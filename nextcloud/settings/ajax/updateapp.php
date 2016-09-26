@@ -1,13 +1,14 @@
 <?php
 /**
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
  * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Frank Karlitschek <frank@owncloud.org>
+ * @author Frank Karlitschek <frank@karlitschek.de>
  * @author Georg Ehrke <georg@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -50,7 +51,7 @@ $appId = OC_App::cleanAppId($appId);
 $config = \OC::$server->getConfig();
 $config->setSystemValue('maintenance', true);
 try {
-	$result = OC_Installer::updateAppByOCSId($appId);
+	$result = \OC\Installer::updateAppByOCSId($appId);
 	$config->setSystemValue('maintenance', false);
 } catch(Exception $ex) {
 	$config->setSystemValue('maintenance', false);

@@ -16,7 +16,7 @@ Command + Q to terminate it.
 If you already have some kind of addressbook setup, it is likely you will see
 some folders named like this **BEA92826-FBF3-4E53-B5C6-ED7C2B454430**.
 Note down what folders there are now and leave the window open.
-#. Open addressbook and try to add a new CardDAV addressbook. At this point, it
+#. Open addressbook and try to add a new CardDav addressbook. At this point, it
 does not matter what information you enter. It will come up with the same error
 message you mentioned before when you click "Create". Ignore it and click "Create"
 again. A non-functional addressbook will be added.
@@ -46,4 +46,5 @@ There is also an easy `HOWTO`_ in the forum.
 
 
 .. _HOWTO: https://forum.owncloud.org/viewtopic.php?f=3&t=132
-.. _Troubleshooting Contacts & Calendar: https://docs.nextcloud.org/server/9/admin_manual/issues/index.html#troubleshooting-contacts-calendar
+.. _Troubleshooting Contacts & Calendar: https://docs.nextcloud.org/server/10/admin_manual/issues/index.html#troubleshooting-contacts-calendar
+.. TODO ON RELEASE: Update version number above on release

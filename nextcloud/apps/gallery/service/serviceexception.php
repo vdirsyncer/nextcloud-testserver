@@ -7,7 +7,7 @@
  *
  * @author Olivier Paroz <owncloud@interfasys.ch>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  */
 
 namespace OCA\Gallery\Service;
@@ -25,9 +25,7 @@ class ServiceException extends \Exception {
 	 * @param string $msg the message contained in the exception
 	 */
 	public function __construct($msg) {
-		if($msg !== 'Share is a write-only share') {
-			Util::writeLog('gallery', 'Exception: ' . $msg, Util::ERROR);
-		}
+		Util::writeLog('gallery', 'Exception: ' . $msg, Util::ERROR);
 		parent::__construct($msg);
 	}
 }

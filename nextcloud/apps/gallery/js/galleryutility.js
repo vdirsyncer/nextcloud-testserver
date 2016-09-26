@@ -19,7 +19,7 @@ window.Gallery = window.Gallery || {};
 		/**
 		 * Detects if the browser is a recent or an old version of Internet Explorer
 		 *
-		 * @returns {string|bool}
+		 * @returns {string|boolean}
 		 */
 		getIeVersion: function () {
 			// Blocking IE8
@@ -27,9 +27,10 @@ window.Gallery = window.Gallery || {};
 				return 'unsupportedIe';
 			} else if (navigator.userAgent.indexOf("MSIE") > 0) {
 				return 'oldIe';
-			} else if ((!!navigator.userAgent.match(/Trident.*rv[ :]*11\./)) ||
-				(navigator.userAgent.indexOf("Edge/") > 0)) {
+			} else if (!!navigator.userAgent.match(/Trident.*rv[ :]*11\./)) {
 				return 'modernIe';
+			} else if (navigator.userAgent.indexOf("Edge/") > 0) {
+				return 'edge';
 			}
 
 			return false;
@@ -94,6 +95,36 @@ window.Gallery = window.Gallery || {};
 			}
 
 			return token;
+		},
+
+		/**
+		 * Returns the host we can use for WebDAV
+		 * 
+		 * On public galleries, we need to provide the token as authorization
+		 *
+		 * @returns {string}
+		 */
+		getWebdavHost: function () {
+			var host = OC.getHost();
+			if (Gallery.token) {
+				host = Gallery.token + '@' + host;
+			}
+
+			return host;
+		},
+
+		/**
+		 * Returns the WebDAV endpoint we can use for files operations
+		 *
+		 * @returns {string}
+		 */
+		getWebdavRoot: function () {
+			var root = OC.linkToRemoteBase('webdav');
+			if (Gallery.token) {
+				root = root.replace('remote.php', 'public.php');
+			}
+
+			return root;
 		},
 
 		/**

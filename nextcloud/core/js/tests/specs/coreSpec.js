@@ -231,22 +231,12 @@ describe('Core base tests', function() {
 		});
 		describe('Images', function() {
 			it('Generates image path with given extension', function() {
-				var svgSupportStub = sinon.stub(OC.Util, 'hasSVGSupport', function() { return true; });
 				expect(OC.imagePath('core', 'somefile.jpg')).toEqual(OC.webroot + '/core/img/somefile.jpg');
 				expect(OC.imagePath(TESTAPP, 'somefile.jpg')).toEqual(TESTAPP_ROOT + '/img/somefile.jpg');
-				svgSupportStub.restore();
 			});
-			it('Generates image path with svg extension when svg support exists', function() {
-				var svgSupportStub = sinon.stub(OC.Util, 'hasSVGSupport', function() { return true; });
+			it('Generates image path with svg extension', function() {
 				expect(OC.imagePath('core', 'somefile')).toEqual(OC.webroot + '/core/img/somefile.svg');
 				expect(OC.imagePath(TESTAPP, 'somefile')).toEqual(TESTAPP_ROOT + '/img/somefile.svg');
-				svgSupportStub.restore();
-			});
-			it('Generates image path with png ext when svg support is not available', function() {
-				var svgSupportStub = sinon.stub(OC.Util, 'hasSVGSupport', function() { return false; });
-				expect(OC.imagePath('core', 'somefile')).toEqual(OC.webroot + '/core/img/somefile.png');
-				expect(OC.imagePath(TESTAPP, 'somefile')).toEqual(TESTAPP_ROOT + '/img/somefile.png');
-				svgSupportStub.restore();
 			});
 		});
 	});
@@ -305,6 +295,7 @@ describe('Core base tests', function() {
 				counter++;
 				xhr.respond(200, {'Content-Type': 'application/json'}, '{}');
 			});
+			$(document).off('ajaxComplete'); // ignore previously registered heartbeats
 		});
 		afterEach(function() {
 			clock.restore();
@@ -312,6 +303,7 @@ describe('Core base tests', function() {
 			window.oc_config = oldConfig;
 			routeStub.restore();
 			$(document).off('ajaxError');
+			$(document).off('ajaxComplete');
 		});
 		it('sends heartbeat half the session lifetime when heartbeat enabled', function() {
 			/* jshint camelcase: false */
@@ -340,7 +332,7 @@ describe('Core base tests', function() {
 			clock.tick(20 * 1000);
 			expect(counter).toEqual(2);
 		});
-		it('does no send heartbeat when heartbeat disabled', function() {
+		it('does not send heartbeat when heartbeat disabled', function() {
 			/* jshint camelcase: false */
 			window.oc_config = {
 				session_keepalive: false,
@@ -470,6 +462,7 @@ describe('Core base tests', function() {
 		var $navigation;
 
 		beforeEach(function() {
+			jQuery.fx.off = true;
 			clock = sinon.useFakeTimers();
 			$('#testArea').append('<div id="header">' +
 				'<a class="menutoggle header-appname-container" href="#">' +
@@ -482,6 +475,7 @@ describe('Core base tests', function() {
 			$navigation = $('#navigation');
 		});
 		afterEach(function() {
+			jQuery.fx.off = false;
 			clock.restore();
 			$(document).off('ajaxError');
 		});
@@ -491,7 +485,6 @@ describe('Core base tests', function() {
 		});
 		it('Clicking menu toggle toggles navigation in', function() {
 			window.initCore();
-			$navigation.hide(); // normally done through media query triggered CSS
 			expect($navigation.is(':visible')).toEqual(false);
 			$toggle.click();
 			clock.tick(1 * 1000);
@@ -499,32 +492,6 @@ describe('Core base tests', function() {
 			$toggle.click();
 			clock.tick(1 * 1000);
 			expect($navigation.is(':visible')).toEqual(false);
-		});
-	});
-	describe('SVG extension replacement', function() {
-		var svgSupportStub;
-
-		beforeEach(function() {
-			svgSupportStub = sinon.stub(OC.Util, 'hasSVGSupport');
-		});
-		afterEach(function() {
-			svgSupportStub.restore();
-		});
-		it('does not replace svg extension with png when SVG is supported', function() {
-			svgSupportStub.returns(true);
-			expect(
-				OC.Util.replaceSVGIcon('/path/to/myicon.svg?someargs=1')
-			).toEqual(
-				'/path/to/myicon.svg?someargs=1'
-			);
-		});
-		it('replaces svg extension with png when SVG not supported', function() {
-			svgSupportStub.returns(false);
-			expect(
-				OC.Util.replaceSVGIcon('/path/to/myicon.svg?someargs=1')
-			).toEqual(
-				'/path/to/myicon.png?someargs=1'
-			);
 		});
 	});
 	describe('Util', function() {
@@ -1014,4 +981,3 @@ describe('Core base tests', function() {
 		});
 	});
 });
-

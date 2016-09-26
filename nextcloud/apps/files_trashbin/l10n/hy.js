@@ -1,6 +1,7 @@
 OC.L10N.register(
     "files_trashbin",
     {
+    "Couldn't restore %s" : "Չկարողացա վերականգնել %s",
     "Deleted files" : "Ջնջված ֆայլեր",
     "Restore" : "Վերականգնել",
     "Delete" : "Ջնջել",
@@ -9,7 +10,6 @@ OC.L10N.register(
     "No deleted files" : "Ջնջված ֆայլեր չկան",
     "Select all" : "Նշել բոլորը",
     "Name" : "Անուն",
-    "Deleted" : "Ջնջված",
-    "Couldn't restore %s" : "Չկարողացա վերականգնել %s"
+    "Deleted" : "Ջնջված"
 },
 "nplurals=2; plural=(n != 1);");

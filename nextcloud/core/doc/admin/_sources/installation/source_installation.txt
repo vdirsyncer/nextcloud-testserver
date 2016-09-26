@@ -2,7 +2,8 @@
 Manual Installation on Linux
 ============================
 
-You can setup Nextcloud from scratch using a classic
+If there are no packages for your Linux distribution, or you prefer installing 
+from the source tarball, you can setup Nextcloud from scratch using a classic 
 LAMP stack (Linux, Apache, MySQL/MariaDB, PHP). This document provides a 
 complete walk-through for installing Nextcloud on Ubuntu 14.04 LTS Server with 
 Apache and MariaDB, using `the Nextcloud .tar archive 
@@ -30,8 +31,8 @@ Apache and MariaDB, using `the Nextcloud .tar archive
 Prerequisites
 -------------
 
-The Nextcloud .tar archive contains all of the required PHP modules. This section 
-lists all required and optional PHP modules.  Consult the `PHP manual 
+The Nextcloud .tar archive contains all of the required PHP modules. This 
+section lists all required and optional PHP modules.  Consult the `PHP manual 
 <http://php.net/manual/en/extensions.php>`_ for more information on modules. 
 Your Linux distribution should have packages for all required modules. You can 
 check the precense of a module by typing ``php -m | grep -i <module_name>``. 
@@ -105,7 +106,8 @@ For command line processing (*optional*):
 * PHP module pcntl (enables command interruption by pressing ``ctrl-c``)
 
 You don’t need the WebDAV module for your Web server (i.e. Apache’s 
-``mod_webdav``), as Nextcloud has a built-in WebDAV server of its own, SabreDAV. 
+``mod_webdav``), as Nextcloud has a built-in WebDAV server of its own,
+SabreDAV.
 If ``mod_webdav`` is enabled you must disable it for Nextcloud. (See 
 :ref:`apache_configuration_label` for an example configuration.)
   
@@ -226,8 +228,8 @@ Then create a symlink to :file:`/etc/apache2/sites-enabled`::
 Additional Apache Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* For Nextcloud to work correctly, we need the module ``mod_rewrite``. Enable it 
-  by running::
+* For Nextcloud to work correctly, we need the module ``mod_rewrite``. Enable
+  it by running::
 
     a2enmod rewrite
   
@@ -244,17 +246,17 @@ Additional Apache Configurations
 
 * You must disable any server-configured authentication for Nextcloud, as it 
   uses Basic authentication internally for DAV services. If you have turned on 
-  authentication on a parent folder (via e.g. an ``AuthType Basic``
-  directive), you can turn off the authentication specifically for the Nextcloud 
-  entry. Following the above example configuration file, add the following line 
-  in the ``<Directory`` section::
+  authentication on a parent folder (via e.g. an ``AuthType Basic`` 
+  directive), you can turn off the authentication specifically for the 
+  Nextcloud entry. Following the above example configuration file, add the 
+  following line in the ``<Directory`` section::
 
     Satisfy Any
 
-* When using SSL, take special note of the ServerName. You should specify one in 
-  the  server configuration, as well as in the CommonName field of the 
-  certificate. If you want your Nextcloud to be reachable via the internet, then 
-  set both of these to the domain you want to reach your Nextcloud server.
+* When using SSL, take special note of the ServerName. You should specify one 
+  in the server configuration, as well as in the CommonName field of the 
+  certificate. If you want your Nextcloud to be reachable via the internet, 
+  then set both of these to the domain you want to reach your Nextcloud server.
 
 * Now restart Apache::
 
@@ -278,8 +280,8 @@ HTTP user, ``mod_env`` and ``mod_rewrite`` are installed, and
 Enabling SSL
 ------------
 
-.. note:: You can use Nextcloud over plain HTTP, but we strongly encourage you to
-          use SSL/TLS to encrypt all of your server traffic, and to protect 
+.. note:: You can use Nextcloud over plain HTTP, but we strongly encourage you 
+          to use SSL/TLS to encrypt all of your server traffic, and to protect 
           user's logins and data in transit.
 
 Apache installed under Ubuntu comes already set-up with a simple
@@ -290,8 +292,11 @@ the default site. Open a terminal and run::
      a2ensite default-ssl
      service apache2 reload
 
-.. note:: See :ref:`security_commands_label` for help on managing self-signed 
-   certificates.   
+.. note:: Self-signed certificates have their drawbacks - especially when you
+          plan to make your Nextcloud server publicly accessible. You might 
+          want to consider getting a certificate signed by a commercial signing
+          authority. Check with your domain name registrar or hosting service 
+          for good deals on commercial certificates.   
     
 .. _installation_wizard_label:
     
@@ -370,7 +375,7 @@ When you are using ``php-fpm``, system environment variables like
 PATH, TMP or others are not automatically populated in the same way as 
 when using ``php-cli``. A PHP call like ``getenv('PATH');`` can therefore 
 return an empty result. So you may need to manually configure environment 
-varibles in the appropropriate ``php-fpm`` ini/config file. 
+variables in the appropropriate ``php-fpm`` ini/config file. 
 
 Here are some example root paths for these ini/config files:
 
@@ -402,10 +407,10 @@ confirm your paths, for example::
 If any of your system environment variables are not present in the file then 
 you must add them.
 
-When you are using shared hosting or a control panel to manage your Nextcloud VM 
-or server, the configuration files are almost certain to be located somewhere 
-else, for security and flexibility reasons, so check your documentation for the 
-correct locations.
+When you are using shared hosting or a control panel to manage your Nextcloud 
+VM or server, the configuration files are almost certain to be located 
+somewhere else, for security and flexibility reasons, so check your 
+documentation for the correct locations.
 
 Please keep in mind that it is possible to create different settings for 
 ``php-cli`` and ``php-fpm``, and for different domains and Web sites. 
@@ -420,9 +425,9 @@ server in order for these changes to be applied.
 
 **.htaccess notes for Apache**
 
-Nextcloud comes with its own ``nextcloud/.htaccess`` file. Because ``php-fpm`` can't 
-read PHP settings in ``.htaccess`` these settings and permissions must be set
-in the ``nextcloud/.user.ini`` file.
+Nextcloud comes with its own ``nextcloud/.htaccess`` file. Because ``php-fpm`` 
+can't read PHP settings in ``.htaccess`` these settings and permissions must 
+be set in the ``nextcloud/.user.ini`` file.
 
 .. _other_HTTP_servers_label:
 
@@ -434,6 +439,3 @@ Other Web Servers
 
 `Other HTTP servers (Nextcloud)
 <https://github.com/nextcloud/documentation/wiki/Alternate-Web-server-notes>`_
-
-`Univention Corporate Server installation (ownCloud)
-<https://github.com/owncloud/documentation/wiki/UCS-Installation>`_

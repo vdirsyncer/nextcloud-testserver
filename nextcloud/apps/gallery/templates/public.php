@@ -76,13 +76,13 @@ style(
 						  data-owner="<?php p($_['displayName']) ?>"
 						  data-name="<?php p($_['filename']) ?>">
 									<button id="save-button"><?php p(
-											$l->t('Add to your ownCloud')
+											$l->t('Add to your Nextcloud')
 										) ?></button>
 									<form class="save-form hidden" action="#">
 										<input type="text" id="remote_address"
 											   placeholder="example.com/owncloud"/>
 										<button id="save-button-confirm"
-												class="icon-confirm svg"></button>
+												class="icon-confirm svg" disabled></button>
 									</form>
 								</span>
 				<?php } ?>
@@ -151,11 +151,9 @@ style(
 				 data-token="<?php isset($_['token']) ? p($_['token']) : p(false) ?>">
 			</div>
 			<div id="emptycontent" class="hidden"></div>
-			<div id="loading-indicator" class="loading"></div>
 		</div>
 	</div>
 	<footer>
 		<p class="info"><?php print_unescaped($theme->getLongFooter()); ?></p>
 	</footer>
 </div>
-

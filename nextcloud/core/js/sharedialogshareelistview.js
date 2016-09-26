@@ -22,28 +22,27 @@
 					'<div class="avatar {{#if modSeed}}imageplaceholderseed{{/if}}" data-username="{{shareWith}}" {{#if modSeed}}data-seed="{{shareWith}} {{shareType}}"{{/if}}></div>' +
 					'{{/if}}' +
 					'<span class="has-tooltip username" title="{{shareWith}}">{{shareWithDisplayName}}</span>' +
-					'{{#if mailNotificationEnabled}} {{#unless isRemoteShare}}' +
+					'{{#if mailNotificationEnabled}}  {{#unless isRemoteShare}}' +
 					'<span class="shareOption">' +
 						'<input id="mail-{{cid}}-{{shareWith}}" type="checkbox" name="mailNotification" class="mailNotification checkbox" {{#if wasMailSent}}checked="checked"{{/if}} />' +
 						'<label for="mail-{{cid}}-{{shareWith}}">{{notifyByMailLabel}}</label>' +
 					'</span>' +
 					'{{/unless}} {{/if}}' +
-					'{{#if isResharingAllowed}} {{#if sharePermissionPossible}} {{#unless isRemoteShare}}' +
+					'{{#if isResharingAllowed}} {{#if sharePermissionPossible}}' +
 					'<span class="shareOption">' +
 						'<input id="canShare-{{cid}}-{{shareWith}}" type="checkbox" name="share" class="permissions checkbox" {{#if hasSharePermission}}checked="checked"{{/if}} data-permissions="{{sharePermission}}" />' +
 						'<label for="canShare-{{cid}}-{{shareWith}}">{{canShareLabel}}</label>' +
 					'</span>' +
-					'{{/unless}} {{/if}} {{/if}}' +
+					'{{/if}} {{/if}}' +
 					'{{#if editPermissionPossible}}' +
 					'<span class="shareOption">' +
 						'<input id="canEdit-{{cid}}-{{shareWith}}" type="checkbox" name="edit" class="permissions checkbox" {{#if hasEditPermission}}checked="checked"{{/if}} />' +
 						'<label for="canEdit-{{cid}}-{{shareWith}}">{{canEditLabel}}</label>' +
-						'{{#unless isRemoteShare}}' +
-						'<a href="#" class="showCruds"><img class="svg" alt="{{crudsLabel}}" src="{{triangleSImage}}"/></a>' +
-						'{{/unless}}' +
+						'{{#if isFolder}}' +
+						'<a href="#" class="showCruds"><img alt="{{crudsLabel}}" src="{{triangleSImage}}"/></a>' +
+						'{{/if}}' +
 					'</span>' +
 					'{{/if}}' +
-					'{{#unless isRemoteShare}}' +
 					'<div class="cruds hidden">' +
 						'{{#if createPermissionPossible}}' +
 						'<span class="shareOption">' +
@@ -57,14 +56,13 @@
 							'<label for="canUpdate-{{cid}}-{{shareWith}}">{{updatePermissionLabel}}</label>' +
 						'</span>' +
 						'{{/if}}' +
-						'{{#if deletePermissionPossible}} {{#unless isRemoteShare}}' +
+						'{{#if deletePermissionPossible}}' +
 						'<span class="shareOption">' +
 							'<input id="canDelete-{{cid}}-{{shareWith}}" type="checkbox" name="delete" class="permissions checkbox" {{#if hasDeletePermission}}checked="checked"{{/if}} data-permissions="{{deletePermission}}"/>' +
 							'<label for="canDelete-{{cid}}-{{shareWith}}">{{deletePermissionLabel}}</label>' +
 						'</span>' +
-						'{{/unless}} {{/if}}' +
+						'{{/if}}' +
 					'</div>' +
-					'{{/unless}}' +
 				'</li>' +
 			'{{/each}}' +
 			'</ul>'
@@ -125,10 +123,6 @@
 				shareWithDisplayName = shareWithDisplayName + " (" + t('core', 'group') + ')';
 			} else if (shareType === OC.Share.SHARE_TYPE_REMOTE) {
 				shareWithDisplayName = shareWithDisplayName + " (" + t('core', 'remote') + ')';
-				hasPermissionOverride = {
-					createPermissionPossible: true,
-					updatePermissionPossible: true
-				};
 			}
 
 			return _.extend(hasPermissionOverride, {
@@ -170,7 +164,8 @@
 				sharePermission: OC.PERMISSION_SHARE,
 				createPermission: OC.PERMISSION_CREATE,
 				updatePermission: OC.PERMISSION_UPDATE,
-				deletePermission: OC.PERMISSION_DELETE
+				deletePermission: OC.PERMISSION_DELETE,
+				isFolder: this.model.isFolder()
 			};
 
 			if(!this.model.hasUserShares()) {
@@ -268,28 +263,17 @@
 			if ($element.attr('name') === 'edit') {
 				checked = $element.is(':checked');
 				// Check/uncheck Create, Update, and Delete checkboxes if Edit is checked/unck
-				$($checkboxes).attr('checked', checked);
+				$($checkboxes).prop('checked', checked);
 			} else {
 				var numberChecked = $checkboxes.filter(':checked').length;
 				checked = numberChecked > 0;
-				$('input[name="edit"]', $li).attr('checked', checked);
+				$('input[name="edit"]', $li).prop('checked', checked);
 			}
 
 			var permissions = OC.PERMISSION_READ;
 			$('.permissions', $li).not('input[name="edit"]').filter(':checked').each(function(index, checkbox) {
 				permissions |= $(checkbox).data('permissions');
 			});
-
-			// The federated share UI is a bit different so handle it properly
-			if (shareType === OC.Share.SHARE_TYPE_REMOTE &&
-				$element.attr('name') === 'edit' &&
-				$element.is(':checked')) {
-				permissions |= OC.PERMISSION_UPDATE;
-
-				if (this.model.deletePermissionPossible()) {
-					permissions |= OC.PERMISSION_CREATE;
-				}
-			}
 
 			this.model.updateShare(shareId, {permissions: permissions});
 		},

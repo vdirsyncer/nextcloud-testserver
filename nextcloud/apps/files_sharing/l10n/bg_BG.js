@@ -48,13 +48,9 @@ OC.L10N.register(
     "the link expired" : "връзката е изтекла",
     "sharing is disabled" : "споделянето е изключено",
     "For more info, please ask the person who sent this link." : "За повече информация, моля питай човека, който е изпратил тази връзка.",
-    "Add to your Nextcloud" : "Добави към своя Nextcloud",
+    "Add to your ownCloud" : "Добави към своя ownCloud",
     "Download" : "Изтегли",
     "Download %s" : "Изтегли %s",
-    "Direct link" : "Директна връзка",
-    "Allow users on this server to send shares to other servers" : "Позволи на потребители от този сървър да споделят папки  с други сървъри",
-    "Allow users on this server to receive shares from other servers" : "Позволи на потребители на този сървър да получават споделени папки от други сървъри",
-    "Public shared file %1$s was downloaded" : "Публично споделения файл %1$s бе изтеглен",
-    "Public shared folder %1$s was downloaded" : "Публично споделената папка %1$s бе изтеглена"
+    "Direct link" : "Директна връзка"
 },
 "nplurals=2; plural=(n != 1);");

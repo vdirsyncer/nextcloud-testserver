@@ -1,6 +1,6 @@
 <?php
 /**
- * ownCloud - Calendar App
+ * Calendar App
  *
  * @author Georg Ehrke
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
@@ -54,6 +54,12 @@ class Application extends App {
 			$config = $c->getServer()->getConfig();
 
 			return new Controller\ViewController($c->getAppName(), $request, $userSession, $config);
+		});
+		$container->registerService('ProxyController', function(IAppContainer $c) {
+			$request = $c->query('Request');
+			$client = $c->getServer()->getHTTPClientService();
+
+			return new Controller\ProxyController($c->getAppName(), $request, $client);
 		});
 	}
 

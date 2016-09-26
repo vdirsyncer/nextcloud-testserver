@@ -1,14 +1,16 @@
 <?php
 /**
- * @author Björn Schießle <schiessle@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Björn Schießle <bjoern@schiessle.org>
  * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Tom Needham <tom@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -99,13 +101,47 @@ API::register(
 
 // Server-to-Server Sharing
 if (\OC::$server->getAppManager()->isEnabledForUser('files_sharing')) {
-	$s2s = new \OCA\Files_Sharing\API\Server2Server();
+	$federatedSharingApp = new \OCA\FederatedFileSharing\AppInfo\Application();
+	$addressHandler = new \OCA\FederatedFileSharing\AddressHandler(
+		\OC::$server->getURLGenerator(),
+		\OC::$server->getL10N('federatedfilesharing')
+	);
+	$notification = new \OCA\FederatedFileSharing\Notifications(
+		$addressHandler,
+		\OC::$server->getHTTPClientService(),
+		new \OCA\FederatedFileSharing\DiscoveryManager(\OC::$server->getMemCacheFactory(), \OC::$server->getHTTPClientService()),
+		\OC::$server->getJobList()
+	);
+	$s2s = new OCA\FederatedFileSharing\RequestHandler(
+		$federatedSharingApp->getFederatedShareProvider(),
+		\OC::$server->getDatabaseConnection(),
+		\OC::$server->getShareManager(),
+		\OC::$server->getRequest(),
+		$notification,
+		$addressHandler,
+		\OC::$server->getUserManager()
+	);
 	API::register('post',
 		'/cloud/shares',
 		array($s2s, 'createShare'),
 		'files_sharing',
 		API::GUEST_AUTH
 	);
+
+	API::register('post',
+		'/cloud/shares/{id}/reshare',
+		array($s2s, 'reShare'),
+		'files_sharing',
+		API::GUEST_AUTH
+	);
+
+	API::register('post',
+		'/cloud/shares/{id}/permissions',
+		array($s2s, 'updatePermissions'),
+		'files_sharing',
+		API::GUEST_AUTH
+	);
+
 
 	API::register('post',
 		'/cloud/shares/{id}/accept',
@@ -124,6 +160,13 @@ if (\OC::$server->getAppManager()->isEnabledForUser('files_sharing')) {
 	API::register('post',
 		'/cloud/shares/{id}/unshare',
 		array($s2s, 'unshare'),
+		'files_sharing',
+		API::GUEST_AUTH
+	);
+
+	API::register('post',
+		'/cloud/shares/{id}/revoke',
+		array($s2s, 'revoke'),
 		'files_sharing',
 		API::GUEST_AUTH
 	);

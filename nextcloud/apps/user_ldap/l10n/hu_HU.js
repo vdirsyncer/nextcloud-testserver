@@ -44,7 +44,6 @@ OC.L10N.register(
     "One Base DN per line" : "Soronként egy DN-gyökér",
     "You can specify Base DN for users and groups in the Advanced tab" : "A Haladó fülre kattintva külön DN-gyökér állítható be a felhasználók és a csoportok számára",
     "Manually enter LDAP filters (recommended for large directories)" : "LDAP szűrők kézi beállitása (ajánlott a nagy könyvtáraknál)",
-    "Limit %s access to users meeting these criteria:" : "Korlátozzuk a %s szolgáltatás elérését azokra a felhasználókra, akik megfelelnek a következő feltételeknek:",
     "The filter specifies which LDAP users shall have access to the %s instance." : "A szűrő meghatározza, hogy mely LDAP felhasználók lesznek jogosultak %s elérésére.",
     "Saving" : "Mentés",
     "Back" : "Vissza",
@@ -98,8 +97,6 @@ OC.L10N.register(
     "UUID Attribute for Groups:" : "A csoportok UUID attribútuma:",
     "Username-LDAP User Mapping" : "Felhasználó - LDAP felhasználó hozzárendelés",
     "Clear Username-LDAP User Mapping" : "A felhasználó - LDAP felhasználó hozzárendelés törlése",
-    "Clear Groupname-LDAP Group Mapping" : "A csoport - LDAP csoport hozzárendelés törlése",
-    "The DN of the client user with which the bind shall be done, e.g. uid=agent,dc=example,dc=com. For anonymous access, leave DN and Password empty." : "Annak a felhasználónak a DN-je, akinek a nevében bejelentkezve kapcsolódunk a kiszolgálóhoz, pl. uid=agent,dc=example,dc=com. Bejelentkezés nélküli eléréshez ne töltse ki a DN és Jelszó mezőket!",
-    "{nthServer}. Server" : "{nthServer}. Kiszolgáló"
+    "Clear Groupname-LDAP Group Mapping" : "A csoport - LDAP csoport hozzárendelés törlése"
 },
 "nplurals=2; plural=(n != 1);");

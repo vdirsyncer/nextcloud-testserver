@@ -1,13 +1,17 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Robin Appelman <robin@icewind.nl>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -30,9 +34,14 @@ $RUNTIME_APPTYPES = ['filesystem', 'authentication', 'logging'];
 OC_App::loadApps($RUNTIME_APPTYPES);
 
 OC_Util::obEnd();
+\OC::$server->getSession()->close();
 
 // Backends
-$authBackend = new OCA\DAV\Connector\PublicAuth(\OC::$server->getConfig());
+$authBackend = new OCA\DAV\Connector\PublicAuth(
+	\OC::$server->getRequest(),
+	\OC::$server->getShareManager(),
+	\OC::$server->getSession()
+);
 
 $serverFactory = new OCA\DAV\Connector\Sabre\ServerFactory(
 	\OC::$server->getConfig(),
@@ -41,7 +50,8 @@ $serverFactory = new OCA\DAV\Connector\Sabre\ServerFactory(
 	\OC::$server->getUserSession(),
 	\OC::$server->getMountManager(),
 	\OC::$server->getTagManager(),
-	\OC::$server->getRequest()
+	\OC::$server->getRequest(),
+	\OC::$server->getPreviewManager()
 );
 
 $requestUri = \OC::$server->getRequest()->getRequestUri();
@@ -50,26 +60,25 @@ $linkCheckPlugin = new \OCA\DAV\Files\Sharing\PublicLinkCheckPlugin();
 
 $server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, function (\Sabre\DAV\Server $server) use ($authBackend, $linkCheckPlugin) {
 	$isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest');
-	if (OCA\Files_Sharing\Helper::isOutgoingServer2serverShareEnabled() === false && !$isAjax) {
+	$federatedSharingApp = new \OCA\FederatedFileSharing\AppInfo\Application();
+	$federatedShareProvider = $federatedSharingApp->getFederatedShareProvider();
+	if ($federatedShareProvider->isOutgoingServer2serverShareEnabled() === false && !$isAjax) {
 		// this is what is thrown when trying to access a non-existing share
 		throw new \Sabre\DAV\Exception\NotAuthenticated();
 	}
 
 	$share = $authBackend->getShare();
-	$rootShare = \OCP\Share::resolveReShare($share);
-	$owner = $rootShare['uid_owner'];
-	$isWritable = $share['permissions'] & (\OCP\Constants::PERMISSION_UPDATE | \OCP\Constants::PERMISSION_CREATE);
-	$isReadable = $share['permissions'] & \OCP\Constants::PERMISSION_READ;
-	$fileId = $share['file_source'];
+	$owner = $share->getShareOwner();
+	$isReadable = $share->getPermissions() & \OCP\Constants::PERMISSION_READ;
+	$fileId = $share->getNodeId();
 
-	if (!$isWritable) {
-		\OC\Files\Filesystem::addStorageWrapper('readonly', function ($mountPoint, $storage) {
-			return new \OC\Files\Storage\Wrapper\PermissionsMask(array('storage' => $storage, 'mask' => \OCP\Constants::PERMISSION_READ + \OCP\Constants::PERMISSION_SHARE));
-		});
-	}
 	if (!$isReadable) {
 		return false;
 	}
+
+	\OC\Files\Filesystem::addStorageWrapper('sharePermissions', function ($mountPoint, $storage) use ($share) {
+		return new \OC\Files\Storage\Wrapper\PermissionsMask(array('storage' => $storage, 'mask' => $share->getPermissions() | \OCP\Constants::PERMISSION_SHARE));
+	});
 
 	OC_Util::setupFS($owner);
 	$ownerView = \OC\Files\Filesystem::getView();

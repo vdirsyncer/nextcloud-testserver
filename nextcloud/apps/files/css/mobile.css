@@ -1,5 +1,9 @@
 @media only screen and (max-width: 768px) {
 
+.app-files #app-content.dir-drop{
+	background-color: rgba(255, 255, 255, 1)!important;
+}
+
 /* don’t require a minimum width for files table */
 #body-user #filestable {
 	min-width: initial !important;
@@ -67,7 +71,15 @@ table td.filename .nametext .innernametext {
 }
 
 /* shorten elements for mobile */
-#uploadprogressbar {
+#uploadprogressbar, #uploadprogressbar .label.inner {
 	width: 50px;
 }
+/* hide desktop-only parts */
+#uploadprogressbar .desktop {
+	display: none !important;
+}
+#uploadprogressbar .mobile {
+	display: block !important;
+}
+
 }

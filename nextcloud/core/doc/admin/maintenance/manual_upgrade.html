@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Manual Nextcloud Upgrade &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Manual Nextcloud Upgrade &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Restoring Nextcloud" href="restore.html" />
-    <link rel="prev" title="Upgrading Nextcloud with the Updater App" href="update.html" />
+    <link rel="prev" title="Upgrading Nextcloud with the Nextcloud App" href="update.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -79,7 +80,7 @@
 <li class="toctree-l2"><a class="reference internal" href="backup.html">Backing up Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="upgrade.html">How to Upgrade Your Nextcloud Server</a></li>
 <li class="toctree-l2"><a class="reference internal" href="package_upgrade.html">Upgrade Nextcloud From Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Updater App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Nextcloud App</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Manual Nextcloud Upgrade</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#previous-nextcloud-releases">Previous Nextcloud Releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reverse-upgrade">Reverse Upgrade</a></li>
@@ -105,7 +106,7 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="update.html" title="Previous Chapter: Upgrading Nextcloud with the Updater App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Upgrading Nex...</span>
+    <a href="update.html" title="Previous Chapter: Upgrading Nextcloud with the Nextcloud App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Upgrading Nex...</span>
     </a>
   </li>
   <li class="next">
@@ -128,7 +129,7 @@ your HTTP user. This example is for Ubuntu Linux:</p>
 <p>The other way is by entering your <code class="docutils literal"><span class="pre">config.php</span></code> file and changing
 <code class="docutils literal"><span class="pre">'maintenance'</span> <span class="pre">=&gt;</span> <span class="pre">false,</span></code> to <code class="docutils literal"><span class="pre">'maintenance'</span> <span class="pre">=&gt;</span> <span class="pre">true,</span></code>.</p>
 <ol class="arabic">
-<li><p class="first">Back up your existing Nextcloud or ownCloud Server database, data directory, and
+<li><p class="first">Back up your existing Nextcloud Server database, data directory, and
 <code class="docutils literal"><span class="pre">config.php</span></code> file. (See <a class="reference internal" href="backup.html"><em>Backing up Nextcloud</em></a>.)</p>
 </li>
 <li><p class="first">Download and unpack the latest Nextcloud Server release (Archive file) from
@@ -142,19 +143,19 @@ tar xjf nextcloud-[version].tar.bz2</p>
 </li>
 <li><p class="first">Stop your Web server.</p>
 </li>
-<li><p class="first">Rename your current ownCloud or Nextcloud directory, for example <code class="docutils literal"><span class="pre">owncloud-old</span></code>.</p>
+<li><p class="first">Rename your current Nextcloud directory, for example <code class="docutils literal"><span class="pre">nextcloud-old</span></code>.</p>
 </li>
-<li><p class="first">Unpacking the new archive creates a new <code class="docutils literal"><span class="pre">Nextcloud</span></code> directory populated
+<li><p class="first">Unpacking the new archive creates a new <code class="docutils literal"><span class="pre">nextcloud</span></code> directory populated
 with your new server files. Copy this directory and its contents to the
 original location of your old server, for example <code class="docutils literal"><span class="pre">/var/www/</span></code>, so that
-you have <code class="docutils literal"><span class="pre">/var/www/nextcloud</span></code>.</p>
+once again you have <code class="docutils literal"><span class="pre">/var/www/nextcloud</span></code>.</p>
 </li>
 <li><p class="first">Copy the <code class="docutils literal"><span class="pre">config.php</span></code> file from your old Nextcloud directory to your new
 Nextcloud directory.</p>
 </li>
-<li><p class="first">If you keep your <code class="docutils literal"><span class="pre">data/</span></code> directory in your <code class="docutils literal"><span class="pre">owncloud/</span></code> directory, copy
+<li><p class="first">If you keep your <code class="docutils literal"><span class="pre">data/</span></code> directory in your <code class="docutils literal"><span class="pre">nextcloud/</span></code> directory, copy
 it from your old version of Nextcloud to your new <code class="docutils literal"><span class="pre">nextcloud/</span></code>. If you keep
-it outside of <code class="docutils literal"><span class="pre">owncloud/</span></code> then you don&#8217;t have to do anything with it,
+it outside of <code class="docutils literal"><span class="pre">nextcloud/</span></code> then you don&#8217;t have to do anything with it,
 because its location is configured in your original <code class="docutils literal"><span class="pre">config.php</span></code>, and
 none of the upgrade steps touch it.</p>
 </li>
@@ -187,8 +188,7 @@ ones are enabled. Re-enable your third-party apps. Then apply strong
 permissions to your Nextcloud directories (<a class="reference internal" href="../installation/installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>).</p>
 <div class="section" id="previous-nextcloud-releases">
 <h2>Previous Nextcloud Releases<a class="headerlink" href="#previous-nextcloud-releases" title="Permalink to this headline">¶</a></h2>
-<p>You&#8217;ll find previous ownCloud releases in the <a class="reference external" href="https://owncloud.org/changelog/">ownCloud Server Changelog</a> and previous Nextcloud releases in the
-<a class="reference external" href="https://nextcloud.com/changelog/">Nextcloud Server Changelog</a>.</p>
+<p>You&#8217;ll find previous Nextcloud releases in the <a class="reference external" href="https://nextcloud.com/changelog/">Nextcloud Server Changelog</a>.</p>
 </div>
 <div class="section" id="reverse-upgrade">
 <h2>Reverse Upgrade<a class="headerlink" href="#reverse-upgrade" title="Permalink to this headline">¶</a></h2>
@@ -214,8 +214,8 @@ help:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php console.php files:scan --all
 </pre></div>
 </div>
-<p>See <a class="reference external" href="https://nextcloud.com/support">the nextcloud.com support page</a> for further
-resources for both home and enterprise users.</p>
+<p>See <a class="reference external" href="https://nextcloud.com/support/">the nextcloud.com support page</a> for further
+resources.</p>
 <p>Sometimes, Nextcloud can get <em>stuck in a upgrade</em>. This is usually due to the
 process taking too long and encountering a PHP time-out. Stop the upgrade
 process this way:</p>
@@ -237,7 +237,7 @@ process this way:</p>
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="update.html" title="Previous Chapter: Upgrading Nextcloud with the Updater App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Upgrading Nex...</span>
+    <a href="update.html" title="Previous Chapter: Upgrading Nextcloud with the Nextcloud App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Upgrading Nex...</span>
     </a>
   </li>
   <li class="next">

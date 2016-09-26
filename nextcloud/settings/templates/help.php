@@ -16,7 +16,7 @@
 	<?php } ?>
 
 		<li>
-			<a href="https://docs.nextcloud.org/" target="_blank" rel="noreferrer">
+			<a href="https://docs.nextcloud.org" target="_blank" rel="noreferrer">
 				<?php p($l->t('Online documentation')); ?> ↗
 			</a>
 		</li>

@@ -1,19 +1,21 @@
 <?php
 /**
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
  * @author Bart Visscher <bartv@thisnet.nl>
- * @author Björn Schießle <schiessle@owncloud.com>
+ * @author Björn Schießle <bjoern@schiessle.org>
  * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Frank Karlitschek <frank@owncloud.org>
+ * @author Christoph Wurst <christoph@owncloud.com>
+ * @author Frank Karlitschek <frank@karlitschek.de>
  * @author Georg Ehrke <georg@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Raghu Nayyar <me@iraghu.com>
- * @author Robin Appelman <icewind@owncloud.com>
- * @author Roeland Jago Douma <rullzer@owncloud.com>
+ * @author Robin Appelman <robin@icewind.nl>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -36,7 +38,8 @@ $application = new Application();
 $application->registerRoutes($this, [
 	'resources' => [
 		'groups' => ['url' => '/settings/users/groups'],
-		'users' => ['url' => '/settings/users/users']
+		'users' => ['url' => '/settings/users/users'],
+		'AuthSettings' => ['url' => '/settings/personal/authtokens'],
 	],
 	'routes' => [
 		['name' => 'MailSettings#setMailSettings', 'url' => '/settings/admin/mailsettings', 'verb' => 'POST'],
@@ -61,6 +64,8 @@ $application->registerRoutes($this, [
 		['name' => 'Certificate#removePersonalRootCertificate', 'url' => '/settings/personal/certificate/{certificateIdentifier}', 'verb' => 'DELETE'],
 		['name' => 'Certificate#addSystemRootCertificate', 'url' => '/settings/admin/certificate', 'verb' => 'POST'],
 		['name' => 'Certificate#removeSystemRootCertificate', 'url' => '/settings/admin/certificate/{certificateIdentifier}', 'verb' => 'DELETE'],
+		['name' => 'AdminSettings#index', 'url' => '/settings/admin/{section}', 'verb' => 'GET', 'defaults' => ['section' => 'server']],
+		['name' => 'AdminSettings#form', 'url' => '/settings/admin/{section}', 'verb' => 'GET'],
 	]
 ]);
 
@@ -73,8 +78,6 @@ $this->create('settings_personal', '/settings/personal')
 	->actionInclude('settings/personal.php');
 $this->create('settings_users', '/settings/users')
 	->actionInclude('settings/users.php');
-$this->create('settings_admin', '/settings/admin')
-	->actionInclude('settings/admin.php');
 // Settings ajax actions
 // users
 $this->create('settings_ajax_setquota', '/settings/ajax/setquota.php')

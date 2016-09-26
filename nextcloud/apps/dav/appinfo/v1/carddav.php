@@ -1,10 +1,13 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Christoph Wurst <christoph@owncloud.com>
+ * @author Georg Ehrke <georg@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -24,6 +27,7 @@
 // Backends
 use OCA\DAV\CardDAV\AddressBookRoot;
 use OCA\DAV\CardDAV\CardDavBackend;
+use OCA\DAV\Connector\LegacyDAVACL;
 use OCA\DAV\Connector\Sabre\Auth;
 use OCA\DAV\Connector\Sabre\ExceptionLoggerPlugin;
 use OCA\DAV\Connector\Sabre\MaintenancePlugin;
@@ -34,6 +38,8 @@ $authBackend = new Auth(
 	\OC::$server->getSession(),
 	\OC::$server->getUserSession(),
 	\OC::$server->getRequest(),
+	\OC::$server->getTwoFactorAuthManager(),
+	\OC::$server->getBruteForceThrottler(),
 	'principals/'
 );
 $principalBackend = new Principal(
@@ -44,12 +50,14 @@ $principalBackend = new Principal(
 $db = \OC::$server->getDatabaseConnection();
 $cardDavBackend = new CardDavBackend($db, $principalBackend);
 
+$debugging = \OC::$server->getConfig()->getSystemValue('debug', false);
+
 // Root nodes
 $principalCollection = new \Sabre\CalDAV\Principal\Collection($principalBackend);
-$principalCollection->disableListing = true; // Disable listing
+$principalCollection->disableListing = !$debugging; // Disable listing
 
 $addressBookRoot = new AddressBookRoot($principalBackend, $cardDavBackend);
-$addressBookRoot->disableListing = true; // Disable listing
+$addressBookRoot->disableListing = !$debugging; // Disable listing
 
 $nodes = array(
 	$principalCollection,
@@ -65,10 +73,13 @@ $server->addPlugin(new MaintenancePlugin());
 $server->addPlugin(new \Sabre\DAV\Auth\Plugin($authBackend, 'ownCloud'));
 $server->addPlugin(new Plugin());
 
-$acl = new \OCA\DAV\Connector\LegacyDAVACL();
-$server->addPlugin($acl);
+$server->addPlugin(new LegacyDAVACL());
+if ($debugging) {
+	$server->addPlugin(new Sabre\DAV\Browser\Plugin());
+}
 
 $server->addPlugin(new \Sabre\CardDAV\VCFExportPlugin());
+$server->addPlugin(new \OCA\DAV\CardDAV\ImageExportPlugin(\OC::$server->getLogger()));
 $server->addPlugin(new ExceptionLoggerPlugin('carddav', \OC::$server->getLogger()));
 
 // And off we go!

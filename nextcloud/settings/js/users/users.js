@@ -117,7 +117,7 @@ var UserList = {
 		 * remove action
 		 */
 		if ($tr.find('td.remove img').length === 0 && OC.currentUser !== user.name) {
-			var deleteImage = $('<img class="svg action">').attr({
+			var deleteImage = $('<img class="action">').attr({
 				src: OC.imagePath('core', 'actions/delete')
 			});
 			var deleteLink = $('<a class="action delete">')
@@ -138,10 +138,13 @@ var UserList = {
 				.find('option').attr('selected', null)
 				.first().attr('selected', 'selected');
 		} else {
-			if ($quotaSelect.find('option').filterAttr('value', user.quota).length > 0) {
-				$quotaSelect.find('option').filterAttr('value', user.quota).attr('selected', 'selected');
+			var $options = $quotaSelect.find('option');
+			var $foundOption = $options.filterAttr('value', user.quota);
+			if ($foundOption.length > 0) {
+				$foundOption.attr('selected', 'selected');
 			} else {
-				$quotaSelect.append('<option value="' + escapeHTML(user.quota) + '" selected="selected">' + escapeHTML(user.quota) + '</option>');
+				// append before "Other" entry
+				$options.last().before('<option value="' + escapeHTML(user.quota) + '" selected="selected">' + escapeHTML(user.quota) + '</option>');
 			}
 		}
 
@@ -576,6 +579,15 @@ var UserList = {
 		var $select = $(ev.target);
 		var uid = UserList.getUID($select);
 		var quota = $select.val();
+		if (quota === 'other') {
+			return;
+		}
+		if (isNaN(parseInt(quota, 10)) || parseInt(quota, 10) < 0) {
+			// the select component has added the bogus value, delete it again
+			$select.find('option[selected]').remove();
+			OC.Notification.showTemporary(t('core', 'Invalid quota value "{val}"', {val: quota}));
+			return;
+		}
 		UserList._updateQuota(uid, quota, function(returnedQuota){
 			if (quota !== returnedQuota) {
 				$select.find(':selected').text(returnedQuota);
@@ -656,7 +668,9 @@ $(document).ready(function () {
 							OC.generateUrl('/settings/users/changepassword'),
 							{username: uid, password: $(this).val(), recoveryPassword: recoveryPasswordVal},
 							function (result) {
-								if (result.status != 'success') {
+								if (result.status === 'success') {
+									OC.Notification.showTemporary(t('admin', 'Password successfully changed'));
+								} else {
 									OC.Notification.showTemporary(t('admin', result.data.message));
 								}
 							}
@@ -728,31 +742,46 @@ $(document).ready(function () {
 		var mailAddress = escapeHTML(UserList.getMailAddress($td));
 		var $input = $('<input type="text">').val(mailAddress);
 		$td.children('span').replaceWith($input);
+		$td.find('img').hide();
 		$input
 			.focus()
 			.keypress(function (event) {
 				if (event.keyCode === 13) {
-					$tr.data('mailAddress', $input.val());
-					$input.blur();
+					// enter key
+
+					var mailAddress = $input.val();
+					$td.find('.loading-small').css('display', 'inline-block');
+					$input.css('padding-right', '26px');
+					$input.attr('disabled', 'disabled');
 					$.ajax({
 						type: 'PUT',
 						url: OC.generateUrl('/settings/users/{id}/mailAddress', {id: uid}),
 						data: {
 							mailAddress: $(this).val()
 						}
-					}).fail(function (result) {
-						OC.Notification.show(result.responseJSON.data.message);
-						// reset the values
+					}).success(function () {
+						// set data attribute to new value
+						// will in blur() be used to show the text instead of the input field
 						$tr.data('mailAddress', mailAddress);
-						$tr.children('.mailAddress').children('span').text(mailAddress);
+						$td.find('.loading-small').css('display', '');
+						$input.removeAttr('disabled')
+							.triggerHandler('blur'); // needed instead of $input.blur() for Firefox
+					}).fail(function (result) {
+						OC.Notification.showTemporary(result.responseJSON.data.message);
+						$td.find('.loading-small').css('display', '');
+						$input.removeAttr('disabled')
+							.css('padding-right', '6px');
 					});
 				}
 			})
 			.blur(function () {
-				var mailAddress = $tr.data('mailAddress');
-				var $span = $('<span>').text(mailAddress);
-				$tr.data('mailAddress', mailAddress);
+				if($td.find('.loading-small').css('display') === 'inline-block') {
+					// in Chrome the blur event is fired too early by the browser - even if the request is still running
+					return;
+				}
+				var $span = $('<span>').text($tr.data('mailAddress'));
 				$input.replaceWith($span);
+				$td.find('img').show();
 			});
 	});
 

@@ -7,7 +7,6 @@ OC.L10N.register(
     "Personal" : "Personal",
     "System" : "Sistema",
     "Grant access" : "Conceder accesu",
-    "Access granted" : "Accesu concedíu",
     "All users. Type to select user or group." : "Tolos usuarios. Escribe pa seleccionar usuariu o grupu.",
     "(group)" : "(grupu)",
     "Saved" : "Guardáu",
@@ -56,8 +55,6 @@ OC.L10N.register(
     "Available for" : "Disponible pa",
     "Add storage" : "Amestar almacenamientu",
     "Delete" : "Desaniciar",
-    "Allow users to mount the following external storage" : "Permitir a los usuarios montar el siguiente almacenamientu esternu",
-    "<b>Note:</b> The FTP support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Nota:</b> El soporte de FTP en PHP nun ta activáu o instaláu. Nun pue montase %s. Pídi-y al alministrador de sistema que lu instale.",
-    "SMB / CIFS using OC login" : "SMB / CIFS usando accesu OC"
+    "Allow users to mount the following external storage" : "Permitir a los usuarios montar el siguiente almacenamientu esternu"
 },
 "nplurals=2; plural=(n != 1);");

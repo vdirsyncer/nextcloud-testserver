@@ -1,4 +1,4 @@
-Collaborative Document Editing 
+Collaborative Document Editing
 ==============================
 
 The Documents application supports editing documents within Nextcloud, without 

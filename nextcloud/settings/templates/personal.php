@@ -39,9 +39,9 @@
 		<div class="avatardiv"></div>
 		<div class="warning hidden"></div>
 		<?php if ($_['avatarChangeSupported']): ?>
-		<label for="uploadavatar" class="inlineblock button icon-upload svg" id="uploadavatarbutton" title="<?php p($l->t('Upload new')); ?>"></label>
-		<div class="inlineblock button icon-folder svg" id="selectavatar" title="<?php p($l->t('Select from Files')); ?>"></div>
-		<div class="hidden button icon-delete svg" id="removeavatar" title="<?php p($l->t('Remove image')); ?>"></div>
+		<label for="uploadavatar" class="inlineblock button icon-upload" id="uploadavatarbutton" title="<?php p($l->t('Upload new')); ?>"></label>
+		<div class="inlineblock button icon-folder" id="selectavatar" title="<?php p($l->t('Select from Files')); ?>"></div>
+		<div class="hidden button icon-delete" id="removeavatar" title="<?php p($l->t('Remove image')); ?>"></div>
 		<input type="file" name="files[]" id="uploadavatar" class="hiddenuploadfield">
 		<p><em><?php p($l->t('png or jpg, max. 20 MB')); ?></em></p>
 		<?php else: ?>
@@ -120,16 +120,16 @@ if($_['passwordChangeSupported']) {
 	<h2 class="inlineblock"><?php p($l->t('Password'));?></h2>
 	<div id="password-error-msg" class="msg success inlineblock" style="display: none;">Saved</div>
 	<br>
-	<label for="pass1" class="onlyInIE8"><?php echo $l->t('Current password');?>: </label>
+	<label for="pass1" class="hidden-visually"><?php echo $l->t('Current password');?>: </label>
 	<input type="password" id="pass1" name="oldpassword"
 		placeholder="<?php echo $l->t('Current password');?>"
 		autocomplete="off" autocapitalize="off" autocorrect="off" />
-	<label for="pass2" class="onlyInIE8"><?php echo $l->t('New password');?>: </label>
+	<label for="pass2" class="hidden-visually"><?php echo $l->t('New password');?>: </label>
 	<input type="password" id="pass2" name="personal-password"
 		placeholder="<?php echo $l->t('New password');?>"
 		data-typetoggle="#personal-show"
 		autocomplete="off" autocapitalize="off" autocorrect="off" />
-	<input type="checkbox" id="personal-show" name="show" /><label for="personal-show" class="svg"></label>
+	<input type="checkbox" id="personal-show" name="show" /><label for="personal-show"></label>
 	<input id="passwordbutton" type="submit" value="<?php echo $l->t('Change password');?>" />
 	<br/>
 </form>
@@ -157,37 +157,96 @@ if($_['passwordChangeSupported']) {
 			</option>
 		<?php endforeach;?>
 	</select>
+	<?php if (OC_Util::getEditionString() === ''): ?>
+	<a href="https://www.transifex.com/nextcloud/nextcloud/"
+		target="_blank" rel="noreferrer">
+		<em><?php p($l->t('Help translate'));?></em>
+	</a>
+	<?php endif; ?>
 </form>
+
 
 <div id="clientsbox" class="section clientsbox">
 	<h2><?php p($l->t('Get the apps to sync your files'));?></h2>
-	<a href="<?php p($_['clients']['desktop']); ?>" target="_blank">
-		<img src="<?php print_unescaped(OCP\Util::imagePath('core', 'desktopapp.svg')); ?>"
-			alt="<?php p($l->t('Desktop client'));?>" />
+	<a href="<?php p($_['clients']['desktop']); ?>" rel="noreferrer" target="_blank">
+		<img src="<?php print_unescaped(image_path('core', 'desktopapp.svg')); ?>"
+			 alt="<?php p($l->t('Desktop client'));?>" />
 	</a>
-	<a href="<?php p($_['clients']['android']); ?>" target="_blank">
-		<img src="<?php print_unescaped(OCP\Util::imagePath('core', 'googleplay.png')); ?>"
-			alt="<?php p($l->t('Android app'));?>" />
+	<a href="<?php p($_['clients']['android']); ?>" rel="noreferrer" target="_blank">
+		<img src="<?php print_unescaped(image_path('core', 'googleplay.png')); ?>"
+			 alt="<?php p($l->t('Android app'));?>" />
 	</a>
-	<a href="<?php p($_['clients']['ios']); ?>" target="_blank">
-		<img src="<?php print_unescaped(OCP\Util::imagePath('core', 'appstore.svg')); ?>"
-			alt="<?php p($l->t('iOS app'));?>" />
+	<a href="<?php p($_['clients']['ios']); ?>" rel="noreferrer" target="_blank">
+		<img src="<?php print_unescaped(image_path('core', 'appstore.svg')); ?>"
+			 alt="<?php p($l->t('iOS app'));?>" />
 	</a>
 
 	<?php if (OC_Util::getEditionString() === ''): ?>
-	<p>
-		<?php print_unescaped($l->t('If you want to support the project
+		<p>
+			<?php print_unescaped($l->t('If you want to support the project
 		<a href="https://nextcloud.com/contribute"
 			target="_blank" rel="noreferrer">join development</a>
-		or
-		<a href="https://help.nextcloud.com/"
-			target="_blank" rel="noreferrer">help other users</a>!'));?>
-	</p>
+		<or></or>
+		<a href="https://nextcloud.com/contribute"
+			target="_blank" rel="noreferrer">spread the word</a>!'));?>
+		</p>
 	<?php endif; ?>
 
 	<?php if(OC_APP::isEnabled('firstrunwizard')) {?>
-	<p><a class="button" href="#" id="showWizard"><?php p($l->t('Show First Run Wizard again'));?></a></p>
+		<p><a class="button" href="#" id="showWizard"><?php p($l->t('Show First Run Wizard again'));?></a></p>
 	<?php }?>
+</div>
+
+<div id="sessions" class="section">
+	<h2><?php p($l->t('Sessions'));?></h2>
+	<span class="hidden-when-empty"><?php p($l->t('Web, desktop and mobile clients currently logged in to your account.'));?></span>
+	<table>
+		<thead class="token-list-header">
+			<tr>
+				<th><?php p($l->t('Device'));?></th>
+				<th><?php p($l->t('Last activity'));?></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody class="token-list icon-loading">
+		</tbody>
+	</table>
+</div>
+
+<div id="apppasswords" class="section">
+	<h2><?php p($l->t('App passwords'));?></h2>
+	<p><?php p($l->t('Passcodes that give an app or device permissions to access your account.'));?></p>
+	<table>
+		<thead class="hidden-when-empty">
+			<tr>
+				<th><?php p($l->t('Name'));?></th>
+				<th><?php p($l->t('Last activity'));?></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody class="token-list icon-loading">
+		</tbody>
+	</table>
+	<div id="app-password-form">
+		<input id="app-password-name" type="text" placeholder="<?php p($l->t('App name')); ?>">
+		<button id="add-app-password" class="button"><?php p($l->t('Create new app password')); ?></button>
+	</div>
+	<div id="app-password-result" class="hidden">
+		<span>
+			<?php p($l->t('Use the credentials below to configure your app or device.')); ?>
+			<?php p($l->t('For security reasons this password will only be shown once.')); ?>
+		</span>
+		<div class="app-password-row">
+			<span class="app-password-label"><?php p($l->t('Username')); ?></span>
+			<input id="new-app-login-name" type="text" readonly="readonly"/>
+		</div>
+		<div class="app-password-row">
+			<span class="app-password-label"><?php p($l->t('Password')); ?></span>
+			<input id="new-app-password" type="text" readonly="readonly"/>
+			<a class="clipboardButton icon icon-clippy" data-clipboard-target="#new-app-password"></a>
+			<button id="app-password-hide" class="button"><?php p($l->t('Done')); ?></button>
+		</div>
+	</div>
 </div>
 
 <?php foreach($_['forms'] as $form) {

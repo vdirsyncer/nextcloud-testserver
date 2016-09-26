@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Nginx Example Configurations &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Nginx Example Configurations &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Nginx Configuration for the Nextcloud 9.x Branches" href="nginx_owncloud_9x.html" />
+    <link rel="next" title="Nginx Configuration for the Nextcloud 9.x Branches" href="nginx_nextcloud_9x.html" />
     <link rel="prev" title="SELinux Configuration" href="selinux_configuration.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,13 +66,14 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud From the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
@@ -83,7 +84,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#example-configurations">Example Configurations</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_owncloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -111,7 +112,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="nginx_owncloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
+    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -124,7 +125,7 @@ community-maintained. (Thank you, contributors!)</p>
 <ul class="simple">
 <li>You need to insert the following code into <strong>your Nginx configuration file.</strong></li>
 <li>The configuration assumes that Nextcloud is installed in
-<code class="docutils literal"><span class="pre">/var/www/owncloud</span></code> and that it is accessed via
+<code class="docutils literal"><span class="pre">/var/www/nextcloud</span></code> and that it is accessed via
 <code class="docutils literal"><span class="pre">http(s)://cloud.example.com</span></code>.</li>
 <li>Adjust <strong>server_name</strong>, <strong>root</strong>, <strong>ssl_certificate</strong> and
 <strong>ssl_certificate_key</strong> to suit your needs.</li>
@@ -132,17 +133,16 @@ community-maintained. (Thank you, contributors!)</p>
 SSL Module documentation</a>).</li>
 <li><code class="docutils literal"><span class="pre">add_header</span></code> statements are only taken from the current level and are not
 cascaded from or to a different level. All necessary <code class="docutils literal"><span class="pre">add_header</span></code>
-statements must be defined  in each level needed. For better readability it
-is possible to move <em>common</em> add
-header statements into a separate file and include that file wherever
-necessary.  However, each <code class="docutils literal"><span class="pre">add_header</span></code> statement must be written in a
-single line to prevent connection problems with sync clients.</li>
+statements must be defined in each level needed. For better readability it
+is possible to move <em>common</em> add header statements into a separate file
+and include that file wherever necessary. However, each <code class="docutils literal"><span class="pre">add_header</span></code>
+statement must be written in a single line to prevent connection problems
+with sync clients.</li>
 </ul>
 <div class="section" id="example-configurations">
 <h2>Example Configurations<a class="headerlink" href="#example-configurations" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><code class="xref doc docutils literal"><span class="pre">nginx_owncloud_8x</span></code></li>
-<li><a class="reference internal" href="nginx_owncloud_9x.html"><em>Nginx Configuration for the Nextcloud 9.x Branches</em></a></li>
+<li><a class="reference internal" href="nginx_nextcloud_9x.html"><em>Nginx Configuration for the Nextcloud 9.x Branches</em></a></li>
 </ul>
 <p>You can use Nextcloud over plain http, but we strongly encourage you to use
 SSL/TLS to encrypt all of your server traffic, and to protect user&#8217;s logins and
@@ -192,8 +192,8 @@ or CSS (.css) files via gzip could also cause such issues.</p>
 to the openssl version used on your system. It will be enabled with the
 <code class="docutils literal"><span class="pre">--with-http_v2_module</span></code> configuration parameter during compilation. The
 dependency should be checked automatically. You can check the presence of
-http_v2 with <code class="docutils literal"><span class="pre">nginx</span> <span class="pre">-V</span> <span class="pre">2&gt;&amp;1</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">http_v2</span> <span class="pre">-o</span></code>. An example how to compile
-nginx can be found in section &#8220;Configure nginx with the
+http_v2 with <code class="docutils literal"><span class="pre">nginx</span> <span class="pre">-V</span> <span class="pre">2&gt;&amp;1</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">http_v2</span> <span class="pre">-o</span></code>. An example of how to
+compile nginx can be found in section &#8220;Configure nginx with the
 <code class="docutils literal"><span class="pre">nginx-cache-purge</span></code> module&#8221; below.</p>
 <p>2.) When you have used SPDY before, the nginx config has to be changed from
 <code class="docutils literal"><span class="pre">listen</span> <span class="pre">443</span> <span class="pre">ssl</span> <span class="pre">spdy;</span></code> to <code class="docutils literal"><span class="pre">listen</span> <span class="pre">443</span> <span class="pre">ssl</span> <span class="pre">http2;</span></code></p>
@@ -241,8 +241,7 @@ sudo vi /etc/apt/sources.list.d/nginx.list
 </pre></div>
 </div>
 <p>Add the following lines (if different, replace <code class="docutils literal"><span class="pre">{trusty}</span></code> by your
-distribution</p>
-<p>name):</p>
+distribution name):</p>
 <div class="highlight-python"><div class="highlight"><pre>deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx
 deb -src http://nginx.org/packages/mainline/ubuntu/ trusty nginx
 </pre></div>
@@ -291,7 +290,7 @@ MODULESDIR = $(CURDIR)/debian/modules
 <div class="highlight-python"><div class="highlight"><pre>--add-module=$(MODULESDIR)/ngx_cache_purge
 </pre></div>
 </div>
-<p>Don&#8217;t forget to escape preceeding lines with a backslash <code class="docutils literal"><span class="pre">\</span></code>.
+<p>Don&#8217;t forget to escape preceding lines with a backslash <code class="docutils literal"><span class="pre">\</span></code>.
 The parameters may now look like:</p>
 <div class="highlight-python"><div class="highlight"><pre>--with-cc-opt=&quot;$(CFLAGS)&quot; \
 --with-ld-opt=&quot;$(LDFLAGS)&quot; \
@@ -347,12 +346,12 @@ your path created:</li>
 <ol class="arabic simple" start="2">
 <li><strong>Configuration</strong></li>
 </ol>
-<div class="highlight-python"><div class="highlight"><pre>sudo vi /etc/nginx/sites-enabled/{your-Nextcloud-nginx-config-file}
+<div class="highlight-python"><div class="highlight"><pre>sudo vi /etc/nginx/sites-enabled/{your-nextcloud-nginx-config-file}
 </pre></div>
 </div>
 <p>Add at the <em>beginning</em>, but <em>outside</em> the <code class="docutils literal"><span class="pre">server{}</span></code> block:</p>
 <div class="highlight-python"><div class="highlight"><pre># cache_purge
-fastcgi_cache_path {path} levels=1:2 keys_zone=OWNCLOUD:100m inactive=60m;
+fastcgi_cache_path {path} levels=1:2 keys_zone=NEXTCLOUD:100m inactive=60m;
 map $request_uri $skip_cache {
      default 1;
      ~*/thumbnail.php 0;
@@ -392,7 +391,7 @@ location ~ \.php(?:$/) {
       # cache_purge
       fastcgi_cache_bypass $skip_cache;
       fastcgi_no_cache $skip_cache;
-      fastcgi_cache OWNCLOUD;
+      fastcgi_cache NEXTCLOUD;
       fastcgi_cache_valid  60m;
       fastcgi_cache_methods GET HEAD;
       }
@@ -420,7 +419,7 @@ This may look like:</p>
 </div>
 <ul class="simple">
 <li>Open your browser and clear your cache.</li>
-<li>Logon to your Nextcloud instance, open the gallery app, move thru your
+<li>Logon to your Nextcloud instance, open the gallery app, move through your
 folders and watch while the thumbnails are generated for the first time.</li>
 <li>You may also watch with eg. <code class="docutils literal"><span class="pre">htop</span></code> your system load while the
 thumbnails are processed.</li>
@@ -442,7 +441,7 @@ the high load before.</li>
     </a>
   </li>
   <li class="next">
-    <a href="nginx_owncloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
+    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
     </a>
   </li>
 </ul>

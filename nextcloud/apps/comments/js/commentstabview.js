@@ -172,7 +172,7 @@
 				this.$el.find('.avatar').avatar(OC.getCurrentUser().uid, 28);
 			}
 			this.delegateEvents();
-			this.$el.find('textarea').on('keyup input change', this._onTypeComment);
+			this.$el.find('textarea').on('keydown input change', this._onTypeComment);
 		},
 
 		_formatItem: function(commentModel) {
@@ -273,7 +273,7 @@
 			// spawn form
 			$comment.after($formRow);
 			$formRow.data('commentEl', $comment);
-			$formRow.find('textarea').on('keyup input change', this._onTypeComment);
+			$formRow.find('textarea').on('keydown input change', this._onTypeComment);
 
 			// copy avatar element from original to avoid flickering
 			$formRow.find('.avatar').replaceWith($comment.find('.avatar').clone());
@@ -301,6 +301,11 @@
 			var limitExceeded = (len > this._commentMaxLength);
 			$field.toggleClass('error', limitExceeded);
 			$submitButton.prop('disabled', limitExceeded);
+
+			//submits form on ctrl+Enter or cmd+Enter
+			if (ev.keyCode === 13 && (ev.ctrlKey || ev.metaKey)) {
+				$submitButton.click();
+			}
 		},
 
 		_onClickComment: function(ev) {
@@ -332,10 +337,10 @@
 					$comment.data('commentEl').remove();
 					$comment.remove();
 				},
-				error: function(msg) {
+				error: function() {
 					$loading.addClass('hidden');
 					$comment.removeClass('disabled');
-					OC.Notification.showTemporary(msg);
+					OC.Notification.showTemporary(t('comments', 'Error occurred while retrieving comment with id {id}', {id: commentId}));
 				}
 			});
 
@@ -383,12 +388,12 @@
 							.html(self._formatMessage(model.get('message')));
 						$row.remove();
 					},
-					error: function(msg) {
+					error: function() {
 						$submit.removeClass('hidden');
 						$loading.addClass('hidden');
 						$textArea.prop('disabled', false);
 
-						OC.Notification.showTemporary(msg);
+						OC.Notification.showTemporary(t('comments', 'Error occurred while updating comment with id {id}', {id: commentId}));
 					}
 				});
 			} else {
@@ -408,12 +413,12 @@
 						$loading.addClass('hidden');
 						$textArea.val('').prop('disabled', false);
 					},
-					error: function(msg) {
+					error: function() {
 						$submit.removeClass('hidden');
 						$loading.addClass('hidden');
 						$textArea.prop('disabled', false);
 
-						OC.Notification.showTemporary(msg);
+						OC.Notification.showTemporary(t('comments', 'Error occurred while posting comment'));
 					}
 				});
 			}

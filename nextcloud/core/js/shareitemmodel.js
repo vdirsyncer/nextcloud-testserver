@@ -154,21 +154,17 @@
 			// Default permissions are Edit (CRUD) and Share
 			// Check if these permissions are possible
 			var permissions = OC.PERMISSION_READ;
-			if (shareType === OC.Share.SHARE_TYPE_REMOTE) {
-				permissions = OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE | OC.PERMISSION_READ;
-			} else {
-				if (this.updatePermissionPossible()) {
-					permissions = permissions | OC.PERMISSION_UPDATE;
-				}
-				if (this.createPermissionPossible()) {
-					permissions = permissions | OC.PERMISSION_CREATE;
-				}
-				if (this.deletePermissionPossible()) {
-					permissions = permissions | OC.PERMISSION_DELETE;
-				}
-				if (this.configModel.get('isResharingAllowed') && (this.sharePermissionPossible())) {
-					permissions = permissions | OC.PERMISSION_SHARE;
-				}
+			if (this.updatePermissionPossible()) {
+				permissions = permissions | OC.PERMISSION_UPDATE;
+			}
+			if (this.createPermissionPossible()) {
+				permissions = permissions | OC.PERMISSION_CREATE;
+			}
+			if (this.deletePermissionPossible()) {
+				permissions = permissions | OC.PERMISSION_DELETE;
+			}
+			if (this.configModel.get('isResharingAllowed') && (this.sharePermissionPossible())) {
+				permissions = permissions | OC.PERMISSION_SHARE;
 			}
 
 			attributes.permissions = permissions;
@@ -191,7 +187,7 @@
 			}).fail(function(xhr) {
 				var msg = t('core', 'Error');
 				var result = xhr.responseJSON;
-				if (result.ocs && result.ocs.meta) {
+				if (result && result.ocs && result.ocs.meta) {
 					msg = result.ocs.meta.message;
 				}
 
@@ -418,12 +414,6 @@
 			if(!_.isObject(share)) {
 				throw "Unknown Share";
 			}
-			if(   share.share_type === OC.Share.SHARE_TYPE_REMOTE
-			   && (   permission === OC.PERMISSION_SHARE
-				   || permission === OC.PERMISSION_DELETE))
-			{
-				return false;
-			}
 			return (share.permissions & permission) === permission;
 		},
 
@@ -494,7 +484,7 @@
 					} else {
 						deferred.resolve();
 					}
-				});
+			});
 
 			return deferred.promise();
 		},
@@ -564,8 +554,8 @@
 		 */
 		editPermissionPossible: function() {
 			return    this.createPermissionPossible()
-				|| this.updatePermissionPossible()
-				|| this.deletePermissionPossible();
+				   || this.updatePermissionPossible()
+				   || this.deletePermissionPossible();
 		},
 
 		/**
@@ -573,8 +563,8 @@
 		 */
 		hasEditPermission: function(shareIndex) {
 			return    this.hasCreatePermission(shareIndex)
-				|| this.hasUpdatePermission(shareIndex)
-				|| this.hasDeletePermission(shareIndex);
+				   || this.hasUpdatePermission(shareIndex)
+				   || this.hasDeletePermission(shareIndex);
 		},
 
 		_getUrl: function(base, params) {
@@ -608,6 +598,33 @@
 			}
 		},
 
+		/**
+		 * Group reshares into a single super share element.
+		 * Does this by finding the most precise share and
+		 * combines the permissions to be the most permissive.
+		 *
+		 * @param {Array} reshares
+		 * @return {Object} reshare
+		 */
+		_groupReshares: function(reshares) {
+			if (!reshares || !reshares.length) {
+				return false;
+			}
+
+			var superShare = reshares.shift();
+			var combinedPermissions = superShare.permissions;
+			_.each(reshares, function(reshare) {
+				// use share have higher priority than group share
+				if (reshare.share_type === OC.Share.SHARE_TYPE_USER && superShare.share_type === OC.Share.SHARE_TYPE_GROUP) {
+					superShare = reshare;
+				}
+				combinedPermissions |= reshare.permissions;
+			});
+
+			superShare.permissions = combinedPermissions;
+			return superShare;
+		},
+
 		fetch: function() {
 			var model = this;
 			this.trigger('request', this);
@@ -625,7 +642,7 @@
 
 				var reshare = false;
 				if (data2[0].ocs.data.length) {
-					reshare = data2[0].ocs.data[0];
+					reshare = model._groupReshares(data2[0].ocs.data);
 				}
 
 				model.set(model.parse({

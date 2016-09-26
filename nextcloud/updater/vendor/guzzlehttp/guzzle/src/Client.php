@@ -200,9 +200,9 @@ class Client implements ClientInterface
         ];
 
         // Use the standard Linux HTTP_PROXY and HTTPS_PROXY if set
-	if (php_sapi_name() == 'cli' && getenv('HTTP_PROXY')) {
-                $settings['proxy']['http'] = getenv('HTTP_PROXY');
-	}
+        if ($proxy = getenv('HTTP_PROXY')) {
+            $settings['proxy']['http'] = $proxy;
+        }
 
         if ($proxy = getenv('HTTPS_PROXY')) {
             $settings['proxy']['https'] = $proxy;

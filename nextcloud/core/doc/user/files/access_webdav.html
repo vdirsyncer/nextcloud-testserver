@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Accessing Nextcloud Files Using WebDAV &mdash; Nextcloud 9 User Manual 9 documentation</title>
+    <title>Accessing Nextcloud Files Using WebDAV &mdash; Nextcloud 10 User Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 User Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 User Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Files &amp; Synchronization" href="index.html" />
     <link rel="next" title="Gallery App" href="gallery_app.html" />
     <link rel="prev" title="Accessing your Files Using the Nextcloud Web Interface" href="access_webgui.html" />
@@ -66,8 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 User Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 User Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webinterface.html">The Nextcloud Web Interface</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Files &amp; Synchronization</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="access_webgui.html">Accessing your Files Using the Nextcloud Web Interface</a></li>
@@ -90,6 +90,7 @@
 <li class="toctree-l2"><a class="reference internal" href="desktop_mobile_sync.html">Desktop and Mobile Synchronization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="encrypting_files.html">Encrypting Your Nextcloud Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="federated_cloud_sharing.html">Using Federation Shares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file_drop.html">Making Anonymous Uploads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="large_file_upload.html">Large File Uploads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quota.html">Storage Quota</a></li>
 <li class="toctree-l2"><a class="reference internal" href="version_control.html">Version Control</a></li>
@@ -98,8 +99,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../pim/index.html">Contacts &amp; Calendar</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../documents.html">Collaborative Document Editing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userpreferences.html">Setting Your Preferences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../session_management.html">Manage Connected Browsers and Devices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../external_storage/index.html">External Storage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../bookmarks.html">Using the Bookmarks App</a></li>
 </ul>
 
 								</ul>
@@ -132,23 +133,22 @@ recommended way of connecting client devices to your Nextcloud servers.</p>
 <div class="section" id="nextcloud-desktop-and-mobile-clients">
 <h2>Nextcloud Desktop and Mobile Clients<a class="headerlink" href="#nextcloud-desktop-and-mobile-clients" title="Permalink to this headline">¶</a></h2>
 <p>The recommended method for keeping your desktop PC synchronized with your
-Nextcloud server is by using the <a class="reference external" href="https://nextcloud.com/install/#install-clients">Nextcloud Desktop Client</a>. You can configure the Nextcloud client
+Nextcloud server is by using the <a class="reference external" href="https://nextcloud.com/install/#install-clients">Nextcloud/ownCloud sync clients</a>. You can configure the client
 to save files in any local directory you want, and you choose which directories
 on the Nextcloud server to sync with. The client displays the current connection
 status and logs all activity, so you always know which remote files have been
 downloaded to your PC, and you can verify that files created and updated on your
 local PC are properly synchronized with the server.</p>
 <p>The recommended method for syncing your Nextcloud server with Android and
-Apple iOS devices is by using the <a class="reference external" href="https://nextcloud.com/install/#install-clients">Nextcloud mobile apps</a>.</p>
-<p>To connect to your Nextcloud server with the <strong>Nextcloud</strong> mobile apps, use the
+Apple iOS devices is by using the <a class="reference external" href="https://nextcloud.com/install/">mobile apps</a>.</p>
+<p>To connect to your Nextcloud server with the mobile apps, use the
 base URL and folder only:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">nextcloud</span>
 </pre></div>
 </div>
-<p>In addition to the mobile apps provided by Nextcloud, you can use other apps to
+<p>In addition to the mobile apps provided by Nextcloud or Nextcloud, you can use other apps to
 connect to Nextcloud from your mobile device using WebDAV. <a class="reference external" href="http://seanashton.net/webdav/">WebDAV Navigator</a> is
-a good (proprietary) app for <a class="reference external" href="https://play.google.com/store/apps/details?id=com.schimera.webdavnavlite">Android devices</a>, <a class="reference external" href="https://itunes.apple.com/app/webdav-navigator/id382551345">iPhones</a>, and <a class="reference external" href="http://appworld.blackberry.com/webstore/content/46816">BlackBerry
-devices</a>. The URL to use on these is:</p>
+a good (proprietary) app for <a class="reference external" href="https://play.google.com/store/apps/details?id=com.schimera.webdavnavlite">Android devices</a> and <a class="reference external" href="https://itunes.apple.com/app/webdav-navigator/id382551345">iPhones</a>. The URL to use on these is:</p>
 <div class="highlight-python"><div class="highlight"><pre>example.com/nextcloud/remote.php/dav/files/USERNAME/
 </pre></div>
 </div>
@@ -357,7 +357,7 @@ check the <a class="reference external" href="http://docs.info.apple.com/article
 drive. Mapping to a drive enables you to browse files stored on an Nextcloud
 server the way you would files stored in a mapped network drive.</p>
 <p>Using this feature requires network connectivity. If you want to store your
-files offline, use the Nextcloud Desktop Client to sync all files on your
+files offline, use the Desktop Client to sync all files on your
 Nextcloud to one or more directories of your local hard drive.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -577,7 +577,7 @@ longer than 30 minutes using Web Client in Windows 7.</p>
 <p>To get the properties of files in the root folder:</p>
 <div class="highlight-bash"><div class="highlight"><pre>    $ curl -X PROPFIND -H <span class="s2">&quot;Depth: 1&quot;</span> -u user:pass https://example.com/nextcloud/remote.php/dav/files/USERNAME/ <span class="p">|</span> xml_pp
     &lt;?xml <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.0&quot;</span> <span class="nv">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>?&gt;
-&lt;d:multistatus xmlns:d<span class="o">=</span><span class="s2">&quot;DAV:&quot;</span> xmlns:oc<span class="o">=</span><span class="s2">&quot;http://nextcloud.com/ns&quot;</span> xmlns:s<span class="o">=</span><span class="s2">&quot;http://sabredav.org/ns&quot;</span>&gt;
+&lt;d:multistatus xmlns:d<span class="o">=</span><span class="s2">&quot;DAV:&quot;</span> xmlns:oc<span class="o">=</span><span class="s2">&quot;http://nextcloud.org/ns&quot;</span> xmlns:s<span class="o">=</span><span class="s2">&quot;http://sabredav.org/ns&quot;</span>&gt;
   &lt;d:response&gt;
     &lt;d:href&gt;/nextcloud/remote.php/dav/files/USERNAME/&lt;/d:href&gt;
     &lt;d:propstat&gt;

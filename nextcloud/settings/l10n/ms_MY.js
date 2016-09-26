@@ -1,11 +1,11 @@
 OC.L10N.register(
     "settings",
     {
+    "Authentication error" : "Ralat pengesahan",
+    "Email saved" : "Emel disimpan",
     "Log" : "Log",
     "Language changed" : "Bahasa diubah",
     "Invalid request" : "Permintaan tidak sah",
-    "Authentication error" : "Ralat pengesahan",
-    "Email saved" : "Emel disimpan",
     "Disable" : "Nyahaktif",
     "Enable" : "Aktif",
     "Delete" : "Padam",
@@ -26,6 +26,7 @@ OC.L10N.register(
     "Change password" : "Ubah kata laluan",
     "Language" : "Bahasa",
     "Help translate" : "Bantu terjemah",
+    "Name" : "Nama",
     "Username" : "Nama pengguna",
     "Create" : "Buat",
     "Default Quota" : "Kuota Lalai",

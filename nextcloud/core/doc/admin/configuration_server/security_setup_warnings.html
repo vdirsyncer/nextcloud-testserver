@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Warnings on Admin Page &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Warnings on Admin Page &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Using the occ Command" href="occ_command.html" />
     <link rel="prev" title="Nextcloud Server Configuration" href="index.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="">Warnings on Admin Page</a><ul>
@@ -81,6 +82,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#outdated-nss-openssl-version">Outdated NSS / OpenSSL version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#your-web-server-is-not-set-up-properly-to-resolve-well-known-caldav-or-well-known-carddav">Your Web server is not set up properly to resolve /.well-known/caldav/ or /.well-known/carddav/</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#some-files-have-not-passed-the-integrity-check">Some files have not passed the integrity check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#your-database-does-not-run-with-read-commited-transaction-isolation-level">Your database does not run with &#8220;READ COMMITED&#8221; transaction isolation level</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
@@ -101,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -144,7 +147,7 @@ might see, and what to do about them.</p>
 <h2>Cache Warnings<a class="headerlink" href="#cache-warnings" title="Permalink to this headline">¶</a></h2>
 <p>&#8220;No memory cache has been configured. To enhance your performance please
 configure a memcache if available.&#8221; Nextcloud supports multiple php caching
-extentions:</p>
+extensions:</p>
 <ul class="simple">
 <li>APC (PHP 5.4 only)</li>
 <li>APCu (PHP 5.5+, minimum required PHP extension version 4.0.6)</li>
@@ -187,7 +190,7 @@ environment.</p>
 </div>
 <div class="section" id="the-strict-transport-security-http-header-is-not-configured">
 <h2>The &#8220;Strict-Transport-Security&#8221; HTTP header is not configured<a class="headerlink" href="#the-strict-transport-security-http-header-is-not-configured" title="Permalink to this headline">¶</a></h2>
-<p>&#8220;The &#8220;Strict-Transport-Security&#8221; HTTP header is not configured to least &#8220;15768000&#8221; seconds.
+<p>&#8220;The &#8220;Strict-Transport-Security&#8221; HTTP header is not configured to least &#8220;15552000&#8221; seconds.
 For enhanced security we recommend enabling HSTS as described in our security tips.&#8221;</p>
 <p>The HSTS header needs to be configured within your Web server by following the
 <a class="reference internal" href="harden_server.html#enable-hsts-label"><span>Enable HTTP Strict Transport Security</span></a> documentation</p>
@@ -203,6 +206,8 @@ at the <a class="reference internal" href="harden_server.html#dev-urandom-label"
 <h2>Your Web server is not yet set up properly to allow file synchronization<a class="headerlink" href="#your-web-server-is-not-yet-set-up-properly-to-allow-file-synchronization" title="Permalink to this headline">¶</a></h2>
 <p>&#8220;Your web server is not yet set up properly to allow file synchronization because
 the WebDAV interface seems to be broken.&#8221;</p>
+<p>At the ownCloud community forums a larger <a class="reference external" href="https://forum.owncloud.org/viewtopic.php?f=17&amp;t=7536">FAQ</a>
+is maintained containing various information and debugging hints.</p>
 </div>
 <div class="section" id="outdated-nss-openssl-version">
 <h2>Outdated NSS / OpenSSL version<a class="headerlink" href="#outdated-nss-openssl-version" title="Permalink to this headline">¶</a></h2>
@@ -227,6 +232,12 @@ refer to <a class="reference internal" href="../issues/general_troubleshooting.h
 <div class="section" id="some-files-have-not-passed-the-integrity-check">
 <h2>Some files have not passed the integrity check<a class="headerlink" href="#some-files-have-not-passed-the-integrity-check" title="Permalink to this headline">¶</a></h2>
 <p>Please refer to the <a class="reference internal" href="../issues/code_signing.html#code-signing-fix-warning-label"><span>Fixing Invalid Code Integrity Messages</span></a> documentation how to debug this issue.</p>
+</div>
+<div class="section" id="your-database-does-not-run-with-read-commited-transaction-isolation-level">
+<h2>Your database does not run with &#8220;READ COMMITED&#8221; transaction isolation level<a class="headerlink" href="#your-database-does-not-run-with-read-commited-transaction-isolation-level" title="Permalink to this headline">¶</a></h2>
+<p>&#8220;Your database does not run with &#8220;READ COMMITED&#8221; transaction isolation level.
+This can cause problems when multiple actions are executed in parallel.&#8221;</p>
+<p>Please refer to <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-transaction-label"><span>Database &#8220;READ COMMITED&#8221; transaction isolation level</span></a> how to configure your database for this requirement.</p>
 </div>
 </div>
 

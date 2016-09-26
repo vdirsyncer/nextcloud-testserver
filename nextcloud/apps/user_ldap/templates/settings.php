@@ -49,6 +49,9 @@ script('user_ldap', [
 
 style('user_ldap', 'settings');
 
+/** @var \OCP\IL10N $l */
+/** @var array $_ */
+
 ?>
 
 <form id="ldap" class="section" action="#" method="post">
@@ -56,20 +59,24 @@ style('user_ldap', 'settings');
 
 	<div id="ldapSettings">
 	<ul>
-		<?php foreach($_['toc'] as $id => $title) { ?>
-			<li id="<?php p($id); ?>"><a href="<?php p($id); ?>"><?php p($title); ?></a></li>
-		<?php } ?>
+		<li id="#ldapWizard1"><a href="#ldapWizard1"><?php p($l->t('Server'));?></a></li>
+		<li id="#ldapWizard2"><a href="#ldapWizard2"><?php p($l->t('Users'));?></a></li>
+		<li id="#ldapWizard3"><a href="#ldapWizard3"><?php p($l->t('Login Attributes'));?></a></li>
+		<li id="#ldapWizard4"><a href="#ldapWizard4"><?php p($l->t('Groups'));?></a></li>
 		<li class="ldapSettingsTabs"><a href="#ldapSettings-2"><?php p($l->t('Expert'));?></a></li>
 		<li class="ldapSettingsTabs"><a href="#ldapSettings-1"><?php p($l->t('Advanced'));?></a></li>
 	</ul>
-		<?php if(OCP\App::isEnabled('user_webdavauth')) {
-			print_unescaped('<p class="ldapwarning">'.$l->t('<b>Warning:</b> Apps user_ldap and user_webdavauth are incompatible. You may experience unexpected behavior. Please ask your system administrator to disable one of them.').'</p>');
-		}
-		if(!function_exists('ldap_connect')) {
-			print_unescaped('<p class="ldapwarning">'.$l->t('<b>Warning:</b> The PHP LDAP module is not installed, the backend will not work. Please ask your system administrator to install it.').'</p>');
-		}
-		?>
-	<?php print_unescaped($_['tabs']); ?>
+	<?php if(OCP\App::isEnabled('user_webdavauth')) {
+		print_unescaped('<p class="ldapwarning">'.$l->t('<b>Warning:</b> Apps user_ldap and user_webdavauth are incompatible. You may experience unexpected behavior. Please ask your system administrator to disable one of them.').'</p>');
+	}
+	if(!function_exists('ldap_connect')) {
+		print_unescaped('<p class="ldapwarning">'.$l->t('<b>Warning:</b> The PHP LDAP module is not installed, the backend will not work. Please ask your system administrator to install it.').'</p>');
+	}
+	?>
+	<?php require_once(__DIR__ . '/part.wizard-server.php'); ?>
+	<?php require_once(__DIR__ . '/part.wizard-userfilter.php'); ?>
+	<?php require_once(__DIR__ . '/part.wizard-loginfilter.php'); ?>
+	<?php require_once(__DIR__ . '/part.wizard-groupfilter.php'); ?>
 	<fieldset id="ldapSettings-1">
 		<div id="ldapAdvancedAccordion">
 			<h3><?php p($l->t('Connection Settings'));?></h3>
@@ -107,7 +114,7 @@ style('user_ldap', 'settings');
 	</fieldset>
 	<fieldset id="ldapSettings-2">
 		<p><strong><?php p($l->t('Internal Username'));?></strong></p>
-		<p class="ldapIndent"><?php p($l->t('By default the internal username will be created from the UUID attribute. It makes sure that the username is unique and characters do not need to be converted. The internal username has the restriction that only these characters are allowed: [ a-zA-Z0-9_.@- ].  Other characters are replaced with their ASCII correspondence or simply omitted. On collisions a number will be added/increased. The internal username is used to identify a user internally. It is also the default name for the user home folder. It is also a part of remote URLs, for instance for all *DAV services. With this setting, the default behavior can be overridden. To achieve a similar behavior as before ownCloud 5 enter the user display name attribute in the following field. Leave it empty for default behavior. Changes will have effect only on newly mapped (added) LDAP users.'));?></p>
+		<p class="ldapIndent"><?php p($l->t('By default the internal username will be created from the UUID attribute. It makes sure that the username is unique and characters do not need to be converted. The internal username has the restriction that only these characters are allowed: [ a-zA-Z0-9_.@- ].  Other characters are replaced with their ASCII correspondence or simply omitted. On collisions a number will be added/increased. The internal username is used to identify a user internally. It is also the default name for the user home folder. It is also a part of remote URLs, for instance for all *DAV services. With this setting, the default behavior can be overridden. Leave it empty for default behavior. Changes will have effect only on newly mapped (added) LDAP users.'));?></p>
 		<p class="ldapIndent"><label for="ldap_expert_username_attr"><?php p($l->t('Internal Username Attribute:'));?></label><input type="text" id="ldap_expert_username_attr" name="ldap_expert_username_attr" data-default="<?php p($_['ldap_expert_username_attr_default']); ?>" /></p>
 		<p><strong><?php p($l->t('Override UUID detection'));?></strong></p>
 		<p class="ldapIndent"><?php p($l->t('By default, the UUID attribute is automatically detected. The UUID attribute is used to doubtlessly identify LDAP users and groups. Also, the internal username will be created based on the UUID, if not specified otherwise above. You can override the setting and pass an attribute of your choice. You must make sure that the attribute of your choice can be fetched for both users and groups and it is unique. Leave it empty for default behavior. Changes will have effect only on newly mapped (added) LDAP users and groups.'));?></p>
@@ -120,5 +127,5 @@ style('user_ldap', 'settings');
 	</fieldset>
 	</div>
 	<!-- Spinner Template -->
-	<img class="ldapSpinner hidden" src="<?php p(\OCP\Util::imagePath('core', 'loading.gif')); ?>">
+	<img class="ldapSpinner hidden" src="<?php p(image_path('core', 'loading.gif')); ?>">
 </form>

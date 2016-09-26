@@ -38,8 +38,7 @@ input#openid, input#webdav { width:20em; }
 #displaynameform,
 #lostpassword,
 #groups,
-#passwordform,
-#language {
+#passwordform {
 	display: inline-block;
 	margin-bottom: 0;
 	padding-bottom: 0;
@@ -100,6 +99,67 @@ input#identity {
 table.nostyle label { margin-right: 2em; }
 table.nostyle td { padding: 0.2em 0; }
 
+#sessions table,
+#apppasswords table {
+	width: 100%;
+	min-height: 50px;
+	padding-top: 5px;
+	max-width: 580px;
+}
+#sessions table th,
+#apppasswords table th {
+	opacity: .5;
+}
+#sessions table th,
+#sessions table td,
+#apppasswords table th,
+#apppasswords table td {
+	padding: 10px 10px 10px 0;
+}
+
+#sessions .token-list td,
+#apppasswords .token-list td {
+	border-top: 1px solid #DDD;
+	text-overflow: ellipsis;
+	max-width: 200px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+#sessions tr *:nth-child(2),
+#apppasswords tr *:nth-child(2) {
+	text-align: right;
+}
+#sessions .token-list td a.icon-delete,
+#apppasswords .token-list td a.icon-delete {
+	display: block;
+	opacity: 0.6;
+}
+
+#new-app-login-name,
+#new-app-password {
+	width: 186px;
+	font-family: monospace;
+	background-color: lightyellow;
+}
+.app-password-row {
+	display: table-row;
+}
+
+.app-password-row .icon {
+	background-size: 16px 16px;
+	display: inline-block;
+	position: relative;
+	top: 3px;
+	margin-left: 5px;
+	margin-right: 8px;
+}
+
+.app-password-label {
+	display: table-cell;
+	padding-right: 1em;
+}
+
 /* USERS */
 #newgroup-init a span { margin-left: 20px; }
 #newgroup-init a span:before {
@@ -122,10 +182,6 @@ table.nostyle td { padding: 0.2em 0; }
 	top: 3px;
 	height: 32px;
 	width: 32px;
-}
-
-.ie8 #newgroup-form .icon-add {
-	height: 30px;
 }
 
 .isgroup .groupname {
@@ -194,6 +250,14 @@ span.usersLastLoginTooltip { white-space: nowrap; }
 	color: #000000;
 }
 
+#userlist .mailAddress .loading-small {
+	width: 16px;
+	height: 16px;
+	margin-left: -26px;
+	position: relative;
+	top: 3px;
+}
+
 tr:hover>td.password>span, tr:hover>td.displayName>span { margin:0; cursor:pointer; }
 tr:hover>td.remove>a, tr:hover>td.password>img,tr:hover>td.displayName>img, tr:hover>td.quota>img { visibility:visible; cursor:pointer; }
 td.remove {
@@ -235,10 +299,6 @@ input.userFilter {width: 200px;}
 #headerAvatar {
 	width: 32px;
 }
-
-
-.ie8 table.hascontrols{border-collapse:collapse;width: 100%;}
-.ie8 table.hascontrols tbody tr{border-collapse:collapse;border: 1px solid #ddd !important;}
 
 /* used to highlight a user row in red */
 #userlist tr.row-warning {
@@ -286,7 +346,7 @@ span.version {
 	padding-left: 25px;
 }
 .app-level .approved {
-	border-color: #e8c805;
+	border-color: #0082c9;
 }
 .app-level .experimental {
 	background-color: #ce3702;
@@ -312,21 +372,20 @@ span.version {
 .section h2.app-name {
 	margin-bottom: 8px;
 }
+.followupsection {
+	display: block;
+	padding: 0 30px 30px 30px;
+	color: #555;
+	margin-bottom: 24px;
+	margin-top: -30px;
+	position: relative;
+}
 .app-image {
 	float: left;
 	padding-right: 10px;
 	width: 80px;
 	height: 80px;
-}
-.app-image img {
-	max-width: 80px;
-	max-height: 80px;
-}
-.app-image-icon img {
-	background-color: #ccc;
-	width: 60px;
-	padding: 10px;
-	border-radius: 3px;
+	opacity: 0.8;
 }
 .app-name,
 .app-version,
@@ -495,18 +554,6 @@ span.indeterminate {
 	margin-top: -7px;
 }
 
-.ie8 .strengthify-wrapper {
-	left: 389px;
-}
-
-.onlyInIE8 {
-	display: none;
-}
-
-.ie8 .onlyInIE8 {
-	display: inline;
-}
-
 /* OPERA hack for strengthify*/
 doesnotexist:-o-prefocus, .strengthify-wrapper {
 	left: 185px;
@@ -562,4 +609,13 @@ doesnotexist:-o-prefocus, .strengthify-wrapper {
 
 #warning {
 	color: red;
+}
+
+/* SELECT */
+
+.select2-container-multi .select2-choices .select2-search-choice {
+	background-color: rgba(240,240,240,.9)!important;
+	border-color: rgba(240,240,240,.9)!important;
+	box-shadow: none!important;
+	background-image: none!important;
 }

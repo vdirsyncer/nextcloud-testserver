@@ -19,7 +19,6 @@ OC.L10N.register(
     "Back" : "返回",
     "Continue" : "繼續",
     "LDAP" : "LDAP",
-    "Advanced" : "進階",
-    "{nthServer}. Server" : "{nthServer}. 伺服器"
+    "Advanced" : "進階"
 },
 "nplurals=1; plural=0;");

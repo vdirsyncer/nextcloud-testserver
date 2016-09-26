@@ -7,7 +7,7 @@
  *
  * @author Olivier Paroz <owncloud@interfasys.ch>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  */
 
 namespace OCA\Gallery\Controller;
@@ -92,7 +92,7 @@ class FilesApiController extends ApiController {
 		$featuresArray = explode(';', $features);
 		$mediaTypesArray = explode(';', $mediatypes);
 		try {
-			return $this->getFiles($location, $featuresArray, $etag, $mediaTypesArray);
+			return $this->getFilesAndAlbums($location, $featuresArray, $etag, $mediaTypesArray);
 		} catch (\Exception $exception) {
 			return $this->jsonError($exception);
 		}

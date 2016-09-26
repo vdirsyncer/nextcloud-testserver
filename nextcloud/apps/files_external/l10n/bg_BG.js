@@ -4,12 +4,9 @@ OC.L10N.register(
     "Step 1 failed. Exception: %s" : "Стъпка 1 - неуспешна. Грешка: %s",
     "Step 2 failed. Exception: %s" : "Стъпка 2 - неуспешна. Грешка: %s",
     "External storage" : "Външно дисково пространство",
-    "Storage with id \"%i\" not found" : "Хранилище с име \"%i\" не е намерено",
-    "Invalid mount point" : "Невалиден път за мониторане на файлова система",
     "Personal" : "Личен",
     "System" : "Системен",
     "Grant access" : "Разреши достъп",
-    "Access granted" : "Достъпът разрешен",
     "Generate keys" : "Генериране на криптографски ключове",
     "Error generating key pair" : "Грешка при генериране на криптографски ключове",
     "All users. Type to select user or group." : "Всички потребители. Пиши, за да избереш потребител или група.",
@@ -18,6 +15,8 @@ OC.L10N.register(
     "Username" : "Потребителско Име",
     "Password" : "Парола",
     "Save" : "Запазване",
+    "Storage with id \"%i\" not found" : "Хранилище с име \"%i\" не е намерено",
+    "Invalid mount point" : "Невалиден път за мониторане на файлова система",
     "None" : "Няма",
     "App key" : "App key",
     "App secret" : "App secret",
@@ -63,8 +62,6 @@ OC.L10N.register(
     "Add storage" : "Добави дисково пространство",
     "Advanced settings" : "Разширени настройки",
     "Delete" : "Изтрий",
-    "Allow users to mount the following external storage" : "Разреши на потребителите да прикачват следното външно дисково пространство",
-    "<b>Note:</b> The FTP support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Note:</b> PHP подръжката на FTP не е включена или инсталирана. Прикачването на %s не е възможно. Моля, поискай системния администратор да я инсталира.",
-    "SMB / CIFS using OC login" : "SMB / CIFS използвайки OC профил"
+    "Allow users to mount the following external storage" : "Разреши на потребителите да прикачват следното външно дисково пространство"
 },
 "nplurals=2; plural=(n != 1);");

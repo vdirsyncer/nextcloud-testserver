@@ -3,7 +3,7 @@
 Handlebars.registerHelper('score', function() {
 	if(this.score) {
 		var score = Math.round( this.score / 10 );
-		var imageName = 'rating/s' + score + '.png';
+		var imageName = 'rating/s' + score + '.svg';
 
 		return new Handlebars.SafeString('<img src="' + OC.imagePath('core', imageName) + '">');
 	}
@@ -119,9 +119,27 @@ OC.Settings.Apps = OC.Settings.Apps || {
 					$('#apps-list-empty').removeClass('hidden').find('h2').text(t('settings', 'No apps found for your version'));
 				}
 
-				$('.app-level .official').tipsy({fallback: t('settings', 'Official apps are developed by and within the Nextcloud community. They offer functionality central to Nextcloud and are ready for production use.')});
-				$('.app-level .approved').tipsy({fallback: t('settings', 'Approved apps are developed by trusted developers and have passed a cursory security check. They are actively maintained in an open code repository and their maintainers deem them to be stable for casual to normal use.')});
-				$('.app-level .experimental').tipsy({fallback: t('settings', 'This app is not checked for security issues and is new or known to be unstable. Install at your own risk.')});
+				$('.enable.needs-download').tooltip({
+					title: t('settings', 'The app will be downloaded from the app store'),
+					placement: 'bottom',
+					container: 'body'
+				});
+
+				$('.app-level .official').tooltip({
+					title: t('settings', 'Official apps are developed by and within the community. They offer central functionality and are ready for production use.'),
+					placement: 'bottom',
+					container: 'body'
+				});
+				$('.app-level .approved').tooltip({
+					title: t('settings', 'Approved apps are developed by trusted developers and have passed a cursory security check. They are actively maintained in an open code repository and their maintainers deem them to be stable for casual to normal use.'),
+					placement: 'bottom',
+					container: 'body'
+				});
+				$('.app-level .experimental').tooltip({
+					title: t('settings', 'This app is not checked for security issues and is new or known to be unstable. Install at your own risk.'),
+					placement: 'bottom',
+					container: 'body'
+				});
 			},
 			complete: function() {
 				var availableUpdates = 0;
@@ -181,7 +199,7 @@ OC.Settings.Apps = OC.Settings.Apps || {
 
 			currentImage.onload = function() {
 				page.find('.app-image')
-					.append(this)
+					.append(OC.Settings.Apps.imageUrl(app.preview, app.detailpage))
 					.fadeIn();
 			};
 		}
@@ -191,21 +209,38 @@ OC.Settings.Apps = OC.Settings.Apps || {
 			OC.Settings.Apps.isType(app, 'authentication') || OC.Settings.Apps.isType(app, 'logging') ||
 			OC.Settings.Apps.isType(app, 'prevent_group_restriction')) {
 			page.find(".groups-enable").hide();
-			page.find(".groups-enable__checkbox").attr('checked', null);
+			page.find(".groups-enable__checkbox").prop('checked', false);
 		} else {
 			page.find('#group_select').val((app.groups || []).join('|'));
 			if (app.active) {
 				if (app.groups.length) {
 					OC.Settings.Apps.setupGroupsSelect(page.find('#group_select'));
-					page.find(".groups-enable__checkbox").attr('checked','checked');
+					page.find(".groups-enable__checkbox").prop('checked', true);
 				} else {
-					page.find(".groups-enable__checkbox").attr('checked', null);
+					page.find(".groups-enable__checkbox").prop('checked', false);
 				}
 				page.find(".groups-enable").show();
 			} else {
 				page.find(".groups-enable").hide();
 			}
 		}
+	},
+
+	/**
+	 * Returns the image for apps listing
+	 * url : the url of the image
+	 * appfromstore: bool to check whether the app is fetched from store or not.
+	 */
+
+	imageUrl : function (url, appfromstore) {
+		var img = '<svg width="72" height="72" viewBox="0 0 72 72">';
+
+		if (appfromstore) {
+			img += '<image x="0" y="0" width="72" height="72" preserveAspectRatio="xMinYMin meet" xlink:href="' + url + '"  class="app-icon" /></svg>';
+		} else {
+			img += '<image x="0" y="0" width="72" height="72" preserveAspectRatio="xMinYMin meet" filter="url(#invertIcon)" xlink:href="' + url + '"  class="app-icon"></image></svg>';
+		}
+		return img;
 	},
 
 	isType: function(app, type){
@@ -287,7 +322,7 @@ OC.Settings.Apps = OC.Settings.Apps || {
 
 						if (OC.Settings.Apps.isType(app, 'filesystem') || OC.Settings.Apps.isType(app, 'prelogin') ||
 							OC.Settings.Apps.isType(app, 'authentication') || OC.Settings.Apps.isType(app, 'logging')) {
-							element.parent().find(".groups-enable").attr('checked', null);
+							element.parent().find(".groups-enable").prop('checked', true);
 							element.parent().find(".groups-enable").hide();
 							element.parent().find('#group_select').hide().val(null);
 						} else {
@@ -378,7 +413,9 @@ OC.Settings.Apps = OC.Settings.Apps || {
 					if(container.children('li[data-id="'+entry.id+'"]').length === 0){
 						var li=$('<li></li>');
 						li.attr('data-id', entry.id);
-						var img= $('<img class="app-icon"/>').attr({ src: entry.icon});
+						var img = '<svg width="32" height="32" viewBox="0 0 32 32">';
+						img += '<defs><filter id="invert"><feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0" /></filter></defs>';
+						img += '<image x="0" y="0" width="32" height="32" preserveAspectRatio="xMinYMin meet" filter="url(#invert)" xlink:href="' + entry.icon + '"  class="app-icon" /></svg>';
 						var a=$('<a></a>').attr('href', entry.href);
 						var filename=$('<span></span>');
 						var loading = $('<div class="icon-loading-dark"></div>').css('display', 'none');
@@ -407,11 +444,6 @@ OC.Settings.Apps = OC.Settings.Apps || {
 							.animate({opacity: 0.5})
 							.animate({opacity: 1})
 							.animate({opacity: 0.75});
-
-						if (!OC.Util.hasSVGSupport() && entry.icon.match(/\.svg$/i)) {
-							$(img).addClass('svg');
-							OC.Util.replaceSVG();
-						}
 					}
 				}
 
@@ -506,7 +538,7 @@ OC.Settings.Apps = OC.Settings.Apps || {
 		if (apps.length === 0) {
 			$appList.addClass('hidden');
 			$emptyList.removeClass('hidden');
-			$emptyList.removeClass('hidden').find('h2').text(t('settings', 'No apps found for "{query}"', {
+			$emptyList.removeClass('hidden').find('h2').text(t('settings', 'No apps found for {query}', {
 				query: query
 			}));
 		} else {

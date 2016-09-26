@@ -6,20 +6,20 @@ The primary purpose of the Nextcloud server-side encryption is to protect users'
 files on remote storage, such as Dropbox and Google Drive, and to do it easily 
 and seamlessly from within Nextcloud.
 
-In Nextcloud 9 the server-side encryption separates encryption of local and 
+In Nextcloud 9.0 the server-side encryption separates encryption of local and 
 remote storage. This allows you to encrypt remote storage, such as Dropbox and 
 Google, without having to also encrypt your home storage on your Nextcloud 
 server.
 
-.. note:: Starting with Nextcloud 9 we support Authenticated Encryption for all
+.. note:: Starting with Nextcloud 9.0 we support Authenticated Encryption for all
    newly encrypted files. See https://hackerone.com/reports/108082 for more 
    technical information about the impact.
    
-   For maximum security make sure to configure external storage with "Check for
-   changes: Never". This will let Nextcloud ignore new files not added via
-   Nextcloud, so a malicious external storage administrator could not add new
-   files to the storage without your knowledge. Of course, this is not wise if
-   your external storage is subject to legitimate external changes.
+   For maximum security make sure to configure external storage with "Check for 
+   changes: Never". This will let Nextcloud ignore new files not added via Nextcloud, 
+   so a malicious external storage administrator could not add new files to the 
+   storage without your knowledge. Of course, this is not wise if your external 
+   storage is subject to legitimate external changes.
 
 Nextcloud server-side encryption encrypts files stored on the Nextcloud server, 
 and files on remote storage that is connected to your Nextcloud server. 
@@ -65,12 +65,12 @@ storage.
    it is better to use other encryption tools, such as file-level or 
    whole-disk encryption. 
    
-   Note also that SSL terminates at or before Apache on the Nextcloud server,
-   and all files will exist in an unencrypted state between the SSL connection
-   termination and the Nextcloud code that encrypts and decrypts files. This is
-   also potentially exploitable by anyone with administrator access to your
-   server. Read `How Nextcloud uses encryption to protect your data
-   <https://owncloud.org/blog/how-owncloud-uses-encryption-to-protect-your-
+   Note also that SSL terminates at or before Apache on the Nextcloud server, and 
+   all files will exist in an unencrypted state between the SSL connection 
+   termination and the Nextcloud code that encrypts and decrypts files. This is 
+   also potentially exploitable by anyone with administrator access to your 
+   server. Read `How Nextcloud uses encryption to protect your data 
+   <https://owncloud.org/blog/how-owncloud-uses-encryption-to-protect-your- 
    data/>`_ for more information.
    
 Before Enabling Encryption
@@ -127,8 +127,7 @@ log-out and log-in again."
 Share owners may need to re-share files after encryption is enabled; users 
 trying to access the share will see a message advising them to ask the share 
 owner to re-share the file with them. For individual shares, un-share and 
-re-share the file. For group shares, share with any individuals who can't 
-access 
+re-share the file. For group shares, share with any individuals who can't access 
 the share. This updates the encryption, and then the share owner can remove the 
 individual shares.
 
@@ -210,7 +209,7 @@ module is OC_DEFAULT_MODULE)::
 The [module ID] is taken from the ``encryption:list-modules`` command.
 
 Encrypt all data files for all users. For performance reasons, when you enable 
-encryption on a Nextcloud server only new and changed files are encrypted. This 
+encryption on an Nextcloud server only new and changed files are encrypted. This 
 command gives you the option to encrypt all files. You must first put your 
 Nextcloud server into single-user mode to prevent any user activity until 
 encryption is completed::

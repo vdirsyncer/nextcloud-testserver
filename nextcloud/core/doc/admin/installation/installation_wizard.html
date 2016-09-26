@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation Wizard &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Installation Wizard &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Installing Nextcloud From the Command Line" href="command_line_installation.html" />
+    <link rel="next" title="Installing Nextcloud from the Command Line" href="command_line_installation.html" />
     <link rel="prev" title="Nextcloud Deployment Recommendations" href="deployment_recommendations.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
@@ -79,7 +80,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#setting-strong-directory-permissions">Setting Strong Directory Permissions</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud From the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
@@ -87,7 +88,7 @@
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_owncloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -115,7 +116,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="command_line_installation.html" title="Next Chapter: Installing Nextcloud From the Command Line"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing Ne... &raquo;</span>
+    <a href="command_line_installation.html" title="Next Chapter: Installing Nextcloud from the Command Line"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing Ne... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -161,27 +162,26 @@ are using an HTTP server other than Apache, or you may wish to store your
 Nextcloud data in a different location for other reasons (e.g. on a storage
 server). It is best to configure your data directory location at installation,
 as it is difficult to move after installation. You may put it anywhere; in this
-example is it located in <code class="docutils literal"><span class="pre">/opt/nextcloud</span></code>. This directory must already exist,
+example is it located in <code class="docutils literal"><span class="pre">/var/oc_data</span></code>. This directory must already exist,
 and must be owned by your HTTP user (see
 <a class="reference internal" href="#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>).</p>
 </div>
 <div class="section" id="database-choice">
 <span id="database-choice-label"></span><h2>Database Choice<a class="headerlink" href="#database-choice" title="Permalink to this headline">¶</a></h2>
-<p>SQLite is the default database for Nextcloud Server (it is not available and not supported
-in the Nextcloud Enterprise edition), and it is good only for testing and lightweight single-user
-setups without client synchronization. Supported databases are MySQL, MariaDB,
-Oracle 11g (Nextcloud Enterprise edition only), and PostgreSQL, and we recommend
-<a class="reference internal" href="system_requirements.html"><em>MySQL/MariaDB</em></a>. Your database and PHP connectors
-must be installed before you run the Installation Wizard. When you install
-Nextcloud from packages all the necessary dependencies will be satisfied (see
-<a class="reference internal" href="source_installation.html"><em>Manual Installation on Linux</em></a> for a detailed listing of required and optional PHP
-modules). You will need the root database login, or any administrator login that
-has permissions to create and modify databases, and then enter any name you want
-for your Nextcloud database.</p>
+<p>SQLite is the default database for Nextcloud Server and it is good only for
+testing and lightweight single-user setups without client synchronization.
+Supported databases are MySQL, MariaDB, Oracle 11g, and PostgreSQL, and we
+recommend <a class="reference internal" href="system_requirements.html"><em>MySQL/MariaDB</em></a>. Your database and PHP
+connectors must be installed before you run the Installation Wizard. When
+you install Nextcloud from packages all the necessary dependencies will be
+satisfied (see <a class="reference internal" href="source_installation.html"><em>Manual Installation on Linux</em></a> for a detailed listing of required
+and optional PHP modules). You will need the root database login, or any
+administrator login that has permissions to create and modify databases, and
+then enter any name you want for your Nextcloud database.</p>
 <p>After you enter your root or administrator login for your database, the
 installer creates a special database user with privileges limited to the
 Nextcloud database. Then Nextcloud needs only the special Nextcloud database
-user, and drops the root DB login. This user is named for your Nextcloud admin
+user, and drops the root dB login. This user is named for your Nextcloud admin
 user, with an <code class="docutils literal"><span class="pre">oc_</span></code> prefix, and then given a random password. The Nextcloud
 database user and password are written into <code class="docutils literal"><span class="pre">config.php</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;dbuser&#39; =&gt; &#39;oc_molly&#39;,
@@ -243,44 +243,44 @@ ownership as above could result in some issues if the NFS mount is
 lost.</p>
 </div>
 <p>The easy way to set the correct permissions is to copy and run this script.
-Replace the <code class="docutils literal"><span class="pre">ncpath</span></code> variable with the path to your Nextcloud directory, and
+Replace the <code class="docutils literal"><span class="pre">ocpath</span></code> variable with the path to your Nextcloud directory, and
 replace the <code class="docutils literal"><span class="pre">htuser</span></code> and <code class="docutils literal"><span class="pre">htgroup</span></code> variables with your HTTP user and group:</p>
 <div class="highlight-python"><div class="highlight"><pre>#!/bin/bash
-ncpath=&#39;/var/www/nextcloud&#39;
+ocpath=&#39;/var/www/nextcloud&#39;
 htuser=&#39;www-data&#39;
 htgroup=&#39;www-data&#39;
 rootuser=&#39;root&#39;
 
 printf &quot;Creating possible missing Directories\n&quot;
-mkdir -p $ncpath/data
-mkdir -p $ncpath/assets
-mkdir -p $ncpath/updater
+mkdir -p $ocpath/data
+mkdir -p $ocpath/assets
+mkdir -p $ocpath/updater
 
 printf &quot;chmod Files and Directories\n&quot;
-find ${ncpath} -type f -print0 | xargs -0 chmod 0640
-find ${ncpath} -type d -print0 | xargs -0 chmod 0750
+find ${ocpath} -type f -print0 | xargs -0 chmod 0640
+find ${ocpath} -type d -print0 | xargs -0 chmod 0750
 
 printf &quot;chown Directories\n&quot;
-chown -R ${rootuser}:${htgroup} ${ncpath}
-chown -R ${htuser}:${htgroup} ${ncpath}/apps/
-chown -R ${htuser}:${htgroup} ${ncpath}/assets/
-chown -R ${htuser}:${htgroup} ${ncpath}/config/
-chown -R ${htuser}:${htgroup} ${ncpath}/data/
-chown -R ${htuser}:${htgroup} ${ncpath}/themes/
-chown -R ${htuser}:${htgroup} ${ncpath}/updater/
+chown -R ${rootuser}:${htgroup} ${ocpath}/
+chown -R ${htuser}:${htgroup} ${ocpath}/apps/
+chown -R ${htuser}:${htgroup} ${ocpath}/assets/
+chown -R ${htuser}:${htgroup} ${ocpath}/config/
+chown -R ${htuser}:${htgroup} ${ocpath}/data/
+chown -R ${htuser}:${htgroup} ${ocpath}/themes/
+chown -R ${htuser}:${htgroup} ${ocpath}/updater/
 
-chmod +x ${ncpath}/occ
+chmod +x ${ocpath}/occ
 
 printf &quot;chmod/chown .htaccess\n&quot;
-if [ -f ${ncpath}/.htaccess ]
+if [ -f ${ocpath}/.htaccess ]
  then
-  chmod 0644 ${ncpath}/.htaccess
-  chown ${rootuser}:${htgroup} ${ncpath}/.htaccess
+  chmod 0644 ${ocpath}/.htaccess
+  chown ${rootuser}:${htgroup} ${ocpath}/.htaccess
 fi
-if [ -f ${ncpath}/data/.htaccess ]
+if [ -f ${ocpath}/data/.htaccess ]
  then
-  chmod 0644 ${ncpath}/data/.htaccess
-  chown ${rootuser}:${htgroup} ${ncpath}/data/.htaccess
+  chmod 0644 ${ocpath}/data/.htaccess
+  chown ${rootuser}:${htgroup} ${ocpath}/data/.htaccess
 fi
 </pre></div>
 </div>
@@ -299,7 +299,7 @@ the group owner</li>
 <li>The <code class="file docutils literal"><span class="pre">themes/</span></code> directory should be owned by <code class="docutils literal"><span class="pre">[HTTP</span> <span class="pre">user]:[HTTP</span> <span class="pre">group]</span></code></li>
 <li>The <code class="file docutils literal"><span class="pre">assets/</span></code> directory should be owned by <code class="docutils literal"><span class="pre">[HTTP</span> <span class="pre">user]:[HTTP</span> <span class="pre">group]</span></code></li>
 <li>The <code class="file docutils literal"><span class="pre">data/</span></code> directory should be owned by <code class="docutils literal"><span class="pre">[HTTP</span> <span class="pre">user]:[HTTP</span> <span class="pre">group]</span></code></li>
-<li>The <code class="file docutils literal"><span class="pre">[ncpath]/.htaccess</span></code> file should be owned by <code class="docutils literal"><span class="pre">root:[HTTP</span> <span class="pre">group]</span></code></li>
+<li>The <code class="file docutils literal"><span class="pre">[ocpath]/.htaccess</span></code> file should be owned by <code class="docutils literal"><span class="pre">root:[HTTP</span> <span class="pre">group]</span></code></li>
 <li>The <code class="file docutils literal"><span class="pre">data/.htaccess</span></code> file should be owned by <code class="docutils literal"><span class="pre">root:[HTTP</span> <span class="pre">group]</span></code></li>
 <li>Both <code class="file docutils literal"><span class="pre">.htaccess</span></code> files are read-write file owner, read-only group and
 world</li>
@@ -318,7 +318,7 @@ permissions to allow upgrading.</p>
     </a>
   </li>
   <li class="next">
-    <a href="command_line_installation.html" title="Next Chapter: Installing Nextcloud From the Command Line"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing Ne... &raquo;</span>
+    <a href="command_line_installation.html" title="Next Chapter: Installing Nextcloud from the Command Line"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing Ne... &raquo;</span>
     </a>
   </li>
 </ul>

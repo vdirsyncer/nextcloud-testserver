@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Encryption Configuration &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Encryption Configuration &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Transactional File Locking" href="files_locking_transactional.html" />
     <link rel="prev" title="External Storage Authentication mechanisms" href="external_storage/auth_mechanisms.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -129,20 +130,20 @@
 <p>The primary purpose of the Nextcloud server-side encryption is to protect users&#8217;
 files on remote storage, such as Dropbox and Google Drive, and to do it easily
 and seamlessly from within Nextcloud.</p>
-<p>In Nextcloud 9 the server-side encryption separates encryption of local and
+<p>In Nextcloud 9.0 the server-side encryption separates encryption of local and
 remote storage. This allows you to encrypt remote storage, such as Dropbox and
 Google, without having to also encrypt your home storage on your Nextcloud
 server.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Starting with Nextcloud 9 we support Authenticated Encryption for all
+<p>Starting with Nextcloud 9.0 we support Authenticated Encryption for all
 newly encrypted files. See <a class="reference external" href="https://hackerone.com/reports/108082">https://hackerone.com/reports/108082</a> for more
 technical information about the impact.</p>
 <p class="last">For maximum security make sure to configure external storage with &#8220;Check for
-changes: Never&#8221;. This will let Nextcloud ignore new files not added via
-Nextcloud, so a malicious external storage administrator could not add new
-files to the storage without your knowledge. Of course, this is not wise if
-your external storage is subject to legitimate external changes.</p>
+changes: Never&#8221;. This will let Nextcloud ignore new files not added via Nextcloud,
+so a malicious external storage administrator could not add new files to the
+storage without your knowledge. Of course, this is not wise if your external
+storage is subject to legitimate external changes.</p>
 </div>
 <p>Nextcloud server-side encryption encrypts files stored on the Nextcloud server,
 and files on remote storage that is connected to your Nextcloud server.
@@ -187,8 +188,8 @@ would require client-side encryption, which this app does not provide. If
 your Nextcloud server is not connected to any external storage services then
 it is better to use other encryption tools, such as file-level or
 whole-disk encryption.</p>
-<p class="last">Note also that SSL terminates at or before Apache on the Nextcloud server,
-and all files will exist in an unencrypted state between the SSL connection
+<p class="last">Note also that SSL terminates at or before Apache on the Nextcloud server, and
+all files will exist in an unencrypted state between the SSL connection
 termination and the Nextcloud code that encrypts and decrypts files. This is
 also potentially exploitable by anyone with administrator access to your
 server. Read <a class="reference external" href="https://owncloud.org/blog/how-owncloud-uses-encryption-to-protect-your-data/">How Nextcloud uses encryption to protect your data</a> for more information.</p>
@@ -240,8 +241,7 @@ log-out and log-in again.&#8221;</p>
 <p>Share owners may need to re-share files after encryption is enabled; users
 trying to access the share will see a message advising them to ask the share
 owner to re-share the file with them. For individual shares, un-share and
-re-share the file. For group shares, share with any individuals who can&#8217;t
-access
+re-share the file. For group shares, share with any individuals who can&#8217;t access
 the share. This updates the encryption, and then the share owner can remove the
 individual shares.</p>
 <div class="figure">
@@ -316,7 +316,7 @@ module is OC_DEFAULT_MODULE):</p>
 </div>
 <p>The [module ID] is taken from the <code class="docutils literal"><span class="pre">encryption:list-modules</span></code> command.</p>
 <p>Encrypt all data files for all users. For performance reasons, when you enable
-encryption on a Nextcloud server only new and changed files are encrypted. This
+encryption on an Nextcloud server only new and changed files are encrypted. This
 command gives you the option to encrypt all files. You must first put your
 Nextcloud server into single-user mode to prevent any user activity until
 encryption is completed:</p>

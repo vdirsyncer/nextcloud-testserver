@@ -1,16 +1,17 @@
 <?php
 /**
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
  * @author Brice Maron <brice@bmaron.net>
  * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Lukas Reschke <lukas@owncloud.com>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -40,9 +41,9 @@ class RemoteException extends Exception {
 }
 
 /**
- * @param Exception $e
+ * @param Exception | Error $e
  */
-function handleException(Exception $e) {
+function handleException($e) {
 	$request = \OC::$server->getRequest();
 	// in case the request content type is text/xml - we assume it's a WebDAV request
 	$isXmlContentType = strpos($request->getHeader('Content-Type'), 'text/xml');
@@ -77,15 +78,41 @@ function handleException(Exception $e) {
 			OC_Response::setStatus($e->getCode());
 			OC_Template::printErrorPage($e->getMessage());
 		} else {
-			\OCP\Util::writeLog('remote', $e->getMessage(), \OCP\Util::FATAL);
+			\OC::$server->getLogger()->logException($e, ['app' => 'remote']);
 			OC_Response::setStatus($statusCode);
 			OC_Template::printExceptionErrorPage($e);
 		}
 	}
 }
 
+/**
+ * @param $service
+ * @return string
+ */
+function resolveService($service) {
+	$services = [
+		'webdav' => 'dav/appinfo/v1/webdav.php',
+		'dav' => 'dav/appinfo/v2/remote.php',
+		'caldav' => 'dav/appinfo/v1/caldav.php',
+		'calendar' => 'dav/appinfo/v1/caldav.php',
+		'carddav' => 'dav/appinfo/v1/carddav.php',
+		'contacts' => 'dav/appinfo/v1/carddav.php',
+		'files' => 'dav/appinfo/v1/webdav.php',
+	];
+	if (isset($services[$service])) {
+		return $services[$service];
+	}
+
+	return \OC::$server->getConfig()->getAppValue('core', 'remote_' . $service);
+}
+
 try {
 	require_once 'lib/base.php';
+
+	// All resources served via the DAV endpoint should have the strictest possible
+	// policy. Exempted from this is the SabreDAV browser plugin which overwrites
+	// this policy with a softer one if debug mode is enabled.
+	header("Content-Security-Policy: default-src 'none';");
 
 	if (\OCP\Util::needUpgrade()) {
 		// since the behavior of apps or remotes are unpredictable during
@@ -103,7 +130,7 @@ try {
 	}
 	$service=substr($pathInfo, 1, $pos-1);
 
-	$file = \OC::$server->getConfig()->getAppValue('core', 'remote_' . $service);
+	$file = resolveService($service);
 
 	if(is_null($file)) {
 		throw new RemoteException('Path not found', OC_Response::STATUS_NOT_FOUND);
@@ -139,4 +166,6 @@ try {
 
 } catch (Exception $ex) {
 	handleException($ex);
+} catch (Error $e) {
+	handleException($e);
 }

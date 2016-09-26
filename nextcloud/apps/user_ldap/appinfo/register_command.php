@@ -1,10 +1,11 @@
 <?php
 /**
- * @author Arthur Schiwon <blizzz@owncloud.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -21,11 +22,11 @@
  *
  */
 
-use OCA\user_ldap\lib\Helper;
-use OCA\user_ldap\lib\LDAP;
-use OCA\user_ldap\User_Proxy;
+use OCA\User_LDAP\Helper;
+use OCA\User_LDAP\LDAP;
+use OCA\User_LDAP\User_Proxy;
 use OCA\User_LDAP\Mapping\UserMapping;
-use OCA\User_LDAP\lib\User\DeletedUsersIndex;
+use OCA\User_LDAP\User\DeletedUsersIndex;
 
 $dbConnection = \OC::$server->getDatabaseConnection();
 $userMapping = new UserMapping($dbConnection);
@@ -40,15 +41,15 @@ $deletedUsersIndex = new DeletedUsersIndex(
 	$ocConfig, $dbConnection, $userMapping
 );
 
-$application->add(new OCA\user_ldap\Command\ShowConfig($helper));
-$application->add(new OCA\user_ldap\Command\SetConfig());
-$application->add(new OCA\user_ldap\Command\TestConfig());
-$application->add(new OCA\user_ldap\Command\CreateEmptyConfig($helper));
-$application->add(new OCA\user_ldap\Command\DeleteConfig($helper));
-$application->add(new OCA\user_ldap\Command\Search($ocConfig));
-$application->add(new OCA\user_ldap\Command\ShowRemnants(
+$application->add(new OCA\User_LDAP\Command\ShowConfig($helper));
+$application->add(new OCA\User_LDAP\Command\SetConfig());
+$application->add(new OCA\User_LDAP\Command\TestConfig());
+$application->add(new OCA\User_LDAP\Command\CreateEmptyConfig($helper));
+$application->add(new OCA\User_LDAP\Command\DeleteConfig($helper));
+$application->add(new OCA\User_LDAP\Command\Search($ocConfig));
+$application->add(new OCA\User_LDAP\Command\ShowRemnants(
 	$deletedUsersIndex, \OC::$server->getDateTimeFormatter())
 );
-$application->add(new OCA\user_ldap\Command\CheckUser(
+$application->add(new OCA\User_LDAP\Command\CheckUser(
 	$uBackend, $helper, $deletedUsersIndex, $userMapping)
 );

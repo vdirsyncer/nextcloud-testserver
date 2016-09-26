@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Logging Configuration &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Logging Configuration &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Hardening and Security Guidance" href="harden_server.html" />
     <link rel="prev" title="Language Configuration" href="language_configuration.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
@@ -92,6 +93,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -138,8 +140,8 @@
 </ul>
 <p>By default the log level is set to <strong>2</strong> (WARN). Use <strong>DEBUG</strong> when you have a problem to diagnose, and then reset your log level to a less-verbose level as <strong>DEBUG</strong> outputs a lot of information, and can affect your server performance.</p>
 <p>Logging level parameters are set in the <code class="file docutils literal"><span class="pre">config/config.php</span></code> file, or on the Admin page of your Nextcloud Web GUI.</p>
-<div class="section" id="nextcloud">
-<h3>Nextcloud<a class="headerlink" href="#nextcloud" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="owncloud">
+<h3>ownCloud<a class="headerlink" href="#owncloud" title="Permalink to this headline">¶</a></h3>
 <p>All log information will be written to a separate log file which can be
 viewed using the log viewer on your Admin page. By default, a log
 file named <strong>nextcloud.log</strong> will be created in the directory which has
@@ -150,7 +152,7 @@ date/time is written in the format &#8220;<em>2013-01-10T15:20:25+02:00</em>&#82
 date format in the example below, the date/time format will be written in the format
 &#8220;<em>January 10, 2013 15:20:25</em>&#8221;.</p>
 <div class="highlight-python"><div class="highlight"><pre>&quot;log_type&quot; =&gt; &quot;owncloud&quot;,
-&quot;logfile&quot; =&gt; &quot;owncloud.log&quot;,
+&quot;logfile&quot; =&gt; &quot;nextcloud.log&quot;,
 &quot;loglevel&quot; =&gt; &quot;3&quot;,
 &quot;logdateformat&quot; =&gt; &quot;F d, Y H:i:s&quot;,
 </pre></div>

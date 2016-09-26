@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<!--[if lte IE 8]><html class="ng-csp ie ie8 lte9 lte8" data-placeholder-focus="false" lang="<?php p($_['language']); ?>" ><![endif]-->
-<!--[if IE 9]><html class="ng-csp ie ie9 lte9" data-placeholder-focus="false" lang="<?php p($_['language']); ?>" ><![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--><html class="ng-csp" data-placeholder-focus="false" lang="<?php p($_['language']); ?>" ><!--<![endif]-->
+<html class="ng-csp" data-placeholder-focus="false" lang="<?php p($_['language']); ?>" >
 	<head data-user="<?php p($_['user_uid']); ?>" data-user-displayname="<?php p($_['user_displayname']); ?>" data-requesttoken="<?php p($_['requesttoken']); ?>">
 		<meta charset="utf-8">
 		<title>
@@ -16,14 +14,17 @@
 		<meta name="apple-itunes-app" content="app-id=<?php p($theme->getiTunesAppId()); ?>">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
-		<meta name="apple-mobile-web-app-title" content="<?php p((!empty($_['application']) && $_['appid']!='files')? $_['application']:'Nextcloud'); ?>">
+		<meta name="apple-mobile-web-app-title" content="<?php p((!empty($_['application']) && $_['appid']!='files')? $_['application']:'ownCloud'); ?>">
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="theme-color" content="<?php p($theme->getMailHeaderColor()); ?>">
-		<link rel="shortcut icon" href="<?php print_unescaped(image_path($_['appid'], 'favicon.ico')); /* IE11+ supports png */ ?>">
+		<link rel="icon" href="<?php print_unescaped(image_path($_['appid'], 'favicon.ico')); /* IE11+ supports png */ ?>">
 		<link rel="apple-touch-icon-precomposed" href="<?php print_unescaped(image_path($_['appid'], 'favicon-touch.png')); ?>">
 		<link rel="mask-icon" sizes="any" href="<?php print_unescaped(image_path($_['appid'], 'favicon-mask.svg')); ?>" color="#0082c9">
 		<?php foreach($_['cssfiles'] as $cssfile): ?>
-			<link rel="stylesheet" href="<?php print_unescaped($cssfile); ?>" media="screen">
+			<link rel="stylesheet" href="<?php print_unescaped($cssfile); ?>">
+		<?php endforeach; ?>
+		<?php foreach($_['printcssfiles'] as $cssfile): ?>
+			<link rel="stylesheet" href="<?php print_unescaped($cssfile); ?>" media="print">
 		<?php endforeach; ?>
 		<?php foreach($_['jsfiles'] as $jsfile): ?>
 			<script src="<?php print_unescaped($jsfile); ?>"></script>
@@ -38,7 +39,7 @@
 	<header role="banner"><div id="header">
 			<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
 				id="owncloud" tabindex="1">
-				<div class="logo-icon svg">
+				<div class="logo-icon">
 					<h1 class="hidden-visually">
 						<?php p($theme->getName()); ?>
 					</h1>
@@ -55,11 +56,11 @@
 						}
 					?>
 				</h1>
-				<div class="icon-caret svg"></div>
+				<div class="icon-caret"></div>
 			</a>
 
 			<div id="logo-claim" style="display:none;"><?php p($theme->getLogoClaim()); ?></div>
-			<div id="settings" class="svg">
+			<div id="settings">
 				<div id="expand" tabindex="6" role="link" class="menutoggle">
 					<?php if ($_['enableAvatars']): ?>
 					<div class="avatardiv<?php if ($_['userAvatarSet']) { print_unescaped(' avatardiv-shown'); } else { print_unescaped('" style="display: none'); } ?>">
@@ -72,7 +73,7 @@
 					</div>
 					<?php endif; ?>
 					<span id="expandDisplayName"><?php  p(trim($_['user_displayname']) != '' ? $_['user_displayname'] : $_['user_uid']) ?></span>
-					<img class="svg" alt="" src="<?php print_unescaped(image_path('', 'actions/caret.svg')); ?>">
+					<div class="icon-caret"></div>
 				</div>
 				<div id="expanddiv">
 				<ul>
@@ -80,14 +81,14 @@
 					<li>
 						<a href="<?php print_unescaped($entry['href']); ?>"
 							<?php if( $entry["active"] ): ?> class="active"<?php endif; ?>>
-							<img class="svg" alt="" src="<?php print_unescaped($entry['icon']); ?>">
+							<img alt="" src="<?php print_unescaped($entry['icon'] . '?v=' . $_['versionHash']); ?>">
 							<?php p($entry['name']) ?>
 						</a>
 					</li>
 				<?php endforeach; ?>
 					<li>
 						<a id="logout" <?php print_unescaped(OC_User::getLogoutAttribute()); ?>>
-							<img class="svg" alt="" src="<?php print_unescaped(image_path('', 'actions/logout.svg')); ?>">
+							<img alt="" src="<?php print_unescaped(image_path('', 'actions/logout.svg') . '?v=' . $_['versionHash']); ?>">
 							<?php p($l->t('Log out'));?>
 						</a>
 					</li>
@@ -99,20 +100,23 @@
 				<label for="searchbox" class="hidden-visually">
 					<?php p($l->t('Search'));?>
 				</label>
-				<input id="searchbox" class="svg" type="search" name="query"
+				<input id="searchbox" type="search" name="query"
 					value="" required
 					autocomplete="off" tabindex="5">
 			</form>
 		</div></header>
 
 		<nav role="navigation"><div id="navigation">
-			<div id="apps" class="svg">
+			<div id="apps">
 				<ul>
 				<?php foreach($_['navigation'] as $entry): ?>
 					<li data-id="<?php p($entry['id']); ?>">
 						<a href="<?php print_unescaped($entry['href']); ?>" tabindex="3"
 							<?php if( $entry['active'] ): ?> class="active"<?php endif; ?>>
-							<img class="app-icon svg" alt="" src="<?php print_unescaped($entry['icon']); ?>">
+							<svg width="32" height="32" viewBox="0 0 32 32">
+								<defs><filter id="invert"><feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"></feColorMatrix></filter></defs>
+								<image x="0" y="0" width="32" height="32" preserveAspectRatio="xMinYMin meet" filter="url(#invert)" xlink:href="<?php print_unescaped($entry['icon'] . '?v=' . $_['versionHash']); ?>"  class="app-icon"></image>
+							</svg>
 							<div class="icon-loading-dark" style="display:none;"></div>
 							<span>
 								<?php p($entry['name']); ?>
@@ -127,7 +131,10 @@
 					<li id="apps-management">
 						<a href="<?php print_unescaped(\OC::$server->getURLGenerator()->linkToRoute('settings.AppSettings.viewApps')); ?>" tabindex="4"
 							<?php if( $_['appsmanagement_active'] ): ?> class="active"<?php endif; ?>>
-							<img class="app-icon svg" alt="" src="<?php print_unescaped(image_path('settings', 'apps.svg')); ?>">
+							<svg width="32" height="32" viewBox="0 0 32 32" class="app-icon">
+								<defs><filter id="invert"><feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"></feColorMatrix></filter></defs>
+								<image x="0" y="0" width="32" height="32" preserveAspectRatio="xMinYMin meet" filter="url(#invert)" xlink:href="<?php print_unescaped(image_path('settings', 'apps.svg') . '?v=' . $_['versionHash']); ?>"></image>
+							</svg>
 							<div class="icon-loading-dark" style="display:none;"></div>
 							<span>
 								<?php p($l->t('Apps')); ?>

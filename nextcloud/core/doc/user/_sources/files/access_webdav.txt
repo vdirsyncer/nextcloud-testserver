@@ -12,8 +12,8 @@ Nextcloud Desktop and Mobile Clients
 ------------------------------------
 
 The recommended method for keeping your desktop PC synchronized with your 
-Nextcloud server is by using the `Nextcloud Desktop Client 
-<https://nextcloud.com/install/#install-clients>`_. You can configure the Nextcloud client 
+Nextcloud server is by using the `Nextcloud/ownCloud sync clients
+<https://nextcloud.com/install/#install-clients>`_. You can configure the client
 to save files in any local directory you want, and you choose which directories 
 on the Nextcloud server to sync with. The client displays the current connection 
 status and logs all activity, so you always know which remote files have been 
@@ -21,18 +21,17 @@ downloaded to your PC, and you can verify that files created and updated on your
 local PC are properly synchronized with the server.
 
 The recommended method for syncing your Nextcloud server with Android and 
-Apple iOS devices is by using the `Nextcloud mobile apps 
-<https://nextcloud.com/install/#install-clients>`_.
+Apple iOS devices is by using the `mobile apps 
+<https://nextcloud.com/install/>`_.
 
-To connect to your Nextcloud server with the **Nextcloud** mobile apps, use the 
+To connect to your Nextcloud server with the mobile apps, use the 
 base URL and folder only::
 
     example.com/nextcloud
 
-In addition to the mobile apps provided by Nextcloud, you can use other apps to 
+In addition to the mobile apps provided by Nextcloud or Nextcloud, you can use other apps to 
 connect to Nextcloud from your mobile device using WebDAV. `WebDAV Navigator`_ is 
-a good (proprietary) app for `Android devices`_, `iPhones`_, and `BlackBerry 
-devices`_. The URL to use on these is::
+a good (proprietary) app for `Android devices`_ and `iPhones`_. The URL to use on these is::
 
     example.com/nextcloud/remote.php/dav/files/USERNAME/
     
@@ -233,7 +232,7 @@ drive. Mapping to a drive enables you to browse files stored on an Nextcloud
 server the way you would files stored in a mapped network drive.
 
 Using this feature requires network connectivity. If you want to store your 
-files offline, use the Nextcloud Desktop Client to sync all files on your 
+files offline, use the Desktop Client to sync all files on your 
 Nextcloud to one or more directories of your local hard drive.
 
 .. note:: Prior to mapping your drive, you must permit the use of Basic
@@ -469,7 +468,7 @@ To get the properties of files in the root folder:
 
 	$ curl -X PROPFIND -H "Depth: 1" -u user:pass https://example.com/nextcloud/remote.php/dav/files/USERNAME/ | xml_pp
 	<?xml version="1.0" encoding="utf-8"?>
-    <d:multistatus xmlns:d="DAV:" xmlns:oc="http://nextcloud.com/ns" xmlns:s="http://sabredav.org/ns">
+    <d:multistatus xmlns:d="DAV:" xmlns:oc="http://nextcloud.org/ns" xmlns:s="http://sabredav.org/ns">
       <d:response>
         <d:href>/nextcloud/remote.php/dav/files/USERNAME/</d:href>
         <d:propstat>
@@ -503,9 +502,6 @@ To get the properties of files in the root folder:
 
 .. _KB2668751: https://support.microsoft.com/kb/2668751
 .. _KB2123563: https://support.microsoft.com/kb/2123563
-.. _in your file manager: http://en.wikipedia.org/wiki/Webdav#WebDAV_client_applications
-.. _ownCloud sync clients: https://docs.nextcloud.org/desktop/2.1/
-.. _Android: https://github.com/nextcloud/android
 .. _WebDAV Navigator: http://seanashton.net/webdav/
 .. _Android devices: https://play.google.com/store/apps/details?id=com.schimera.webdavnavlite
 .. _iPhones: https://itunes.apple.com/app/webdav-navigator/id382551345

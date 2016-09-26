@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Configuring Federation Sharing &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Configuring Federation Sharing &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Uploading big files &gt; 512MB" href="big_file_upload_configuration.html" />
     <link rel="prev" title="File Sharing" href="file_sharing_configuration.html" />
@@ -66,15 +66,16 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">File Sharing and Management</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="file_sharing_configuration.html">File Sharing</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Configuring Federation Sharing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-federation-share">Creating a Federation Share</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-new-federation-share">Creating a new Federation Share</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-trusted-nextcloud-servers">Configuring Trusted Nextcloud Servers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-federation-shares-via-public-link-share">Creating Federation Shares via Public Link Share</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration-tips">Configuration Tips</a></li>
@@ -121,10 +122,12 @@
 						
   <div class="section" id="configuring-federation-sharing">
 <h1>Configuring Federation Sharing<a class="headerlink" href="#configuring-federation-sharing" title="Permalink to this headline">¶</a></h1>
-<p>When you enable the Federation app you can easily and securely link file shares
-between Nextcloud servers, in effect creating a cloud of Nextclouds.</p>
-<div class="section" id="creating-a-federation-share">
-<h2>Creating a Federation Share<a class="headerlink" href="#creating-a-federation-share" title="Permalink to this headline">¶</a></h2>
+<p>Federated Cloud Sharing is now managed by the Federation app (9.0+), and is
+now called Federation sharing. When you enable the Federation app you can
+easily and securely link file shares between Nextcloud servers, in effect
+creating a cloud of Nextclouds.</p>
+<div class="section" id="creating-a-new-federation-share">
+<span id="label-direct-share-link"></span><h2>Creating a new Federation Share<a class="headerlink" href="#creating-a-new-federation-share" title="Permalink to this headline">¶</a></h2>
 <p>Follow these steps to create a new Federation share between two Nextcloud
 servers. This requires no action by the user on the remote server; all it takes
 is a few steps on the originating server.</p>
@@ -144,7 +147,7 @@ you create shares. If you do not want this enabled, then un-check it.</li>
 <div class="figure">
 <img alt="../_images/federation-0.png" src="../_images/federation-0.png" />
 </div>
-<ol class="arabic simple" start="3">
+<ol class="arabic simple" start="4">
 <li>Now go to your Files page and select a folder to share. Click the share
 icon, and then enter the username and URL of the user on the remote Nextcloud
 server. In this example, that is <code class="docutils literal"><span class="pre">freda&#64;https://example.com/nextcloud</span></code>.
@@ -154,7 +157,7 @@ Click on this label to establish the link.</li>
 <div class="figure">
 <img alt="../_images/federation-2.png" src="../_images/federation-2.png" />
 </div>
-<ol class="arabic simple" start="3">
+<ol class="arabic simple" start="5">
 <li>When the link is successfully completed, you have a single share option,
 and that is <strong>can edit</strong>.</li>
 </ol>

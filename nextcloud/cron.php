@@ -1,19 +1,19 @@
 <?php
 /**
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
  * @author Bernhard Posselt <dev@bernhard-posselt.com>
  * @author Christopher Schäpers <kondou@ts.unde.re>
  * @author Jakob Sack <mail@jakobsack.de>
- * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Oliver Kohl D.Sc. <oliver@kohl.bz>
- * @author Phil Davis <phil.davis@inf.org>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Steffen Lindner <mail@steffen-lindner.de>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -85,47 +85,22 @@ try {
 		set_time_limit(0);
 
 		// the cron job must be executed with the right user
-		if (!OC_Util::runningOnWindows())  {
-			if (!function_exists('posix_getuid')) {
-				echo "The posix extensions are required - see http://php.net/manual/en/book.posix.php" . PHP_EOL;
-				exit(0);
-			}
-			$user = posix_getpwuid(posix_getuid());
-			$configUser = posix_getpwuid(fileowner(OC::$SERVERROOT . '/config/config.php'));
-			if ($user['name'] !== $configUser['name']) {
-				echo "Console has to be executed with the same user as the web server is operated" . PHP_EOL;
-				echo "Current user: " . $user['name'] . PHP_EOL;
-				echo "Web server user: " . $configUser['name'] . PHP_EOL;
-				exit(0);
-			}
+		if (!function_exists('posix_getuid')) {
+			echo "The posix extensions are required - see http://php.net/manual/en/book.posix.php" . PHP_EOL;
+			exit(0);
 		}
-
-		$instanceId = $config->getSystemValue('instanceid');
-		$lockFileName = 'owncloud-server-' . $instanceId . '-cron.lock';
-		$lockDirectory = $config->getSystemValue('cron.lockfile.location', sys_get_temp_dir());
-		$lockDirectory = rtrim($lockDirectory, '\\/');
-		$lockFile = $lockDirectory . '/' . $lockFileName;
-
-		if (!file_exists($lockFile)) {
-			touch($lockFile);
+		$user = posix_getpwuid(posix_getuid());
+		$configUser = posix_getpwuid(fileowner(OC::$SERVERROOT . '/config/config.php'));
+		if ($user['name'] !== $configUser['name']) {
+			echo "Console has to be executed with the same user as the web server is operated" . PHP_EOL;
+			echo "Current user: " . $user['name'] . PHP_EOL;
+			echo "Web server user: " . $configUser['name'] . PHP_EOL;
+			exit(0);
 		}
 
 		// We call ownCloud from the CLI (aka cron)
 		if ($appMode != 'cron') {
 			\OCP\BackgroundJob::setExecutionType('cron');
-		}
-
-		// open the file and try to lock it. If it is not locked, the background
-		// job can be executed, otherwise another instance is already running
-		$fp = fopen($lockFile, 'w');
-		$isLocked = flock($fp, LOCK_EX|LOCK_NB, $wouldBlock);
-
-		// check if backgroundjobs is still running. The wouldBlock check is
-		// needed on systems with advisory locking, see
-		// http://php.net/manual/en/function.flock.php#45464
-		if (!$isLocked || $wouldBlock) {
-			echo "Another instance of cron.php is still running!" . PHP_EOL;
-			exit(1);
 		}
 
 		// Work
@@ -138,12 +113,13 @@ try {
 		$executedJobs = [];
 		while ($job = $jobList->getNext()) {
 			if (isset($executedJobs[$job->getId()])) {
+				$jobList->unlockJob($job);
 				break;
 			}
 
-			$logger->debug('Run job with ID ' . $job->getId(), ['app' => 'cron']);
+			$logger->debug('Run ' . get_class($job) . ' job with ID ' . $job->getId(), ['app' => 'cron']);
 			$job->execute($jobList, $logger);
-			$logger->debug('Finished job with ID ' . $job->getId(), ['app' => 'cron']);
+			$logger->debug('Finished ' . get_class($job) . ' job with ID ' . $job->getId(), ['app' => 'cron']);
 
 			$jobList->setLastJob($job);
 			$executedJobs[$job->getId()] = true;
@@ -153,10 +129,6 @@ try {
 				break;
 			}
 		}
-
-		// unlock the file
-		flock($fp, LOCK_UN);
-		fclose($fp);
 
 	} else {
 		// We call cron.php from some website
@@ -182,5 +154,7 @@ try {
 	exit();
 
 } catch (Exception $ex) {
+	\OCP\Util::writeLog('cron', $ex->getMessage(), \OCP\Util::FATAL);
+} catch (Error $ex) {
 	\OCP\Util::writeLog('cron', $ex->getMessage(), \OCP\Util::FATAL);
 }

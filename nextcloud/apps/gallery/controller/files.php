@@ -8,7 +8,7 @@
  * @author Olivier Paroz <owncloud@interfasys.ch>
  * @author Robin Appelman <icewind@owncloud.com>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  * @copyright Robin Appelman 2012-2014
  */
 
@@ -48,7 +48,7 @@ trait Files {
 	/**
 	 * @NoAdminRequired
 	 *
-	 * Returns a list of all media files available to the authenticated user
+	 * Returns a list of all media files and albums available to the authenticated user
 	 *
 	 *    * Authentication can be via a login/password or a token/(password)
 	 *    * For private galleries, it returns all media files, with the full path from the root
@@ -64,22 +64,24 @@ trait Files {
 	 *
 	 * @return array <string,array<string,string|int>>|Http\JSONResponse
 	 */
-	private function getFiles($location, $features, $etag, $mediatypes) {
+	private function getFilesAndAlbums($location, $features, $etag, $mediatypes) {
 		$files = [];
+		$albums = [];
+		$updated = true;
 		/** @var Folder $folderNode */
-		list($folderPathFromRoot, $folderNode, $locationHasChanged) =
+		list($folderPathFromRoot, $folderNode) =
 			$this->searchFolderService->getCurrentFolder(rawurldecode($location), $features);
-		$albumInfo =
-			$this->configService->getAlbumInfo($folderNode, $folderPathFromRoot, $features);
-
-		if ($albumInfo['etag'] !== $etag) {
-			$files = $this->searchMediaService->getMediaFiles(
+		$albumConfig = $this->configService->getConfig($folderNode, $features);
+		if ($folderNode->getEtag() !== $etag) {
+			list($files, $albums) = $this->searchMediaService->getMediaFiles(
 				$folderNode, $mediatypes, $features
 			);
-			$files = $this->fixPaths($files, $folderPathFromRoot);
+		} else {
+			$updated = false;
 		}
+		$files = $this->fixPaths($files, $folderPathFromRoot);
 
-		return $this->formatResults($files, $albumInfo, $locationHasChanged);
+		return $this->formatResults($files, $albums, $albumConfig, $folderPathFromRoot, $updated);
 	}
 
 	/**
@@ -90,8 +92,8 @@ trait Files {
 	 * becomes
 	 * /root/folder/file.ext
 	 *
-	 * @param $files
-	 * @param $folderPathFromRoot
+	 * @param array $files
+	 * @param string $folderPathFromRoot
 	 *
 	 * @return array
 	 */
@@ -109,17 +111,22 @@ trait Files {
 	 * Simply builds and returns an array containing the list of files, the album information and
 	 * whether the location has changed or not
 	 *
-	 * @param array <string,string|int> $files
-	 * @param array $albumInfo
-	 * @param bool $locationHasChanged
+	 * @param array $files
+	 * @param array $albums
+	 * @param array $albumConfig
+	 * @param string $folderPathFromRoot
+	 * @param bool $updated
 	 *
 	 * @return array
+	 * @internal param $array <string,string|int> $files
 	 */
-	private function formatResults($files, $albumInfo, $locationHasChanged) {
+	private function formatResults($files, $albums, $albumConfig, $folderPathFromRoot, $updated) {
 		return [
-			'files'              => $files,
-			'albuminfo'          => $albumInfo,
-			'locationhaschanged' => $locationHasChanged
+			'files'       => $files,
+			'albums'      => $albums,
+			'albumconfig' => $albumConfig,
+			'albumpath'   => $folderPathFromRoot,
+			'updated'     => $updated
 		];
 	}
 
@@ -133,7 +140,7 @@ trait Files {
 	 */
 	private function getDownload($fileId, $filename) {
 		/** @type File $file */
-		$file = $this->downloadService->getResourceFromId($fileId);
+		$file = $this->downloadService->getFile($fileId);
 		$this->configService->validateMimeType($file->getMimeType());
 		$download = $this->downloadService->downloadFile($file);
 		if (is_null($filename)) {

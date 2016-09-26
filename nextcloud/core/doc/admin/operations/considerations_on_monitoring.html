@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Considerations on Monitoring &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Considerations on Monitoring &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Operations" href="index.html" />
     <link rel="next" title="Scaling Across Multiple Machines" href="scaling_multiple_machines.html" />
     <link rel="prev" title="Operations" href="index.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -140,7 +141,7 @@ there through the layers of infrastructure.</p>
 <h3>Status.php<a class="headerlink" href="#status-php" title="Permalink to this headline">¶</a></h3>
 <p>Nextcloud provides a very simple mechanism for determining if an application server is up and functioning –
 call the status.php file on each Nextcloud server. This file can be found in the root Nextcloud directory on
-the server, which by default is /nextcloud/status.php. If the server is functioning normally, the response
+the server, which by default is /status.php. If the server is functioning normally, the response
 looks something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span><span class="s2">&quot;installed&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span><span class="p">,</span><span class="s2">&quot;version&quot;</span><span class="p">:</span><span class="s2">&quot;6.0.0.16&quot;</span><span class="p">,</span><span class="s2">&quot;versionstring&quot;</span><span class="p">:</span><span class="s2">&quot;6.0.1&quot;</span><span class="p">,</span><span class="s2">&quot;edition&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">}</span>
 </pre></div>
@@ -150,8 +151,8 @@ server is operating properly.</p>
 </div>
 <div class="section" id="nextcloud-log">
 <h3>Nextcloud.log<a class="headerlink" href="#nextcloud-log" title="Permalink to this headline">¶</a></h3>
-<p>Nextcloud also provides a built in logging function. If the Nextcloud Enterprise Edition logging applications
-are enabled, this file will track user logins and shared file activity. If these logging applications are
+<p>Nextcloud also provides a built in logging function. If the Nextcloud logging application
+is enabled, this file will track user logins and shared file activity. If these logging applications are
 not enabled, this log file still tracks basic Nextcloud health. Given the potential for this file to get
 quite large, the log file should be rotated on a daily basis, and given the importance of the error information
 in the log file, this should be integrated with an enterprise log manager.</p>

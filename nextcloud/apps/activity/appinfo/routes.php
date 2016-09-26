@@ -1,10 +1,10 @@
 <?php
 /**
- * @author Frank Karlitschek <frank@owncloud.org>
- * @author Joas Schilling <nickvergessen@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Frank Karlitschek <frank@karlitschek.de>
+ * @author Joas Schilling <coding@schilljs.com>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -21,11 +21,9 @@
  *
  */
 
-namespace OCA\Activity\AppInfo;
-
 use OCP\API;
 
-$application = new Application();
+$app = new \OCA\Activity\AppInfo\Application();
 
 // Register an OCS API call
 //API::register(
@@ -47,7 +45,7 @@ API::register(
 	'activity'
 );
 
-$application->registerRoutes($this, ['routes' => [
+$app->registerRoutes($this, ['routes' => [
 	['name' => 'Settings#personal', 'url' => '/settings', 'verb' => 'POST'],
 	['name' => 'Settings#feed', 'url' => '/settings/feed', 'verb' => 'POST'],
 	['name' => 'Activities#showList', 'url' => '/', 'verb' => 'GET'],

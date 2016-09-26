@@ -1,20 +1,32 @@
 <?php
 	use \OCA\Files_External\Lib\Backend\Backend;
+	use \OCA\Files_External\Lib\Auth\AuthMechanism;
 	use \OCA\Files_External\Lib\DefinitionParameter;
 	use \OCA\Files_External\Service\BackendService;
+
+	$l->t("Enable encryption");
+	$l->t("Enable previews");
+	$l->t("Enable sharing");
+	$l->t("Check for changes");
+	$l->t("Never");
+	$l->t("Once every direct access");
 
 	script('files_external', 'settings');
 	style('files_external', 'settings');
 
 	// load custom JS
 	foreach ($_['backends'] as $backend) {
-		if ($backend->getCustomJs()) {
-			script('files_external', $backend->getCustomJs());
+		/** @var Backend $backend */
+		$scripts = $backend->getCustomJs();
+		foreach ($scripts as $script) {
+			script('files_external', $script);
 		}
 	}
 	foreach ($_['authMechanisms'] as $authMechanism) {
-		if ($authMechanism->getCustomJs()) {
-			script('files_external', $authMechanism->getCustomJs());
+		/** @var AuthMechanism $authMechanism */
+		$scripts = $authMechanism->getCustomJs();
+		foreach ($scripts as $script) {
+			script('files_external', $script);
 		}
 	}
 
@@ -39,13 +51,17 @@
 			break;
 		case DefinitionParameter::VALUE_BOOLEAN: ?>
 			<?php $checkboxId = uniqid("checkbox_"); ?>
+			<div>
+			<label>
 			<input type="checkbox"
 				id="<?php p($checkboxId); ?>"
 				<?php if (!empty($classes)): ?> class="checkbox <?php p(implode(' ', $classes)); ?>"<?php endif; ?>
 				data-parameter="<?php p($parameter->getName()); ?>"
 				<?php if ($value === true): ?> checked="checked"<?php endif; ?>
 			/>
-			<label for="<?php p($checkboxId); ?>"><?php p($placeholder); ?></label>
+			<?php p($placeholder); ?>
+			</label>
+			</div>
 			<?php
 			break;
 		case DefinitionParameter::VALUE_HIDDEN: ?>
@@ -68,22 +84,21 @@
 		}
 	}
 ?>
-
 <form autocomplete="false" class="section" action="#"
 	  id="global_credentials">
 	<h2><?php p($l->t('External Storage')); ?></h2>
 	<p><?php p($l->t('Global Credentials')); ?></p>
 	<input type="text" name="username"
-		   autocomplete="false"
-		   value="<?php p($_['globalCredentials']['user']); ?>"
-		   placeholder="<?php p($l->t('Username')) ?>"/>
+		autocomplete="false"
+		value="<?php p($_['globalCredentials']['user']); ?>"
+		placeholder="<?php p($l->t('Username')) ?>"/>
 	<input type="password" name="password"
-		   autocomplete="false"
-		   value="<?php p($_['globalCredentials']['password']); ?>"
-		   placeholder="<?php p($l->t('Password')) ?>"/>
+		autocomplete="false"
+		value="<?php p($_['globalCredentials']['password']); ?>"
+		placeholder="<?php p($l->t('Password')) ?>"/>
 	<input type="hidden" name="uid"
-		   value="<?php p($_['globalCredentialsUid']); ?>"/>
-	<input type="submit" value="<?php p($l->t('Save')) ?>"/>
+		value="<?php p($_['globalCredentialsUid']); ?>"/>
+		<input type="submit" value="<?php p($l->t('Save')) ?>"/>
 </form>
 
 <form id="files_external" class="section" data-encryption-enabled="<?php echo $_['encryptionEnabled']?'true': 'false'; ?>">
@@ -141,7 +156,7 @@
 					</td>
 				<?php endif; ?>
 				<td class="mountOptionsToggle hidden">
-					<img class="svg action"
+					<img class="svg"
 						title="<?php p($l->t('Advanced settings')); ?>"
 						alt="<?php p($l->t('Advanced settings')); ?>"
 						src="<?php print_unescaped(image_path('core', 'actions/settings.svg')); ?>"
@@ -149,7 +164,7 @@
 					<input type="hidden" class="mountOptions" value="" />
 				</td>
 				<td class="hidden">
-					<img class="svg action"
+					<img class="svg"
 						alt="<?php p($l->t('Delete')); ?>"
 						title="<?php p($l->t('Delete')); ?>"
 						src="<?php print_unescaped(image_path('core', 'actions/delete.svg')); ?>"

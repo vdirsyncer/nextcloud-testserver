@@ -7,7 +7,7 @@
  *
  * @author Olivier Paroz <owncloud@interfasys.ch>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  */
 
 namespace OCA\Gallery\AppInfo;
@@ -236,13 +236,6 @@ class Application extends App {
 					 ->getUserFolder($c->query('UserId'));
 		}
 		);
-		$container->registerService(
-			'ShareManager', function (IAppContainer $c) {
-			return $c->getServer()
-				->getShareManager();
-		}
-		);
-
 
 		/**
 		 * OCA
@@ -401,8 +394,8 @@ class Application extends App {
 					$c->query('Environment'),
 					$c->query('OCP\AppFramework\Utility\IControllerMethodReflector'),
 					$c->query('OCP\IURLGenerator'),
-					$c->query('Logger'),
-					$c->query('ShareManager')
+					$c->query('OCP\Share\IManager'),
+					$c->query('Logger')
 				);
 			}
 		);

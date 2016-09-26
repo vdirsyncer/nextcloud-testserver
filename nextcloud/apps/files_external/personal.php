@@ -1,13 +1,14 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Michael Gapczynski <GapczynskiM@gmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -29,7 +30,7 @@ use \OCA\Files_External\Service\BackendService;
 // we must use the same container
 $appContainer = \OC_Mount_Config::$app->getContainer();
 $backendService = $appContainer->query('OCA\Files_External\Service\BackendService');
-$userStoragesService = $appContainer->query('OCA\Files_external\Service\UserStoragesService');
+$userStoragesService = $appContainer->query('OCA\Files_External\Service\UserStoragesService');
 $globalAuth = $appContainer->query('OCA\Files_External\Lib\Auth\Password\GlobalAuth');
 
 $tmpl = new OCP\Template('files_external', 'settings');

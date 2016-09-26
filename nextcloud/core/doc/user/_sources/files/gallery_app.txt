@@ -1,9 +1,10 @@
 ===========
-Gallery App 
+Gallery App
 ===========
 
-The gallery app supports several image formats, sorting, zoom, and scrolling. 
-It also supports advanced customizations via a simple text file.
+The Pictures app has been rewritten and improved, and is now called the Gallery 
+app. It supports more image formats, sorting, zoom, and scrolling. It also 
+supports advanced customizations via a simple text file.
 
 On your main Nextcloud Files page, click the little icon at the top right, 
 underneath your username, to open your Gallery. The Gallery app automatically 
@@ -241,7 +242,3 @@ Possible Future Extensions
 
 Different sorting parameters for albums.
 
-Keeping Up With New Features
-----------------------------
-
-See the `Gallery Wiki page <https://github.com/owncloud/gallery/wiki>`_ to stay informed of new developments.

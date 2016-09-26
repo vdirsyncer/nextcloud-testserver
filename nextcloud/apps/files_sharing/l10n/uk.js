@@ -52,17 +52,9 @@ OC.L10N.register(
     "the link expired" : "посилання застаріло",
     "sharing is disabled" : "обмін заборонений",
     "For more info, please ask the person who sent this link." : "Для отримання додаткової інформації, будь ласка, зверніться до особи, яка надіслала це посилання.",
-    "Add to your Nextcloud" : "Додати до вашого Nextcloud",
+    "Add to your ownCloud" : "Додати до вашого ownCloud",
     "Download" : "Завантажити",
     "Download %s" : "Завантажити %s",
-    "Direct link" : "Пряме посилання",
-    "Federated Cloud Sharing" : "Об’єднання хмарних сховищ",
-    "Open documentation" : "Відкрити документацію",
-    "Allow users on this server to send shares to other servers" : "Дозволити користувачам цього сервера публікувати на інших серверах",
-    "Allow users on this server to receive shares from other servers" : "Дозволити користувачам на цьому сервері отримувати публікації з інших серверів",
-    "Share it:" : "Поділитися цим:",
-    "HTML Code:" : "HTML код:",
-    "Public shared file %1$s was downloaded" : "Опублікований файл %1$s був завантажений",
-    "Public shared folder %1$s was downloaded" : "Опублікований каталог %1$s був завантажений"
+    "Direct link" : "Пряме посилання"
 },
 "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);");

@@ -1,6 +1,6 @@
 <?php
 /**
- * ownCloud - Calendar App
+ * Calendar App
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
@@ -75,29 +75,31 @@
 	 class="app-navigation-entry-menu hidden">
 	<ul>
 		<li ng-show="item.calendar.arePropertiesWritable()">
-			<button	ng-click="item.openEditor()"
-					title="<?php p($l->t('Edit')); ?>">
+			<button	ng-click="item.openEditor()">
 				<span class="icon-rename svg"></span>
 				<span><?php p($l->t('Edit')); ?></span>
 			</button>
 		</li>
-		<li>
-			<button	ng-click="item.showCalDAVUrl()"
-					title="<?php p($l->t('CalDAV')); ?>">
+		<li ng-show="item.calendar.eventsAccessibleViaCalDAV()">
+			<button	ng-click="item.showCalDAVUrl()">
 				<span class="icon-public svg"></span>
-				<span><?php p($l->t('CalDAV-Link')); ?></span>
+				<span><?php p($l->t('Link')); ?></span>
+			</button>
+		</li>
+		<li ng-show="item.isWebCal()">
+			<button	ng-click="item.showWebCalUrl()">
+				<span class="icon-link svg"></span>
+				<span><?php p($l->t('WebCal URL')); ?></span>
 			</button>
 		</li>
 		<li>
-			<button	ng-click="download(item)"
-					title="<?php p($l->t('Export')); ?>">
+			<button	ng-click="download(item)">
 				<span class="icon-download svg"></span>
-				<span><?php p($l->t('Export')); ?></span>
+				<span><?php p($l->t('Download')); ?></span>
 			</button>
 		</li>
 		<li>
-			<button	ng-click="remove(item)"
-					title="<?php p($l->t('Delete')); ?>">
+			<button	ng-click="remove(item)">
 				<span class="icon-delete svg"></span>
 				<span><?php p($l->t('Delete')); ?></span>
 			</button>
@@ -133,9 +135,19 @@
 			ng-click="item.hideCalDAVUrl()">
 	</button>
 </fieldset>
+<fieldset class="editfieldset"
+		  ng-show="item.displayWebCalUrl()">
+	<input class="input-with-button-on-right-side"
+		   ng-value="item.calendar.storedUrl"
+		   readonly
+		   type="text"/>
+	<button class="btn icon-close button-next-to-input"
+			ng-click="item.hideWebCalUrl()">
+	</button>
+</fieldset>
 <div class="calendarShares"
 	 ng-show="item.isEditingShares()">
-	<i class="glyphicon glyphicon-refresh"
+	<i class="glyphicon glyphicon-refresh refresh-shares"
 	   ng-show="loadingSharees">
 	</i>
 	<input class="shareeInput"

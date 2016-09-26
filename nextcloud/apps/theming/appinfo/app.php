@@ -3,6 +3,9 @@
  * @copyright Copyright (c) 2016 Bjoern Schiessle <bjoern@schiessle.org>
  * @copyright Copyright (c) 2016 Lukas Reschke <lukas@statuscode.ch>
  *
+ * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Lukas Reschke <lukas@statuscode.ch>
+ *
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,15 +23,13 @@
  *
  */
 
-\OCP\App::registerAdmin('theming', 'settings/settings-admin');
-
 $linkToCSS = \OC::$server->getURLGenerator()->linkToRoute(
 	'theming.Theming.getStylesheet',
 	[
 		'v' => \OC::$server->getConfig()->getAppValue('theming', 'cachebuster', '0'),
 	]
 );
-\OC_Util::addHeader(
+\OCP\Util::addHeader(
 	'link',
 	[
 		'rel' => 'stylesheet',
@@ -36,3 +37,15 @@ $linkToCSS = \OC::$server->getURLGenerator()->linkToRoute(
 	]
 );
 
+$linkToJs = \OC::$server->getURLGenerator()->linkToRoute(
+	'theming.Theming.getJavascript',
+	[
+		'v' => \OC::$server->getConfig()->getAppValue('theming', 'cachebuster', '0'),
+	]
+);
+\OCP\Util::addHeader(
+	'script',
+	[
+		'src' => $linkToJs,
+	], ''
+);

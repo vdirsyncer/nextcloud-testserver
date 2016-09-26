@@ -1,12 +1,14 @@
 <?php
 /**
- * @author Arthur Schiwon <blizzz@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bart Visscher <bartv@thisnet.nl>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <icewind@owncloud.com>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -30,8 +32,8 @@ OCP\JSON::callCheck();
 
 $l = \OC::$server->getL10N('user_ldap');
 
-$ldapWrapper = new OCA\user_ldap\lib\LDAP();
-$connection = new \OCA\user_ldap\lib\Connection($ldapWrapper, '', null);
+$ldapWrapper = new OCA\User_LDAP\LDAP();
+$connection = new \OCA\User_LDAP\Connection($ldapWrapper, '', null);
 //needs to be true, otherwise it will also fail with an irritating message
 $_POST['ldap_configuration_active'] = 1;
 

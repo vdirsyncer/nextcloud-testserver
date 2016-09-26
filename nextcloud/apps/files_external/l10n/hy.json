@@ -1,6 +1,6 @@
 { "translations": {
     "Personal" : "Անձնական",
-    "Never" : "Երբեք",
+    "Saved" : "Պահված",
     "Username" : "Օգտանուն",
     "Password" : "Գաղտնաբառ",
     "Save" : "Պահպանել",
@@ -8,8 +8,8 @@
     "Dropbox" : "Dropbox",
     "Share" : "Կիսվել",
     "Name" : "Անուն",
+    "Never" : "Երբեք",
     "Folder name" : "Պանակի անուն",
-    "Delete" : "Ջնջել",
-    "Saved" : "Պահված"
+    "Delete" : "Ջնջել"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Config.php Parameters &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Config.php Parameters &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Email Configuration" href="email_configuration.html" />
     <link rel="prev" title="Defining Background Jobs" href="background_jobs_configuration.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
@@ -86,6 +87,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#file-versions">File versions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nextcloud-verifications">Nextcloud Verifications</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#alternate-code-locations">Alternate Code Locations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#apps">Apps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#previews">Previews</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ldap">LDAP</a></li>
@@ -111,6 +113,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -192,6 +195,14 @@ never use it.</p>
 <p>Your list of trusted domains that users can log into. Specifying trusted
 domains prevents host header poisoning. Do not remove this, as it performs
 necessary security checks.</p>
+<p>You can specify:</p>
+<ul class="simple">
+<li>the exact hostname of your host or virtual host, e.g. demo.example.org.</li>
+<li>the exact hostname with permitted port, e.g. demo.example.org:443.
+This disallows all other ports on this host</li>
+<li>use * as a wildcard, e.g. ubos-raspberry-pi*.local will allow
+ubos-raspberry-pi.local and ubos-raspberry-pi-2.local</li>
+</ul>
 <div class="highlight-python"><div class="highlight"><pre>&#39;datadirectory&#39; =&gt; &#39;/var/www/nextcloud/data&#39;,
 </pre></div>
 </div>
@@ -350,6 +361,12 @@ expressed in seconds.</p>
 </div>
 <p>Enable or disable session keep-alive when a user is logged in to the Web UI.</p>
 <p>Enabling this sends a &#8220;heartbeat&#8221; to the server to keep it from timing out.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;token_auth_enforced&#39; =&gt; false,
+</pre></div>
+</div>
+<p>Enforce token authentication for clients, which blocks requests using the user
+password for enhanced security. Users need to generate tokens in personal settings
+which can be used as passwords on their clients.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;skeletondirectory&#39; =&gt; &#39;/path/to/nextcloud/core/skeleton&#39;,
 </pre></div>
 </div>
@@ -536,7 +553,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 file and folder deletion. For migration purposes, this setting is installed
 initially set to &#8220;auto&#8221;, which is equivalent to the default setting in
-ownCloud 8.1 and before.</p>
+Nextcloud 8.1 and before.</p>
 <p>Available values:</p>
 <ul>
 <li><dl class="first docutils">
@@ -592,7 +609,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 version deletion. For migration purposes, this setting is installed
 initially set to &#8220;auto&#8221;, which is equivalent to the default setting in
-ownCloud 8.1 and before.</p>
+Nextcloud 8.1 and before.</p>
 <p>Available values:</p>
 <ul>
 <li><dl class="first docutils">
@@ -650,10 +667,6 @@ available.</p>
 </pre></div>
 </div>
 <p>URL that Nextcloud should use to look for updates</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;updater.release.channel&#39; =&gt; &#39;stable&#39;,
-</pre></div>
-</div>
-<p>Release channel to use for updates</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;has_internet_connection&#39; =&gt; true,
 </pre></div>
 </div>
@@ -692,16 +705,16 @@ process.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;log_type&#39; =&gt; &#39;owncloud&#39;,
 </pre></div>
 </div>
-<p>By default the Nextcloud logs are sent to the <code class="docutils literal"><span class="pre">owncloud.log</span></code> file in the
+<p>By default the Nextcloud logs are sent to the <code class="docutils literal"><span class="pre">nextcloud.log</span></code> file in the
 default Nextcloud data directory.</p>
 <p>If syslogging is desired, set this parameter to <code class="docutils literal"><span class="pre">syslog</span></code>.
 Setting this parameter to <code class="docutils literal"><span class="pre">errorlog</span></code> will use the PHP error_log function
 for logging.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;logfile&#39; =&gt; &#39;/var/log/owncloud.log&#39;,
+<div class="highlight-python"><div class="highlight"><pre>&#39;logfile&#39; =&gt; &#39;/var/log/nextcloud.log&#39;,
 </pre></div>
 </div>
 <p>Log file path for the Nextcloud logging type.</p>
-<p>Defaults to <code class="docutils literal"><span class="pre">[datadirectory]/owncloud.log</span></code></p>
+<p>Defaults to <code class="docutils literal"><span class="pre">[datadirectory]/nextcloud.log</span></code></p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;loglevel&#39; =&gt; 2,
 </pre></div>
 </div>
@@ -775,12 +788,16 @@ or no rotation. Specify a size in bytes, for example 104857600 (100 megabytes
 = 100 * 1024 * 1024 bytes). A new logfile is created with a new name when the
 old logfile reaches your limit. If a rotated log file is already present, it
 will be overwritten.</p>
+</div>
+<div class="section" id="alternate-code-locations">
+<h2>Alternate Code Locations<a class="headerlink" href="#alternate-code-locations" title="Permalink to this headline">¶</a></h2>
+<p>Some of the Nextcloud code may be stored in alternate locations.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;customclient_desktop&#39; =&gt;
         &#39;https://nextcloud.com/install/&#39;,
 &#39;customclient_android&#39; =&gt;
         &#39;https://play.google.com/store/apps/details?id=com.nextcloud.client&#39;,
 &#39;customclient_ios&#39; =&gt;
-        &#39;https://itunes.apple.com/us/app/owncloud/id543672169?mt=8&#39;,
+        &#39;https://itunes.apple.com/us/app/nextcloud/id1125420102?mt=8&#39;,
 </pre></div>
 </div>
 <p>This section is for configuring the download links for Nextcloud clients, as
@@ -793,7 +810,7 @@ seen in the first-run wizard and on Personal pages.</p>
 </pre></div>
 </div>
 <p>When enabled, admins may install apps from the Nextcloud app store.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;appstoreurl&#39; =&gt; &#39;https://api.owncloud.com/v1&#39;,
+<div class="highlight-python"><div class="highlight"><pre>&#39;appstoreurl&#39; =&gt; &#39;https://api.nextcloud.com/v1&#39;,
 </pre></div>
 </div>
 <p>The URL of the appstore to use.</p>
@@ -950,7 +967,7 @@ section of the Administrators Manual.</p>
 <p>defines the interval in minutes for the background job that checks user
 existence and marks them as ready to be cleaned up. The number is always
 minutes. Setting it to 0 disables the feature.</p>
-<p>See command line (occ) methods <a class="reference external" href="ldap:show-remnants">ldap:show-remnants</a> and user:delete</p>
+<p>See command line (occ) methods <code class="docutils literal"><span class="pre">ldap:show-remnants</span></code> and <code class="docutils literal"><span class="pre">user:delete</span></code></p>
 </div>
 <div class="section" id="comments">
 <h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
@@ -1055,6 +1072,29 @@ for more information.</p>
 </pre></div>
 </div>
 <p>Server details for one or more memcached servers to use for memory caching.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;memcached_options&#39; =&gt; array(
+        // Set timeouts to 50ms
+        \Memcached::OPT_CONNECT_TIMEOUT =&gt; 50,
+        \Memcached::OPT_RETRY_TIMEOUT =&gt;   50,
+        \Memcached::OPT_SEND_TIMEOUT =&gt;    50,
+        \Memcached::OPT_RECV_TIMEOUT =&gt;    50,
+        \Memcached::OPT_POLL_TIMEOUT =&gt;    50,
+
+        // Enable compression
+        \Memcached::OPT_COMPRESSION =&gt;          true,
+
+        // Turn on consistent hashing
+        \Memcached::OPT_LIBKETAMA_COMPATIBLE =&gt; true,
+
+        // Enable Binary Protocol
+        \Memcached::OPT_BINARY_PROTOCOL =&gt;      true,
+
+        // Binary serializer vill be enabled if the igbinary PECL module is available
+        //\Memcached::OPT_SERIALIZER =&gt; \Memcached::SERIALIZER_IGBINARY,
+),
+</pre></div>
+</div>
+<p>Connection options for memcached, see <a class="reference external" href="http://apprize.info/php/scaling/15.html">http://apprize.info/php/scaling/15.html</a></p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;cache_path&#39; =&gt; &#39;&#39;,
 </pre></div>
 </div>
@@ -1062,6 +1102,13 @@ for more information.</p>
 <code class="docutils literal"><span class="pre">$user</span></code> is the current user. When specified, the format will change to
 <code class="docutils literal"><span class="pre">$cache_path/$user</span></code> where <code class="docutils literal"><span class="pre">$cache_path</span></code> is the configured cache directory
 and <code class="docutils literal"><span class="pre">$user</span></code> is the user.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;cache_chunk_gc_ttl&#39; =&gt; 86400, // 60*60*24 = 1 day
+</pre></div>
+</div>
+<p>TTL of chunks located in the cache folder before they&#8217;re removed by
+garbage collection (in seconds). Increase this value if users have
+issues uploading very large files via the Nextcloud Client as upload isn&#8217;t
+completed within one day.</p>
 </div>
 <div class="section" id="using-object-store-with-nextcloud">
 <h2>Using Object Store with Nextcloud<a class="headerlink" href="#using-object-store-with-nextcloud" title="Permalink to this headline">¶</a></h2>
@@ -1185,11 +1232,11 @@ AES-256-CFB are supported.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;minimum.supported.desktop.version&#39; =&gt; &#39;1.7.0&#39;,
 </pre></div>
 </div>
-<p>The minimum ownCloud desktop client version that will be allowed to sync with
+<p>The minimum Nextcloud desktop client version that will be allowed to sync with
 this server instance. All connections made from earlier clients will be denied
-by the server. Defaults to the minimum officially supported ownCloud desktop
-client version at the time of release of this server version.</p>
-<p>When changing this, note that older unsupported versions of the ownCloud desktop
+by the server. Defaults to the minimum officially supported Nextcloud desktop
+clientversion at the time of release of this server version.</p>
+<p>When changing this, note that older unsupported versions of the Nextcloud desktop
 client may not function as expected, and could lead to permanent data loss for
 clients or other unexpected results.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;quota_include_external_storage&#39; =&gt; false,
@@ -1215,20 +1262,6 @@ general use if outside changes might happen.</p>
 same storage as the upload target. Setting this to false will store the part
 files in the root of the users folder which might be required to work with certain
 external storage setups that have limited rename capabilities.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;asset-pipeline.enabled&#39; =&gt; false,
-</pre></div>
-</div>
-<p>All css and js files will be served by the Web server statically in one js
-file and one css file if this is set to <code class="docutils literal"><span class="pre">true</span></code>. This improves performance.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;assetdirectory&#39; =&gt; &#39;/var/www/nextcloud&#39;,
-</pre></div>
-</div>
-<p>The parent of the directory where css and js assets will be stored if
-pipelining is enabled; this defaults to the Nextcloud directory. The assets
-will be stored in a subdirectory of this directory named &#8216;assets&#8217;. The
-server <em>must</em> be configured to serve that directory as $WEBROOT/assets.</p>
-<p>You will only likely need to change this if the main Nextcloud directory
-is not writeable by the Web server in your configuration.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;mount_file&#39; =&gt; &#39;/var/www/nextcloud/data/mount.json&#39;,
 </pre></div>
 </div>
@@ -1276,18 +1309,38 @@ at the same time. Can help prevent side effects that would
 be caused by concurrent operations. Mainly relevant for
 very large installations with many users working with
 shared files.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;filelocking.ttl&#39; =&gt; 3600,
+</pre></div>
+</div>
+<p>Set the time-to-live for locks in secconds.</p>
+<p>Any lock older than this will be automatically cleaned up.</p>
+<p>If not set this defaults to either 1 hour or the php max_execution_time, whichever is higher.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;memcache.locking&#39; =&gt; &#39;\\OC\\Memcache\\Redis&#39;,
 </pre></div>
 </div>
 <p>Memory caching backend for file locking</p>
 <p>Because most memcache backends can clean values without warning using redis
 is highly recommended to <em>avoid data loss</em>.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;upgrade.disable-web&#39; =&gt; false,
+</pre></div>
+</div>
+<p>Disable the web based updater</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;debug&#39; =&gt; false,
 </pre></div>
 </div>
 <p>Set this Nextcloud instance to debugging mode</p>
 <p>Only enable this for local development and not in production environments
 This will disable the minifier and outputs some additional debug information</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;data-fingerprint&#39; =&gt; &#39;&#39;,
+</pre></div>
+</div>
+<p>Sets the data-fingerprint of the current data served</p>
+<p>This is a property used by the clients to find out if a backup has been
+restored on the server. Once a backup is restored run
+./occ maintenance:data-fingerprint
+To set this to a new value.</p>
+<p>Updating/Deleting this value can make connected clients stall until
+the user has resolved conflicts.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;copied_sample_config&#39; =&gt; true,
 </pre></div>
 </div>

@@ -4,7 +4,8 @@ OC.L10N.register(
     "Saved" : "সংরক্ষিত",
     "Delete" : "মুছে ফেলা",
     "Cancel" : "বাতিল করা",
-    "Get the apps to sync your files" : "আপনার ফাইল সিঙ্ক করার অ্যাপ পান",
-    "Username" : "ইউজারনেম"
+    "Name" : "নাম",
+    "Username" : "ইউজারনেম",
+    "Get the apps to sync your files" : "আপনার ফাইল সিঙ্ক করার অ্যাপ পান"
 },
 "nplurals=2; plural=(n != 1);");

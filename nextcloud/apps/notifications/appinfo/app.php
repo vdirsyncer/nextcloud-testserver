@@ -1,6 +1,6 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Tom Needham <tom@owncloud.com>
  *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
@@ -20,8 +20,6 @@
  *
  */
 
-namespace OCA\Notifications\AppInfo;
-
 use OCA\Notifications\App;
 use OCA\Notifications\Handler;
 use OCP\Util;
@@ -39,7 +37,8 @@ use OCP\Util;
 $request = \OC::$server->getRequest();
 if (\OC::$server->getUserSession()->getUser() !== null
 	&& substr($request->getScriptName(), 0 - strlen('/index.php')) === '/index.php'
-	&& substr($request->getPathInfo(), 0, strlen('/s/')) !== '/s/') {
+	&& substr($request->getPathInfo(), 0, strlen('/s/')) !== '/s/'
+	&& substr($request->getPathInfo(), 0, strlen('/login/')) !== '/login/') {
 	Util::addScript('notifications', 'app');
 	Util::addScript('notifications', 'notification');
 	Util::addStyle('notifications', 'styles');

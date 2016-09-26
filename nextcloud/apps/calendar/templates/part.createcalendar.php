@@ -1,7 +1,7 @@
 
 <?php
 /**
- * ownCloud - Calendar App
+ * Calendar App
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
@@ -37,7 +37,7 @@
 
 	<fieldset class="calendarlist-fieldset add-new hide">
 		<form ng-submit="create(newCalendarInputVal,selected)">
-			<input class="app-navigation-input" type="text" ng-model="newCalendarInputVal" autofocus />
+			<input class="app-navigation-input" type="text" ng-model="newCalendarInputVal" autofocus placeholder="<?php p($l->t('Name')); ?>"/>
 			<colorpicker class="colorpicker" selected="selected"></colorpicker>
 			<button
 				id="submitnewCalendar"

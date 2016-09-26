@@ -66,6 +66,14 @@ Your list of trusted domains that users can log into. Specifying trusted
 domains prevents host header poisoning. Do not remove this, as it performs
 necessary security checks.
 
+You can specify:
+
+- the exact hostname of your host or virtual host, e.g. demo.example.org.
+- the exact hostname with permitted port, e.g. demo.example.org:443.
+  This disallows all other ports on this host
+- use * as a wildcard, e.g. ubos-raspberry-pi*.local will allow
+  ubos-raspberry-pi.local and ubos-raspberry-pi-2.local
+
 ::
 
 	'datadirectory' => '/var/www/nextcloud/data',
@@ -265,6 +273,14 @@ expressed in seconds.
 Enable or disable session keep-alive when a user is logged in to the Web UI.
 
 Enabling this sends a "heartbeat" to the server to keep it from timing out.
+
+::
+
+	'token_auth_enforced' => false,
+
+Enforce token authentication for clients, which blocks requests using the user
+password for enhanced security. Users need to generate tokens in personal settings
+which can be used as passwords on their clients.
 
 ::
 
@@ -515,7 +531,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 file and folder deletion. For migration purposes, this setting is installed
 initially set to "auto", which is equivalent to the default setting in
-ownCloud 8.1 and before.
+Nextcloud 8.1 and before.
 
 Available values:
 
@@ -556,7 +572,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 version deletion. For migration purposes, this setting is installed
 initially set to "auto", which is equivalent to the default setting in
-ownCloud 8.1 and before.
+Nextcloud 8.1 and before.
 
 Available values:
 
@@ -602,12 +618,6 @@ available.
 	'updater.server.url' => 'https://updates.nextcloud.org/server/',
 
 URL that Nextcloud should use to look for updates
-
-::
-
-	'updater.release.channel' => 'stable',
-
-Release channel to use for updates
 
 ::
 
@@ -661,7 +671,7 @@ Logging
 
 	'log_type' => 'owncloud',
 
-By default the Nextcloud logs are sent to the ``owncloud.log`` file in the
+By default the Nextcloud logs are sent to the ``nextcloud.log`` file in the
 default Nextcloud data directory.
 
 If syslogging is desired, set this parameter to ``syslog``.
@@ -670,11 +680,11 @@ for logging.
 
 ::
 
-	'logfile' => '/var/log/owncloud.log',
+	'logfile' => '/var/log/nextcloud.log',
 
 Log file path for the Nextcloud logging type.
 
-Defaults to ``[datadirectory]/owncloud.log``
+Defaults to ``[datadirectory]/nextcloud.log``
 
 ::
 
@@ -751,6 +761,12 @@ or no rotation. Specify a size in bytes, for example 104857600 (100 megabytes
 old logfile reaches your limit. If a rotated log file is already present, it
 will be overwritten.
 
+Alternate Code Locations
+------------------------
+
+Some of the Nextcloud code may be stored in alternate locations.
+
+
 ::
 
 	'customclient_desktop' =>
@@ -758,7 +774,7 @@ will be overwritten.
 	'customclient_android' =>
 		'https://play.google.com/store/apps/details?id=com.nextcloud.client',
 	'customclient_ios' =>
-		'https://itunes.apple.com/us/app/owncloud/id543672169?mt=8',
+		'https://itunes.apple.com/us/app/nextcloud/id1125420102?mt=8',
 
 This section is for configuring the download links for Nextcloud clients, as
 seen in the first-run wizard and on Personal pages.
@@ -777,7 +793,7 @@ When enabled, admins may install apps from the Nextcloud app store.
 
 ::
 
-	'appstoreurl' => 'https://api.owncloud.com/v1',
+	'appstoreurl' => 'https://api.nextcloud.com/v1',
 
 The URL of the appstore to use.
 
@@ -960,7 +976,7 @@ defines the interval in minutes for the background job that checks user
 existence and marks them as ready to be cleaned up. The number is always
 minutes. Setting it to 0 disables the feature.
 
-See command line (occ) methods ldap:show-remnants and user:delete
+See command line (occ) methods ``ldap:show-remnants`` and ``user:delete``
 
 Comments
 --------
@@ -1094,12 +1110,46 @@ Server details for one or more memcached servers to use for memory caching.
 
 ::
 
+	'memcached_options' => array(
+		// Set timeouts to 50ms
+		\Memcached::OPT_CONNECT_TIMEOUT => 50,
+		\Memcached::OPT_RETRY_TIMEOUT =>   50,
+		\Memcached::OPT_SEND_TIMEOUT =>    50,
+		\Memcached::OPT_RECV_TIMEOUT =>    50,
+		\Memcached::OPT_POLL_TIMEOUT =>    50,
+	
+		// Enable compression
+		\Memcached::OPT_COMPRESSION =>          true,
+	
+		// Turn on consistent hashing
+		\Memcached::OPT_LIBKETAMA_COMPATIBLE => true,
+	
+		// Enable Binary Protocol
+		\Memcached::OPT_BINARY_PROTOCOL =>      true,
+	
+		// Binary serializer vill be enabled if the igbinary PECL module is available
+		//\Memcached::OPT_SERIALIZER => \Memcached::SERIALIZER_IGBINARY,
+	),
+
+Connection options for memcached, see http://apprize.info/php/scaling/15.html
+
+::
+
 	'cache_path' => '',
 
 Location of the cache folder, defaults to ``data/$user/cache`` where
 ``$user`` is the current user. When specified, the format will change to
 ``$cache_path/$user`` where ``$cache_path`` is the configured cache directory
 and ``$user`` is the user.
+
+::
+
+	'cache_chunk_gc_ttl' => 86400, // 60*60*24 = 1 day
+
+TTL of chunks located in the cache folder before they're removed by
+garbage collection (in seconds). Increase this value if users have
+issues uploading very large files via the Nextcloud Client as upload isn't
+completed within one day.
 
 Using Object Store with Nextcloud
 ---------------------------------
@@ -1253,12 +1303,12 @@ AES-256-CFB are supported.
 
 	'minimum.supported.desktop.version' => '1.7.0',
 
-The minimum ownCloud desktop client version that will be allowed to sync with
+The minimum Nextcloud desktop client version that will be allowed to sync with
 this server instance. All connections made from earlier clients will be denied
-by the server. Defaults to the minimum officially supported ownCloud desktop
-client version at the time of release of this server version.
+by the server. Defaults to the minimum officially supported Nextcloud desktop
+clientversion at the time of release of this server version.
 
-When changing this, note that older unsupported versions of the ownCloud desktop
+When changing this, note that older unsupported versions of the Nextcloud desktop
 client may not function as expected, and could lead to permanent data loss for
 clients or other unexpected results.
 
@@ -1292,25 +1342,6 @@ By default Nextcloud will store the part files created during upload in the
 same storage as the upload target. Setting this to false will store the part
 files in the root of the users folder which might be required to work with certain
 external storage setups that have limited rename capabilities.
-
-::
-
-	'asset-pipeline.enabled' => false,
-
-All css and js files will be served by the Web server statically in one js
-file and one css file if this is set to ``true``. This improves performance.
-
-::
-
-	'assetdirectory' => '/var/www/nextcloud',
-
-The parent of the directory where css and js assets will be stored if
-pipelining is enabled; this defaults to the Nextcloud directory. The assets
-will be stored in a subdirectory of this directory named 'assets'. The
-server *must* be configured to serve that directory as $WEBROOT/assets.
-
-You will only likely need to change this if the main Nextcloud directory
-is not writeable by the Web server in your configuration.
 
 ::
 
@@ -1382,6 +1413,16 @@ shared files.
 
 ::
 
+	'filelocking.ttl' => 3600,
+
+Set the time-to-live for locks in secconds.
+
+Any lock older than this will be automatically cleaned up.
+
+If not set this defaults to either 1 hour or the php max_execution_time, whichever is higher.
+
+::
+
 	'memcache.locking' => '\\OC\\Memcache\\Redis',
 
 Memory caching backend for file locking
@@ -1391,12 +1432,32 @@ is highly recommended to *avoid data loss*.
 
 ::
 
+	'upgrade.disable-web' => false,
+
+Disable the web based updater
+
+::
+
 	'debug' => false,
 
 Set this Nextcloud instance to debugging mode
 
 Only enable this for local development and not in production environments
 This will disable the minifier and outputs some additional debug information
+
+::
+
+	'data-fingerprint' => '',
+
+Sets the data-fingerprint of the current data served
+
+This is a property used by the clients to find out if a backup has been
+restored on the server. Once a backup is restored run
+./occ maintenance:data-fingerprint
+To set this to a new value.
+
+Updating/Deleting this value can make connected clients stall until
+the user has resolved conflicts.
 
 ::
 

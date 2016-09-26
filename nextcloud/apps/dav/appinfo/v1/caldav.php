@@ -1,10 +1,12 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
- * @author Lukas Reschke <lukas@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Christoph Wurst <christoph@owncloud.com>
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -34,6 +36,8 @@ $authBackend = new Auth(
 	\OC::$server->getSession(),
 	\OC::$server->getUserSession(),
 	\OC::$server->getRequest(),
+	\OC::$server->getTwoFactorAuthManager(),
+	\OC::$server->getBruteForceThrottler(),
 	'principals/'
 );
 $principalBackend = new Principal(
@@ -44,12 +48,14 @@ $principalBackend = new Principal(
 $db = \OC::$server->getDatabaseConnection();
 $calDavBackend = new CalDavBackend($db, $principalBackend);
 
+$debugging = \OC::$server->getConfig()->getSystemValue('debug', false);
+
 // Root nodes
 $principalCollection = new \Sabre\CalDAV\Principal\Collection($principalBackend);
-$principalCollection->disableListing = true; // Disable listing
+$principalCollection->disableListing = !$debugging; // Disable listing
 
 $addressBookRoot = new CalendarRoot($principalBackend, $calDavBackend);
-$addressBookRoot->disableListing = true; // Disable listing
+$addressBookRoot->disableListing = !$debugging; // Disable listing
 
 $nodes = array(
 	$principalCollection,
@@ -66,8 +72,10 @@ $server->addPlugin(new MaintenancePlugin());
 $server->addPlugin(new \Sabre\DAV\Auth\Plugin($authBackend, 'ownCloud'));
 $server->addPlugin(new \Sabre\CalDAV\Plugin());
 
-$acl = new LegacyDAVACL();
-$server->addPlugin($acl);
+$server->addPlugin(new LegacyDAVACL());
+if ($debugging) {
+	$server->addPlugin(new Sabre\DAV\Browser\Plugin());
+}
 
 $server->addPlugin(new \Sabre\CalDAV\ICSExportPlugin());
 $server->addPlugin(new ExceptionLoggerPlugin('caldav', \OC::$server->getLogger()));

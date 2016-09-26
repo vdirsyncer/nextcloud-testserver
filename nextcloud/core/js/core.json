@@ -1,6 +1,6 @@
 {
 	"vendor": [
-		"jquery/jquery.min.js",
+		"jquery/dist/jquery.min.js",
 		"jquery-migrate/jquery-migrate.min.js",
 		"jquery-ui/ui/jquery-ui.custom.js",
 		"underscore/underscore.js",
@@ -10,7 +10,8 @@
 		"bootstrap/js/tooltip.js",
 		"backbone/backbone.js",
 		"es6-promise/dist/es6-promise.js",
-		"davclient.js/lib/client.js"
+		"davclient.js/lib/client.js",
+		"clipboard/dist/clipboard.js"
 	],
 	"libraries": [
 		"jquery-showpassword.js",
@@ -32,6 +33,7 @@
 		"sharedialogview.js",
 		"sharedialogexpirationview.js",
 		"sharedialoglinkshareview.js",
+		"sharedialogmailview.js",
 		"sharedialogresharerinfoview.js",
 		"sharedialogshareelistview.js",
 		"octemplate.js",

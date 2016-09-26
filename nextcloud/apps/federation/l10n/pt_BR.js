@@ -1,14 +1,18 @@
 OC.L10N.register(
     "federation",
     {
-    "Server added to the list of trusted Nextclouds" : "Servidor adicionado à lista de Nextclouds confiáveis",
+    "Added to the list of trusted servers" : "Adicionado a lista de servidores confiáveis.",
     "Server is already in the list of trusted servers." : "O servidor já está na lista de servidores confiáveis.",
-    "No Nextcloud server found" : "Nenhum servidor Nextcloud encontrado",
+    "No server to federate with found" : "Nenhum servidor para associar com o encontrado",
     "Could not add server" : "Não foi possível adicionar servidor",
     "Federation" : "Associação",
-    "Nextcloud Federation allows you to connect with other trusted Nextclouds to exchange the user directory. For example this will be used to auto-complete external users for federated sharing." : "A associação Nextcloud permite que você conecte com outros Nextcloud confiáveis para haja trocas de diretórios do usuário. Por exemplo, este será utilizado para usuários externos de complementação para compartilhamento associado.",
+    "Federation allows you to connect with other trusted servers to exchange the user directory. For example this will be used to auto-complete external users for federated sharing." : "Federação permite que você conecte com outros servidores confiáveis para trocar o diretório do usuário. Por exemplo, este atributo será usado para completar automaticamente usuários externos para compartilhamento federado.",
     "Add server automatically once a federated share was created successfully" : "Adicionar servidor automaticamente uma vez que um compartilhamento associado foi criado com êxito",
+    "Trusted Servers" : "Servidores confiáveis",
+    "+ Add Nextcloud server" : "+ Adicionar servidor Nextcloud",
     "Nextcloud Server" : "Servidor Nextcloud",
-    "Trusted Nextcloud Servers" : "Servidores Nextcloud Confiáveis"
+    "Server added to the list of trusted Nextclouds" : "Adicionado a lista de servidores confiáveis.",
+    "No Nextcloud server found" : "Servidor Nextcloud não encontrado",
+    "Trusted Nextcloud Servers" : "Servidores Nextcloud confiáveis"
 },
 "nplurals=2; plural=(n > 1);");

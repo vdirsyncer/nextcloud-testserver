@@ -2,17 +2,15 @@
 Using the occ Command
 =====================
 
-Nextcloud's ``occ`` command (Nextcloud console) is Nextcloud's command-line 
+Nextcloud's ``occ`` command (origins from "ownCloud Console") is Nextcloud's command-line
 interface. You can perform many common server operations with ``occ``, such as 
 installing and upgrading Nextcloud, manage users, encryption, passwords, LDAP 
 setting, and more.
 
-``occ`` is in the :file:`nextcloud/` directory; for example
-:file:`/var/www/nextcloud` on Ubuntu Linux. ``occ`` is a PHP script. **You must
+``occ`` is in the :file:`nextcloud/` directory; for example 
+:file:`/var/www/nextcloud` on Ubuntu Linux. ``occ`` is a PHP script. **You must 
 run it as your HTTP user** to ensure that the correct permissions are maintained 
-on your Nextcloud files and directories. In Nextcloud 8.2+ you may run it from 
-any directory (specifying the filepath); in previous releases it had to be 
-run from the :file:`nextcloud/` directory.
+on your Nextcloud files and directories.
 
 occ Command Directory
 ---------------------
@@ -39,6 +37,8 @@ occ Command Directory
 * :ref:`versions_label`
 * :ref:`command_line_installation_label`
 * :ref:`command_line_upgrade_label`
+* :ref:`two_factor_auth_label`
+* :ref:`disable_user_label`
 
 .. _http_user_label:
 
@@ -165,7 +165,6 @@ The ``app`` commands list, enable, and disable apps::
   app:disable      disable an app
   app:enable       enable an app
   app:getpath      Get an absolute path to the app directory
-                   (added in 9.0)
   app:list         List all available apps
 
 List all of your installed apps, and show whether they are 
@@ -417,8 +416,8 @@ Run this command to migrate calendars::
 
  sudo -u www-data php occ dav:migrate-calendars [user]
  
-See `Nextcloud 9.0 - calendar migration analysis 
-<http://morrisjobke.de/2016/03/07/Nextcloud-9.0-calendar-migration-analysis/>`_ 
+See `ownCloud 9.0 - calendar migration analysis
+<http://morrisjobke.de/2016/03/07/ownCloud-9.0-calendar-migration-analysis/>`_ 
 for help with troubleshooting and reporting problems. 
 
 ``dav:sync-birthday-calendar`` adds all birthdays to your calendar from 
@@ -431,8 +430,6 @@ bernie::
 addressbook::
 
  sudo -u www-data php occ dav:sync-system-addressbook
- 
-Added in 9.0. 
 
 .. _database_conversion_label:  
   
@@ -559,13 +556,11 @@ Synchronize the addressbooks of all federated Nextcloud servers::
  federation:sync-addressbooks  Synchronizes addressbooks of all 
                                federated clouds
 
-In Nextcloud 9.+, servers connected with federation shares can share user 
+In Nextcloud, servers connected with federation shares can share user
 address books, and auto-complete usernames in share dialogs. Use this command 
 to synchronize federated servers::
 
   sudo -u www-data php occ federation:sync-addressbooks
-  
-Added in 9.0.  
 
 .. _file_operations_label:
 
@@ -578,7 +573,7 @@ File Operations
   files:cleanup              cleanup filecache
   files:scan                 rescan filesystem
   files:transfer-ownership   All files and folders are moved to another 
-                             user - shares are moved as well. (Added in 9.0)
+                             user - shares are moved as well.
  
 The ``files:scan`` command scans for new files and updates the file cache. You 
 may rescan all files, per-user, a space-delimited list of users, and limit the 
@@ -599,8 +594,13 @@ the scan::
    --quiet               suppress any output
    --verbose             files and directories being processed are shown 
                          additionally during scanning
+   --unscanned           scan only previously unscanned files
 
 Verbosity levels of ``-vv`` or ``-vvv`` are automatically reset to ``-v``
+
+Note for option --unscanned:
+In general there is a background job (through cron) that will do that scan periodically.
+The --unscanned option makes it possible to trigger this from the CLI.
 
 When using the ``--path`` option, the path must consist of following 
 components::
@@ -629,16 +629,13 @@ entries that have no matching entries in the storage table.
 You may transfer all files and shares from one user to another. This is useful 
 before removing a user::
 
- sudo -u www-data php occ files:transfer-ownership <source-user> 
+ sudo -u www-data php occ files:transfer-ownership <source-user>
  <destination-user>
 
 .. _files_external_label:
 
 Files External
 --------------
-
-These commands replace the ``data/mount.json`` configuration file used in 
-Nextcloud releases before 9.0.
 
 .. note::
   These commands are only available when the "External storage support" app
@@ -668,14 +665,12 @@ Nextcloud user.
 Use ``files_external:import [filename]`` to import legacy JSON configurations, 
 and to copy external mount configurations to another Nextcloud server.
 
-Added in 9.0.
-
 .. _integrity_check_label:
 
 Integrity Check
 ---------------
 
-Apps which have an official tag MUST be code signed starting with Nextcloud 9.0. Unsigned official apps won't be installable anymore. Code signing is optional for all third-party applications::
+Apps which have an official tag MUST be code signed with Nextcloud. Unsigned official apps won't be installable anymore. Code signing is optional for all third-party applications::
 
  integrity
   integrity:check-app                 Check app integrity using a signature.
@@ -692,13 +687,12 @@ Verify your app::
   sudo -u www-data php occ integrity:check-app --path=/pathto/app appname
   
 When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See `Code Signing 
-<https://docs.nextcloud.org/server/9/developer_manual/app/code_signing.html#how-to-get-your-app-signed>`_ in the Developer manual for more detailed information.
+<https://docs.nextcloud.org/server/10/developer_manual/app/code_signing.html#how-to-get-your-app-signed>`_ in the Developer manual for more detailed information.
+.. TODO ON RELEASE: Update version number above on release
 
 ``integrity:sign-core`` is for Nextcloud core developers only.
 
 See :doc:`../issues/code_signing` to learn more.
-  
-Added in 9.0.  
 
 .. _create_javascript_translation_files_label:
  
@@ -706,7 +700,7 @@ l10n, Create Javascript Translation Files for Apps
 --------------------------------------------------
 
 This command is for app developers to update their translation mechanism from
-Nextcloud 7 to Nextcloud 8 and later.
+ownCloud 7 to Nextcloud.
 
 .. _ldap_commands_label: 
  
@@ -822,7 +816,7 @@ Run ``log:owncloud`` to see your current logging status::
 
  sudo -u www-data php occ log:owncloud 
  Log backend Nextcloud: enabled
- Log file: /opt/nextcloud/data/owncloud.log
+ Log file: /opt/nextcloud/data/nextcloud.log
  Rotate at: disabled
 
 Use the ``--enable`` option to turn on logging. Use ``--file`` to set a 
@@ -886,8 +880,8 @@ change to existing files.
 
 .. _security_commands_label:
 
-Security (Import SSL Certificates)
-----------------------------------
+Security
+--------
 
 Use these commands to manage server-wide SSL certificates. These are useful when you create federation shares with other Nextcloud servers that use self-signed certificates::
 
@@ -965,12 +959,15 @@ The ``user`` commands create and remove users, reset passwords, display a simple
 report showing how many users you have, and when a user was last logged in::
 
  user
-  user:add            adds a user
-  user:delete         deletes the specified user
-  user:lastseen       shows when the user was logged it last 
-                      time
-  user:report         shows how many users have access
-  user:resetpassword  Resets the password of the named user
+  user:add                            adds a user
+  user:delete                         deletes the specified user
+  user:disable                        disables the specified user
+  user:enable                         enables the specified user
+  user:lastseen                       shows when the user was logged in last time
+  user:report                         shows how many users have access
+  user:resetpassword                  Resets the password of the named user
+  user:setting                        Read and modify user settings
+
 
 You can create a new user with their display name, login name, and any group 
 memberships with the ``user:add`` command. The syntax is::
@@ -1034,7 +1031,36 @@ View a user's most recent login::
    
  sudo -u www-data php occ user:lastseen layla 
    layla's last login: 09.01.2015 18:46
-   
+
+Read user settings::
+
+ sudo -u www-data php occ user:setting layla
+   - core:
+     - lang: en
+   - login:
+     - lastLogin: 1465910968
+   - settings:
+     - email: layla@example.tld
+
+Filter by app::
+
+ sudo -u www-data php occ user:setting layla core
+   - core:
+     - lang: en
+
+Get a single setting::
+
+ sudo -u www-data php occ user:setting layla core lang
+ en
+
+Set a setting::
+
+ sudo -u www-data php occ user:setting layla settings email "new-layla@example.tld"
+
+Delete a setting::
+
+ sudo -u www-data php occ user:setting layla settings email --delete
+
 Generate a simple report that counts all users, including users on external user
 authentication servers such as LDAP::
 
@@ -1091,8 +1117,8 @@ These commands are available only after you have downloaded and unpacked the
 Nextcloud archive, and taken no further installation steps.
 
 You can install Nextcloud entirely from the command line. After downloading the 
-tarball and copying Nextcloud into the appropriate directories (See :doc:`../installation/source_installation`) you can use ``occ`` commands in 
-place of running the graphical Installation Wizard.
+tarball and copying Nextcloud into the appropriate directories you can use ``occ`` 
+commands in place of running the graphical Installation Wizard.
 
 Apply correct permissions to your Nextcloud directories; see 
 :ref:`strong_perms_label`. Then choose your ``occ`` options. This lists your 
@@ -1161,7 +1187,7 @@ This example completes the installation::
 
  cd /var/www/nextcloud/
  sudo -u www-data php occ maintenance:install --database 
- "mysql" --database-name "nextcloud"  --database-user "root" --database-pass
+ "mysql" --database-name "nextcloud"  --database-user "root" --database-pass 
  "password" --admin-user "admin" --admin-pass "password" 
  Nextcloud is not installed - only a limited number of commands are available
  Nextcloud was successfully installed
@@ -1261,5 +1287,35 @@ option::
  sudo -u www-data php occ upgrade --skip-migration-test
 
 You can perform this simulation manually with the ``--dry-run`` option::
- 
+
  sudo -u www-data php occ upgrade --dry-run
+
+.. _two_factor_auth_label:
+
+Two-factor Authentication
+-------------------------
+If a two-factor provider app is enabled, it is enabled for all users by default
+(though the provider can decide whether or not the user has to pass the challenge).
+In the case of an user losing access to the second factor (e.g. lost phone with
+two-factor SMS verification), the admin can temporarily disable the two-factor
+check for that user via the occ command::
+
+ sudo -u www-data php occ twofactor:disable <username>
+
+To re-enable two-factor auth again use the following commmand::
+
+ sudo -u www-data php occ twofactor:enable <username>
+
+.. _disable_user_label:
+
+Disable Users
+-------------
+Admins can disable users via the occ command too::
+
+ sudo -u www-data php occ user:disable <username>
+
+Use the following command to enable the user again::
+
+ sudo -u www-data php occ user:enable <username>
+
+Note that once users are disabled, their connected browsers will be disconnected.

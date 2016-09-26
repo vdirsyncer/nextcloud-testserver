@@ -3,6 +3,10 @@
 	width: 100%;
 }
 
+#fullcalendar table {
+	white-space: inherit !important;
+}
+
 .fc-state-highlight.fc-day-number,
 #fullcalendar tbody tr,
 #fullcalendar tbody tr:hover,
@@ -85,7 +89,6 @@
 .add-new-subscription .calendarlist-fieldset input {
 	width: 130px;
 	margin-right: 2px;
-
 }
 
 .add-new-subscription .calendarlist-fieldset select {
@@ -246,6 +249,15 @@
 	background-color: transparent !important;
 }
 
+#app-navigation .refresh-shares {
+	position: absolute;
+	right: 15px;
+	height: 15px;
+	width: 15px;
+	top: 15px;
+	z-index: 1000;
+}
+
 #app-navigation > ul {
 	height: auto;
 }
@@ -253,7 +265,9 @@
 /* ColorPicker overrides. */
 .colorpicker {
 	display: block;
-	height: 30px;
+	height: auto;
+	padding-bottom: 3px;
+	padding-top: 3px;
 }
 
 .colorpicker .colorpicker-list {
@@ -302,8 +316,8 @@ li.calendar-share-item {
 }
 
 ul.dropdown-menu {
-	height: 100px;
-	overflow: scroll;
+	max-height: 100px;
+	overflow-y: scroll;
 	border: 1px #ddd solid;
 	border-radius: 0 0 3px 3px;
 	margin-top: -7px;
@@ -311,8 +325,12 @@ ul.dropdown-menu {
 	width: 94%;
 }
 
-ul.dropdown-menu  li {
+ul.dropdown-menu li {
 	height: 25px;
+}
+
+ul.dropdown-menu li:last-child {
+	border-bottom: none !important;
 }
 
 #app-navigation ul.dropdown-menu a {
@@ -332,6 +350,7 @@ ul.dropdown-menu li > a:hover {
 .fc .fc-axis,
 .fc-day-grid-event .fc-time,
 .fc-ltr .fc-basic-view .fc-day-number,
+.fc-ltr .fc-basic-view .fc-week-number,
 .fc-time-grid-event .fc-time {
 	opacity: .8;
 	font-size: 80%;
@@ -367,6 +386,10 @@ ul.dropdown-menu li > a:hover {
 	font-size: 13px;
 	line-height: initial;
 	padding-left: 3px;
+}
+
+.app-navigation-entry-menu .icon-link {
+	background-size: 16px;
 }
 
 #datepicker .datepicker_current,
@@ -728,6 +751,14 @@ button.delete:focus {
 	width: 45% !important;
 }
 
+.advanced .sidebar-top {
+	position: absolute;
+	width: 100%;
+	top: 0;
+	bottom: 120px;
+	overflow-y: scroll;
+}
+
 .advanced .pull-quarter {
 	width: 22% !important;
 }
@@ -815,16 +846,17 @@ button.delete:focus {
 }
 
 .input-with-button-on-right-side {
-	width: 85% !important;
+	width: 76% !important;
 	float: left;
+	margin-right: 6px !important;
 }
 
 .button-next-to-input {
 	height: 32px;
-	width: 5%;
+	width: 32px;
 }
 
-#app-settings .settings-fieldset .settings-fieldset-interior input {
+#app-settings .settings-fieldset .settings-fieldset-interior input:not([type="checkbox"]) {
 	width: 90%;
 }
 
@@ -865,6 +897,10 @@ button.delete:focus {
 #app-settings .settings-fieldset .settings-fieldset-interior-upload input {
 	position: absolute;
 	top: 18px;
+}
+
+#app-settings .settings-fieldset .settings-fieldset-interior-inline-label {
+	display: inline;
 }
 
 #app-settings .settings-fieldset .settings-fieldset-interior input[type="file"] {
@@ -922,7 +958,7 @@ button.delete:focus {
 	height: 100%;
 	font-size: 12px;
 	line-height: 20px;
-	background-color: #1d2d44;
+	background-color: #0082c9;
 }
 
 #importdialog table {

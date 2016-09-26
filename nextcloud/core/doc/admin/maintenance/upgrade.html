@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How to Upgrade Your Nextcloud Server &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>How to Upgrade Your Nextcloud Server &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Upgrade Nextcloud From Packages" href="package_upgrade.html" />
     <link rel="prev" title="Backing up Nextcloud" href="backup.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -82,7 +83,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="package_upgrade.html">Upgrade Nextcloud From Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Updater App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Nextcloud App</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual_upgrade.html">Manual Nextcloud Upgrade</a></li>
 <li class="toctree-l2"><a class="reference internal" href="restore.html">Restoring Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating.html">Migrating to a Different Server</a></li>
@@ -123,7 +124,7 @@ shared hosters, and for users who want an easy way to track different
 release channels. (It is not available and not supported on the Enterprise
 edition.)</li>
 <li><a class="reference internal" href="manual_upgrade.html"><em>Manually upgrading</em></a> with the Nextcloud <code class="docutils literal"><span class="pre">.tar</span></code> archive
-from <a class="reference external" href="https://nextcloud.com/install">https://nextcloud.com/install</a>.</li>
+from <a href="#id1"><span class="problematic" id="id2">`https://nextcloud.com/install/`_</span></a>.</li>
 <li>Manually upgrading is also an option for users on shared hosting; download
 and unpack the Nextcloud tarball to your PC. Delete your existing Nextcloud
 files, except <code class="docutils literal"><span class="pre">data/</span></code> and <code class="docutils literal"><span class="pre">config/</span></code> files, on your hosting account. Then
@@ -135,17 +136,17 @@ notification at the top of your Nextcloud Web interface. When you click the
 notification it brings you here, to this page.</p>
 <p><strong>It is best to keep your Nextcloud server upgraded regularly</strong>, and to install
 all point releases and major releases without skipping any of them, as skipping
-releases increases the risk of errors. Major releases are 8.0, 8.1, 8.2, and
-9.0. Point releases are intermediate releases for each major release. For
-example, 8.0.9 and 8.1.3 are point releases. <strong>Skipping major releases is not
+releases increases the risk of errors. Major releases are 9, 10, and
+11. Point releases are intermediate releases for each major release. For
+example, 9.0.52 and 10.0.2 are point releases. <strong>Skipping major releases is not
 supported.</strong></p>
 <p><strong>Upgrading is disruptive</strong>. Your Nextcloud server will be put into maintenance
 mode, so your users will be locked out until the upgrade is completed. Large
 installations may take several hours to complete the upgrade.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p><strong>Downgrading is not supported</strong> and risks corrupting your data!</p>
-<p class="last">If you want to revert to an older Nextcloud version, make a new, fresh
+<p class="last"><strong>Downgrading is not supported</strong> and risks corrupting your data! If
+you want to revert to an older Nextcloud version, make a new, fresh
 installation and then restore your data from backup. Before doing this,
 file a support ticket (if you have paid support) or ask for help in the
 Nextcloud forums to see if your issue can be resolved without downgrading.</p>

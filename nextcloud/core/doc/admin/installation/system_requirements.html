@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>System Requirements &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>System Requirements &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Nextcloud Deployment Recommendations" href="deployment_recommendations.html" />
     <link rel="prev" title="Installation" href="index.html" />
@@ -66,18 +66,20 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="">System Requirements</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#memory">Memory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#recommended-setup-for-running-nextcloud">Recommended Setup for Running Nextcloud</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#supported-platforms">Supported Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#database-requirements-for-mysql-mariadb">Database Requirements for MySQL / MariaDB</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud From the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
@@ -85,7 +87,7 @@
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_owncloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -156,6 +158,15 @@ Safari 5+</li>
 </ul>
 <p>See <a class="reference internal" href="source_installation.html"><em>Manual Installation on Linux</em></a> for minimum software versions for installing
 Nextcloud.</p>
+</div>
+<div class="section" id="database-requirements-for-mysql-mariadb">
+<h2>Database Requirements for MySQL / MariaDB<a class="headerlink" href="#database-requirements-for-mysql-mariadb" title="Permalink to this headline">¶</a></h2>
+<p>The following is currently required if you&#8217;re running Nextcloud together with a MySQL / MariaDB database:</p>
+<ul class="simple">
+<li>Disabled or BINLOG_FORMAT = MIXED configured Binary Logging (See: <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-binlog-label"><span>MySQL / MariaDB with Binary Logging Enabled</span></a>)</li>
+<li>InnoDB storage engine (MyISAM is not supported)</li>
+<li>&#8220;READ COMMITED&#8221; transaction isolation level (See: <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-transaction-label"><span>Database &#8220;READ COMMITED&#8221; transaction isolation level</span></a>)</li>
+</ul>
 </div>
 </div>
 

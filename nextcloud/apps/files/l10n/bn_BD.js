@@ -17,10 +17,11 @@ OC.L10N.register(
     "Invalid directory." : "ভুল ডিরেক্টরি",
     "Files" : "ফাইল",
     "All files" : "সব ফাইল",
-    "Favorites" : "প্রিয়জন",
     "Home" : "নিবাস",
     "Close" : "বন্ধ",
+    "Favorites" : "প্রিয়জন",
     "Upload cancelled." : "আপলোড বাতিল করা হয়েছে।",
+    "Uploading..." : "আপলোড করা হচ্ছে..........",
     "File upload is in progress. Leaving the page now will cancel the upload." : "ফাইল আপলোড চলমান। এই পৃষ্ঠা পরিত্যাগ করলে আপলোড বাতিল করা হবে।",
     "Actions" : "পদক্ষেপসমূহ",
     "Download" : "ডাউনলোড",
@@ -57,13 +58,8 @@ OC.L10N.register(
     "Save" : "সংরক্ষণ",
     "Settings" : "নিয়ামকসমূহ",
     "WebDAV" : "WebDAV",
-    "Cancel upload" : "আপলোড বাতিল কর",
     "Upload too large" : "আপলোডের আকারটি অনেক বড়",
     "The files you are trying to upload exceed the maximum size for file uploads on this server." : "আপনি এই সার্ভারে আপলোড করার জন্য অনুমোদিত ফাইলের সর্বোচ্চ আকারের চেয়ে বৃহদাকার ফাইল আপলোড করার চেষ্টা করছেন ",
-    "Text file" : "টেক্সট ফাইল",
-    "Upload cancelled." : "আপলোড বাতিল করা হয়েছে।",
-    "You changed %1$s" : "আপনি পরিবরতন করেছেন %1$s",
-    "You created %1$s" : "আপনি তৈরি করেছেন %1$s",
-    "You deleted %1$s" : "আপনি ডিলিট করেছেন %1$s"
+    "Text file" : "টেক্সট ফাইল"
 },
 "nplurals=2; plural=(n != 1);");

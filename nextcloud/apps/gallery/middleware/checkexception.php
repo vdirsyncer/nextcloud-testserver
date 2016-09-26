@@ -8,7 +8,7 @@
  *
  * @author Olivier Paroz <owncloud@interfasys.ch>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  */
 
 namespace OCA\Gallery\Middleware;
@@ -29,9 +29,7 @@ class CheckException extends \Exception {
 	 * @param int $code the HTTP status code
 	 */
 	public function __construct($msg, $code = 0) {
-		if($msg !== 'Share is a write-only share') {
-			Util::writeLog('gallery', 'Exception: ' . $msg . ' (' . $code . ')', Util::ERROR);
-		}
+		Util::writeLog('gallery', 'Exception: ' . $msg . ' (' . $code . ')', Util::ERROR);
 		parent::__construct($msg, $code);
 	}
 

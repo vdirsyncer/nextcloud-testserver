@@ -7,7 +7,6 @@ OC.L10N.register(
     "Personal" : "Pertsonala",
     "System" : "Sistema",
     "Grant access" : "Baimendu sarrera",
-    "Access granted" : "Sarrera baimendua",
     "All users. Type to select user or group." : "Erabiltzaile guztiak. Idatzi erabiltzaile edo taldea hautatzeko.",
     "(group)" : "(taldea)",
     "Saved" : "Gordeta",
@@ -55,8 +54,6 @@ OC.L10N.register(
     "Available for" : "Hauentzat eskuragarri",
     "Add storage" : "Gehitu biltegiratzea",
     "Delete" : "Ezabatu",
-    "Allow users to mount the following external storage" : "Baimendu erabiltzaileak hurrengo kanpo biltegiratzeak muntatzen",
-    "<b>Note:</b> The FTP support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Oharra:</b> :PHPko FTP euskarria ez dago instalatuta edo gaitua. Ezinezko da %s muntatzea. Mesedez eskatu sistema administratzaleari instala dezan. ",
-    "SMB / CIFS using OC login" : "SMB / CIFS saioa hasteko OC erabiliz"
+    "Allow users to mount the following external storage" : "Baimendu erabiltzaileak hurrengo kanpo biltegiratzeak muntatzen"
 },
 "nplurals=2; plural=(n != 1);");

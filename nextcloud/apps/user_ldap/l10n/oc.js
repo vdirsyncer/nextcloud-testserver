@@ -95,7 +95,6 @@ OC.L10N.register(
     "Test Base DN" : "Testar lo DN de basa",
     "Avoids automatic LDAP requests. Better for bigger setups, but requires some LDAP knowledge." : "Evita las requèstas LDAP automaticas. Melhor per las installacions de grand ample, mas demanda de coneissenças en LDAP.",
     "Manually enter LDAP filters (recommended for large directories)" : "Sasir los filtres LDAP manualament (recomandat pels annuaris de grand ample)",
-    "Limit %s access to users meeting these criteria:" : "Limitar l'accès a %s als utilizaires que respèctan aquestes critèris :",
     "The most common object classes for users are organizationalPerson, person, user, and inetOrgPerson. If you are not sure which object class to select, please consult your directory admin." : "Las classas d'objèctes frequentas pels utilizaires son : organizationalPerson, person, user e inetOrgPerson. Se sètz pas segur de la classa d'utilizar, demandatz a l'administrator de l'annuari.",
     "The filter specifies which LDAP users shall have access to the %s instance." : "Lo filtre especifica quins utilizaires LDAP auràn accès a l'instància %s.",
     "Verify settings and count users" : "Verificar los paramètres e comptar los utilizaires",
@@ -153,8 +152,6 @@ OC.L10N.register(
     "Username-LDAP User Mapping" : "Associacion Nom d'utilizaire-Utilizaire LDAP",
     "Usernames are used to store and assign (meta) data. In order to precisely identify and recognize users, each LDAP user will have an internal username. This requires a mapping from username to LDAP user. The created username is mapped to the UUID of the LDAP user. Additionally the DN is cached as well to reduce LDAP interaction, but it is not used for identification. If the DN changes, the changes will be found. The internal username is used all over. Clearing the mappings will have leftovers everywhere. Clearing the mappings is not configuration sensitive, it affects all LDAP configurations! Never clear the mappings in a production environment, only in a testing or experimental stage." : "Los noms d'utilizaires son utilizats per l'emmagazinatge e l'assignacion de (meta) donadas. Per identificar e reconéisser precisament los utilizaires, cada utilizaire LDAP aurà un nom intèrne especific. Aquò requerís l'associacion d'un nom d'utilizaire ownCloud a un nom d'utilizaire LDAP. Lo nom d'utilizaire creat es associat a l'atribut UUID de l'utilizaire LDAP. Amai, lo DN es memorizat en escondedor per limitar las interaccions LDAP mas es pas utilizat per l'identificacion. Se lo DN es modificat, aquelas modificacions seràn retrobadas. Sol lo nom intèrne a ownCloud es utilizat al dintre del produch. Suprimir las associacions crearà d'orfanèls e l'accion afectarà totas las configuracions LDAP. SUPRIMISSÈTZ PAS JAMAI LAS ASSOCIACIONS EN ENVIRONAMENT DE PRODUCCION, mas unicament sus d'environaments de tèsts e d'experimentacions.",
     "Clear Username-LDAP User Mapping" : "Suprimir l'associacion utilizaire intèrne-utilizaire LDAP",
-    "Clear Groupname-LDAP Group Mapping" : "Suprimir l'associacion nom de grop-grop LDAP",
-    "Anonymous bind is not allowed. Please provide a User DN and Password." : "Lo ligam anonim es pas autorizat. Mercé de provesir lo DN d'un utilizaire e un senhal.",
-    "{nthServer}. Server" : "{nthServer}. Servidor"
+    "Clear Groupname-LDAP Group Mapping" : "Suprimir l'associacion nom de grop-grop LDAP"
 },
 "nplurals=2; plural=(n > 1);");

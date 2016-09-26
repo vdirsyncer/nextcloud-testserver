@@ -8,7 +8,7 @@
  * @author Olivier Paroz <owncloud@interfasys.ch>
  * @author Robin Appelman <icewind@owncloud.com>
  *
- * @copyright Olivier Paroz 2014-2015
+ * @copyright Olivier Paroz 2014-2016
  * @copyright Robin Appelman 2012-2014
  */
 
@@ -138,7 +138,7 @@ trait Preview {
 		$status = Http::STATUS_OK;
 		try {
 			/** @type File $file */
-			$file = $this->previewService->getResourceFromId($fileId);
+			$file = $this->previewService->getFile($fileId);
 			$this->configService->validateMimeType($file->getMimeType());
 		} catch (ServiceException $exception) {
 			$file = null;

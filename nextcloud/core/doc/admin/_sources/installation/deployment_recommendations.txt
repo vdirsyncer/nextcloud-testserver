@@ -79,7 +79,7 @@ Authentication via an existing LDAP or Active Directory server.
    scale the DB.
 
 * Backup
-   Install Nextcloud data directory and database on Btrfs filesystem. 
+   Install Nextcloud, Nextcloud data directory and database on Btrfs filesystem. 
    Make regular snapshots at desired intervals for zero downtime backups. 
    Mount DB partitions with the "nodatacow" option to prevent fragmentation.
  
@@ -293,8 +293,7 @@ Authentication via an existing LDAP or Active Directory server, or SAML.
     
 * Authentication
    User authentication via one or several LDAP or Active Directory 
-   servers, or SAML/Shibboleth. (See `User Authentication with LDAP`_ and 
-   `Shibboleth Integration`_.) 
+   servers, or SAML/Shibboleth. (See `User Authentication with LDAP`_.)
 
 * LDAP
    Read-only slaves should be deployed on every application server for 
@@ -481,19 +480,17 @@ References
 `How to Set Up a Redis Server as a Session Handler for PHP on Ubuntu 14.04`_
 
 
+.. TODO ON RELEASE: Update version number below on release
 .. _Maintenance: 
-   https://docs.nextcloud.org/server/9/admin_manual/maintenance/index.html
+   https://docs.nextcloud.org/server/10/admin_manual/maintenance/index.html
 .. _User Authentication with LDAP:
-   https://docs.nextcloud.org/server/9/admin_manual/configuration_user/
-   user_auth_ldap.html
+   https://docs.nextcloud.org/server/10/admin_manual/configuration_user/user_auth_ldap.html
 .. _Configuring Memory Caching:   
-   https://docs.nextcloud.org/server/9/admin_manual/configuration_server/
-   caching_configuration.html
+   https://docs.nextcloud.org/server/10/admin_manual/configuration_server/caching_configuration.html
+.. _Nextcloud Server or Enterprise Edition:  
+   https://nextcloud.com/enterprise/
 .. _F5 Big-IP: https://f5.com/products/big-ip/
 
-.. _Shibboleth Integration: 
-   https://docs.nextcloud.org/server/9/admin_manual/enterprise_user_management/
-   user_auth_shibboleth.html
 .. _Memcache StorageService:  
    https://wiki.shibboleth.net/confluence/display/SHIB2/
    NativeSPStorageService#NativeSPStorageService-MemcacheStorageService

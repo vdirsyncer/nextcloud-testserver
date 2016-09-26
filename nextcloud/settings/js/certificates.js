@@ -13,7 +13,7 @@ $(document).ready(function () {
 		return true;
 	});
 
-	$('#sslCertificate tr > td').tipsy({gravity: 'n', live: true});
+	$('#sslCertificate tr > td').tooltip({placement: 'bottom', container: 'body'});
 
 	$('#rootcert_import').fileupload({
 		pasteZone: null,
@@ -24,10 +24,10 @@ $(document).ready(function () {
 		},
 		success: function (data) {
 			if (typeof data === 'string') {
-				data = $.parseJSON(data);
+				data = JSON.parse(data);
 			} else if (data && data.length) {
 				// fetch response from iframe
-				data = $.parseJSON(data[0].body.innerText);
+				data = JSON.parse(data[0].body.innerText);
 			}
 			if (!data || typeof(data) === 'string') {
 				// IE8 iframe workaround comes here instead of fail()

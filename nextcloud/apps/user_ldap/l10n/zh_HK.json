@@ -17,7 +17,6 @@
     "Back" : "返回",
     "Continue" : "繼續",
     "LDAP" : "LDAP",
-    "Advanced" : "進階",
-    "{nthServer}. Server" : "{nthServer}. 伺服器"
+    "Advanced" : "進階"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

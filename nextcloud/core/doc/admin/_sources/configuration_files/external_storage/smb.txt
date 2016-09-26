@@ -26,12 +26,17 @@ You need the following information:
      subfolder name. 
 *    And finally, the Nextcloud users and groups who get access to the share.
 
-Optionally, you can specify a ``Domain``. This is useful in cases where the SMB 
-server requires a domain and a username, and an advanced authentication 
-mechanism like session credentials is used so that the username cannot be 
-modified. This is concatenated with the username, so the backend gets 
+Optionally, you can specify a ``Domain``. This is useful in 
+cases where the
+SMB server requires a domain and a username, and an advanced authentication
+mechanism like session credentials is used so that the username cannot be
+modified. This is concatenated with the username, so the backend gets
 ``domain\username``
 
+.. note:: For improved reliability and performance, we recommended installing   
+          ``libsmbclient-php``, a native PHP module for connecting to
+          SMB servers.
+		  
 .. figure:: images/smb.png
    :alt: Samba external storage configuration.
    :scale: 75%

@@ -1,8 +1,10 @@
 <?php
 /**
- * @author Robin Appelman <icewind@owncloud.com>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Robin Appelman <robin@icewind.nl>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -21,10 +23,10 @@
 
 $installedVersion = \OC::$server->getConfig()->getAppValue('files_external', 'installed_version');
 
-$app = new \OCA\Files_external\Appinfo\Application();
+$app = new \OCA\Files_External\AppInfo\Application();
 
 // Migration to db config
 if (version_compare($installedVersion, '0.5.0', '<')) {
-	$migrator = $app->getContainer()->query('OCA\Files_external\Migration\StorageMigrator');
+	$migrator = $app->getContainer()->query('OCA\Files_External\Migration\StorageMigrator');
 	$migrator->migrateGlobal();
 }

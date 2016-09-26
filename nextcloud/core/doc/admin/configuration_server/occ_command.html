@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using the occ Command &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Using the occ Command &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Configuring the Activity App" href="activity_configuration.html" />
     <link rel="prev" title="Warnings on Admin Page" href="security_setup_warnings.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
@@ -88,13 +89,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#ldap-commands">LDAP Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#logging-commands">Logging Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maintenance-commands">Maintenance Commands</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#security-import-ssl-certificates">Security (Import SSL Certificates)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#security">Security</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shibboleth-modes-enterprise-edition-only">Shibboleth Modes (Enterprise Edition only)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#trashbin">Trashbin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#user-commands">User Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#versions">Versions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line-installation">Command Line Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line-upgrade">Command Line Upgrade</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#two-factor-authentication">Two-factor Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#disable-users">Disable Users</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -114,6 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -147,16 +151,14 @@
 						
   <div class="section" id="using-the-occ-command">
 <h1>Using the occ Command<a class="headerlink" href="#using-the-occ-command" title="Permalink to this headline">¶</a></h1>
-<p>Nextcloud&#8217;s <code class="docutils literal"><span class="pre">occ</span></code> command (Nextcloud console) is Nextcloud&#8217;s command-line
+<p>Nextcloud&#8217;s <code class="docutils literal"><span class="pre">occ</span></code> command (origins from &#8220;ownCloud Console&#8221;) is Nextcloud&#8217;s command-line
 interface. You can perform many common server operations with <code class="docutils literal"><span class="pre">occ</span></code>, such as
 installing and upgrading Nextcloud, manage users, encryption, passwords, LDAP
 setting, and more.</p>
 <p><code class="docutils literal"><span class="pre">occ</span></code> is in the <code class="file docutils literal"><span class="pre">nextcloud/</span></code> directory; for example
 <code class="file docutils literal"><span class="pre">/var/www/nextcloud</span></code> on Ubuntu Linux. <code class="docutils literal"><span class="pre">occ</span></code> is a PHP script. <strong>You must
 run it as your HTTP user</strong> to ensure that the correct permissions are maintained
-on your Nextcloud files and directories. In Nextcloud 8.2+ you may run it from
-any directory (specifying the filepath); in previous releases it had to be
-run from the <code class="file docutils literal"><span class="pre">nextcloud/</span></code> directory.</p>
+on your Nextcloud files and directories.</p>
 <div class="section" id="occ-command-directory">
 <h2>occ Command Directory<a class="headerlink" href="#occ-command-directory" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -175,13 +177,15 @@ run from the <code class="file docutils literal"><span class="pre">nextcloud/</s
 <li><a class="reference internal" href="#ldap-commands-label"><span>LDAP Commands</span></a></li>
 <li><a class="reference internal" href="#logging-commands-label"><span>Logging Commands</span></a></li>
 <li><a class="reference internal" href="#maintenance-commands-label"><span>Maintenance Commands</span></a></li>
-<li><a class="reference internal" href="#security-commands-label"><span>Security (Import SSL Certificates)</span></a></li>
+<li><a class="reference internal" href="#security-commands-label"><span>Security</span></a></li>
 <li><a class="reference internal" href="#shibboleth-label"><span>Shibboleth Modes (Enterprise Edition only)</span></a></li>
 <li><a class="reference internal" href="#trashbin-label"><span>Trashbin</span></a></li>
 <li><a class="reference internal" href="#user-commands-label"><span>User Commands</span></a></li>
 <li><a class="reference internal" href="#versions-label"><span>Versions</span></a></li>
 <li><a class="reference internal" href="#command-line-installation-label"><span>Command Line Installation</span></a></li>
 <li><a class="reference internal" href="#command-line-upgrade-label"><span>Command Line Upgrade</span></a></li>
+<li><a class="reference internal" href="#two-factor-auth-label"><span>Two-factor Authentication</span></a></li>
+<li><a class="reference internal" href="#disable-user-label"><span>Disable Users</span></a></li>
 </ul>
 </div>
 <div class="section" id="run-occ-as-your-http-user">
@@ -301,7 +305,6 @@ and <code class="docutils literal"><span class="pre">encryption:list-modules</sp
  app:disable      disable an app
  app:enable       enable an app
  app:getpath      Get an absolute path to the app directory
-                  (added in 9.0)
  app:list         List all available apps
 </pre></div>
 </div>
@@ -545,7 +548,7 @@ command to migrate user&#8217;s contacts:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ dav:migrate-calendars [user]
 </pre></div>
 </div>
-<p>See <a class="reference external" href="http://morrisjobke.de/2016/03/07/Nextcloud-9.0-calendar-migration-analysis/">Nextcloud 9.0 - calendar migration analysis</a>
+<p>See <a class="reference external" href="http://morrisjobke.de/2016/03/07/ownCloud-9.0-calendar-migration-analysis/">ownCloud 9.0 - calendar migration analysis</a>
 for help with troubleshooting and reporting problems.</p>
 <p><code class="docutils literal"><span class="pre">dav:sync-birthday-calendar</span></code> adds all birthdays to your calendar from
 addressbooks shared with you. This example syncs to your calendar from user
@@ -558,7 +561,6 @@ addressbook:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ dav:sync-system-addressbook
 </pre></div>
 </div>
-<p>Added in 9.0.</p>
 </div>
 <div class="section" id="database-conversion">
 <span id="database-conversion-label"></span><h2>Database Conversion<a class="headerlink" href="#database-conversion" title="Permalink to this headline">¶</a></h2>
@@ -669,13 +671,12 @@ enabled.</p>
                               federated clouds
 </pre></div>
 </div>
-<p>In Nextcloud 9.+, servers connected with federation shares can share user
+<p>In Nextcloud, servers connected with federation shares can share user
 address books, and auto-complete usernames in share dialogs. Use this command
 to synchronize federated servers:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ federation:sync-addressbooks
 </pre></div>
 </div>
-<p>Added in 9.0.</p>
 </div>
 <div class="section" id="file-operations">
 <span id="file-operations-label"></span><h2>File Operations<a class="headerlink" href="#file-operations" title="Permalink to this headline">¶</a></h2>
@@ -684,7 +685,7 @@ to synchronize federated servers:</p>
  files:cleanup              cleanup filecache
  files:scan                 rescan filesystem
  files:transfer-ownership   All files and folders are moved to another
-                            user - shares are moved as well. (Added in 9.0)
+                            user - shares are moved as well.
 </pre></div>
 </div>
 <p>The <code class="docutils literal"><span class="pre">files:scan</span></code> command scans for new files and updates the file cache. You
@@ -705,9 +706,13 @@ Options:
   --quiet               suppress any output
   --verbose             files and directories being processed are shown
                         additionally during scanning
+  --unscanned           scan only previously unscanned files
 </pre></div>
 </div>
 <p>Verbosity levels of <code class="docutils literal"><span class="pre">-vv</span></code> or <code class="docutils literal"><span class="pre">-vvv</span></code> are automatically reset to <code class="docutils literal"><span class="pre">-v</span></code></p>
+<p>Note for option &#8211;unscanned:
+In general there is a background job (through cron) that will do that scan periodically.
+The &#8211;unscanned option makes it possible to trigger this from the CLI.</p>
 <p>When using the <code class="docutils literal"><span class="pre">--path</span></code> option, the path must consist of following
 components:</p>
 <div class="highlight-python"><div class="highlight"><pre>&quot;user_id/files/path&quot;
@@ -737,8 +742,6 @@ before removing a user:</p>
 </div>
 <div class="section" id="files-external">
 <span id="files-external-label"></span><h2>Files External<a class="headerlink" href="#files-external" title="Permalink to this headline">¶</a></h2>
-<p>These commands replace the <code class="docutils literal"><span class="pre">data/mount.json</span></code> configuration file used in
-Nextcloud releases before 9.0.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">These commands are only available when the &#8220;External storage support&#8221; app
@@ -765,11 +768,10 @@ features:  <code class="docutils literal"><span class="pre">files_external:expor
 Nextcloud user.</p>
 <p>Use <code class="docutils literal"><span class="pre">files_external:import</span> <span class="pre">[filename]</span></code> to import legacy JSON configurations,
 and to copy external mount configurations to another Nextcloud server.</p>
-<p>Added in 9.0.</p>
 </div>
 <div class="section" id="integrity-check">
 <span id="integrity-check-label"></span><h2>Integrity Check<a class="headerlink" href="#integrity-check" title="Permalink to this headline">¶</a></h2>
-<p>Apps which have an official tag MUST be code signed starting with Nextcloud 9.0. Unsigned official apps won&#8217;t be installable anymore. Code signing is optional for all third-party applications:</p>
+<p>Apps which have an official tag MUST be code signed with Nextcloud. Unsigned official apps won&#8217;t be installable anymore. Code signing is optional for all third-party applications:</p>
 <div class="highlight-python"><div class="highlight"><pre>integrity
  integrity:check-app                 Check app integrity using a signature.
  integrity:check-core                Check core integrity using a signature.
@@ -785,15 +787,15 @@ and to copy external mount configurations to another Nextcloud server.</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ integrity:check-app --path=/pathto/app appname
 </pre></div>
 </div>
-<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/9/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.</p>
+<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/10/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.
+.. TODO ON RELEASE: Update version number above on release</p>
 <p><code class="docutils literal"><span class="pre">integrity:sign-core</span></code> is for Nextcloud core developers only.</p>
 <p>See <a class="reference internal" href="../issues/code_signing.html"><em>Code Signing</em></a> to learn more.</p>
-<p>Added in 9.0.</p>
 </div>
 <div class="section" id="l10n-create-javascript-translation-files-for-apps">
 <span id="create-javascript-translation-files-label"></span><h2>l10n, Create Javascript Translation Files for Apps<a class="headerlink" href="#l10n-create-javascript-translation-files-for-apps" title="Permalink to this headline">¶</a></h2>
 <p>This command is for app developers to update their translation mechanism from
-Nextcloud 7 to Nextcloud 8 and later.</p>
+ownCloud 7 to Nextcloud.</p>
 </div>
 <div class="section" id="ldap-commands">
 <span id="ldap-commands-label"></span><h2>LDAP Commands<a class="headerlink" href="#ldap-commands" title="Permalink to this headline">¶</a></h2>
@@ -902,7 +904,7 @@ documented in <a class="reference internal" href="../configuration_user/user_aut
 <p>Run <code class="docutils literal"><span class="pre">log:owncloud</span></code> to see your current logging status:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ log:owncloud
 Log backend Nextcloud: enabled
-Log file: /opt/nextcloud/data/owncloud.log
+Log file: /opt/nextcloud/data/nextcloud.log
 Rotate at: disabled
 </pre></div>
 </div>
@@ -962,8 +964,8 @@ command after modifying <code class="docutils literal"><span class="pre">config/
 mimetype, run <code class="docutils literal"><span class="pre">maintenance:mimetype:update-db</span> <span class="pre">--repair-filecache</span></code> to apply the
 change to existing files.</p>
 </div>
-<div class="section" id="security-import-ssl-certificates">
-<span id="security-commands-label"></span><h2>Security (Import SSL Certificates)<a class="headerlink" href="#security-import-ssl-certificates" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="security">
+<span id="security-commands-label"></span><h2>Security<a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h2>
 <p>Use these commands to manage server-wide SSL certificates. These are useful when you create federation shares with other Nextcloud servers that use self-signed certificates:</p>
 <div class="highlight-python"><div class="highlight"><pre>security
  security:certificates         list trusted certificates
@@ -1033,12 +1035,14 @@ Remove deleted files of   freda
 <p>The <code class="docutils literal"><span class="pre">user</span></code> commands create and remove users, reset passwords, display a simple
 report showing how many users you have, and when a user was last logged in:</p>
 <div class="highlight-python"><div class="highlight"><pre>user
- user:add            adds a user
- user:delete         deletes the specified user
- user:lastseen       shows when the user was logged it last
-                     time
- user:report         shows how many users have access
- user:resetpassword  Resets the password of the named user
+ user:add                            adds a user
+ user:delete                         deletes the specified user
+ user:disable                        disables the specified user
+ user:enable                         enables the specified user
+ user:lastseen                       shows when the user was logged in last time
+ user:report                         shows how many users have access
+ user:resetpassword                  Resets the password of the named user
+ user:setting                        Read and modify user settings
 </pre></div>
 </div>
 <p>You can create a new user with their display name, login name, and any group
@@ -1102,6 +1106,35 @@ su -s /bin/sh www-data -c &#39;php occ user:resetpassword --password-from-env
   layla&#39;s last login: 09.01.2015 18:46
 </pre></div>
 </div>
+<p>Read user settings:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:setting layla
+  - core:
+    - lang: en
+  - login:
+    - lastLogin: 1465910968
+  - settings:
+    - email: layla@example.tld
+</pre></div>
+</div>
+<p>Filter by app:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:setting layla core
+  - core:
+    - lang: en
+</pre></div>
+</div>
+<p>Get a single setting:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:setting layla core lang
+en
+</pre></div>
+</div>
+<p>Set a setting:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:setting layla settings email &quot;new-layla@example.tld&quot;
+</pre></div>
+</div>
+<p>Delete a setting:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:setting layla settings email --delete
+</pre></div>
+</div>
 <p>Generate a simple report that counts all users, including users on external user
 authentication servers such as LDAP:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:report
@@ -1154,8 +1187,8 @@ Delete versions of   molly
 <p>These commands are available only after you have downloaded and unpacked the
 Nextcloud archive, and taken no further installation steps.</p>
 <p>You can install Nextcloud entirely from the command line. After downloading the
-tarball and copying Nextcloud into the appropriate directories (See <a class="reference internal" href="../installation/source_installation.html"><em>Manual Installation on Linux</em></a>) you can use <code class="docutils literal"><span class="pre">occ</span></code> commands in
-place of running the graphical Installation Wizard.</p>
+tarball and copying Nextcloud into the appropriate directories you can use <code class="docutils literal"><span class="pre">occ</span></code>
+commands in place of running the graphical Installation Wizard.</p>
 <p>Apply correct permissions to your Nextcloud directories; see
 <a class="reference internal" href="../installation/installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>. Then choose your <code class="docutils literal"><span class="pre">occ</span></code> options. This lists your
 available options:</p>
@@ -1323,6 +1356,33 @@ option:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ upgrade --dry-run
 </pre></div>
 </div>
+</div>
+<div class="section" id="two-factor-authentication">
+<span id="two-factor-auth-label"></span><h2>Two-factor Authentication<a class="headerlink" href="#two-factor-authentication" title="Permalink to this headline">¶</a></h2>
+<p>If a two-factor provider app is enabled, it is enabled for all users by default
+(though the provider can decide whether or not the user has to pass the challenge).
+In the case of an user losing access to the second factor (e.g. lost phone with
+two-factor SMS verification), the admin can temporarily disable the two-factor
+check for that user via the occ command:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ twofactor:disable &lt;username&gt;
+</pre></div>
+</div>
+<p>To re-enable two-factor auth again use the following commmand:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ twofactor:enable &lt;username&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="disable-users">
+<span id="disable-user-label"></span><h2>Disable Users<a class="headerlink" href="#disable-users" title="Permalink to this headline">¶</a></h2>
+<p>Admins can disable users via the occ command too:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:disable &lt;username&gt;
+</pre></div>
+</div>
+<p>Use the following command to enable the user again:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ user:enable &lt;username&gt;
+</pre></div>
+</div>
+<p>Note that once users are disabled, their connected browsers will be disconnected.</p>
 </div>
 </div>
 

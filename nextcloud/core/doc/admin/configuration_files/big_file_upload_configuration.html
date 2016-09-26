@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Uploading big files &gt; 512MB &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Uploading big files &gt; 512MB &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Configuring the Collaborative Documents App" href="collaborative_documents_configuration.html" />
     <link rel="prev" title="Configuring Federation Sharing" href="federated_cloud_sharing_configuration.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -194,7 +195,7 @@ for how to configure those values correctly:</p>
 <p class="first admonition-title">Note</p>
 <p>If you are using Apache/2.4 with mod_fcgid, as of February/March 2016,
 <code class="docutils literal"><span class="pre">FcgidMaxRequestInMem</span></code> still needs to be significantly increased from its default value
-to avoid the occurence of segmentation faults when uploading big files. This is not a regular
+to avoid the occurrence of segmentation faults when uploading big files. This is not a regular
 setting but serves as a workaround for <a class="reference external" href="https://bz.apache.org/bugzilla/show_bug.cgi?id=51747">Apache with mod_fcgid bug #51747</a>.</p>
 <p class="last">Setting <code class="docutils literal"><span class="pre">FcgidMaxRequestInMem</span></code> significantly higher than normal may no longer be
 necessary, once bug #51747 is fixed.</p>

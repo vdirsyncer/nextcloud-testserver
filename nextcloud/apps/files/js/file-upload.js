@@ -273,7 +273,7 @@ OC.Upload = {
 		var self = this;
 		if ( $('#file_upload_start').exists() ) {
 			var file_upload_param = {
-				dropZone: $('#content'), // restrict dropZone to content div
+				dropZone: $('#app-content'), // restrict dropZone to app-content div
 				pasteZone: null, 
 				autoUpload: false,
 				sequentialUploads: true,
@@ -474,9 +474,9 @@ OC.Upload = {
 						} else {
 							// HTTP connection problem
 							var message = t('files', 'Error uploading file "{fileName}": {message}', {
-								fileName: data.files[0].name,
+								fileName: escapeHTML(data.files[0].name),
 								message: data.errorThrown
-							});
+							}, undefined, {escape: false});
 							OC.Notification.show(message, {timeout: 0, type: 'error'});
 							if (data.result) {
 								var result = JSON.parse(data.result);
@@ -494,7 +494,7 @@ OC.Upload = {
 				 * @param {object} e
 				 * @param {object} data
 				 */
-				done:function(e, data) {
+				done: function(e, data) {
 					OC.Upload.log('done', e, data);
 					// handle different responses (json or body from iframe for ie)
 					var response;
@@ -504,7 +504,7 @@ OC.Upload = {
 						//fetch response from iframe
 						response = data.result[0].body.innerText;
 					}
-					var result = $.parseJSON(response);
+					var result = JSON.parse(response);
 
 					delete data.jqXHR;
 
@@ -557,7 +557,16 @@ OC.Upload = {
 			window.file_upload_param = fileupload;
 
 			if (supportAjaxUploadWithProgress()) {
-
+				//remaining time
+				var lastUpdate = new Date().getMilliseconds();
+				var lastSize = 0;
+				var bufferSize = 20;
+				var buffer = [];
+				var bufferIndex = 0;
+				var bufferTotal = 0;
+				for(var i = 0; i < bufferSize;i++){
+					buffer[i] = 0;    
+				}
 				// add progress handlers
 				fileupload.on('fileuploadadd', function(e, data) {
 					OC.Upload.log('progress handle fileuploadadd', e, data);
@@ -570,7 +579,15 @@ OC.Upload = {
 				fileupload.on('fileuploadstart', function(e, data) {
 					OC.Upload.log('progress handle fileuploadstart', e, data);
 					$('#uploadprogresswrapper .stop').show();
+					$('#uploadprogresswrapper .label').show();
 					$('#uploadprogressbar').progressbar({value: 0});
+					$('#uploadprogressbar .ui-progressbar-value').
+						html('<em class="label inner"><span class="desktop">'
+							+ t('files', 'Uploading...')
+							+ '</span><span class="mobile">'
+							+ t('files', '...')
+							+ '</span></em>');
+                    $('#uploadprogressbar').tipsy({gravity:'n', fade:true, live:true});
 					OC.Upload._showProgressBar();
 				});
 				fileupload.on('fileuploadprogress', function(e, data) {
@@ -580,11 +597,67 @@ OC.Upload = {
 				fileupload.on('fileuploadprogressall', function(e, data) {
 					OC.Upload.log('progress handle fileuploadprogressall', e, data);
 					var progress = (data.loaded / data.total) * 100;
+					var thisUpdate = new Date().getMilliseconds();
+					var diffUpdate = (thisUpdate - lastUpdate)/1000; // eg. 2s
+					lastUpdate = thisUpdate;
+					var diffSize = data.loaded - lastSize;
+					lastSize = data.loaded;
+					diffSize = diffSize / diffUpdate; // apply timing factor, eg. 1mb/2s = 0.5mb/s
+					var remainingSeconds = ((data.total - data.loaded) / diffSize);
+					if(remainingSeconds >= 0) {
+						bufferTotal = bufferTotal - (buffer[bufferIndex]) + remainingSeconds;
+						buffer[bufferIndex] = remainingSeconds; //buffer to make it smoother
+						bufferIndex = (bufferIndex + 1) % bufferSize;
+					}
+					var smoothRemainingSeconds = (bufferTotal / bufferSize); //seconds
+					var date = new Date(smoothRemainingSeconds * 1000);
+					var timeStringDesktop = "";
+					var timeStringMobile = ""; 
+					if(date.getUTCHours() > 0){
+						timeStringDesktop = t('files', '{hours}:{minutes}:{seconds} hour{plural_s} left' , { 
+							hours:date.getUTCHours(),
+							minutes: ('0' + date.getUTCMinutes()).slice(-2),
+							seconds: ('0' + date.getUTCSeconds()).slice(-2),
+							plural_s: ( smoothRemainingSeconds === 3600  ? "": "s") // 1 hour = 1*60m*60s = 3600s
+						});						
+						timeStringMobile = t('files', '{hours}:{minutes}h' , {
+							hours:date.getUTCHours(),
+							minutes: ('0' + date.getUTCMinutes()).slice(-2),
+							seconds: ('0' + date.getUTCSeconds()).slice(-2)
+						});
+					} else if(date.getUTCMinutes() > 0){
+						timeStringDesktop = t('files', '{minutes}:{seconds} minute{plural_s} left' , {
+							minutes: date.getUTCMinutes(),
+							seconds: ('0' + date.getUTCSeconds()).slice(-2),
+							plural_s: (smoothRemainingSeconds === 60 ? "": "s") // 1 minute = 1*60s = 60s
+						}); 
+						timeStringMobile = t('files', '{minutes}:{seconds}m' , {
+							minutes: date.getUTCMinutes(),
+							seconds: ('0' + date.getUTCSeconds()).slice(-2)
+						});
+					} else if(date.getUTCSeconds() > 0){ 
+						timeStringDesktop = t('files', '{seconds} second{plural_s} left' , {
+							seconds: date.getUTCSeconds(),
+							plural_s: (smoothRemainingSeconds === 1 ? "": "s") // 1 second = 1s = 1s
+						});
+						timeStringMobile = t('files', '{seconds}s' , {seconds: date.getUTCSeconds()});
+					} else {
+						timeStringDesktop = t('files', 'Any moment now...');
+						timeStringMobile = t('files', 'Soon...');
+					}
+					$('#uploadprogressbar .label .mobile').text(timeStringMobile);
+					$('#uploadprogressbar .label .desktop').text(timeStringDesktop);
+					$('#uploadprogressbar').attr('original-title',
+						t('files', '{loadedSize} of {totalSize} ({bitrate})' , {
+							loadedSize: humanFileSize(data.loaded),
+							totalSize: humanFileSize(data.total),
+							bitrate: humanFileSize(data.bitrate) + '/s'
+						})
+					);
 					$('#uploadprogressbar').progressbar('value', progress);
 				});
 				fileupload.on('fileuploadstop', function(e, data) {
 					OC.Upload.log('progress handle fileuploadstop', e, data);
-
 					OC.Upload._hideProgressBar();
 				});
 				fileupload.on('fileuploadfail', function(e, data) {
@@ -594,7 +667,30 @@ OC.Upload = {
 						OC.Upload._hideProgressBar();
 					}
 				});
+				fileupload.on('fileuploaddragover', function(e){
+					$('#app-content').addClass('file-drag');
+					$('#emptycontent .icon-folder').addClass('icon-filetype-folder-drag-accept');
 
+					var filerow = $(e.delegatedEvent.target).closest('tr');
+
+					if(!filerow.hasClass('dropping-to-dir')){
+						$('.dropping-to-dir .icon-filetype-folder-drag-accept').removeClass('icon-filetype-folder-drag-accept');
+						$('.dropping-to-dir').removeClass('dropping-to-dir');
+						$('.dir-drop').removeClass('dir-drop');
+					}
+
+					if(filerow.attr('data-type') === 'dir'){
+						$('#app-content').addClass('dir-drop');
+						filerow.addClass('dropping-to-dir');
+						filerow.find('.thumbnail').addClass('icon-filetype-folder-drag-accept');
+					}
+				});
+				fileupload.on('fileuploaddragleave fileuploaddrop', function (){
+					$('#app-content').removeClass('file-drag');
+					$('.dropping-to-dir').removeClass('dropping-to-dir');
+					$('.dir-drop').removeClass('dir-drop');
+					$('.icon-filetype-folder-drag-accept').removeClass('icon-filetype-folder-drag-accept');
+				});
 			} else {
 				// for all browsers that don't support the progress bar
 				// IE 8 & 9

@@ -6,8 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = $vendorDir;
 
 return array(
-    'SecurityLib' => array($vendorDir . '/ircmaxell/security-lib/lib'),
-    'RandomLib' => array($vendorDir . '/ircmaxell/random-lib/lib'),
     'Pimple' => array($vendorDir . '/pimple/pimple/src'),
     'PEAR' => array($vendorDir . '/pear/pear_exception'),
     'OpenCloud' => array($vendorDir . '/rackspace/php-opencloud/lib', $vendorDir . '/rackspace/php-opencloud/tests'),
@@ -22,7 +20,6 @@ return array(
     'Doctrine\\Common\\Annotations\\' => array($vendorDir . '/doctrine/annotations/lib'),
     'Doctrine\\Common\\' => array($vendorDir . '/doctrine/common/lib'),
     'Console' => array($vendorDir . '/pear/console_getopt'),
-    'Assetic' => array($vendorDir . '/kriswallsmith/assetic/src'),
     'Archive_Tar' => array($vendorDir . '/pear/archive_tar'),
     '' => array($vendorDir . '/pear/pear-core-minimal/src'),
 );

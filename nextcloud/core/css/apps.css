@@ -84,7 +84,7 @@
 }
 
 #app-navigation .collapse {
-	display: none; /* hide collapse button intially */
+	display: none; /* hide collapse button initially */
 }
 #app-navigation .collapsible > .collapse {
 	position: absolute;
@@ -92,7 +92,7 @@
 	width: 44px;
 	margin: 0;
 	padding: 0;
-	background: none; background-image: url('../img/actions/triangle-s.svg');
+	background: none; background-image: url('../img/actions/triangle-s.svg?v=1');
 	background-size: 16px; background-repeat: no-repeat; background-position: center;
 	border: none;
 	border-radius: 0;
@@ -162,7 +162,6 @@
 		text-overflow: ellipsis;
 		overflow: hidden;
 		display: inline-block;
-		width: 201px; /* fallback for IE8 */
 		width: calc(100% - 49px);
 		line-height: 44px;
 		float: left;
@@ -257,7 +256,7 @@
 		background-color: transparent;
 		background-repeat: no-repeat;
 		background-position: center;
-		background-image: url('../img/actions/more.svg');
+		background-image: url('../img/actions/more.svg?v=1');
 	}
 
 	#app-navigation .app-navigation-entry-utils-menu-button:hover button,
@@ -308,12 +307,6 @@
 .edge .bubble:after,
 .edge #app-navigation .app-navigation-entry-menu:after {
 	border: 1px solid #eee;
-}
-.ie8 .bubble {
-	margin-top: 18px;
-}
-.ie8 .bubble:after {
-	display: none;
 }
 /* miraculous border arrow stuff */
 .bubble:after,
@@ -392,7 +385,6 @@
 	#app-navigation .app-navigation-entry-edit input {
 		border-bottom-right-radius: 0;
 		border-top-right-radius: 0;
-		width: 204px; /* fallback for IE8 */
 		width: calc(100% - 36px);
 		padding: 5px;
 		margin-right: 0;
@@ -505,7 +497,7 @@
 	padding: 0;
 	margin: 0;
 	background-color: #fff;
-	background-image: url('../img/actions/settings.svg');
+	background-image: url('../img/actions/settings.svg?v=1');
 	background-position: 14px center;
 	background-repeat: no-repeat;
 	box-shadow: none;
@@ -573,11 +565,11 @@ h3 {
 }
 .appear {
 	opacity: 1;
-	transition: opacity 500ms ease 0s;
+	-webkit-transition: opacity 500ms ease 0s;
 	-moz-transition: opacity 500ms ease 0s;
 	-ms-transition: opacity 500ms ease 0s;
 	-o-transition: opacity 500ms ease 0s;
-	-webkit-transition: opacity 500ms ease 0s;
+	transition: opacity 500ms ease 0s;
 }
 .appear.transparent {
 	opacity: 0;

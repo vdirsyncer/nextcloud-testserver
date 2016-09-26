@@ -50,7 +50,6 @@ OC.L10N.register(
     "in bytes" : "ბაიტებში",
     "Email Field" : "იმეილის ველი",
     "User Home Folder Naming Rule" : "მომხმარებლის Home დირექტორიის სახელების დარქმევის წესი",
-    "Leave empty for user name (default). Otherwise, specify an LDAP/AD attribute." : "დატოვეთ ცარიელი მომხმარებლის სახელი (default). სხვა დანარჩენში მიუთითეთ LDAP/AD ატრიბუტი.",
-    "The DN of the client user with which the bind shall be done, e.g. uid=agent,dc=example,dc=com. For anonymous access, leave DN and Password empty." : "მომხმარებლის DN რომელთანაც უნდა მოხდეს დაკავშირება მოხდება შემდეგნაირად მაგ: uid=agent,dc=example,dc=com. ხოლო ანონიმური დაშვებისთვის, დატოვეთ DN–ის და პაროლის ველები ცარიელი."
+    "Leave empty for user name (default). Otherwise, specify an LDAP/AD attribute." : "დატოვეთ ცარიელი მომხმარებლის სახელი (default). სხვა დანარჩენში მიუთითეთ LDAP/AD ატრიბუტი."
 },
 "nplurals=1; plural=0;");

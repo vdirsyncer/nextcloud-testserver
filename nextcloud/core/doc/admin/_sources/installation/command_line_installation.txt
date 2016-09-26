@@ -1,5 +1,5 @@
 ==========================================
-Installing Nextcloud From the Command Line
+Installing Nextcloud from the Command Line
 ==========================================
 
 It is now possible to install Nextcloud entirely from the command line. This is 
@@ -7,8 +7,7 @@ convenient for scripted operations, headless servers, and sysadmins who prefer
 the command line. There are three stages to installing Nextcloud via the command 
 line:
 
-1. Download and install the Nextcloud code via your package manager, or download 
-and unpack the tarball in the appropriate directories. (See :doc:`source_installation`.)
+1. Download the Nextcloud code and unpack the tarball in the appropriate directories. (See :doc:`source_installation`.)
 
 2. Change the ownership of your ``nextcloud`` directory to your HTTP user, like 
 this example for Debian/Ubuntu. You must run ``occ`` as your HTTP user; see 
@@ -35,7 +34,7 @@ Supported databases are::
  - sqlite (SQLite3 - Nextcloud Community edition only)
  - mysql (MySQL/MariaDB)
  - pgsql (PostgreSQL)
- - oci (Oracle - Nextcloud Enterprise edition only)
+ - oci (Oracle 11g currently only possible if you contact us at https://nextcloud.com/enterprise as part of a subscription)
  
 See :ref:`command_line_installation_label` for more information.
 

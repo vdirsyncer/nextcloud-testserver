@@ -202,7 +202,7 @@
 		},
 
 		/**
-		 * Handles removing the Notification from the UI when no longer in JSON
+		 * Handles errors when requesting the notifications
 		 * @param {XMLHttpRequest} xhr
 		 */
 		_onFetchError: function(xhr) {
@@ -210,7 +210,7 @@
 				// 404 Not Found - stop polling
 				this._shutDownNotifications();
 			} else {
-				OC.Notification.showTemporary('Failed to perform request for notifications');
+				OC.Notification.showTemporary('Failed to request notifications. Please try to refresh the page manually.');
 			}
 		},
 
@@ -289,8 +289,14 @@
 		 */
 		_onHaveNotifications: function() {
 			// Add the button, title, etc
+			var icon;
+			if (OCA.Theming && OCA.Theming.inverted) {
+				icon = 'notifications-new-dark';
+			} else {
+				icon = 'notifications-new';
+			}
 			this.$button.addClass('hasNotifications');
-			this.$button.find('img').attr('src', OC.imagePath('notifications', 'notifications-new'))
+			this.$button.find('img').attr('src', OC.imagePath('notifications', icon))
 				.animate({opacity: 0.5}, 600)
 				.animate({opacity: 1}, 600)
 				.animate({opacity: 0.5}, 600)

@@ -13,6 +13,7 @@ OC.L10N.register(
     "Invalid directory." : "অবৈধ ডিরেক্টরি।",
     "Files" : "ফাইলস",
     "Close" : "বন্ধ",
+    "Uploading..." : "আপলোডইং ...",
     "Download" : "ডাউনলোড করুন",
     "Rename" : "পুনঃনামকরণ",
     "Delete" : "মুছে ফেলা",
@@ -31,9 +32,6 @@ OC.L10N.register(
     "You deleted %1$s" : "আপনি %1$s কে মুছেছেন",
     "%2$s deleted %1$s" : "%2$s মুছেছে %1$s কে",
     "Save" : "সেভ",
-    "Settings" : "সেটিংস",
-    "You changed %1$s" : "আপনি %1$s পরিবর্তন করেছেন ",
-    "You created %1$s" : "আপনি %1$s তৈরি করেছেন ",
-    "You deleted %1$s" : "আপনি %1$s কে মুছেছেন"
+    "Settings" : "সেটিংস"
 },
 "nplurals=2; plural=(n != 1);");

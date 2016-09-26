@@ -1,10 +1,11 @@
 <?php
 /**
- * @author Arthur Schiwon <blizzz@owncloud.com>
- * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Joas Schilling <nickvergessen@owncloud.com>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christopher Schäpers <kondou@ts.unde.re>
+ * @author Roger Szabo <roger.szabo@web.de>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -25,5 +26,5 @@ if($state === 'doSet') {
 	OCP\Config::setSystemValue('ldapIgnoreNamingRules', false);
 }
 
-OCP\Backgroundjob::registerJob('OCA\user_ldap\lib\Jobs');
-OCP\Backgroundjob::registerJob('\OCA\User_LDAP\Jobs\CleanUp');
+$helper = new \OCA\User_LDAP\Helper();
+$helper->setLDAPProvider();

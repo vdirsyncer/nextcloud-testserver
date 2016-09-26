@@ -255,7 +255,7 @@ var OC={
 	 *
 	 * Examples:
 	 * http://example.com => example.com
-	 * https://example.com => exmaple.com
+	 * https://example.com => example.com
 	 * http://example.com:8080 => example.com:8080
 	 *
 	 * @return {string} host
@@ -327,8 +327,8 @@ var OC={
 	 * @return {string}
 	 */
 	imagePath:function(app,file){
-		if(file.indexOf('.')==-1){//if no extension is given, use png or svg depending on browser support
-			file+=(OC.Util.hasSVGSupport())?'.svg':'.png';
+		if(file.indexOf('.')==-1){//if no extension is given, use svg
+			file+='.svg';
 		}
 		return OC.filePath(app,'img',file);
 	},
@@ -592,7 +592,7 @@ var OC={
 			var arrowclass = settings.hasClass('topright') ? 'up' : 'left';
 			var jqxhr = $.get(OC.filePath(props.appid, '', props.scriptName), function(data) {
 				popup.html(data).ready(function() {
-					popup.prepend('<span class="arrow '+arrowclass+'"></span><h2>'+t('core', 'Settings')+'</h2><a class="close svg"></a>').show();
+					popup.prepend('<span class="arrow '+arrowclass+'"></span><h2>'+t('core', 'Settings')+'</h2><a class="close"></a>').show();
 					popup.find('.close').bind('click', function() {
 						popup.remove();
 					});
@@ -612,9 +612,6 @@ var OC={
 						.fail(function(jqxhr, settings, e) {
 							throw e;
 						});
-					}
-					if(!OC.Util.hasSVGSupport()) {
-						OC.Util.replaceSVG();
 					}
 				}).show();
 			}, 'html');
@@ -788,7 +785,6 @@ var OC={
 			$(document).trigger(new $.Event('ajaxError'), xhr);
 		};
 
-		// FIXME: also needs an IE8 way
 		if (xhr.addEventListener) {
 			xhr.addEventListener('load', loadCallback);
 			xhr.addEventListener('error', errorCallback);
@@ -1131,7 +1127,7 @@ OC.Notification={
 	 *
 	 * @param {string} text Message to display
 	 * @param {Object} [options] options
-	 * @param {string] [options.type] notification type
+	 * @param {string} [options.type] notification type
 	 * @param {int} [options.timeout=0] timeout value, defaults to 0 (permanent)
 	 * @return {jQuery} jQuery element for notification row
 	 */
@@ -1147,7 +1143,7 @@ OC.Notification={
 	 * @param {array} [options] options array
 	 * @param {int} [options.timeout=7] timeout in seconds, if this is 0 it will show the message permanently
 	 * @param {boolean} [options.isHTML=false] an indicator for HTML notifications (true) or text (false)
-	 * @param {string] [options.type] notification type
+	 * @param {string} [options.type] notification type
 	 */
 	showTemporary: function(text, options) {
 		var self = this;
@@ -1338,9 +1334,6 @@ if(typeof localStorage !=='undefined' && localStorage !== null){
 			var item = localStorage.getItem(OC.localStorage.namespace+name);
 			if(item === null) {
 				return null;
-			} else if (typeof JSON === 'undefined') {
-				//fallback to jquery for IE6/7/8
-				return $.parseJSON(item);
 			} else {
 				return JSON.parse(item);
 			}
@@ -1359,49 +1352,6 @@ if(typeof localStorage !=='undefined' && localStorage !== null){
 			return null;
 		}
 	};
-}
-
-/**
- * check if the browser support svg images
- * @return {boolean}
- */
-function SVGSupport() {
-	return SVGSupport.checkMimeType.correct && !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', "svg").createSVGRect;
-}
-SVGSupport.checkMimeType=function(){
-	$.ajax({
-		url: OC.imagePath('core','breadcrumb.svg'),
-		success:function(data,text,xhr){
-			var headerParts=xhr.getAllResponseHeaders().split("\n");
-			var headers={};
-			$.each(headerParts,function(i,text){
-				if(text){
-					var parts=text.split(':',2);
-					if(parts.length===2){
-						var value=parts[1].trim();
-						if(value[0]==='"'){
-							value=value.substr(1,value.length-2);
-						}
-						headers[parts[0].toLowerCase()]=value;
-					}
-				}
-			});
-			if(headers["content-type"]!=='image/svg+xml'){
-				OC.Util.replaceSVG();
-				SVGSupport.checkMimeType.correct=false;
-			}
-		}
-	});
-};
-SVGSupport.checkMimeType.correct=true;
-
-/**
- * Replace all svg images with png for browser compatibility
- * @param $el
- * @deprecated use OC.Util.replaceSVG instead
- */
-function replaceSVG($el){
-	return OC.Util.replaceSVG($el);
 }
 
 /**
@@ -1440,11 +1390,15 @@ function initCore() {
 	 */
 	moment.locale(OC.getLocale());
 
-	if ($.browser.msie || !!navigator.userAgent.match(/Trident\/7\./)) {
-		// for IE10+ that don't have conditional comments
-		// and IE11 doesn't identify as MSIE any more...
+	var userAgent = window.navigator.userAgent;
+	var msie = userAgent.indexOf('MSIE ');
+	var trident = userAgent.indexOf('Trident/');
+	var edge = userAgent.indexOf('Edge/');
+
+	if (msie > 0 || trident > 0) {
+		// (IE 10 or older) || IE 11
 		$('html').addClass('ie');
-	} else if (!!navigator.userAgent.match(/Edge\/12/)) {
+	} else if (edge > 0) {
 		// for edge
 		$('html').addClass('edge');
 	}
@@ -1499,9 +1453,15 @@ function initCore() {
 			interval = maxInterval;
 		}
 		var url = OC.generateUrl('/heartbeat');
-		setInterval(function(){
-			$.post(url);
-		}, interval * 1000);
+		var heartBeatTimeout = null;
+		var heartBeat = function() {
+			clearTimeout(heartBeatTimeout);
+			heartBeatTimeout = setInterval(function() {
+				$.post(url);
+			}, interval * 1000);
+		};
+		$(document).ajaxComplete(heartBeat);
+		heartBeat();
 	}
 
 	// session heartbeat (defaults to enabled)
@@ -1509,12 +1469,6 @@ function initCore() {
 		!!oc_config.session_keepalive) {
 
 		initSessionHeartBeat();
-	}
-
-	if(!OC.Util.hasSVGSupport()){ //replace all svg images with png images for browser that dont support svg
-		OC.Util.replaceSVG();
-	}else{
-		SVGSupport.checkMimeType();
 	}
 
 	OC.registerMenu($('#expand'), $('#expanddiv'));
@@ -1554,11 +1508,30 @@ function initCore() {
 			}
 			if(!event.ctrlKey) {
 				$app.addClass('app-loading');
+			} else {
+				// Close navigation when opening app in
+				// a new tab
+				OC.hideMenus();
 			}
 		});
 	}
 
+	function setupUserMenu() {
+		var $menu = $('#header #settings');
+
+		$menu.delegate('a', 'click', function(event) {
+			var $page = $(event.target);
+			if (!$page.is('a')) {
+				$page = $page.closest('a');
+			}
+			$page.find('img').remove();
+			$page.find('div').remove(); // prevent odd double-clicks
+			$page.prepend($('<div/>').addClass('icon-loading-small-dark'));
+		});
+	}
+
 	setupMainMenu();
+	setupUserMenu();
 
 	// move triangle of apps dropdown to align with app name triangle
 	// 2 is the additional offset between the triangles
@@ -1766,24 +1739,21 @@ OC.Util = {
 	},
 	/**
 	 * Returns whether the browser supports SVG
+	 * @deprecated SVG is always supported (since 9.0)
 	 * @return {boolean} true if the browser supports SVG, false otherwise
 	 */
-	// TODO: replace with original function
-	hasSVGSupport: SVGSupport,
+	hasSVGSupport: function(){
+		return true
+	},
 	/**
 	 * If SVG is not supported, replaces the given icon's extension
 	 * from ".svg" to ".png".
 	 * If SVG is supported, return the image path as is.
 	 * @param {string} file image path with svg extension
+	 * @deprecated SVG is always supported (since 9.0)
 	 * @return {string} fixed image path with png extension if SVG is not supported
 	 */
 	replaceSVGIcon: function(file) {
-		if (file && !OC.Util.hasSVGSupport()) {
-			var i = file.lastIndexOf('.svg');
-			if (i >= 0) {
-				file = file.substr(0, i) + '.png' + file.substr(i+4);
-			}
-		}
 		return file;
 	},
 	/**
@@ -1791,39 +1761,9 @@ OC.Util = {
 	 * with PNG images.
 	 *
 	 * @param $el root element from which to search, defaults to $('body')
+	 * @deprecated SVG is always supported (since 9.0)
 	 */
-	replaceSVG: function($el) {
-		if (!$el) {
-			$el = $('body');
-		}
-		$el.find('img.svg').each(function(index,element){
-			element=$(element);
-			var src=element.attr('src');
-			element.attr('src',src.substr(0, src.length-3) + 'png');
-		});
-		$el.find('.svg').each(function(index,element){
-			element = $(element);
-			var background = element.css('background-image');
-			if (background){
-				var i = background.lastIndexOf('.svg');
-				if (i >= 0){
-					background = background.substr(0,i) + '.png' + background.substr(i + 4);
-					element.css('background-image', background);
-				}
-			}
-			element.find('*').each(function(index, element) {
-				element = $(element);
-				var background = element.css('background-image');
-				if (background) {
-					var i = background.lastIndexOf('.svg');
-					if(i >= 0){
-						background = background.substr(0,i) + '.png' + background.substr(i + 4);
-						element.css('background-image', background);
-					}
-				}
-			});
-		});
-	},
+	replaceSVG: function($el) {},
 
 	/**
 	 * Fix image scaling for IE8, since background-size is not supported.
@@ -1831,30 +1771,10 @@ OC.Util = {
 	 * This scales the image to the element's actual size, the URL is
 	 * taken from the "background-image" CSS attribute.
 	 *
+	 * @deprecated IE8 isn't supported since 9.0
 	 * @param {Object} $el image element
 	 */
-	scaleFixForIE8: function($el) {
-		if (!this.isIE8()) {
-			return;
-		}
-		var self = this;
-		$($el).each(function() {
-			var url = $(this).css('background-image');
-			var r = url.match(/url\(['"]?([^'")]*)['"]?\)/);
-			if (!r) {
-				return;
-			}
-			url = r[1];
-			url = self.replaceSVGIcon(url);
-			// TODO: escape
-			url = url.replace(/'/g, '%27');
-			$(this).css({
-				'filter': 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' + url + '\', sizingMethod=\'scale\')',
-				'background-image': ''
-			});
-		});
-		return $el;
-	},
+	scaleFixForIE8: function($el) {},
 
 	/**
 	 * Returns whether this is IE
@@ -1868,10 +1788,11 @@ OC.Util = {
 	/**
 	 * Returns whether this is IE8
 	 *
-	 * @return {bool} true if this is IE8, false otherwise
+	 * @deprecated IE8 isn't supported since 9.0
+	 * @return {bool} false (IE8 isn't supported anymore)
 	 */
 	isIE8: function() {
-		return $('html').hasClass('ie8');
+		return false;
 	},
 
 	/**
@@ -2024,8 +1945,9 @@ OC.Util.History = {
 	 *
 	 * @param params to append to the URL, can be either a string
 	 * or a map
+	 * @param {boolean} [replace=false] whether to replace instead of pushing
 	 */
-	pushState: function(params) {
+	_pushState: function(params, replace) {
 		var strParams;
 		if (typeof(params) === 'string') {
 			strParams = params;
@@ -2035,7 +1957,11 @@ OC.Util.History = {
 		}
 		if (window.history.pushState) {
 			var url = location.pathname + '?' + strParams;
-			window.history.pushState(params, '', url);
+			if (replace) {
+				window.history.replaceState(params, '', url);
+			} else {
+				window.history.pushState(params, '', url);
+			}
 		}
 		// use URL hash for IE8
 		else {
@@ -2044,6 +1970,32 @@ OC.Util.History = {
 			// to the event queue
 			this._cancelPop = true;
 		}
+	},
+
+	/**
+	 * Push the current URL parameters to the history stack
+	 * and change the visible URL.
+	 * Note: this includes a workaround for IE8/IE9 that uses
+	 * the hash part instead of the search part.
+	 *
+	 * @param params to append to the URL, can be either a string
+	 * or a map
+	 */
+	pushState: function(params) {
+		return this._pushState(params, false);
+	},
+
+	/**
+	 * Push the current URL parameters to the history stack
+	 * and change the visible URL.
+	 * Note: this includes a workaround for IE8/IE9 that uses
+	 * the hash part instead of the search part.
+	 *
+	 * @param params to append to the URL, can be either a string
+	 * or a map
+	 */
+	replaceState: function(params) {
+		return this._pushState(params, true);
 	},
 
 	/**
@@ -2103,7 +2055,12 @@ OC.Util.History = {
 		if (!this._handlers.length) {
 			return;
 		}
-		params = (e && e.state) || this.parseUrlQuery() || {};
+		params = (e && e.state);
+		if (_.isString(params)) {
+			params = OC.parseQueryString(params);
+		} else if (!params) {
+			params = this.parseUrlQuery() || {};
+		}
 		for (var i = 0; i < this._handlers.length; i++) {
 			this._handlers[i](params);
 		}

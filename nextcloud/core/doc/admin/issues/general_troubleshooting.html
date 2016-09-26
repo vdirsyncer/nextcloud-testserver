@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>General Troubleshooting &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>General Troubleshooting &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Issues and Troubleshooting" href="index.html" />
     <link rel="next" title="Code Signing" href="code_signing.html" />
     <link rel="prev" title="Issues and Troubleshooting" href="index.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -120,20 +121,20 @@ refer to our community support channels:</p>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The Nextcloud forums have a <a href="#id3"><span class="problematic" id="id4">`FAQ page`_</span></a> where each topic corresponds
+<p class="last">The Nextcloud forums have a <a href="#id2"><span class="problematic" id="id3">`FAQ page`_</span></a> where each topic corresponds
 to typical mistakes or frequently occurring issues</p>
 </div>
 <ul class="simple">
+<li><a class="reference external" href="https://help.nextcloud.com">The Nextcloud forums</a></li>
 <li>The Nextcloud IRC chat channel <code class="docutils literal"><span class="pre">irc://#nextcloud&#64;freenode.net</span></code> on
-freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloud">webchat</a></li>
+freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloudhttps://docs.nextcloud.org/server/10/developer_manual/bugtracker/index.html">webchat</a></li>
 </ul>
 <p>Please understand that all these channels essentially consist of users like you
 helping each other out. Consider helping others out where you can, to contribute
 back for the help you get. This is the only way to keep a community like
 Nextcloud healthy and sustainable!</p>
 <p>If you are using Nextcloud in a business or otherwise large scale deployment,
-note that Nextcloud GmbH. offers the <a href="#id5"><span class="problematic" id="id6">`Enterprise Edition`_</span></a> with commercial
-support options.</p>
+note that Nextcloud GmbH offers commercial support options.</p>
 <div class="section" id="bugs">
 <h2>Bugs<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h2>
 <p>If you think you have found a bug in Nextcloud, please:</p>
@@ -141,7 +142,7 @@ support options.</p>
 <li>Search for a solution (see the options above)</li>
 <li>Double-check your configuration</li>
 </ul>
-<p>If you can&#8217;t find a solution, please use our <a class="reference external" href="https://docs.nextcloud.org/server/9/developer_manual/bugtracker/index.html">bugtracker</a>. You can generate a
+<p>If you can&#8217;t find a solution, please use our <a href="#id4"><span class="problematic" id="id5">`bugtracker`_</span></a>. You can generate a
 configuration report with the <a class="reference internal" href="../configuration_server/occ_command.html#config-commands-label"><span>occ config command</span></a>, with passwords automatically obscured.</p>
 </div>
 <div class="section" id="id1">
@@ -173,7 +174,7 @@ the <a class="reference external" href="https://getfirebug.com/">Firebug extensi
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The logfile of Nextcloud is located in the data directory
-<code class="docutils literal"><span class="pre">nextcloud/data/owncloud.log</span></code>.</p>
+<code class="docutils literal"><span class="pre">nextcloud/data/nextcloud.log</span></code>.</p>
 </div>
 </div>
 <div class="section" id="php-version-and-information">
@@ -225,25 +226,22 @@ for more information.</li>
 which can&#8217;t handle a lot of parallel requests. Please consider converting to
 another database like described in
 <a class="reference internal" href="../configuration_database/db_conversion.html"><em>Converting Database Type</em></a>.</li>
-<li><code class="docutils literal"><span class="pre">SQLSTATE[HY000]:</span> <span class="pre">General</span> <span class="pre">error:</span> <span class="pre">2006</span> <span class="pre">MySQL</span> <span class="pre">server</span> <span class="pre">has</span> <span class="pre">gone</span> <span class="pre">away</span></code> -&gt; The
-database request takes too long and therefore the MySQL server times out. Its
-also possible that the server is dropping a packet that is too large. Please
-refer to the manual of your database for how to raise the config options
-<code class="docutils literal"><span class="pre">wait_timeout</span></code> and/or <code class="docutils literal"><span class="pre">max_allowed_packet</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">SQLSTATE[HY000]:</span> <span class="pre">General</span> <span class="pre">error:</span> <span class="pre">2006</span> <span class="pre">MySQL</span> <span class="pre">server</span> <span class="pre">has</span> <span class="pre">gone</span> <span class="pre">away</span></code> -&gt; Please
+refer to <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-troubleshooting-label"><span>Troubleshooting</span></a> for more information.</li>
 <li><code class="docutils literal"><span class="pre">SQLSTATE[HY000]</span> <span class="pre">[2002]</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory</span></code> -&gt; There is a problem
 accessing your SQLite database file in your data directory
-(<code class="docutils literal"><span class="pre">data/owncloud.db</span></code>). Please check the permissions of this folder/file or
+(<code class="docutils literal"><span class="pre">data/nextcloud.db</span></code>). Please check the permissions of this folder/file or
 if it exists at all. If you&#8217;re using MySQL please start your database.</li>
 <li><code class="docutils literal"><span class="pre">Connection</span> <span class="pre">closed</span> <span class="pre">/</span> <span class="pre">Operation</span> <span class="pre">cancelled</span></code> -&gt; This could be caused by wrong
 <code class="docutils literal"><span class="pre">KeepAlive</span></code> settings within your Apache config. Make sure that
 <code class="docutils literal"><span class="pre">KeepAlive</span></code> is set to <code class="docutils literal"><span class="pre">On</span></code> and  also try to raise the limits of
 <code class="docutils literal"><span class="pre">KeepAliveTimeout</span></code> and  <code class="docutils literal"><span class="pre">MaxKeepAliveRequests</span></code>.</li>
 <li><code class="docutils literal"><span class="pre">No</span> <span class="pre">basic</span> <span class="pre">authentication</span> <span class="pre">headers</span> <span class="pre">were</span> <span class="pre">found</span></code> -&gt; This error is shown in your
-<code class="docutils literal"><span class="pre">data/owncloud.log</span></code> file. Some Apache modules like <code class="docutils literal"><span class="pre">mod_fastcgi</span></code>, <code class="docutils literal"><span class="pre">mod_fcgid</span></code>
+<code class="docutils literal"><span class="pre">data/nextcloud.log</span></code> file. Some Apache modules like <code class="docutils literal"><span class="pre">mod_fastcgi</span></code>, <code class="docutils literal"><span class="pre">mod_fcgid</span></code>
 or <code class="docutils literal"><span class="pre">mod_proxy_fcgi</span></code> are not passing the needed authentication headers to
 PHP and so the login to Nextcloud via WebDAV, CalDAV and CardDAV clients is
 failing. Information on how to correctly configure your environment can be
-found at the <a class="reference external" href="https://forum.owncloud.org/viewtopic.php?f=17&amp;t=30646">ownCloud forums</a>.</li>
+found at the <a class="reference external" href="https://forum.owncloud.org/viewtopic.php?f=17&amp;t=30646">forums</a>.</li>
 </ul>
 </div>
 </div>
@@ -266,7 +264,7 @@ You need to set the directive <code class="docutils literal"><span class="pre">l
 to store the logfile in the <code class="docutils literal"><span class="pre">error_log</span></code> directive. After those changes you
 need to restart your Web server.</li>
 <li>The logfile of Nextcloud is located in the data directory
-<code class="docutils literal"><span class="pre">/var/www/nextcloud/data/owncloud.log</span></code>.</li>
+<code class="docutils literal"><span class="pre">/var/www/nextcloud/data/nextcloud.log</span></code>.</li>
 </ul>
 </div>
 <div class="section" id="web-server-and-php-modules">
@@ -354,14 +352,14 @@ running Nextcloud at the document root of your Web server the correct URL is:</p
 this work for your when running Apache. You only need to make sure that your
 Web server is using this file. When running NGINX please refer to
 <a class="reference internal" href="../installation/nginx_examples.html"><em>Nginx Example Configurations</em></a>.</p>
-<p>If your Nextcloud instance is installed in a subfolder called <code class="docutils literal"><span class="pre">owncloud</span></code> and
+<p>If your Nextcloud instance is installed in a subfolder called <code class="docutils literal"><span class="pre">nextcloud</span></code> and
 you&#8217;re running Apache create or edit the <code class="file docutils literal"><span class="pre">.htaccess</span></code> file within the
 document root of your Web server and add the following lines:</p>
 <div class="highlight-python"><div class="highlight"><pre>Redirect 301 /.well-known/carddav /nextcloud/remote.php/dav
+Redirect 301 /.well-known/caldav /nextcloud/remote.php/dav
 </pre></div>
 </div>
-<p>nextcloud
-Now change the URL in the client settings to just use:</p>
+<p>Now change the URL in the client settings to just use:</p>
 <p><code class="docutils literal"><span class="pre">https://example.com</span></code></p>
 <p>instead of e.g.</p>
 <p><code class="docutils literal"><span class="pre">https://example.com/nextcloud/remote.php/dav/principals/username</span></code>.</p>

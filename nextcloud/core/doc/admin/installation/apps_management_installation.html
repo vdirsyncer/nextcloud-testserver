@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installing and Managing Apps &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Installing and Managing Apps &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Supported Apps in Nextcloud" href="apps_supported.html" />
-    <link rel="prev" title="Installing Nextcloud From the Command Line" href="command_line_installation.html" />
+    <link rel="prev" title="Installing Nextcloud from the Command Line" href="command_line_installation.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,13 +66,14 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud From the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Installing and Managing Apps</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#supported-apps">Supported Apps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#viewing-enabled-apps">Viewing Enabled Apps</a></li>
@@ -88,7 +89,7 @@
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_owncloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -112,7 +113,7 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="command_line_installation.html" title="Previous Chapter: Installing Nextcloud From the Command Line"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Installing Ne...</span>
+    <a href="command_line_installation.html" title="Previous Chapter: Installing Nextcloud from the Command Line"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Installing Ne...</span>
     </a>
   </li>
   <li class="next">
@@ -131,8 +132,7 @@ applications.</p>
 </div>
 <div class="section" id="viewing-enabled-apps">
 <h2>Viewing Enabled Apps<a class="headerlink" href="#viewing-enabled-apps" title="Permalink to this headline">¶</a></h2>
-<p>During the Nextcloud installation, some apps are enabled by default. To see
-which
+<p>During the Nextcloud installation, some apps are enabled by default. To see which
 apps are enabled go to your Apps page.</p>
 <div class="figure">
 <img alt="Apps page for enabling and disabling apps." src="../_images/oc_admin_app_page.png" />
@@ -156,18 +156,16 @@ supported; they are maintained by trusted developers, and are under active
 development. Only <strong>Official</strong> and <strong>Approved</strong> apps are linked on the Apps
 page by default.</p>
 <p>Click the app name to view a description of the app and any of the app settings in the Application View field.  Clicking the <strong>Enable</strong> button will enable the app.  If the app is not part of the Nextcloud installation, it will be downloaded from the app store, installed and enabled.</p>
-<p>Click the gear icon on the lower left to browse experimental apps in the <a class="reference external" href="https://apps.owncloud.com/">Nextcloud Apps
+<p>Click the gear icon on the lower left to browse experimental apps in the <a class="reference external" href="https://apps.owncloud.com/">ownCloud Apps
 Store</a>. Install experimental apps at your own risk.</p>
 <p>Sometimes the installation of a third-party app fails silently, possibly because
-<code class="docutils literal"><span class="pre">'appcodechecker'</span> <span class="pre">=&gt;</span> <span class="pre">true,</span></code> is enabled in <code class="docutils literal"><span class="pre">config.php</span></code>. When
-<code class="docutils literal"><span class="pre">appcodechecker</span></code> is
-enabled it checks if third-party apps are using the private API, rather than the
-public
+<code class="docutils literal"><span class="pre">'appcodechecker'</span> <span class="pre">=&gt;</span> <span class="pre">true,</span></code> is enabled in <code class="docutils literal"><span class="pre">config.php</span></code>. When <code class="docutils literal"><span class="pre">appcodechecker</span></code> is
+enabled it checks if third-party apps are using the private API, rather than the public
 API. If they are then they will not be installed.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If you would like to create or add your own Nextcloud app, please
-refer to the <a class="reference external" href="https://docs.nextcloud.org/server/9/developer_manual/app/index.html">developer manual</a>.</p>
+refer to the <a class="reference external" href="https://docs.nextcloud.org/server/10/developer_manual/app/index.html">developer manual</a>.</p>
 </div>
 </div>
 <div class="section" id="using-custom-app-directories">
@@ -175,8 +173,7 @@ refer to the <a class="reference external" href="https://docs.nextcloud.org/serv
 <p>Use the <strong>apps_paths</strong> array in <code class="docutils literal"><span class="pre">config.php</span></code> to set any custom apps directory
 locations. The key <strong>path</strong> defines the absolute file system path to the app
 folder. The key <strong>url</strong> defines the HTTP web path to that folder, starting at
-the Nextcloud web root. The key <strong>writable</strong> indicates if a user can install
-apps
+the Nextcloud web root. The key <strong>writable</strong> indicates if a user can install apps
 in that folder.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -203,8 +200,7 @@ which will be used to store all other apps.</p>
 </div>
 <div class="section" id="using-your-own-appstore">
 <h2>Using Your Own Appstore<a class="headerlink" href="#using-your-own-appstore" title="Permalink to this headline">¶</a></h2>
-<p>You can enable the installation of apps from your own apps store. This requires
-that you
+<p>You can enable the installation of apps from your own apps store. This requires that you
 can write to at least one of the configured apps directories.</p>
 <p>To enable installation from your own apps store:</p>
 <ol class="arabic">
@@ -212,14 +208,14 @@ can write to at least one of the configured apps directories.</p>
 <p>This parameter is used to enable your apps store in Nextcloud.</p>
 </li>
 <li><p class="first">Set the <strong>appstoreurl</strong> to the URL of your Nextcloud apps store.</p>
-<p>This parameter is used to set the http path to the Nextcloud apps store. The
-appstore server must use <abbr title="Open Collaboration Services">OCS</abbr>.</p>
+<p>This parameter is used to set the http path to the Nextcloud apps store. The appstore
+server must use <abbr title="Open Collaboration Services">OCS</abbr>.</p>
 </li>
 </ol>
 <div class="highlight-python"><div class="highlight"><pre>&lt;?php
 
   &quot;appstoreenabled&quot; =&gt; true,
-  &quot;appstoreurl&quot; =&gt; &quot;https://api.owncloud.com/v1&quot;,
+  &quot;appstoreurl&quot; =&gt; &quot;https://api.nextcloud.com/v1&quot;,
 </pre></div>
 </div>
 </div>
@@ -229,7 +225,7 @@ appstore server must use <abbr title="Open Collaboration Services">OCS</abbr>.</
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="command_line_installation.html" title="Previous Chapter: Installing Nextcloud From the Command Line"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Installing Ne...</span>
+    <a href="command_line_installation.html" title="Previous Chapter: Installing Nextcloud from the Command Line"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Installing Ne...</span>
     </a>
   </li>
   <li class="next">

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Upgrading Nextcloud with the Updater App &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Upgrading Nextcloud with the Nextcloud App &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Manual Nextcloud Upgrade" href="manual_upgrade.html" />
     <link rel="prev" title="Upgrade Nextcloud From Packages" href="package_upgrade.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -79,7 +80,7 @@
 <li class="toctree-l2"><a class="reference internal" href="backup.html">Backing up Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="upgrade.html">How to Upgrade Your Nextcloud Server</a></li>
 <li class="toctree-l2"><a class="reference internal" href="package_upgrade.html">Upgrade Nextcloud From Packages</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Upgrading Nextcloud with the Updater App</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Upgrading Nextcloud with the Nextcloud App</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#setting-permissions-for-updating">Setting Permissions for Updating</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line-options">Command Line Options</a></li>
 </ul>
@@ -113,24 +114,20 @@
   </li>
 </ul>
 						
-  <div class="section" id="upgrading-nextcloud-with-the-updater-app">
-<h1>Upgrading Nextcloud with the Updater App<a class="headerlink" href="#upgrading-nextcloud-with-the-updater-app" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="upgrading-nextcloud-with-the-nextcloud-app">
+<h1>Upgrading Nextcloud with the Nextcloud App<a class="headerlink" href="#upgrading-nextcloud-with-the-nextcloud-app" title="Permalink to this headline">¶</a></h1>
 <p>The Updater app automates many of the steps of upgrading an Nextcloud
 installation. It is useful for installations that do not have root access,
 such as shared hosting, for installations with a smaller number of users
 and data, and it automates updating
 <a class="reference internal" href="../installation/source_installation.html"><em>manual installations</em></a>.</p>
-<p>New in 9.0, the Updater app has <a class="reference internal" href="#updater-cli-label"><span>command-line options</span></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>The Updater app is <strong>not enabled and not supported</strong> in Nextcloud
-Enterprise edition.</p>
-<p class="last"><strong>Downgrading</strong> is not supported and risks corrupting your data! If you want
+<p>The Updater app has <a class="reference internal" href="#updater-cli-label"><span>command-line options</span></a>.</p>
+<blockquote>
+<div><strong>Downgrading</strong> is not supported and risks corrupting your data! If you want
 to revert to an older Nextcloud version, install it from scratch and then
 restore your data from backup. Before doing this, file a support ticket (if
 you have paid support) or ask for help in the Nextcloud forums to see if your
-issue can be resolved without downgrading.</p>
-</div>
+issue can be resolved without downgrading.</div></blockquote>
 <p>You should maintain regular backups (see <a class="reference internal" href="backup.html"><em>Backing up Nextcloud</em></a>), and make a backup
 before every update. The Updater app does not backup your database or data
 directory.</p>
@@ -213,17 +210,17 @@ immediately after the initial installation. Please follow the steps in
 <a class="reference internal" href="../installation/installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>.</p>
 <p>These strict permissions will prevent the Updater app from working, as it needs
 your whole Nextcloud directory to be owned by the HTTP user. Run this script to
-set the appropriate permissions for updating. Replace the <code class="docutils literal"><span class="pre">ncpath</span></code> variable
+set the appropriate permissions for updating. Replace the <code class="docutils literal"><span class="pre">ocpath</span></code> variable
 with the path to your Nextcloud directory, and replace the <code class="docutils literal"><span class="pre">htuser</span></code> and
 <code class="docutils literal"><span class="pre">htgroup</span></code> variables with your HTTP user and group.:</p>
 <div class="highlight-python"><div class="highlight"><pre>#!/bin/bash
 # Sets permissions of the Nextcloud instance for updating
 
-ncpath=&#39;/var/www/nextcloud&#39;
+ocpath=&#39;/var/www/nextcloud&#39;
 htuser=&#39;www-data&#39;
 htgroup=&#39;www-data&#39;
 
-chown -R ${htuser}:${htgroup} ${ncpath}
+chown -R ${htuser}:${htgroup} ${ocpath}
 </pre></div>
 </div>
 <p>You can find your HTTP user in your HTTP server configuration files. Or you can

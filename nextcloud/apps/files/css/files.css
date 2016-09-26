@@ -2,6 +2,11 @@
  This file is licensed under the Affero General Public License version 3 or later.
  See the COPYING-README file. */
 
+/* SETTINGS */
+#files-setting-showhidden {
+	padding-bottom: 8px;
+}
+
 /* FILE MENU */
 .actions { padding:5px; height:32px; display: inline-block; float: left; }
 .actions input, .actions button, .actions .button { margin:0; float:left; }
@@ -63,12 +68,29 @@
 }
 
 .app-files #app-content {
+	transition: background-color 0.3s ease;
 	overflow-x: hidden;
+}
+
+.file-drag, .file-drag #filestable tbody tr, .file-drag #filestable tbody tr:hover {
+	transition: background-color 0.3s ease!important;
+	background-color: rgb(179, 230, 255)!important;
+}
+
+.app-files #app-content.dir-drop, .file-drag #filestable tbody tr, .file-drag #filestable tbody tr:hover{
+	background-color: rgba(0, 0, 0, 0)!important;
+}
+
+.app-files #app-content.dir-drop #filestable tbody tr.dropping-to-dir{
+	background-color: rgb(179, 230, 255)!important;
 }
 
 /* icons for sidebar */
 .nav-icon-files {
 	background-image: url('../img/folder.svg?v=1');
+}
+.nav-icon-recent {
+	background-image: url('../img/recent.svg?v=1');
 }
 .nav-icon-favorites {
 	background-image: url('../img/star.svg?v=1');
@@ -108,6 +130,7 @@
 }
 
 #filestable tbody tr {
+	transition: background-color 0.3s ease;
 	background-color: #fff;
 	height: 40px;
 }
@@ -120,6 +143,7 @@
 #filestable tbody tr.selected,
 #filestable tbody tr.searchresult,
 table tr.mouseOver td {
+	transition: background-color 0.3s ease;
 	background-color: #f8f8f8;
 }
 tbody a { color:#000; }
@@ -322,6 +346,21 @@ table td.filename .nametext {
 .has-favorites #fileList td.filename a.name {
 	left: 50px;
 	margin-right: 50px;
+}
+
+.hide-hidden-files #fileList tr.hidden-file,
+.hide-hidden-files #fileList tr.hidden-file.dragging {
+	display: none;
+}
+
+#fileList tr.animate-opacity {
+	-webkit-transition:opacity 250ms;
+	-moz-transition:opacity 250ms;
+	-o-transition:opacity 250ms;
+	transition:opacity 250ms;
+}
+#fileList tr.dragging {
+	opacity: 0.2;
 }
 
 table td.filename .nametext .innernametext {
@@ -822,4 +861,9 @@ html.ie8 #controls .button.new {
 
 .app-files .actions .button.new .icon {
 	margin-bottom: 2px;
+}
+
+.canDrop,
+#filestable tbody tr.canDrop {
+  background-color: rgba(255, 255, 140, 1);
 }

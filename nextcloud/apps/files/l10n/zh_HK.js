@@ -28,10 +28,6 @@ OC.L10N.register(
     "%2$s deleted %1$s" : "%2$s 刪除了 %1$s",
     "Save" : "儲存",
     "Settings" : "設定",
-    "WebDAV" : "WebDAV",
-    "Cancel upload" : "取消上戴",
-    "You changed %1$s" : "你改變了%1$s",
-    "You created %1$s" : "你新增了%1$s",
-    "You deleted %1$s" : "你刪除了%1$s"
+    "WebDAV" : "WebDAV"
 },
 "nplurals=1; plural=0;");

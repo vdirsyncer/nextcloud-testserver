@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Database Configuration &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Database Configuration &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Database Configuration" href="index.html" />
     <link rel="next" title="Mimetypes Management" href="../configuration_mimetypes/index.html" />
     <link rel="prev" title="Converting Database Type" href="db_conversion.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -114,15 +115,18 @@
 <ul class="simple">
 <li><a class="reference external" href="http://www.mysql.com/">MySQL</a> / <a class="reference external" href="https://mariadb.org/">MariaDB</a></li>
 <li><a class="reference external" href="http://www.postgresql.org/">PostgreSQL</a></li>
+<li><a class="reference external" href="http://www.oracle.com/">Oracle</a></li>
 </ul>
 <p>The MySQL or MariaDB databases are the recommended database engines.</p>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>Choosing to use MySQL / MariaDB or PostgreSQL, as your database requires that
-you install and set up the server software first.</p>
+<p>Choosing to use MySQL / MariaDB, PostgreSQL, or Oracle as your database
+requires that you install and set up the server software first.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The steps for configuring a third party database are beyond the scope of this document.  Please refer to the documentation for your specific database choice for instructions.</p>
+<p class="last">The steps for configuring a third party database are beyond the
+scope of this document.  Please refer to the documentation for your specific
+database choice for instructions.</p>
 </div>
 <div class="section" id="mysql-mariadb-with-binary-logging-enabled">
 <span id="db-binlog-label"></span><h3>MySQL / MariaDB with Binary Logging Enabled<a class="headerlink" href="#mysql-mariadb-with-binary-logging-enabled" title="Permalink to this headline">¶</a></h3>
@@ -149,6 +153,15 @@ BINLOG_FORMAT = MIXED. See <a class="reference external" href="https://mariadb.c
 Log</a> and <a class="reference external" href="https://dev.mysql.com/doc/refman/5.6/en/binary-log.html">The
 Binary Log</a> for
 detailed information.</p>
+</div>
+<div class="section" id="database-read-commited-transaction-isolation-level">
+<span id="db-transaction-label"></span><h3>Database &#8220;READ COMMITED&#8221; transaction isolation level<a class="headerlink" href="#database-read-commited-transaction-isolation-level" title="Permalink to this headline">¶</a></h3>
+<p>As discussed above Nextcloud is using the <code class="docutils literal"><span class="pre">TRANSACTION_READ_COMMITTED</span></code> transaction isolation
+level. Some database configurations are enforcing other transaction isolation levels. To avoid
+data loss under high load scenarios (e.g. by using the sync client with many clients/users and
+many parallel operations) you need to configure the transaction isolation level accordingly.
+Please refer to the <a class="reference external" href="https://dev.mysql.com/doc/refman/5.7/en/set-transaction.html">MySQL manual</a>
+for detailed information.</p>
 </div>
 </div>
 <div class="section" id="parameters">
@@ -305,7 +318,18 @@ this:</p>
 </div>
 </div>
 <div class="section" id="troubleshooting">
-<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<span id="db-troubleshooting-label"></span><h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-to-workaround-general-error-2006-mysql-server-has-gone-away">
+<h3>How to workaround General error: 2006 MySQL server has gone away<a class="headerlink" href="#how-to-workaround-general-error-2006-mysql-server-has-gone-away" title="Permalink to this headline">¶</a></h3>
+<p>The database request takes too long and therefore the MySQL server times out. Its
+also possible that the server is dropping a packet that is too large. Please
+refer to the manual of your database for how to raise the configuration options
+<code class="docutils literal"><span class="pre">wait_timeout</span></code> and/or <code class="docutils literal"><span class="pre">max_allowed_packet</span></code>.</p>
+<p>Some shared hosters are not allowing the access to these config options. For such
+systems Nextcloud is providing a <code class="docutils literal"><span class="pre">dbdriveroptions</span></code> configuration option within your
+<code class="file docutils literal"><span class="pre">config/config.php</span></code> where you can pass such options to the database driver.
+Please refer to <a class="reference internal" href="../configuration_server/config_sample_php_parameters.html"><em>Config.php Parameters</em></a> for an example.</p>
+</div>
 <div class="section" id="how-can-i-find-out-if-my-mysql-postgresql-server-is-reachable">
 <h3>How can I find out if my MySQL/PostgreSQL server is reachable?<a class="headerlink" href="#how-can-i-find-out-if-my-mysql-postgresql-server-is-reachable" title="Permalink to this headline">¶</a></h3>
 <p>To check the server&#8217;s network availability, use the ping command on
@@ -332,7 +356,7 @@ the command from, use:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mysql</span> <span class="o">-</span><span class="n">uUSERNAME</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
-<p>To acess a MySQL installation on a different machine, add the -h option with
+<p>To access a MySQL installation on a different machine, add the -h option with
 the respective host name:</p>
 <div class="highlight-python"><div class="highlight"><pre>mysql -uUSERNAME -p -h HOSTNAME
 </pre></div>
@@ -353,7 +377,7 @@ the command from, use:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">psql</span> <span class="o">-</span><span class="n">Uusername</span> <span class="o">-</span><span class="n">dnextcloud</span>
 </pre></div>
 </div>
-<p>To acess a MySQL installation on a different machine, add the -h option with
+<p>To access a MySQL installation on a different machine, add the -h option with
 the respective host name:</p>
 <div class="highlight-python"><div class="highlight"><pre>psql -Uusername -dnextcloud -h HOSTNAME
 </pre></div>

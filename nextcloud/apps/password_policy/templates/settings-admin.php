@@ -26,13 +26,13 @@ style('password_policy', 'settings-admin');
 ?>
 
 <div id="password-policy" class="section">
-	<h2 class="inlineblock"><?php p($l->t('Password Policy')); ?></h2>
+	<h2 class="inlineblock"><?php p($l->t('Password policy')); ?></h2>
 	<div id="password-policy-settings-msg" class="msg success inlineblock" style="display: none;">Saved</div>
 
 	<p>
 		<label>
 			<span><?php p($l->t('Minimal length')) ?></span>
-			<input id="password-policy-min-length" type="text" value="<?php p($_['minLength']) ?>" />
+			<input id="password-policy-min-length" type="number" value="<?php p($_['minLength']) ?>" />
 		</label>
 	</p>
 	<p id="enforceNonCommonPassword">

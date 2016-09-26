@@ -1,6 +1,6 @@
-========================================
-Upgrading Nextcloud with the Updater App
-========================================
+==========================================
+Upgrading Nextcloud with the Nextcloud App
+==========================================
 
 The Updater app automates many of the steps of upgrading an Nextcloud 
 installation. It is useful for installations that do not have root access, 
@@ -8,11 +8,8 @@ such as shared hosting, for installations with a smaller number of users
 and data, and it automates updating 
 :doc:`manual installations <../installation/source_installation>`.
 
-New in 9.0, the Updater app has :ref:`command-line options <updater_cli_label>`.
-
-.. note:: The Updater app is **not enabled and not supported** in Nextcloud 
-   Enterprise edition. 
-
+The Updater app has :ref:`command-line options <updater_cli_label>`.
+   
    **Downgrading** is not supported and risks corrupting your data! If you want 
    to revert to an older Nextcloud version, install it from scratch and then 
    restore your data from backup. Before doing this, file a support ticket (if 
@@ -113,18 +110,18 @@ immediately after the initial installation. Please follow the steps in
     
 These strict permissions will prevent the Updater app from working, as it needs 
 your whole Nextcloud directory to be owned by the HTTP user. Run this script to 
-set the appropriate permissions for updating. Replace the ``ncpath`` variable 
+set the appropriate permissions for updating. Replace the ``ocpath`` variable 
 with the path to your Nextcloud directory, and replace the ``htuser`` and 
 ``htgroup`` variables with your HTTP user and group.::
 
     #!/bin/bash
     # Sets permissions of the Nextcloud instance for updating
     
-    ncpath='/var/www/nextcloud'
+    ocpath='/var/www/nextcloud'
     htuser='www-data'
     htgroup='www-data'
     
-    chown -R ${htuser}:${htgroup} ${ncpath}
+    chown -R ${htuser}:${htgroup} ${ocpath}
 
 You can find your HTTP user in your HTTP server configuration files. Or you can 
 use :ref:`label-phpinfo` (Look for the **User/Group** line).
@@ -178,12 +175,12 @@ List checkpoints::
  
 Restore an earlier checkpoint::
 
- sudo -u www-data php nextcloud/updater/application.php upgrade:checkpoint
+ sudo -u www-data php nextcloud/updater/application.php upgrade:checkpoint 
   --restore=9.0.0.12-56d5e4e004964
 
 Add a line like this to your crontab to automatically create daily 
 checkpoints::
 
- 2 15 * * * sudo -u www-data php /path/to/nextcloud/updater/application.php
+ 2 15 * * * sudo -u www-data php /path/to/nextcloud/updater/application.php 
  upgrade:checkpoint --create > /dev/null 2>&1
  

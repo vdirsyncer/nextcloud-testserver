@@ -17,10 +17,6 @@ OC.L10N.register(
     "You restored %1$s" : "Та %1$s-ийг сэргээлээ",
     "%2$s restored %1$s" : "%2$s %1$s-ийг сэргээлээ",
     "Save" : "Хадгалах",
-    "Settings" : "Тохиргоо",
-    "You changed %1$s" : "Та %1$s-ийг өөрчиллөө",
-    "You created %1$s" : "Та %1$s үүсгэлээ",
-    "You deleted %1$s" : "Та %1$s-ийг устгалаа",
-    "You restored %1$s" : "Та %1$s-ийг сэргээлээ"
+    "Settings" : "Тохиргоо"
 },
 "nplurals=2; plural=(n != 1);");

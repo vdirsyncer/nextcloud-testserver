@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Configuring Memory Caching &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Configuring Memory Caching &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Defining Background Jobs" href="background_jobs_configuration.html" />
     <link rel="prev" title="Configuring the ClamAV Antivirus Scanner" href="antivirus_configuration.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
@@ -98,6 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -182,7 +184,7 @@ of memcache that best fits your needs. The supported caching backends are:</p>
 </dl>
 </li>
 </ul>
-<p>Memcaches must be explicitly configured in Nextcloud 8.1 and up by installing
+<p>Memcaches must be explicitly configured in Nextcloud by installing
 and enabling your desired cache, and then adding the appropriate entry to
 <code class="docutils literal"><span class="pre">config.php</span></code> (See <a class="reference internal" href="config_sample_php_parameters.html"><em>Config.php Parameters</em></a> for an overview of
 all possible config parameters).</p>
@@ -213,8 +215,7 @@ distributions it is enabled by default. However, it does
 not bundle a data cache. APCu is a data cache, and it is available in most
 Linux distributions. On Red Hat/CentOS/Fedora systems running PHP 5.5 and up
 install <code class="docutils literal"><span class="pre">php-pecl-apcu</span></code>. On Debian/Ubuntu/Mint systems install <code class="docutils literal"><span class="pre">php5-apcu</span></code>.
-On Ubuntu 14.04LTS, the APCu version is 4.0.2, which is too old to use with Nextcloud.
-Nextcloud requires 4.0.6+. You may install 4.0.7 from Ubuntu backports with this command:</p>
+On Ubuntu 14.04LTS, the APCu version is 4.0.2, which is too old to use with Nextcloud. Nextcloud requires 4.0.6+. You may install 4.0.7 from Ubuntu backports with this command:</p>
 <div class="highlight-python"><div class="highlight"><pre>apt-get install php5-apcu/trusty-backports
 </pre></div>
 </div>

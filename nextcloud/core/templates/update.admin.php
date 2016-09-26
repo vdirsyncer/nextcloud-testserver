@@ -34,11 +34,6 @@
 		<div class="infogroup bold">
 			<?php p($l->t('Please make sure that the database, the config folder and the data folder have been backed up before proceeding.')) ?>
 		</div>
-		<?php foreach ($_['releaseNotes'] as $note): ?>
-		<div class="infogroup bold">
-			<?php p($note) ?>
-		</div>
-		<?php endforeach; ?>
 		<input class="updateButton" type="button" value="<?php p($l->t('Start update')) ?>">
 		<div class="infogroup">
 			<?php p($l->t('To avoid timeouts with larger installations, you can instead run the following command from your installation directory:')) ?>
@@ -46,5 +41,13 @@
 		</div>
 	</div>
 
-	<div class="updateProgress hidden"></div>
+	<div class="update-progress hidden">
+		<h2 id="update-progress-title"></h2>
+		<div id="update-progress-icon" class="icon-loading-dark"></div>
+		<p id="update-progress-message-error" class="warning hidden"></p>
+		<ul id="update-progress-message-warnings" class="warning hidden"></ul>
+		<p id="update-progress-message"></p>
+		<a class="update-show-detailed"><?php p($l->t( 'Detailed logs' )); ?> <img src="<?php print_unescaped(image_path('', 'actions/caret.svg')); ?>" /></a>
+		<div id="update-progress-detailed" class="hidden warning"></div>
+	</div>
 </div>

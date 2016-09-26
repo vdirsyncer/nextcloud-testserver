@@ -1,8 +1,9 @@
 <?php
 /**
- * @author Joas Schilling <nickvergessen@owncloud.com>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Joas Schilling <coding@schilljs.com>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -18,6 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+
+use OCP\DB\QueryBuilder\IQueryBuilder;
+
 $installedVersion = \OC::$server->getConfig()->getAppValue('activity', 'installed_version');
 $connection = \OC::$server->getDatabaseConnection();
 
@@ -44,6 +48,31 @@ if (version_compare($installedVersion, '1.2.2', '<')) {
 	$connection->executeUpdate('UPDATE `*PREFIX*activity_mq` SET `amq_appid` = ? WHERE `amq_type` = ?', array('files_sharing', 'shared'));
 }
 
-// Cron job for sending emails and pruning the activity list
-\OC::$server->getJobList()->add('OCA\Activity\BackgroundJob\EmailNotification');
-\OC::$server->getJobList()->add('OCA\Activity\BackgroundJob\ExpireActivities');
+// Delete notification settings that can not be changed, so we correctly fall
+// back to the default value.
+$deleteNotificationTypes = [];
+/**
+ * For now we need to do it manually because the other apps might not be loaded
+ * on the update.
+$notificationTypes = \OC::$server->getActivityManager()->getNotificationTypes('en');
+foreach ($notificationTypes as $type => $data) {
+	if (is_array($data) && isset($data['methods'])) {
+		if (!in_array(\OCP\Activity\IExtension::METHOD_MAIL, $data['methods'])) {
+			$deleteNotificationTypes[] = 'notify_email_' . $type;
+		}
+		if (!in_array(\OCP\Activity\IExtension::METHOD_STREAM, $data['methods'])) {
+			$deleteNotificationTypes[] = 'notify_stream_' . $type;
+		}
+	}
+}
+ */
+// Disable due to https://github.com/nextcloud/server/pull/903: $deleteNotificationTypes[] = 'notify_stream_comments';
+$deleteNotificationTypes[] = 'notify_email_files_favorites';
+
+if (!empty($deleteNotificationTypes)) {
+	$query = $connection->getQueryBuilder();
+	$query->delete('preferences')
+		->where($query->expr()->eq('appid', $query->createNamedParameter('activity')))
+		->andWhere($query->expr()->in('configkey', $query->createNamedParameter($deleteNotificationTypes, IQueryBuilder::PARAM_STR_ARRAY)));
+	$query->execute();
+}

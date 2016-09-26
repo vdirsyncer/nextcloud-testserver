@@ -13,6 +13,7 @@ OC.L10N.register(
     "Remote share password" : "Contraseña de compartición remota",
     "Cancel" : "Encaboxar",
     "Add remote share" : "Amestar compartición remota",
+    "No ownCloud installation (7 or higher) found at {remote}" : "Nun s'atopó nenguna instalación ownCloud (7 o cimera) en { } remotu",
     "Invalid ownCloud url" : "Url ownCloud inválida",
     "Shared by" : "Compartíos por",
     "Sharing" : "Compartiendo",
@@ -34,7 +35,7 @@ OC.L10N.register(
     "the link expired" : "l'enllaz caducó",
     "sharing is disabled" : "la compartición ta deshabilitada",
     "For more info, please ask the person who sent this link." : "Pa más información, entrúga-y a la persona qu'unvió esti enllaz",
-    "Add to your Nextcloud" : "Amestar al to Nextcloud",
+    "Add to your ownCloud" : "Amestar al to ownCloud",
     "Download" : "Baxar",
     "Download %s" : "Descargar %s",
     "Direct link" : "Enllaz direutu"

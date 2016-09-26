@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>User Authentication with LDAP &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>User Authentication with LDAP &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="User Management" href="index.html" />
     <link rel="next" title="LDAP User Cleanup" href="user_auth_ldap_cleanup.html" />
     <link rel="prev" title="User Authentication with IMAP, SMB, and FTP" href="user_auth_ftp_smb_imap.html" />
@@ -66,14 +66,16 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Management</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="user_configuration.html">User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reset_admin_password.html">Resetting a Lost Admin Password</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reset_user_password.html">Resetting a User Password</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_password_policy.html">User Password Policy App</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ftp_smb_imap.html">User Authentication with IMAP, SMB, and FTP</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">User Authentication with LDAP</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
@@ -133,7 +135,7 @@ user.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">The PHP LDAP module is required; this is supplied by <code class="docutils literal"><span class="pre">php5-ldap</span></code> on
 Debian/Ubuntu, and <code class="docutils literal"><span class="pre">php-ldap</span></code> on CentOS/Red Hat/Fedora. PHP 5.4+ is
-required in Nextcloud 8.1.</p>
+required in Nextcloud.</p>
 </div>
 <p>The LDAP application supports:</p>
 <ul class="simple">
@@ -540,8 +542,8 @@ attribute value. The attribute can also return an absolute path, e.g.
 </ul>
 </dd>
 </dl>
-<p>In new Nextcloud installations (8.0.10, 8.1.5, 8.2.0 and up) the home folder rule is enforced. This means that once you set a home folder naming rule (get a home folder from an LDAP attribute), it must be available for all users. If it isn&#8217;t available for a user, then that user will not be able to login. Also, the filesystem will not be set up for that user, so their file shares will not be available to other users.</p>
-<p>In existing Nextcloud installations the old behavior still applies, which is using the Nextcloud username as the home folder when an LDAP attribute is not set. You may change this to enforcing the home folder rule with the <code class="docutils literal"><span class="pre">occ</span></code> command in Nextcloud 8.2, like this example on Ubuntu:</p>
+<p>In new Nextcloud installations the home folder rule is enforced. This means that once you set a home folder naming rule (get a home folder from an LDAP attribute), it must be available for all users. If it isn&#8217;t available for a user, then that user will not be able to login. Also, the filesystem will not be set up for that user, so their file shares will not be available to other users.</p>
+<p>In migrated Nextcloud installations the old behavior still applies, which is using the Nextcloud username as the home folder when an LDAP attribute is not set. You may change this to enforcing the home folder rule with the <code class="docutils literal"><span class="pre">occ</span></code> command in Nextcloud, like this example on Ubuntu:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ config:app:set user_ldap enforce_home_folder_naming_rule --value=1
 </pre></div>
 </div>
@@ -704,8 +706,8 @@ testing, you can empty the tables any time. Do not do this in production.</p>
 </div>
 <div class="section" id="caching">
 <h3>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h3>
-<p>The LDAP cache has changed in Nextcloud 8.1. There is no more file cache, but
-only a memory cache, and you must install and configure the memory cache (see
+<p>The LDAP information is cached in Nextcloud memory cache, and you must install
+and configure the memory cache (see
 <a class="reference internal" href="../configuration_server/caching_configuration.html"><em>Configuring Memory Caching</em></a>). The Nextcloud  <strong>Cache</strong>
 helps to speed up user interactions and sharing. It is populated on demand,
 and remains populated until the <strong>Cache Time-To-Live</strong> for each unique request

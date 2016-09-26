@@ -1,10 +1,10 @@
 {
 	"_comment" : "Array of mimetype aliases.",
 	"_comment2": "Any changes you make here will be overwritten on an update of Nextcloud.",
-	"_comment3": "Put any custom mappings in a new file mimetypealiases.json in the config/ folder of ownCloud",
+	"_comment3": "Put any custom mappings in a new file mimetypealiases.json in the config/ folder of Nextcloud",
 
 	"_comment4": "After any change to mimetypealiases.json run:",
-	"_comment5": "./occ maintenance:mimetypesjs",
+	"_comment5": "./occ maintenance:mimetype:update-js",
 	"_comment6": "Otherwise your update won't propagate through the system.",
 
 
@@ -56,13 +56,16 @@
 	"application/vnd.visio": "x-office/document",
 	"application/vnd.wordperfect": "x-office/document",
 	"application/x-7z-compressed": "package/x-generic",
+	"application/x-bzip2": "package/x-generic",
 	"application/x-cbr": "text",
 	"application/x-compressed": "package/x-generic",
 	"application/x-dcraw": "image",
 	"application/x-deb": "package/x-generic",
+	"application/x-fictionbook+xml": "text",
 	"application/x-font": "image",
 	"application/x-gimp": "image",
 	"application/x-gzip": "package/x-generic",
+	"application/x-mobipocket-ebook": "text",
 	"application/x-perl": "text/code",
 	"application/x-photoshop": "image",
 	"application/x-php": "text/code",

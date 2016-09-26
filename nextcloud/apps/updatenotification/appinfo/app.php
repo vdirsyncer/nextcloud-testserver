@@ -1,8 +1,11 @@
 <?php
 /**
- * @author Lukas Reschke <lukas@owncloud.com>
- *
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Joas Schilling <coding@schilljs.com>
+ * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Thomas Müller <thomas.mueller@tmit.eu>
+ *
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -20,10 +23,9 @@
  */
 
 if(\OC::$server->getConfig()->getSystemValue('updatechecker', true) === true) {
-	$updater = new \OC\Updater(
-		\OC::$server->getHTTPHelper(),
-		\OC::$server->getConfig(),
-		\OC::$server->getIntegrityCodeChecker()
+	$updater = new \OC\Updater\VersionCheck(
+		\OC::$server->getHTTPClientService(),
+		\OC::$server->getConfig()
 	);
 	$updateChecker = new \OCA\UpdateNotification\UpdateChecker(
 		$updater
@@ -36,7 +38,20 @@ if(\OC::$server->getConfig()->getSystemValue('updatechecker', true) === true) {
 				\OCP\Util::addScript('updatenotification', 'notification');
 				OC_Hook::connect('\OCP\Config', 'js', $updateChecker, 'getJavaScript');
 			}
-			\OC_App::registerAdmin('updatenotification', 'admin');
 		}
 	}
+
+	$manager = \OC::$server->getNotificationManager();
+	$manager->registerNotifier(function() use ($manager) {
+		return new \OCA\UpdateNotification\Notification\Notifier(
+			$manager,
+			\OC::$server->getL10NFactory()
+		);
+	}, function() {
+		$l = \OC::$server->getL10N('updatenotification');
+		return [
+			'id' => 'updatenotification',
+			'name' => $l->t('Update notifications'),
+		];
+	});
 }

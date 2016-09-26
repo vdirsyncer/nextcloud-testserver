@@ -13,7 +13,7 @@ Cache Warnings
 
 "No memory cache has been configured. To enhance your performance please 
 configure a memcache if available." Nextcloud supports multiple php caching
-extentions:
+extensions:
 
 * APC (PHP 5.4 only)
 * APCu (PHP 5.5+, minimum required PHP extension version 4.0.6)
@@ -66,7 +66,7 @@ environment.
 The "Strict-Transport-Security" HTTP header is not configured
 -------------------------------------------------------------
 
-"The "Strict-Transport-Security" HTTP header is not configured to least "15768000" seconds.
+"The "Strict-Transport-Security" HTTP header is not configured to least "15552000" seconds.
 For enhanced security we recommend enabling HSTS as described in our security tips."
 
 The HSTS header needs to be configured within your Web server by following the
@@ -86,6 +86,9 @@ Your Web server is not yet set up properly to allow file synchronization
 
 "Your web server is not yet set up properly to allow file synchronization because
 the WebDAV interface seems to be broken."
+
+At the ownCloud community forums a larger `FAQ <https://forum.owncloud.org/viewtopic.php?f=17&t=7536>`_
+is maintained containing various information and debugging hints.
 
 Outdated NSS / OpenSSL version
 ------------------------------
@@ -116,3 +119,11 @@ Some files have not passed the integrity check
 ----------------------------------------------
 
 Please refer to the :ref:`code_signing_fix_warning_label` documentation how to debug this issue.
+
+Your database does not run with "READ COMMITED" transaction isolation level
+---------------------------------------------------------------------------
+
+"Your database does not run with "READ COMMITED" transaction isolation level.
+This can cause problems when multiple actions are executed in parallel."
+
+Please refer to :ref:`db-transaction-label` how to configure your database for this requirement.

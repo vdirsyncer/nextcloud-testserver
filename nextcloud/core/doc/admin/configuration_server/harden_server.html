@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Hardening and Security Guidance &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Hardening and Security Guidance &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Reverse Proxy Configuration" href="reverse_proxy_configuration.html" />
     <link rel="prev" title="Logging Configuration" href="logging_configuration.html" />
@@ -66,8 +66,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
@@ -98,6 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -207,7 +209,8 @@ documentation for your HTTP server. The following examples are for Apache.</p>
 <h3>Redirect all unencrypted traffic to HTTPS<a class="headerlink" href="#redirect-all-unencrypted-traffic-to-https" title="Permalink to this headline">¶</a></h3>
 <p>To redirect all HTTP traffic to HTTPS administrators are encouraged to issue a
 permanent redirect using the 301 status code. When using Apache this can be
-achieved by a setting such as the following in the Apache VirtualHosts config:</p>
+achieved by a setting such as the following in the Apache VirtualHosts
+configuration:</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;VirtualHost *:80&gt;
    ServerName cloud.nextcloud.com
    Redirect permanent / https://cloud.nextcloud.com/
@@ -227,7 +230,7 @@ VirtualHost file:</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;VirtualHost *:443&gt;
   ServerName cloud.nextcloud.com
     &lt;IfModule mod_headers.c&gt;
-      Header always set Strict-Transport-Security &quot;max-age=15768000; includeSubDomains; preload&quot;
+      Header always set Strict-Transport-Security &quot;max-age=15552000; includeSubDomains; preload&quot;
     &lt;/IfModule&gt;
  &lt;/VirtualHost&gt;
 </pre></div>
@@ -242,8 +245,8 @@ require fine-tuning for an optimal performance and security experience. The
 available SSL ciphers and options depend completely on your environment and
 thus giving a generic recommendation is not really possible.</p>
 <p>We recommend using the <a class="reference external" href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">Mozilla SSL Configuration Generator</a> to generate a
-suitable configuration suited for your environment, and the free <a class="reference external" href="https://www.ssllabs.com/ssltest/">Qualys
-SSL Labs Tests</a> gives good guidance on whether your SSL server is correctly
+suitable configuration suited for your environment, and the free <a class="reference external" href="https://www.ssllabs.com/ssltest/">Qualys SSL Labs Tests</a>
+gives good guidance on whether your SSL server is correctly
 configured.</p>
 <p>Also ensure that HTTP compression is disabled to mitigate the BREACH attack.</p>
 </div>

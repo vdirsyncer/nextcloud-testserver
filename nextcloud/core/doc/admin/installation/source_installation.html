@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Manual Installation on Linux &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Manual Installation on Linux &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Installing PHP 5.4 on RHEL 6 and CentOS 6" href="php_54_installation.html" />
     <link rel="prev" title="Supported Apps in Nextcloud" href="apps_supported.html" />
@@ -66,13 +66,14 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud From the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Manual Installation on Linux</a><ul>
@@ -94,7 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_owncloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -129,7 +130,8 @@
 						
   <div class="section" id="manual-installation-on-linux">
 <h1>Manual Installation on Linux<a class="headerlink" href="#manual-installation-on-linux" title="Permalink to this headline">¶</a></h1>
-<p>You can setup Nextcloud from scratch using a classic
+<p>If there are no packages for your Linux distribution, or you prefer installing
+from the source tarball, you can setup Nextcloud from scratch using a classic
 LAMP stack (Linux, Apache, MySQL/MariaDB, PHP). This document provides a
 complete walk-through for installing Nextcloud on Ubuntu 14.04 LTS Server with
 Apache and MariaDB, using <a class="reference external" href="https://nextcloud.com/install/">the Nextcloud .tar archive</a>.</p>
@@ -155,8 +157,8 @@ Nextcloud. See <a class="reference internal" href="#selinux-tips-label"><span>SE
 </div>
 <div class="section" id="prerequisites">
 <span id="prerequisites-label"></span><h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
-<p>The Nextcloud .tar archive contains all of the required PHP modules. This section
-lists all required and optional PHP modules.  Consult the <a class="reference external" href="http://php.net/manual/en/extensions.php">PHP manual</a> for more information on modules.
+<p>The Nextcloud .tar archive contains all of the required PHP modules. This
+section lists all required and optional PHP modules.  Consult the <a class="reference external" href="http://php.net/manual/en/extensions.php">PHP manual</a> for more information on modules.
 Your Linux distribution should have packages for all required modules. You can
 check the precense of a module by typing <code class="docutils literal"><span class="pre">php</span> <span class="pre">-m</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-i</span> <span class="pre">&lt;module_name&gt;</span></code>.
 If you get a result, the module is present.</p>
@@ -227,7 +229,8 @@ and configure a memcache.</p>
 <li>PHP module pcntl (enables command interruption by pressing <code class="docutils literal"><span class="pre">ctrl-c</span></code>)</li>
 </ul>
 <p>You don’t need the WebDAV module for your Web server (i.e. Apache’s
-<code class="docutils literal"><span class="pre">mod_webdav</span></code>), as Nextcloud has a built-in WebDAV server of its own, SabreDAV.
+<code class="docutils literal"><span class="pre">mod_webdav</span></code>), as Nextcloud has a built-in WebDAV server of its own,
+SabreDAV.
 If <code class="docutils literal"><span class="pre">mod_webdav</span></code> is enabled you must disable it for Nextcloud. (See
 <a class="reference internal" href="#apache-configuration-label"><span>Apache Web Server Configuration</span></a> for an example configuration.)</p>
 </div>
@@ -348,8 +351,8 @@ it, replacing the <strong>Directory</strong> and other filepaths with your own f
 <div class="section" id="additional-apache-configurations">
 <h3>Additional Apache Configurations<a class="headerlink" href="#additional-apache-configurations" title="Permalink to this headline">¶</a></h3>
 <ul>
-<li><p class="first">For Nextcloud to work correctly, we need the module <code class="docutils literal"><span class="pre">mod_rewrite</span></code>. Enable it
-by running:</p>
+<li><p class="first">For Nextcloud to work correctly, we need the module <code class="docutils literal"><span class="pre">mod_rewrite</span></code>. Enable
+it by running:</p>
 <div class="highlight-python"><div class="highlight"><pre>a2enmod rewrite
 </pre></div>
 </div>
@@ -368,17 +371,17 @@ a2enmod mime
 <li><p class="first">You must disable any server-configured authentication for Nextcloud, as it
 uses Basic authentication internally for DAV services. If you have turned on
 authentication on a parent folder (via e.g. an <code class="docutils literal"><span class="pre">AuthType</span> <span class="pre">Basic</span></code>
-directive), you can turn off the authentication specifically for the Nextcloud
-entry. Following the above example configuration file, add the following line
-in the <code class="docutils literal"><span class="pre">&lt;Directory</span></code> section:</p>
+directive), you can turn off the authentication specifically for the
+Nextcloud entry. Following the above example configuration file, add the
+following line in the <code class="docutils literal"><span class="pre">&lt;Directory</span></code> section:</p>
 <div class="highlight-python"><div class="highlight"><pre>Satisfy Any
 </pre></div>
 </div>
 </li>
-<li><p class="first">When using SSL, take special note of the ServerName. You should specify one in
-the  server configuration, as well as in the CommonName field of the
-certificate. If you want your Nextcloud to be reachable via the internet, then
-set both of these to the domain you want to reach your Nextcloud server.</p>
+<li><p class="first">When using SSL, take special note of the ServerName. You should specify one
+in the server configuration, as well as in the CommonName field of the
+certificate. If you want your Nextcloud to be reachable via the internet,
+then set both of these to the domain you want to reach your Nextcloud server.</p>
 </li>
 <li><p class="first">Now restart Apache:</p>
 <div class="highlight-python"><div class="highlight"><pre>service apache2 restart
@@ -402,8 +405,8 @@ HTTP user, <code class="docutils literal"><span class="pre">mod_env</span></code
 <span id="enabling-ssl-label"></span><h2>Enabling SSL<a class="headerlink" href="#enabling-ssl" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">You can use Nextcloud over plain HTTP, but we strongly encourage you to
-use SSL/TLS to encrypt all of your server traffic, and to protect
+<p class="last">You can use Nextcloud over plain HTTP, but we strongly encourage you
+to use SSL/TLS to encrypt all of your server traffic, and to protect
 user&#8217;s logins and data in transit.</p>
 </div>
 <p>Apache installed under Ubuntu comes already set-up with a simple
@@ -416,8 +419,11 @@ service apache2 reload
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">See <a class="reference internal" href="../configuration_server/occ_command.html#security-commands-label"><span>Security (Import SSL Certificates)</span></a> for help on managing self-signed
-certificates.</p>
+<p class="last">Self-signed certificates have their drawbacks - especially when you
+plan to make your Nextcloud server publicly accessible. You might
+want to consider getting a certificate signed by a commercial signing
+authority. Check with your domain name registrar or hosting service
+for good deals on commercial certificates.</p>
 </div>
 </div>
 <div class="section" id="installation-wizard">
@@ -436,7 +442,7 @@ find your HTTP user):</p>
 rules to complete their Nextcloud installation; see
 <a class="reference internal" href="#selinux-tips-label"><span>SELinux Configuration Tips</span></a>.</p>
 </div>
-<p>To use <code class="docutils literal"><span class="pre">occ</span></code> see <a class="reference internal" href="command_line_installation.html"><em>Installing Nextcloud From the Command Line</em></a>.</p>
+<p>To use <code class="docutils literal"><span class="pre">occ</span></code> see <a class="reference internal" href="command_line_installation.html"><em>Installing Nextcloud from the Command Line</em></a>.</p>
 <p>To use the graphical Installation Wizard see <a class="reference internal" href="installation_wizard.html"><em>Installation Wizard</em></a>.</p>
 </div>
 <div class="section" id="setting-strong-directory-permissions">
@@ -478,7 +484,7 @@ at least PHP 5.5.22 or 5.6.6 when in a threaded environment.</p>
 PATH, TMP or others are not automatically populated in the same way as
 when using <code class="docutils literal"><span class="pre">php-cli</span></code>. A PHP call like <code class="docutils literal"><span class="pre">getenv('PATH');</span></code> can therefore
 return an empty result. So you may need to manually configure environment
-varibles in the appropropriate <code class="docutils literal"><span class="pre">php-fpm</span></code> ini/config file.</p>
+variables in the appropropriate <code class="docutils literal"><span class="pre">php-fpm</span></code> ini/config file.</p>
 <p>Here are some example root paths for these ini/config files:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -514,10 +520,10 @@ confirm your paths, for example:</p>
 </div>
 <p>If any of your system environment variables are not present in the file then
 you must add them.</p>
-<p>When you are using shared hosting or a control panel to manage your Nextcloud VM
-or server, the configuration files are almost certain to be located somewhere
-else, for security and flexibility reasons, so check your documentation for the
-correct locations.</p>
+<p>When you are using shared hosting or a control panel to manage your Nextcloud
+VM or server, the configuration files are almost certain to be located
+somewhere else, for security and flexibility reasons, so check your
+documentation for the correct locations.</p>
 <p>Please keep in mind that it is possible to create different settings for
 <code class="docutils literal"><span class="pre">php-cli</span></code> and <code class="docutils literal"><span class="pre">php-fpm</span></code>, and for different domains and Web sites.
 The best way to check your settings is with <a class="reference internal" href="../issues/general_troubleshooting.html#label-phpinfo"><span>PHP Version and Information</span></a>.</p>
@@ -527,15 +533,14 @@ your <code class="docutils literal"><span class="pre">php-fpm</span></code> conf
 <code class="docutils literal"><span class="pre">post_max_size</span></code> values. You will need to restart <code class="docutils literal"><span class="pre">php5-fpm</span></code> and your HTTP
 server in order for these changes to be applied.</p>
 <p><strong>.htaccess notes for Apache</strong></p>
-<p>Nextcloud comes with its own <code class="docutils literal"><span class="pre">nextcloud/.htaccess</span></code> file. Because <code class="docutils literal"><span class="pre">php-fpm</span></code> can&#8217;t
-read PHP settings in <code class="docutils literal"><span class="pre">.htaccess</span></code> these settings and permissions must be set
-in the <code class="docutils literal"><span class="pre">nextcloud/.user.ini</span></code> file.</p>
+<p>Nextcloud comes with its own <code class="docutils literal"><span class="pre">nextcloud/.htaccess</span></code> file. Because <code class="docutils literal"><span class="pre">php-fpm</span></code>
+can&#8217;t read PHP settings in <code class="docutils literal"><span class="pre">.htaccess</span></code> these settings and permissions must
+be set in the <code class="docutils literal"><span class="pre">nextcloud/.user.ini</span></code> file.</p>
 </div>
 <div class="section" id="other-web-servers">
 <span id="other-http-servers-label"></span><h2>Other Web Servers<a class="headerlink" href="#other-web-servers" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="nginx_examples.html"><em>Nginx Example Configurations</em></a></p>
 <p><a class="reference external" href="https://github.com/nextcloud/documentation/wiki/Alternate-Web-server-notes">Other HTTP servers (Nextcloud)</a></p>
-<p><a class="reference external" href="https://github.com/owncloud/documentation/wiki/UCS-Installation">Univention Corporate Server installation (ownCloud)</a></p>
 </div>
 </div>
 

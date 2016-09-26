@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Code Signing &mdash; Nextcloud 9 Server Administration Manual 9 documentation</title>
+    <title>Code Signing &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '9',
+        VERSION:     '10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 9 Server Administration Manual 9 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
     <link rel="up" title="Issues and Troubleshooting" href="index.html" />
     <link rel="prev" title="General Troubleshooting" href="general_troubleshooting.html" />
 <meta charset='utf-8'>
@@ -65,8 +65,9 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 9 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -266,7 +267,7 @@ the application. For other means on how to receive support please take a look at
 </div>
 <div class="section" id="rescans">
 <span id="rescans-label"></span><h2>Rescans<a class="headerlink" href="#rescans" title="Permalink to this headline">¶</a></h2>
-<p>Rescans are triggered at installation, and by updates. You may run scans manually with the <code class="docutils literal"><span class="pre">occ</span></code> command. The first command scans the Nextcloud core files, and the second command scans the named app. There is not yet a command to manually scan all apps:</p>
+<p>Rescans are triggered at installation, and by updates. You may run scans manually with the <code class="docutils literal"><span class="pre">occ</span></code> command. The first command scans the Nextcloud server files, and the second command scans the named app. There is not yet a command to manually scan all apps:</p>
 <div class="highlight-python"><div class="highlight"><pre>occ integrity:check-core
 occ integrity:check-app $appid
 </pre></div>

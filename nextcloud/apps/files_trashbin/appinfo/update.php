@@ -1,9 +1,10 @@
 <?php
 /**
- * @author Björn Schießle <schiessle@owncloud.com>
+ * @copyright Copyright (c) 2016, ownCloud, Inc.
+ *
+ * @author Björn Schießle <bjoern@schiessle.org>
  * @author Victor Dubiniuk <dubiniuk@owncloud.com>
  *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -39,6 +40,3 @@ if (version_compare($installedVersion, '0.6.4', '<')) {
 	$config->setSystemValue('trashbin_retention_obligation', $newObligation);
 	$config->deleteSystemValue('trashbin_auto_expire');
 }
-
-// Cron job for deleting expired trash items
-\OC::$server->getJobList()->add('OCA\Files_Trashbin\BackgroundJob\ExpireTrash');

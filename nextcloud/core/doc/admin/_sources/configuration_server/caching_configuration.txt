@@ -39,7 +39,7 @@ of memcache that best fits your needs. The supported caching backends are:
 * `Redis <http://redis.io/>`_, PHP module 2.2.5 and up required.
    For distributed caching.
    
-Memcaches must be explicitly configured in Nextcloud 8.1 and up by installing 
+Memcaches must be explicitly configured in Nextcloud by installing
 and enabling your desired cache, and then adding the appropriate entry to 
 ``config.php`` (See :doc:`config_sample_php_parameters` for an overview of
 all possible config parameters).
@@ -74,8 +74,7 @@ distributions it is enabled by default. However, it does
 not bundle a data cache. APCu is a data cache, and it is available in most 
 Linux distributions. On Red Hat/CentOS/Fedora systems running PHP 5.5 and up 
 install ``php-pecl-apcu``. On Debian/Ubuntu/Mint systems install ``php5-apcu``.
-On Ubuntu 14.04LTS, the APCu version is 4.0.2, which is too old to use with Nextcloud. 
-Nextcloud requires 4.0.6+. You may install 4.0.7 from Ubuntu backports with this command::
+On Ubuntu 14.04LTS, the APCu version is 4.0.2, which is too old to use with Nextcloud. Nextcloud requires 4.0.6+. You may install 4.0.7 from Ubuntu backports with this command::
 
   apt-get install php5-apcu/trusty-backports
    
@@ -229,7 +228,7 @@ APCu is faster at local caching than Redis. If you have enough memory, use APCu 
 and Redis for File Locking. If you are low on memory, use Redis for both.
 
 ..  _install_redis_label:     
-        
+
 Additional Redis Installation Help
 ----------------------------------
 
