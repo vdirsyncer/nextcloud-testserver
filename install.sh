@@ -17,7 +17,7 @@ if [ "$CI" = "true" ]; then
         php php-cgi php-cli \
         php-gd php-json php-sqlite3 php-curl \
         php-intl php-mcrypt php-imagick \
-        php-xml php-zip
+        php-xml php-zip php-mbstring
 fi
 
 cd "$DIR"
