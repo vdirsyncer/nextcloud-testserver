@@ -8,16 +8,16 @@ echo "install.sh: Own directory is $DIR"
 
 if [ "$CI" = "true" ]; then
     # https://docs.nextcloud.org/server/9/admin_manual/installation/source_installation.html#prerequisites
-    sudo add-apt-repository -y ppa:ondrej/php5-5.6
+    sudo add-apt-repository -y ppa:ondrej/php
     # who cares if one or two repos are down. As long as i'm able to install
     # these packages...
     sudo apt-get update || true
 
     sudo apt-get install \
-        php5-cgi \
-        php5 php5-cli \
-        php5-gd php5-json php5-sqlite php5-curl \
-        php5-intl php5-mcrypt php5-imagick
+        php php-cgi php-cli \
+        php-gd php-json php-sqlite3 php-curl \
+        php-intl php-mcrypt php-imagick \
+        php-xml php-zip
 fi
 
 cd "$DIR"
