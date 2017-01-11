@@ -55,6 +55,8 @@ class Handler {
 		$sql->insert('notifications');
 		$this->sqlInsert($sql, $notification);
 		$sql->execute();
+
+		return $sql->getLastInsertId();
 	}
 
 	/**
@@ -81,7 +83,6 @@ class Handler {
 	 * Delete the notifications matching the given Notification
 	 *
 	 * @param INotification $notification
-	 * @return null
 	 */
 	public function delete(INotification $notification) {
 		$sql = $this->connection->getQueryBuilder();
@@ -95,7 +96,6 @@ class Handler {
 	 *
 	 * @param int $id
 	 * @param string $user
-	 * @return null
 	 */
 	public function deleteById($id, $user) {
 		$sql = $this->connection->getQueryBuilder();
@@ -205,6 +205,11 @@ class Handler {
 			$sql->andWhere($sql->expr()->eq('link', $sql->createParameter('link')))
 				->setParameter('link', $notification->getLink());
 		}
+
+		if (method_exists($notification, 'getIcon') && $notification->getIcon() !== '') {
+			$sql->andWhere($sql->expr()->eq('icon', $sql->createParameter('icon')))
+				->setParameter('icon', $notification->getIcon());
+		}
 	}
 
 	/**
@@ -244,6 +249,14 @@ class Handler {
 		$sql->setValue('link', $sql->createParameter('link'))
 			->setParameter('link', $notification->getLink());
 
+		if (method_exists($notification, 'getIcon')) {
+			$sql->setValue('icon', $sql->createParameter('icon'))
+				->setParameter('icon', $notification->getIcon());
+		} else {
+			$sql->setValue('icon', $sql->createParameter('icon'))
+				->setParameter('icon', '');
+		}
+
 		$actions = [];
 		foreach ($notification->getActions() as $action) {
 			/** @var IAction $action */
@@ -278,8 +291,11 @@ class Handler {
 		if ($row['message'] !== '') {
 			$notification->setMessage($row['message'], (array) json_decode($row['message_parameters'], true));
 		}
-		if ($row['link'] !== '') {
+		if ($row['link'] !== '' && $row['link'] !== null) {
 			$notification->setLink($row['link']);
+		}
+		if ($row['icon'] !== '' && $row['icon'] !== null) {
+			$notification->setIcon($row['icon']);
 		}
 
 		$actions = (array) json_decode($row['actions'], true);

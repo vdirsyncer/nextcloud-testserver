@@ -1,9 +1,14 @@
+/* global OC */
+
 /**
  * Copyright (c) 2011, Robin Appelman <icewind1991@gmail.com>
  *               2013, Morris Jobke <morris.jobke@gmail.com>
+ *               2016, Christoph Wurst <christoph@owncloud.com>
  * This file is licensed under the Affero General Public License version 3 or later.
  * See the COPYING-README file.
  */
+
+OC.Settings = OC.Settings || {};
 
 /**
  * The callback will be fired as soon as enter is pressed by the
@@ -21,84 +26,32 @@ jQuery.fn.keyUpDelayedOrEnter = function (callback, allowEmptyValue) {
 			return;
 		}
 		if (allowEmptyValue || that.val() !== '') {
-			cb();
+			cb(event);
 		}
 	}, 1000));
 
 	this.keypress(function (event) {
 		if (event.keyCode === 13 && (allowEmptyValue || that.val() !== '')) {
 			event.preventDefault();
-			cb();
+			cb(event);
 		}
 	});
 
-	this.bind('paste', null, function (e) {
-		if(!e.keyCode){
+	this.bind('paste', null, function (event) {
+		if(!event.keyCode){
 			if (allowEmptyValue || that.val() !== '') {
-				cb();
+				cb(event);
 			}
 		}
 	});
 };
 
-
-/**
- * Post the email address change to the server.
- */
-function changeEmailAddress () {
-	var emailInfo = $('#email');
-	if (emailInfo.val() === emailInfo.defaultValue) {
-		return;
-	}
-	emailInfo.defaultValue = emailInfo.val();
-	OC.msg.startSaving('#lostpassword .msg');
-	var post = $("#lostpassword").serializeArray();
-	$.ajax({
-		type: 'PUT',
-		url: OC.generateUrl('/settings/users/{id}/mailAddress', {id: OC.currentUser}),
-		data: {
-			mailAddress: post[0].value
-		}
-	}).done(function(result){
-		// I know the following 4 lines look weird, but that is how it works
-		// in jQuery -  for success the first parameter is the result
-		//              for failure the first parameter is the result object
-		OC.msg.finishedSaving('#lostpassword .msg', result);
-	}).fail(function(result){
-		OC.msg.finishedSaving('#lostpassword .msg', result.responseJSON);
-	});
-}
-
-/**
- * Post the display name change to the server.
- */
-function changeDisplayName () {
-	if ($('#displayName').val() !== '') {
-		OC.msg.startSaving('#displaynameform .msg');
-		// Serialize the data
-		var post = $("#displaynameform").serialize();
-		// Ajax foo
-		$.post(OC.generateUrl('/settings/users/{id}/displayName', {id: OC.currentUser}), post, function (data) {
-			if (data.status === "success") {
-				$('#oldDisplayName').val($('#displayName').val());
-				// update displayName on the top right expand button
-				$('#expandDisplayName').text($('#displayName').val());
-				// update avatar if avatar is available
-				if(!$('#removeavatar').hasClass('hidden')) {
-					updateAvatar();
-				}
-			}
-			else {
-				$('#newdisplayname').val(data.data.displayName);
-			}
-			OC.msg.finishedSaving('#displaynameform .msg', data);
-		});
-	}
-}
-
 function updateAvatar (hidedefault) {
 	var $headerdiv = $('#header .avatardiv');
 	var $displaydiv = $('#displayavatar .avatardiv');
+
+	//Bump avatar avatarversion
+	oc_userconfig.avatar.version = -(Math.floor(Math.random() * 1000));
 
 	if (hidedefault) {
 		$headerdiv.hide();
@@ -109,13 +62,12 @@ function updateAvatar (hidedefault) {
 		$('#header .avatardiv').addClass('avatardiv-shown');
 	}
 	$displaydiv.css({'background-color': ''});
-	$displaydiv.avatar(OC.currentUser, 145, true);
-	$.get(OC.generateUrl(
-		'/avatar/{user}/{size}',
-		{user: OC.currentUser, size: 1}
-	), function (result) {
-		if (typeof(result) === 'string') {
-			// Show the delete button when the avatar is custom
+	$displaydiv.avatar(OC.currentUser, 145, true, null, function() {
+		$displaydiv.removeClass('loading');
+		$('#displayavatar img').show();
+		if($('#displayavatar img').length === 0) {
+			$('#removeavatar').removeClass('inlineblock').addClass('hidden');
+		} else {
 			$('#removeavatar').removeClass('hidden').addClass('inlineblock');
 		}
 	});
@@ -123,24 +75,27 @@ function updateAvatar (hidedefault) {
 
 function showAvatarCropper () {
 	var $cropper = $('#cropper');
-	$cropper.prepend("<img>");
-	var $cropperImage = $('#cropper img');
+	var $cropperImage = $('<img/>');
+	$cropperImage.css('opacity', 0); // prevent showing the unresized image
+	$cropper.children('.inner-container').prepend($cropperImage);
 
 	$cropperImage.attr('src',
 		OC.generateUrl('/avatar/tmp') + '?requesttoken=' + encodeURIComponent(oc_requesttoken) + '#' + Math.floor(Math.random() * 1000));
 
-	// Looks weird, but on('load', ...) doesn't work in IE8
-	$cropperImage.ready(function () {
-		$('#displayavatar').hide();
-		$cropper.show();
-
+	$cropperImage.load(function () {
+		var img = $cropperImage.get()[0];
+		var selectSize = Math.min(img.width, img.height);
+		var offsetX = (img.width - selectSize) / 2;
+		var offsetY = (img.height - selectSize) / 2;
 		$cropperImage.Jcrop({
 			onChange: saveCoords,
 			onSelect: saveCoords,
 			aspectRatio: 1,
-			boxHeight: 500,
-			boxWidth: 500,
-			setSelect: [0, 0, 300, 300]
+			boxHeight: Math.min(500, $('#app-content').height() -100),
+			boxWidth: Math.min(500, $('#app-content').width()),
+			setSelect: [offsetX, offsetY, selectSize, selectSize]
+		}, function() {
+			$cropper.show();
 		});
 	});
 }
@@ -175,7 +130,7 @@ function avatarResponseHandler (data) {
 	if (typeof data === 'string') {
 		data = JSON.parse(data);
 	}
-	var $warning = $('#avatar .warning');
+	var $warning = $('#avatarform .warning');
 	$warning.hide();
 	if (data.status === "success") {
 		updateAvatar();
@@ -191,8 +146,16 @@ $(document).ready(function () {
 	if($('#pass2').length) {
 		$('#pass2').showPassword().keyup();
 	}
+
+	var removeloader = function () {
+		setTimeout(function(){
+			if ($('.password-state').length > 0) {
+				$('.password-state').remove();
+			}
+		}, 5000)
+	};
+
 	$("#passwordbutton").click(function () {
-		OC.msg.startSaving('#password-error-msg');
 		var isIE8or9 = $('html').hasClass('lte9');
 		// FIXME - TODO - once support for IE8 and IE9 is dropped
 		// for IE8 and IE9 this will check additionally if the typed in password
@@ -204,26 +167,32 @@ $(document).ready(function () {
 			var post = $("#passwordform").serialize();
 			$('#passwordchanged').hide();
 			$('#passworderror').hide();
+			$("#passwordbutton").attr('disabled', 'disabled');
+			$("#passwordbutton").after("<span class='password-loading icon icon-loading-small-dark password-state'></span>");
+			$(".personal-show-label").hide();
 			// Ajax foo
 			$.post(OC.generateUrl('/settings/personal/changepassword'), post, function (data) {
 				if (data.status === "success") {
+					$("#passwordbutton").after("<span class='checkmark icon icon-checkmark password-state'></span>");
+					removeloader();
+					$(".personal-show-label").show();
 					$('#pass1').val('');
 					$('#pass2').val('').change();
+				}
+				if (typeof(data.data) !== "undefined") {
 					OC.msg.finishedSaving('#password-error-msg', data);
 				} else {
-					if (typeof(data.data) !== "undefined") {
-						OC.msg.finishedSaving('#password-error-msg', data);
-					} else {
-						OC.msg.finishedSaving('#password-error-msg',
-							{
-								'status' : 'error',
-								'data' : {
-									'message' : t('core', 'Unable to change password')
-								}
+					OC.msg.finishedSaving('#password-error-msg',
+						{
+							'status' : 'error',
+							'data' : {
+								'message' : t('core', 'Unable to change password')
 							}
-						);
-					}
+						}
+					);
 				}
+				$(".password-loading").remove();
+				$("#passwordbutton").removeAttr('disabled');
 			});
 			return false;
 		} else {
@@ -237,23 +206,27 @@ $(document).ready(function () {
 			);
 			return false;
 		}
-
 	});
 
-	$('#displayName').keyUpDelayedOrEnter(changeDisplayName);
-	$('#email').keyUpDelayedOrEnter(changeEmailAddress, true);
+	var federationSettingsView = new OC.Settings.FederationSettingsView({
+		el: '#personal-settings'
+	});
+	federationSettingsView.render();
 
 	$("#languageinput").change(function () {
 		// Serialize the data
 		var post = $("#languageinput").serialize();
 		// Ajax foo
-		$.post('ajax/setlanguage.php', post, function (data) {
-			if (data.status === "success") {
-				location.reload();
+		$.ajax(
+			'ajax/setlanguage.php',
+			{
+				method: 'POST',
+				data: post
 			}
-			else {
-				$('#passworderror').text(data.data.message);
-			}
+		).done(function() {
+			location.reload();
+		}).fail(function(jqXHR) {
+			$('#passworderror').text(jqXHR.responseJSON.message);
 		});
 		return false;
 	});
@@ -273,6 +246,8 @@ $(document).ready(function () {
 			avatarResponseHandler(response);
 		},
 		submit: function(e, data) {
+			$('#displayavatar img').hide();
+			$('#displayavatar .avatardiv').addClass('loading');
 			data.formData = _.extend(data.formData || {}, {
 				requesttoken: OC.requestToken
 			});
@@ -286,8 +261,8 @@ $(document).ready(function () {
 				msg = data.jqXHR.responseJSON.data.message;
 			}
 			avatarResponseHandler({
-			data: {
-					message: t('settings', 'An error occurred: {message}', { message: msg })
+				data: {
+					message: msg
 				}
 			});
 		}
@@ -299,12 +274,14 @@ $(document).ready(function () {
 		OC.dialogs.filepicker(
 			t('settings', "Select a profile picture"),
 			function (path) {
+				$('#displayavatar img').hide();
+				$('#displayavatar .avatardiv').addClass('loading');
 				$.ajax({
 					type: "POST",
 					url: OC.generateUrl('/avatar/'),
 					data: { path: path }
 				}).done(avatarResponseHandler)
-					.fail(function(jqXHR, status){
+					.fail(function(jqXHR) {
 						var msg = jqXHR.statusText + ' (' + jqXHR.status + ')';
 						if (!_.isUndefined(jqXHR.responseJSON) &&
 							!_.isUndefined(jqXHR.responseJSON.data) &&
@@ -314,7 +291,7 @@ $(document).ready(function () {
 						}
 						avatarResponseHandler({
 							data: {
-								message: t('settings', 'An error occurred: {message}', { message: msg })
+								message: msg
 							}
 						});
 					});
@@ -330,12 +307,13 @@ $(document).ready(function () {
 			url: OC.generateUrl('/avatar/'),
 			success: function () {
 				updateAvatar(true);
-				$('#removeavatar').addClass('hidden').removeClass('inlineblock');
 			}
 		});
 	});
 
 	$('#abortcropperbutton').click(function () {
+		$('#displayavatar .avatardiv').removeClass('loading');
+		$('#displayavatar img').show();
 		cleanCropper();
 	});
 
@@ -344,7 +322,7 @@ $(document).ready(function () {
 	});
 
 	$('#pass2').strengthify({
-		zxcvbn: OC.linkTo('core','vendor/zxcvbn/zxcvbn.js'),
+		zxcvbn: OC.linkTo('core','vendor/zxcvbn/dist/zxcvbn.js'),
 		titles: [
 			t('core', 'Very weak password'),
 			t('core', 'Weak password'),
@@ -355,21 +333,17 @@ $(document).ready(function () {
 		drawTitles: true,
 	});
 
-	// does the user have a custom avatar? if he does show #removeavatar
-	$.get(OC.generateUrl(
-		'/avatar/{user}/{size}',
-		{user: OC.currentUser, size: 1}
-	), function (result) {
-		if (typeof(result) === 'string') {
-			// Show the delete button when the avatar is custom
-			$('#removeavatar').removeClass('hidden').addClass('inlineblock');
-		}
-	});
-
 	// Load the big avatar
 	if (oc_config.enable_avatars) {
-		$('#avatar .avatardiv').avatar(OC.currentUser, 145);
+		$('#avatarform .avatardiv').avatar(OC.currentUser, 145, true, null, function() {
+			if($('#displayavatar img').length === 0) {
+				$('#removeavatar').removeClass('inlineblock').addClass('hidden');
+			} else {
+				$('#removeavatar').removeClass('hidden').addClass('inlineblock');
+			}
+		});
 	}
+	
 
 	// Show token views
 	var collection = new OC.Settings.AuthTokenCollection();
@@ -415,3 +389,5 @@ OC.Encryption.msg = {
 		}
 	}
 };
+
+OC.Settings.updateAvatar = updateAvatar;

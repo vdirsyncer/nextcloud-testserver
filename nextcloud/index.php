@@ -25,30 +25,22 @@
  *
  */
 
-// Show warning if a PHP version below 5.4.0 is used, this has to happen here
-// because base.php will already use 5.4 syntax.
-if (version_compare(PHP_VERSION, '5.4.0') === -1) {
-	echo 'This version of ownCloud requires at least PHP 5.4.0<br/>';
+// Show warning if a PHP version below 5.6.0 is used, this has to happen here
+// because base.php will already use 5.6 syntax.
+if (version_compare(PHP_VERSION, '5.6.0') === -1) {
+	echo 'This version of Nextcloud requires at least PHP 5.6.0<br/>';
 	echo 'You are currently running ' . PHP_VERSION . '. Please update your PHP version.';
 	return;
 }
 
-// Show warning if PHP 7.1 is used as Nextcloud is not compatible with PHP 7.1 for now
-// @see https://github.com/nextcloud/docker-ci/issues/10
-if (version_compare(PHP_VERSION, '7.1.0') !== -1) {
-	echo 'This version of Nextcloud is not compatible with PHP 7.1.<br/>';
-	echo 'You are currently running ' . PHP_VERSION . '.';
-	return;
-}
-
 try {
-	
-	require_once 'lib/base.php';
+
+	require_once __DIR__ . '/lib/base.php';
 
 	OC::handleRequest();
 
 } catch(\OC\ServiceUnavailableException $ex) {
-	\OC::$server->getLogger()->logException($ex, ['app' => 'index']);
+	\OC::$server->getLogger()->logException($ex, array('app' => 'index'));
 
 	//show the user a detailed error page
 	OC_Response::setStatus(OC_Response::STATUS_SERVICE_UNAVAILABLE);
@@ -56,14 +48,17 @@ try {
 } catch (\OC\HintException $ex) {
 	OC_Response::setStatus(OC_Response::STATUS_SERVICE_UNAVAILABLE);
 	OC_Template::printErrorPage($ex->getMessage(), $ex->getHint());
+} catch (\OC\User\LoginException $ex) {
+	OC_Response::setStatus(OC_Response::STATUS_FORBIDDEN);
+	OC_Template::printErrorPage($ex->getMessage(), $ex->getMessage());
 } catch (Exception $ex) {
-	\OC::$server->getLogger()->logException($ex, ['app' => 'index']);
+	\OC::$server->getLogger()->logException($ex, array('app' => 'index'));
 
 	//show the user a detailed error page
 	OC_Response::setStatus(OC_Response::STATUS_INTERNAL_SERVER_ERROR);
 	OC_Template::printExceptionErrorPage($ex);
 } catch (Error $ex) {
-	\OC::$server->getLogger()->logException($ex, ['app' => 'index']);
+	\OC::$server->getLogger()->logException($ex, array('app' => 'index'));
 	OC_Response::setStatus(OC_Response::STATUS_INTERNAL_SERVER_ERROR);
 	OC_Template::printExceptionErrorPage($ex);
 }

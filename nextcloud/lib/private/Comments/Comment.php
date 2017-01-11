@@ -47,8 +47,8 @@ class Comment implements IComment {
 	/**
 	 * Comment constructor.
 	 *
-	 * @param [] $data	optional, array with keys according to column names from
-	 * 					the comments database scheme
+	 * @param array $data	optional, array with keys according to column names from
+	 * 						the comments database scheme
 	 */
 	public function __construct(array $data = null) {
 		if(is_array($data)) {
@@ -201,6 +201,43 @@ class Comment implements IComment {
 		}
 		$this->data['message'] = $message;
 		return $this;
+	}
+
+	/**
+	 * returns an array containing mentions that are included in the comment
+	 *
+	 * @return array each mention provides a 'type' and an 'id', see example below
+	 * @since 11.0.0
+	 *
+	 * The return array looks like:
+	 * [
+	 *   [
+	 *     'type' => 'user',
+	 *     'id' => 'citizen4'
+	 *   ],
+	 *   [
+	 *     'type' => 'group',
+	 *     'id' => 'media'
+	 *   ],
+	 *   …
+	 * ]
+	 *
+	 */
+	public function getMentions() {
+		$ok = preg_match_all('/\B@[a-z0-9_\-@\.\']+/i', $this->getMessage(), $mentions);
+		if(!$ok || !isset($mentions[0]) || !is_array($mentions[0])) {
+			return [];
+		}
+		$uids = array_unique($mentions[0]);
+		$result = [];
+		foreach ($uids as $uid) {
+			// exclude author, no self-mentioning
+			if($uid === '@' . $this->getActorId()) {
+				continue;
+			}
+			$result[] = ['type' => 'user', 'id' => substr($uid, 1)];
+		}
+		return $result;
 	}
 
 	/**
@@ -358,7 +395,7 @@ class Comment implements IComment {
 	 * sets the comment data based on an array with keys as taken from the
 	 * database.
 	 *
-	 * @param [] $data
+	 * @param array $data
 	 * @return IComment
 	 */
 	protected function fromArray($data) {

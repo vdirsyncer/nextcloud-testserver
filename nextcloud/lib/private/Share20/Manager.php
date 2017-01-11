@@ -30,10 +30,12 @@ namespace OC\Share20;
 use OC\Cache\CappedMemoryCache;
 use OC\Files\Mount\MoveableMount;
 use OC\HintException;
+use OC\Share20\Exception\ProviderException;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Mount\IMountManager;
+use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -48,6 +50,7 @@ use OCP\Share\IManager;
 use OCP\Share\IProviderFactory;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use OCP\Share\IShareProvider;
 
 /**
  * This class is the communication hub for all sharing related operations.
@@ -180,6 +183,10 @@ class Manager implements IManager {
 				throw new \InvalidArgumentException('SharedWith should be empty');
 			}
 		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_REMOTE) {
+			if ($share->getSharedWith() === null) {
+				throw new \InvalidArgumentException('SharedWith should not be empty');
+			}
+		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_EMAIL) {
 			if ($share->getSharedWith() === null) {
 				throw new \InvalidArgumentException('SharedWith should not be empty');
 			}
@@ -479,6 +486,7 @@ class Manager implements IManager {
 		if (method_exists($share, 'setParent')) {
 			$storage = $share->getNode()->getStorage();
 			if ($storage->instanceOfStorage('\OCA\Files_Sharing\ISharedStorage')) {
+				/** @var \OCA\Files_Sharing\SharedStorage $storage */
 				$share->setParent($storage->getShareId());
 			}
 		};
@@ -578,6 +586,16 @@ class Manager implements IManager {
 			if ($share->getPassword() !== null) {
 				$share->setPassword($this->hasher->hash($share->getPassword()));
 			}
+		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_EMAIL) {
+			$this->linkCreateChecks($share);
+			$share->setToken(
+				$this->secureRandom->generate(
+					\OC\Share\Constants::TOKEN_LENGTH,
+					\OCP\Security\ISecureRandom::CHAR_LOWER.
+					\OCP\Security\ISecureRandom::CHAR_UPPER.
+					\OCP\Security\ISecureRandom::CHAR_DIGITS
+				)
+			);
 		}
 
 		// Cannot share with the owner
@@ -614,8 +632,11 @@ class Manager implements IManager {
 			throw new \Exception($error);
 		}
 
+		$oldShare = $share;
 		$provider = $this->factory->getProviderForType($share->getShareType());
 		$share = $provider->create($share);
+		//reuse the node we already have
+		$share->setNode($oldShare->getNode());
 
 		// Post share hook
 		$postHookData = [
@@ -878,6 +899,22 @@ class Manager implements IManager {
 		$provider->move($share, $recipientId);
 	}
 
+	public function getSharesInFolder($userId, Folder $node, $reshares = false) {
+		$providers = $this->factory->getAllProviders();
+
+		return array_reduce($providers, function($shares, IShareProvider $provider) use ($userId, $node, $reshares) {
+			$newShares = $provider->getSharesInFolder($userId, $node, $reshares);
+			foreach ($newShares as $fid => $data) {
+				if (!isset($shares[$fid])) {
+					$shares[$fid] = [];
+				}
+
+				$shares[$fid] = array_merge($shares[$fid], $data);
+			}
+			return $shares;
+		}, []);
+	}
+
 	/**
 	 * @inheritdoc
 	 */
@@ -888,7 +925,11 @@ class Manager implements IManager {
 			throw new \InvalidArgumentException('invalid path');
 		}
 
-		$provider = $this->factory->getProviderForType($shareType);
+		try {
+			$provider = $this->factory->getProviderForType($shareType);
+		} catch (ProviderException $e) {
+			return [];
+		}
 
 		$shares = $provider->getSharesBy($userId, $shareType, $path, $reshares, $limit, $offset);
 
@@ -952,7 +993,11 @@ class Manager implements IManager {
 	 * @inheritdoc
 	 */
 	public function getSharedWith($userId, $shareType, $node = null, $limit = 50, $offset = 0) {
-		$provider = $this->factory->getProviderForType($shareType);
+		try {
+			$provider = $this->factory->getProviderForType($shareType);
+		} catch (ProviderException $e) {
+			return [];
+		}
 
 		return $provider->getSharedWith($userId, $shareType, $node, $limit, $offset);
 	}
@@ -966,7 +1011,12 @@ class Manager implements IManager {
 		}
 
 		list($providerId, $id) = $this->splitFullId($id);
-		$provider = $this->factory->getProvider($providerId);
+
+		try {
+			$provider = $this->factory->getProvider($providerId);
+		} catch (ProviderException $e) {
+			throw new ShareNotFound();
+		}
 
 		$share = $provider->getShareById($id, $recipient);
 
@@ -991,6 +1041,7 @@ class Manager implements IManager {
 	 * @return Share[]
 	 */
 	public function getSharesByPath(\OCP\Files\Node $path, $page=0, $perPage=50) {
+		return [];
 	}
 
 	/**
@@ -1002,18 +1053,37 @@ class Manager implements IManager {
 	 * @throws ShareNotFound
 	 */
 	public function getShareByToken($token) {
-		$provider = $this->factory->getProviderForType(\OCP\Share::SHARE_TYPE_LINK);
-
+		$share = null;
 		try {
+			$provider = $this->factory->getProviderForType(\OCP\Share::SHARE_TYPE_LINK);
 			$share = $provider->getShareByToken($token);
+		} catch (ProviderException $e) {
 		} catch (ShareNotFound $e) {
-			$share = null;
 		}
+
 
 		// If it is not a link share try to fetch a federated share by token
 		if ($share === null) {
-			$provider = $this->factory->getProviderForType(\OCP\Share::SHARE_TYPE_REMOTE);
-			$share = $provider->getShareByToken($token);
+			try {
+				$provider = $this->factory->getProviderForType(\OCP\Share::SHARE_TYPE_REMOTE);
+				$share = $provider->getShareByToken($token);
+			} catch (ProviderException $e) {
+			} catch (ShareNotFound $e) {
+			}
+		}
+
+		// If it is not a link share try to fetch a federated share by token
+		if ($share === null && $this->shareProviderExists(\OCP\Share::SHARE_TYPE_EMAIL)) {
+			try {
+				$provider = $this->factory->getProviderForType(\OCP\Share::SHARE_TYPE_EMAIL);
+				$share = $provider->getShareByToken($token);
+			} catch (ProviderException $e) {
+			} catch (ShareNotFound $e) {
+			}
+		}
+
+		if ($share === null) {
+			throw new ShareNotFound();
 		}
 
 		if ($share->getExpirationDate() !== null &&
@@ -1068,10 +1138,14 @@ class Manager implements IManager {
 	 * @inheritdoc
 	 */
 	public function userDeleted($uid) {
-		$types = [\OCP\Share::SHARE_TYPE_USER, \OCP\Share::SHARE_TYPE_GROUP, \OCP\Share::SHARE_TYPE_LINK, \OCP\Share::SHARE_TYPE_REMOTE];
+		$types = [\OCP\Share::SHARE_TYPE_USER, \OCP\Share::SHARE_TYPE_GROUP, \OCP\Share::SHARE_TYPE_LINK, \OCP\Share::SHARE_TYPE_REMOTE, \OCP\Share::SHARE_TYPE_EMAIL];
 
 		foreach ($types as $type) {
-			$provider = $this->factory->getProviderForType($type);
+			try {
+				$provider = $this->factory->getProviderForType($type);
+			} catch (ProviderException $e) {
+				continue;
+			}
 			$provider->userDeleted($uid, $type);
 		}
 	}
@@ -1254,6 +1328,19 @@ class Manager implements IManager {
 	 */
 	public function outgoingServer2ServerSharesAllowed() {
 		return $this->config->getAppValue('files_sharing', 'outgoing_server2server_share_enabled', 'yes') === 'yes';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function shareProviderExists($shareType) {
+		try {
+			$this->factory->getProviderForType($shareType);
+		} catch (ProviderException $e) {
+			return false;
+		}
+
+		return true;
 	}
 
 }

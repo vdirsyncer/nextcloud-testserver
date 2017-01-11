@@ -198,10 +198,15 @@ $(function(){
 		},
 
 		addActivity: function(activity) {
-			subject = activity.subject_prepared;
-			var parsedSubject = OCA.Activity.Formatter.parseMessage(subject);
-
-			if (parsedSubject.indexOf('<a') >= 0) {
+			var subject = activity.subject;
+			if (activity.subject_rich[0].length > 1) {
+				subject = OCA.Activity.RichObjectStringParser.parseMessage(activity.subject_rich[0], activity.subject_rich[1]);
+			}
+			var message = activity.message;
+			if (activity.message_rich[0].length > 1) {
+				message = OCA.Activity.RichObjectStringParser.parseMessage(activity.message_rich[0], activity.message_rich[1]);
+			}
+			if (subject.indexOf('<a') >= 0) {
 				activity.link = '';
 			}
 
@@ -209,21 +214,23 @@ $(function(){
 				+ '<div class="box" data-activity-id="' + activity.activity_id + '">' + "\n"
 				+ '	<div class="messagecontainer">' + "\n"
 
-				+ '		<div class="activity-icon ' + ((activity.typeicon) ? escapeHTML(activity.typeicon) + ' svg' : '') + '"></div>' + "\n"
+				+ '		<div class="activity-icon">'
+				+ ((activity.icon) ? '			<img src="' + activity.icon + '" />' : '')
+				+ '		</div>' + "\n"
 
 				+ '		<div class="activitysubject">' + "\n"
 				+ ((activity.link) ? '			<a href="' + activity.link + '">' + "\n" : '')
-				+ '			' + parsedSubject + "\n"
+				+ '			' + subject + "\n"
 				+ ((activity.link) ? '			</a>' + "\n" : '')
 				+ '		</div>' + "\n"
 
-				+'		<span class="activitytime has-tooltip" title="' + escapeHTML(OC.Util.formatDate(activity.timestamp)) + '">' + "\n"
+				+'		<span class="activitytime has-tooltip live-relative-timestamp" data-timestamp="' + activity.timestamp + '" title="' + escapeHTML(OC.Util.formatDate(activity.timestamp)) + '">' + "\n"
 				+ '			' + escapeHTML(OC.Util.relativeModifiedDate(activity.timestamp)) + "\n"
 				+'		</span>' + "\n";
 
-			if (activity.message_prepared) {
+			if (message) {
 				content += '<div class="activitymessage">' + "\n"
-					+ OCA.Activity.Formatter.parseMessage(activity.message_prepared) + "\n"
+					+ message + "\n"
 					+'</div>' + "\n";
 			}
 
@@ -251,9 +258,9 @@ $(function(){
 			$element.find('.avatar').each(function() {
 				var element = $(this);
 				if (element.data('user-display-name')) {
-					element.avatar(element.data('user'), 28, undefined, false, undefined, element.data('user-display-name'));
+					element.avatar(element.data('user'), 21, undefined, false, undefined, element.data('user-display-name'));
 				} else {
-					element.avatar(element.data('user'), 28);
+					element.avatar(element.data('user'), 21);
 				}
 			});
 
@@ -273,7 +280,7 @@ $(function(){
 		}
 	};
 
-	OCA.Activity.Formatter.setAvatarStatus(OCA.Activity.InfinitScrolling.$container.data('avatars-enabled') === 'yes');
+	//OCA.Activity.Formatter.setAvatarStatus(OCA.Activity.InfinitScrolling.$container.data('avatars-enabled') === 'yes');
 	OC.Util.History.addOnPopStateHandler(_.bind(OCA.Activity.Filter._onPopState, OCA.Activity.Filter));
 	OCA.Activity.Filter.setFilter(OCA.Activity.InfinitScrolling.$container.attr('data-activity-filter'));
 	OCA.Activity.InfinitScrolling.$content.on('scroll', _.bind(OCA.Activity.InfinitScrolling.onScroll, OCA.Activity.InfinitScrolling));
@@ -287,21 +294,6 @@ $(function(){
 		}
 		OCA.Activity.Filter.setFilter(filter);
 		event.preventDefault();
-	});
-
-	$('#enable_rss').change(function () {
-		if (this.checked) {
-			$('#rssurl').removeClass('hidden');
-		} else {
-			$('#rssurl').addClass('hidden');
-		}
-		$.post(OC.generateUrl('/apps/activity/settings/feed'), 'enable=' + this.checked, function(response) {
-			$('#rssurl').val(response.data.rsslink);
-		});
-	});
-
-	$('#rssurl').on('click', function () {
-		$('#rssurl').select();
 	});
 });
 

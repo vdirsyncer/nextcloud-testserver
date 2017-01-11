@@ -23,19 +23,21 @@
  */
 ?>
 <div id="app-navigation">
-	<?php foreach ($_['navigations'] as $navigationGroup => $navigationEntries) { ?>
-		<?php if ($navigationGroup !== 'apps'): ?><ul><?php endif; ?>
-
-		<?php foreach ($navigationEntries as $navigation) { ?>
+	<ul>
+	<?php foreach ($_['navigations'] as $navigation) { ?>
 		<li<?php if ($_['activeNavigation'] === $navigation['id']): ?> class="active"<?php endif; ?>>
-			<a data-navigation="<?php p($navigation['id']) ?>" href="<?php p($navigation['url']) ?>">
-				<?php p($navigation['name']) ?>
+			<a data-navigation="<?php p($navigation['id']) ?>"
+			   href="<?php p($navigation['url']) ?>">
+				<?php if (!empty($navigation['icon'])) { ?>
+					<img alt="" src="<?php print_unescaped($navigation['icon']); ?>">
+					<span><?php p($navigation['name']) ?></span>
+				<?php } else { ?>
+					<span class="no-icon"><?php p($navigation['name']) ?></span>
+				<?php } ?>
 			</a>
 		</li>
-		<?php } ?>
-
-		<?php if ($navigationGroup !== 'top'): ?></ul><?php endif; ?>
 	<?php } ?>
+	</ul>
 
 	<div id="app-settings">
 		<div id="app-settings-header">
@@ -45,7 +47,11 @@
 		<div id="app-settings-content">
 			<input type="checkbox"<?php if ($_['rssLink']): ?> checked="checked"<?php endif; ?> id="enable_rss" class="checkbox" />
 			<label for="enable_rss"><?php p($l->t('Enable RSS feed'));?></label>
-			<input id="rssurl"<?php if (!$_['rssLink']): ?> class="hidden"<?php endif; ?> type="text" readonly="readonly" value="<?php p($_['rssLink']); ?>" />
+
+			<span id="rssurl"<?php if (!$_['rssLink']): ?> class="hidden"<?php endif; ?>>
+				<input class="feed-link" type="text" readonly="readonly" value="<?php p($_['rssLink']); ?>" />
+				<a class="icon-clippy" data-clipboard-target="#rssurl input"></a>
+			</span>
 		</div>
 	</div>
 </div>

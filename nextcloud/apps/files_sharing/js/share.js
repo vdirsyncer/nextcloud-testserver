@@ -36,19 +36,7 @@
 			var oldCreateRow = fileList._createRow;
 			fileList._createRow = function(fileData) {
 				var tr = oldCreateRow.apply(this, arguments);
-				var sharePermissions = fileData.permissions;
-				if (fileData.mountType && fileData.mountType === "external-root"){
-					// for external storages we can't use the permissions of the mountpoint
-					// instead we show all permissions and only use the share permissions from the mountpoint to handle resharing
-					sharePermissions = sharePermissions | (OC.PERMISSION_ALL & ~OC.PERMISSION_SHARE);
-				}
-				if (fileData.type === 'file') {
-					// files can't be shared with delete permissions
-					sharePermissions = sharePermissions & ~OC.PERMISSION_DELETE;
-
-					// create permissions don't mean anything for files
-					sharePermissions = sharePermissions & ~OC.PERMISSION_CREATE;
-				}
+				var sharePermissions = OCA.Sharing.Util.getSharePermissions(fileData);
 				tr.attr('data-share-permissions', sharePermissions);
 				if (fileData.shareOwner) {
 					tr.attr('data-share-owner', fileData.shareOwner);
@@ -71,6 +59,12 @@
 				var fileInfo = oldElementToFile.apply(this, arguments);
 				fileInfo.sharePermissions = $el.attr('data-share-permissions') || undefined;
 				fileInfo.shareOwner = $el.attr('data-share-owner') || undefined;
+
+				if( $el.attr('data-share-types')){
+					var shareTypes = $el.attr('data-share-types').split(',');
+					fileInfo.shareTypes = shareTypes;
+				}
+
 				return fileInfo;
 			};
 
@@ -120,6 +114,8 @@
 							shareType = parseInt(shareType, 10);
 							if (shareType === OC.Share.SHARE_TYPE_LINK) {
 								hasLink = true;
+							} else if (shareType === OC.Share.SHARE_TYPE_EMAIL) {
+								hasLink = true;
 							} else if (shareType === OC.Share.SHARE_TYPE_USER) {
 								hasShares = true;
 							} else if (shareType === OC.Share.SHARE_TYPE_GROUP) {
@@ -141,6 +137,7 @@
 			fileActions.registerAction({
 				name: 'Share',
 				displayName: '',
+				altText: t('core', 'Share'),
 				mime: 'all',
 				permissions: OC.PERMISSION_ALL,
 				iconClass: 'icon-share',
@@ -164,8 +161,17 @@
 			shareTab.on('sharesChanged', function(shareModel) {
 				var fileInfoModel = shareModel.fileInfoModel;
 				var $tr = fileList.findFileEl(fileInfoModel.get('name'));
+
+				// We count email shares as link share
+				var hasLinkShare = shareModel.hasLinkShare();
+				shareModel.get('shares').forEach(function (share) {
+					if (share.share_type === OC.Share.SHARE_TYPE_EMAIL) {
+						hasLinkShare = true;
+					}
+				});
+
 				OCA.Sharing.Util._updateFileListDataAttributes(fileList, $tr, shareModel);
-				if (!OCA.Sharing.Util._updateFileActionIcon($tr, shareModel.hasUserShares(), shareModel.hasLinkShare())) {
+				if (!OCA.Sharing.Util._updateFileActionIcon($tr, shareModel.hasUserShares(), hasLinkShare)) {
 					// remove icon, if applicable
 					OC.Share.markFileAsShared($tr, false, false);
 				}
@@ -178,6 +184,9 @@
 				}
 			});
 			fileList.registerTabView(shareTab);
+
+			var breadCrumbSharingDetailView = new OCA.Sharing.ShareBreadCrumbView({shareTab: shareTab});
+			fileList.registerBreadCrumbDetailView(breadCrumbSharingDetailView);
 		},
 
 		/**
@@ -241,9 +250,29 @@
 				text += ', +' + (count - maxRecipients);
 			}
 			return text;
+		},
+
+		/**
+		 * @param {Array} fileData
+		 * @returns {String}
+		 */
+		getSharePermissions: function(fileData) {
+			var sharePermissions = fileData.permissions;
+			if (fileData.mountType && fileData.mountType === "external-root"){
+				// for external storages we can't use the permissions of the mountpoint
+				// instead we show all permissions and only use the share permissions from the mountpoint to handle resharing
+				sharePermissions = sharePermissions | (OC.PERMISSION_ALL & ~OC.PERMISSION_SHARE);
+			}
+			if (fileData.type === 'file') {
+				// files can't be shared with delete permissions
+				sharePermissions = sharePermissions & ~OC.PERMISSION_DELETE;
+
+				// create permissions don't mean anything for files
+				sharePermissions = sharePermissions & ~OC.PERMISSION_CREATE;
+			}
+			return sharePermissions;
 		}
 	};
 })();
 
 OC.Plugins.register('OCA.Files.FileList', OCA.Sharing.Util);
-

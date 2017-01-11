@@ -107,11 +107,13 @@ class AdminController extends Controller implements ISettings {
 		$notifyGroups = json_decode($this->config->getAppValue('updatenotification', 'notify_groups', '["admin"]'), true);
 
 		$params = [
-			'isNewVersionAvailable' => ($updateState === []) ? false : true,
+			'isNewVersionAvailable' => !empty($updateState['updateAvailable']),
 			'lastChecked' => $lastUpdateCheck,
 			'currentChannel' => $currentChannel,
 			'channels' => $channels,
-			'newVersionString' => ($updateState === []) ? '' : $updateState['updateVersion'],
+			'newVersionString' => (empty($updateState['updateVersion'])) ? '' : $updateState['updateVersion'],
+			'downloadLink' => (empty($updateState['downloadLink'])) ? '' : $updateState['downloadLink'],
+			'updaterEnabled' => (empty($updateState['updaterEnabled'])) ? false : $updateState['updaterEnabled'],
 
 			'notify_groups' => implode('|', $notifyGroups),
 		];
@@ -128,7 +130,7 @@ class AdminController extends Controller implements ISettings {
 	public function setChannel($channel) {
 		\OCP\Util::setChannel($channel);
 		$this->config->setAppValue('core', 'lastupdatedat', 0);
-		return new DataResponse(['status' => 'success', 'data' => ['message' => $this->l10n->t('Updated channel')]]);
+		return new DataResponse(['status' => 'success', 'data' => ['message' => $this->l10n->t('Channel updated')]]);
 	}
 
 	/**

@@ -4,7 +4,7 @@
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
- * @copyright 2016 Raghu Nayyar <beingminimal@gmail.com>
+ * @copyright 2016 Raghu Nayyar <hey@raghunayyar.com>
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,9 +23,9 @@
  */
 ?>
 <div class="advanced--fieldset" ng-hide="emailAddress === ''">
-	<input type="text" class="advanced--input" ng-model="nameofattendee"
+	<input type="text" class="advanced--input attendeename" ng-model="nameofattendee"
 		placeholder="<?php p($l->t('E-Mail address of attendee'))?>" name="nameofattendee" autocomplete="off"
-		uib-typeahead="contact.name for contact in search($viewValue)" typeahead-show-hint="true" typeahead-min-length="3"
+		uib-typeahead="contact as contact.displayname for contact in search($viewValue)" typeahead-show-hint="true" typeahead-min-length="3"
 		   typeahead-on-select="selectFromTypeahead($item)" />
 	<button id="addmoreattendees" ng-click="add(nameofattendee)" class="btn event-button button" type="button">
 		<?php p($l->t('Add')); ?>

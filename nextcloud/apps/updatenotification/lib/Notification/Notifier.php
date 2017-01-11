@@ -24,12 +24,16 @@
 namespace OCA\UpdateNotification\Notification;
 
 
+use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use OCP\Notification\IManager;
 use OCP\Notification\INotification;
 use OCP\Notification\INotifier;
 
 class Notifier implements INotifier {
+
+	/** @var IURLGenerator */
+	protected $url;
 
 	/** @var IManager */
 	protected $notificationManager;
@@ -43,10 +47,12 @@ class Notifier implements INotifier {
 	/**
 	 * Notifier constructor.
 	 *
+	 * @param IURLGenerator $url
 	 * @param IManager $notificationManager
 	 * @param IFactory $l10NFactory
 	 */
-	public function __construct(IManager $notificationManager, IFactory $l10NFactory) {
+	public function __construct(IURLGenerator $url, IManager $notificationManager, IFactory $l10NFactory) {
+		$this->url = $url;
 		$this->notificationManager = $notificationManager;
 		$this->l10NFactory = $l10NFactory;
 		$this->appVersions = $this->getAppVersions();
@@ -66,9 +72,10 @@ class Notifier implements INotifier {
 
 		$l = $this->l10NFactory->get('updatenotification', $languageCode);
 		if ($notification->getObjectType() === 'core') {
-			$appName = $l->t('Nextcloud core');
-
 			$this->updateAlreadyInstalledCheck($notification, $this->getCoreVersions());
+
+			$parameters = $notification->getSubjectParameters();
+			$notification->setParsedSubject($l->t('Update to %1$s is available.', [$parameters['version']]));
 		} else {
 			$appInfo = $this->getAppInfo($notification->getObjectType());
 			$appName = ($appInfo === null) ? $notification->getObjectType() : $appInfo['name'];
@@ -76,9 +83,19 @@ class Notifier implements INotifier {
 			if (isset($this->appVersions[$notification->getObjectType()])) {
 				$this->updateAlreadyInstalledCheck($notification, $this->appVersions[$notification->getObjectType()]);
 			}
+
+			$notification->setParsedSubject($l->t('Update for %1$s to version %2$s is available.', [$appName, $notification->getObjectId()]))
+				->setRichSubject($l->t('Update for {app} to version %s is available.', $notification->getObjectId()), [
+					'app' => [
+						'type' => 'app',
+						'id' => $notification->getObjectType(),
+						'name' => $appName,
+					]
+				]);
 		}
 
-		$notification->setParsedSubject($l->t('Update for %1$s to version %2$s is available.', [$appName, $notification->getObjectId()]));
+		$notification->setIcon($this->url->getAbsoluteURL($this->url->imagePath('updatenotification', 'notification.svg')));
+
 		return $notification;
 	}
 

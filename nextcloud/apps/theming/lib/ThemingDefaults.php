@@ -23,12 +23,11 @@
 namespace OCA\Theming;
 
 
-
-
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
-
+use OCP\Files\IRootFolder;
 
 class ThemingDefaults extends \OC_Defaults {
 
@@ -38,6 +37,10 @@ class ThemingDefaults extends \OC_Defaults {
 	private $l;
 	/** @var IURLGenerator */
 	private $urlGenerator;
+	/** @var IRootFolder */
+	private $rootFolder;
+	/** @var ICacheFactory */
+	private $cacheFactory;
 	/** @var string */
 	private $name;
 	/** @var string */
@@ -54,16 +57,22 @@ class ThemingDefaults extends \OC_Defaults {
 	 * @param IL10N $l
 	 * @param IURLGenerator $urlGenerator
 	 * @param \OC_Defaults $defaults
+	 * @param IRootFolder $rootFolder
+	 * @param ICacheFactory $cacheFactory
 	 */
 	public function __construct(IConfig $config,
 								IL10N $l,
 								IURLGenerator $urlGenerator,
-								\OC_Defaults $defaults
+								\OC_Defaults $defaults,
+								IRootFolder $rootFolder,
+								ICacheFactory $cacheFactory
 	) {
 		parent::__construct();
 		$this->config = $config;
 		$this->l = $l;
 		$this->urlGenerator = $urlGenerator;
+		$this->rootFolder = $rootFolder;
+		$this->cacheFactory = $cacheFactory;
 
 		$this->name = $defaults->getName();
 		$this->url = $defaults->getBaseUrl();
@@ -111,6 +120,57 @@ class ThemingDefaults extends \OC_Defaults {
 	 */
 	public function getMailHeaderColor() {
 		return $this->config->getAppValue('theming', 'color', $this->color);
+	}
+
+	/**
+	 * Themed logo url
+	 *
+	 * @return string
+	 */
+	public function getLogo() {
+		$logo = $this->config->getAppValue('theming', 'logoMime');
+		if(!$logo || !$this->rootFolder->nodeExists('/themedinstancelogo')) {
+			return $this->urlGenerator->imagePath('core','logo.svg');
+		} else {
+			return $this->urlGenerator->linkToRoute('theming.Theming.getLogo');
+		}
+	}
+
+	/**
+	 * Themed background image url
+	 *
+	 * @return string
+	 */
+	public function getBackground() {
+		$backgroundLogo = $this->config->getAppValue('theming', 'backgroundMime');
+		if(!$backgroundLogo || !$this->rootFolder->nodeExists('/themedbackgroundlogo')) {
+			return $this->urlGenerator->imagePath('core','background.jpg');
+		} else {
+			return $this->urlGenerator->linkToRoute('theming.Theming.getLoginBackground');
+		}
+	}
+
+	/**
+	 * Check if Imagemagick is enabled and if SVG is supported
+	 * otherwise we can't render custom icons
+	 *
+	 * @return bool
+	 */
+	public function shouldReplaceIcons() {
+		$cache = $this->cacheFactory->create('theming');
+		if($value = $cache->get('shouldReplaceIcons')) {
+			return (bool)$value;
+		}
+		$value = false;
+		if(extension_loaded('imagick')) {
+			$checkImagick = new \Imagick();
+			if (count($checkImagick->queryFormats('SVG')) >= 1) {
+				$value = true;
+			}
+			$checkImagick->clear();
+		}
+		$cache->set('shouldReplaceIcons', $value);
+		return $value;
 	}
 
 	/**

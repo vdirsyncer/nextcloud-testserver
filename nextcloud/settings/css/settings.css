@@ -7,16 +7,14 @@ input#openid, input#webdav { width:20em; }
 
 /* PERSONAL */
 
-#avatar {
-	display: inline-block;
-	float: left;
+#avatarform {
 	width: 160px;
 	padding-right: 0;
 }
-#avatar .avatardiv {
+#avatarform .avatardiv {
 	margin-bottom: 10px;
 }
-#avatar .warning {
+#avatarform .warning {
 	width: 100%;
 }
 #uploadavatarbutton,
@@ -28,14 +26,106 @@ input#openid, input#webdav { width:20em; }
 .jcrop-holder {
 	z-index: 500;
 }
-#avatar #cropper {
+#cropper {
 	float: left;
-	background-color: #fff;
 	z-index: 500;
-	position: relative;
+	/* float cropper above settings page to prevent unexpected flowing from dynamically sized element */
+	position: fixed;
+	background-color: rgba(0, 0, 0, .2);
+	box-sizing: border-box;
+	top: 45px;
+	left: 0;
+	width: 100%;
+	height: calc(100% - 45px);
+}
+#cropper .inner-container {
+	z-index: 2001; /* above the top bar if needed */
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: #fff;
+	color: #333;
+	border-radius: 3px;
+	box-shadow: 0 0 7px #888;
+	padding: 15px;
 }
 
-#displaynameform,
+#cropper .inner-container .jcrop-holder {
+	box-shadow: 0 0 7px #888;
+}
+#cropper .inner-container .button {
+	margin-top: 15px;
+}
+#cropper .inner-container .primary {
+	float: right;
+}
+
+#personal-settings-avatar-container {
+	float: left;
+}
+#personal-settings-container {
+	position: relative;
+	float: left;
+	min-width: 280px;
+	max-width: 700px;
+	width: calc(100% - 200px);
+}
+#personal-settings-container:after {
+	clear: both;
+}
+#personal-settings-container > div {
+	float: left;
+	height: 100px;
+	min-width: 300px;
+}
+#personal-settings-container.no-edit > div {
+	height: 20px;
+	min-width: 200px;
+}
+#avatarform > h2,
+#personal-settings-container > div h2 {
+	position: relative;
+}
+#personal-settings-container > div h2 span[class^="icon-"],
+#personal-settings-avatar-container h2 span[class^="icon-"] {
+	display: inline-block;
+	padding: 8px;
+	margin-left: -8px;
+	margin-bottom: -10px;
+	background-size: 16px;
+	opacity: .3;
+	cursor: pointer;
+}
+.personal-settings-setting-box input[type="text"],
+.personal-settings-setting-box input[type="email"],
+.personal-settings-setting-box input[type="tel"] {
+	width: 17em;
+}
+#personal-settings-container > div > form span[class^="icon-checkmark"] {
+	position: absolute;
+	left: 239px;
+	top: 82px;
+	pointer-events: none;
+}
+.federationScopeMenu {
+	top: 44px;
+	margin: -5px 0px 0;
+}
+.federationScopeMenu.bubble::after {
+	right: 50%;
+	transform: translate(50%, 0);
+}
+.federationScopeMenu.popovermenu a.menuitem,
+.federationScopeMenu.popovermenu label.menuitem,
+.federationScopeMenu.popovermenu .menuitem {
+	font-size: 12.8px;
+	line-height: 1.6em;
+}
+.federationScopeMenu.popovermenu .menuitem .menuitem-text-detail {
+	opacity: .75;
+}
+
 #lostpassword,
 #groups,
 #passwordform {
@@ -45,7 +135,7 @@ input#openid, input#webdav { width:20em; }
 	padding-right: 0;
 	min-width: 60%;
 }
-#avatar,
+#avatarform,
 #passwordform {
 	margin-bottom: 0;
 	padding-bottom: 0;
@@ -53,6 +143,8 @@ input#openid, input#webdav { width:20em; }
 #groups {
 	overflow-wrap: break-word;
 	max-width: 75%;
+	display: block;;
+	clear: both;
 }
 
 .clientsbox img {
@@ -76,10 +168,6 @@ input#openid, input#webdav { width:20em; }
 input#identity {
 	width: 20em;
 }
-#displayName,
-#email {
-	width: 17em;
-}
 
 #showWizard {
 	display: inline-block;
@@ -94,6 +182,10 @@ input#identity {
 	color: #fff;
 	background-color: #d2322d;
 	padding: 3px;
+}
+
+.password-state {
+	display: inline-block;
 }
 
 table.nostyle label { margin-right: 2em; }
@@ -117,6 +209,13 @@ table.nostyle td { padding: 0.2em 0; }
 	padding: 10px 10px 10px 0;
 }
 
+#sessions .token-list td.more,
+#apppasswords .token-list td.more {
+	overflow: visible;
+	position: relative;
+	width: 16px;
+}
+
 #sessions .token-list td,
 #apppasswords .token-list td {
 	border-top: 1px solid #DDD;
@@ -124,16 +223,63 @@ table.nostyle td { padding: 0.2em 0; }
 	max-width: 200px;
 	white-space: nowrap;
 	overflow: hidden;
+	vertical-align: top;
+	position: relative;
 }
 
-#sessions tr *:nth-child(2),
-#apppasswords tr *:nth-child(2) {
+#sessions tr>*:nth-child(2),
+#apppasswords tr>*:nth-child(2) {
 	text-align: right;
 }
-#sessions .token-list td a.icon-delete,
-#apppasswords .token-list td a.icon-delete {
+#sessions .token-list td > a.icon,
+#apppasswords .token-list td > a.icon {
+	opacity: 0;
+	transition: opacity 0.5s;
+}
+
+#sessions .token-list a.icon,
+#apppasswords .token-list a.icon {
+	margin-top: 4px;
 	display: block;
+}
+
+#sessions .token-list tr:hover td > a.icon,
+#apppasswords .token-list tr:hover td > a.icon,
+#sessions .token-list tr.active td > a.icon,
+#apppasswords .token-list tr.active td > a.icon{
 	opacity: 0.6;
+}
+
+#sessions .token-list td div.configure,
+#apppasswords .token-list td div.configure {
+	display: none;
+}
+
+#sessions .token-list tr.active div.configure,
+#apppasswords .token-list tr.active div.configure {
+	display: block;
+	position: absolute;
+	top: 45px;
+	right: -5px;
+	padding: 10px;
+}
+
+#sessions .token-list div.configure:after,
+#apppasswords .token-list div.configure:after {
+	right: 13px;
+}
+
+#sessions .token-list tr.active div.configure > *,
+#apppasswords .token-list tr.active div.configure > *{
+	margin-top: 5px;
+	margin-bottom: 5px;
+	display: inline-block;
+}
+
+#sessions .token-list tr.active a.icon-delete,
+#apppasswords .token-list tr.active a.icon-delete {
+	background-position: left;
+	padding-left: 20px;
 }
 
 #new-app-login-name,
@@ -160,6 +306,15 @@ table.nostyle td { padding: 0.2em 0; }
 	padding-right: 1em;
 }
 
+.social-button {
+	padding-left: 0 !important;
+	margin-left: -10px
+}
+.social-button img {
+	padding: 10px;
+}
+
+
 /* USERS */
 #newgroup-init a span { margin-left: 20px; }
 #newgroup-init a span:before {
@@ -171,17 +326,23 @@ table.nostyle td { padding: 0.2em 0; }
 	height: 44px;
 }
 #newgroupname {
-	margin: 6px;
-	width: 95%;
-	padding-right: 32px;
-	box-sizing: border-box
+	margin: 0;
+	width: 100%;
+	padding: 12px 40px 12px 12px;
+	box-sizing: border-box;
+	background-color: transparent;
+	border: none;
+	border-bottom: 1px solid #eee;
+	border-radius: 0;
 }
 #newgroup-form .button {
 	position: absolute;
 	right: 0;
-	top: 3px;
-	height: 32px;
-	width: 32px;
+	top: 0;
+	padding: 10px 20px;
+	background-color: transparent;
+	border: none;
+	opacity: .5;
 }
 
 .isgroup .groupname {
@@ -226,8 +387,17 @@ table.grid {
 	width: 100%;
 }
 
-table.grid th { height:2em; color:#999; }
-table.grid th, table.grid td { border-bottom:1px solid #ddd; padding:0 .5em; padding-left:.8em; text-align:left; font-weight:normal; }
+table.grid th {
+	height: 2em;
+	color: #999;
+}
+table.grid th, table.grid td {
+	border-bottom: 1px solid #eee;
+	padding: 0 .5em;
+	padding-left: .8em;
+	text-align: left;
+	font-weight: normal;
+}
 td.name, td.password { padding-left:.8em; }
 td.password>img,td.displayName>img, td.remove>a, td.quota>img { visibility:hidden; }
 td.password, td.quota, td.displayName { width:12em; cursor:pointer; }
@@ -247,7 +417,12 @@ span.usersLastLoginTooltip { white-space: nowrap; }
 
 /* because of accessibility the name cell is <th> - therefore we enforce the black color */
 #userlist th.name {
-	color: #000000;
+	color: #000;
+}
+
+/* use same height as in files app */
+#userlist tr {
+	height: 51px;
 }
 
 #userlist .mailAddress .loading-small {
@@ -256,6 +431,15 @@ span.usersLastLoginTooltip { white-space: nowrap; }
 	margin-left: -26px;
 	position: relative;
 	top: 3px;
+}
+
+#newuser .groups {
+	display: inline;
+}
+
+#newuser .groupsListContainer.hidden,
+#userlist .groupsListContainer.hidden {
+	display: none;
 }
 
 tr:hover>td.password>span, tr:hover>td.displayName>span { margin:0; cursor:pointer; }
@@ -345,17 +529,6 @@ span.version {
 	background-position: 5px center;
 	padding-left: 25px;
 }
-.app-level .approved {
-	border-color: #0082c9;
-}
-.app-level .experimental {
-	background-color: #ce3702;
-	border-color: #ce3702;
-	color: #fff;
-}
-.apps-experimental {
-	color: #ce3702;
-}
 
 .app-score {
 	position: relative;
@@ -365,12 +538,62 @@ span.version {
 #apps-list {
 	position: relative;
 	height: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
 }
-.section {
+#apps-list .section {
 	position: relative;
+	flex: 0 0 auto;
+	margin-left: 20px;
 }
+#apps-list .section.apps-experimental {
+	flex-basis: 90%;
+}
+
+@media (min-width: 1601px) {
+	#apps-list .section {
+		width: 22%;
+		box-sizing: border-box;
+	}
+	#apps-list .section:nth-child(4n) {
+		margin-right: 20px;
+	}
+}
+
+@media (min-width: 1201px) and (max-width: 1600px) {
+	#apps-list .section {
+		width: 30%;
+		box-sizing: border-box;
+	}
+	#apps-list .section:nth-child(3n) {
+		margin-right: 20px;
+	}
+}
+
+@media (min-width: 901px) and (max-width: 1200px), (min-width: 601px) and (max-width: 770px) {
+	#apps-list .section {
+		width: 40%;
+		box-sizing: border-box;
+	}
+	#apps-list .section:nth-child(2n) {
+		margin-right: 20px;
+	}
+}
+
+@media (max-width: 600px), (min-width: 771px) and (max-width: 900px) {
+	#apps-list .section {
+		width: 100%;
+		box-sizing: border-box;
+	}
+}
+
 .section h2.app-name {
 	margin-bottom: 8px;
+	display: inline;
+}
+form.section {
+	position: relative;
 }
 .followupsection {
 	display: block;
@@ -415,6 +638,10 @@ span.version {
 	white-space: pre-line;
 }
 
+#apps-list .groups-enable {
+	margin-top: 8px;
+}
+
 #app-category-1 {
 	margin-bottom: 18px;
 }
@@ -454,6 +681,9 @@ span.version {
 table.grid td.date{
 	white-space: nowrap;
 }
+#log-section p {
+	margin-top:20px;
+}
 
 /* ADMIN */
 #security-warning li {
@@ -476,6 +706,14 @@ table.grid td.date{
 }
 #fileSharingSettings h3 {
 	display: inline-block;
+}
+
+#publicShareDisclaimerText {
+	width: calc(100% - 23px); /* 20 px left margin, 3 px right margin */
+	max-width: 600px;
+	height: 150px;
+	margin-left: 20px;
+	box-sizing: border-box;
 }
 
 /* correctly display help icons next to headings */
@@ -560,8 +798,13 @@ doesnotexist:-o-prefocus, .strengthify-wrapper {
 	width: 129px;
 }
 
-
-
+.trusted-domain-warning {
+	color: #fff;
+	padding: 5px;
+	background: #ce3702;
+	border-radius: 5px;
+	font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
 
 
 /* HELP */
@@ -609,13 +852,4 @@ doesnotexist:-o-prefocus, .strengthify-wrapper {
 
 #warning {
 	color: red;
-}
-
-/* SELECT */
-
-.select2-container-multi .select2-choices .select2-search-choice {
-	background-color: rgba(240,240,240,.9)!important;
-	border-color: rgba(240,240,240,.9)!important;
-	box-shadow: none!important;
-	background-image: none!important;
 }

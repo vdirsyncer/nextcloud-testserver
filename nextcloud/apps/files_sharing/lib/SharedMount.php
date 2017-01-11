@@ -37,7 +37,7 @@ use OC\Files\View;
  */
 class SharedMount extends MountPoint implements MoveableMount {
 	/**
-	 * @var \OC\Files\Storage\Shared $storage
+	 * @var \OCA\Files_Sharing\SharedStorage $storage
 	 */
 	protected $storage = null;
 
@@ -130,12 +130,12 @@ class SharedMount extends MountPoint implements MoveableMount {
 	 */
 	private function generateUniqueTarget($path, $view, array $mountpoints) {
 		$pathinfo = pathinfo($path);
-		$ext = (isset($pathinfo['extension'])) ? '.'.$pathinfo['extension'] : '';
+		$ext = (isset($pathinfo['extension'])) ? '.' . $pathinfo['extension'] : '';
 		$name = $pathinfo['filename'];
 		$dir = $pathinfo['dirname'];
 
 		// Helper function to find existing mount points
-		$mountpointExists = function($path) use ($mountpoints) {
+		$mountpointExists = function ($path) use ($mountpoints) {
 			foreach ($mountpoints as $mountpoint) {
 				if ($mountpoint->getShare()->getTarget() === $path) {
 					return true;
@@ -146,7 +146,7 @@ class SharedMount extends MountPoint implements MoveableMount {
 
 		$i = 2;
 		while ($view->file_exists($path) || $mountpointExists($path)) {
-			$path = Filesystem::normalizePath($dir . '/' . $name . ' ('.$i.')' . $ext);
+			$path = Filesystem::normalizePath($dir . '/' . $name . ' (' . $i . ')' . $ext);
 			$i++;
 		}
 
@@ -212,7 +212,7 @@ class SharedMount extends MountPoint implements MoveableMount {
 	 */
 	public function removeMount() {
 		$mountManager = \OC\Files\Filesystem::getMountManager();
-		/** @var $storage \OC\Files\Storage\Shared */
+		/** @var $storage \OCA\Files_Sharing\SharedStorage */
 		$storage = $this->getStorage();
 		$result = $storage->unshareStorage();
 		$mountManager->removeMount($this->mountPoint);
@@ -240,12 +240,22 @@ class SharedMount extends MountPoint implements MoveableMount {
 	 * @return int
 	 */
 	public function getNumericStorageId() {
-		$builder = \OC::$server->getDatabaseConnection()->getQueryBuilder();
+		if (!is_null($this->getShare()->getNodeCacheEntry())) {
+			return $this->getShare()->getNodeCacheEntry()->getStorageId();
+		} else {
+			$builder = \OC::$server->getDatabaseConnection()->getQueryBuilder();
 
-		$query = $builder->select('storage')
-			->from('filecache')
-			->where($builder->expr()->eq('fileid', $builder->createNamedParameter($this->getStorageRootId())));
+			$query = $builder->select('storage')
+				->from('filecache')
+				->where($builder->expr()->eq('fileid', $builder->createNamedParameter($this->getStorageRootId())));
 
-		return $query->execute()->fetchColumn();
+			$result = $query->execute();
+			$row = $result->fetch();
+			$result->closeCursor();
+			if ($row) {
+				return $row['storage'];
+			}
+			return -1;
+		}
 	}
 }

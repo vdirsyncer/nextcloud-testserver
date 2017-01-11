@@ -28,14 +28,10 @@
 
 $l = \OC::$server->getL10N('files_sharing');
 
-\OC::$CLASSPATH['OC_Share_Backend_File'] = 'files_sharing/lib/share/file.php';
-\OC::$CLASSPATH['OC_Share_Backend_Folder'] = 'files_sharing/lib/share/folder.php';
-\OC::$CLASSPATH['OC\Files\Storage\Shared'] = 'files_sharing/lib/sharedstorage.php';
-
 \OCA\Files_Sharing\Helper::registerHooks();
 
-\OCP\Share::registerBackend('file', 'OC_Share_Backend_File');
-\OCP\Share::registerBackend('folder', 'OC_Share_Backend_Folder', 'file');
+\OCP\Share::registerBackend('file', 'OCA\Files_Sharing\ShareBackend\File');
+\OCP\Share::registerBackend('folder', 'OCA\Files_Sharing\ShareBackend\Folder', 'file');
 
 $application = new \OCA\Files_Sharing\AppInfo\Application();
 $application->registerMountProviders();
@@ -46,19 +42,13 @@ $eventDispatcher->addListener(
 	function() {
 		\OCP\Util::addScript('files_sharing', 'share');
 		\OCP\Util::addScript('files_sharing', 'sharetabview');
+		\OCP\Util::addScript('files_sharing', 'sharebreadcrumbview');
 		\OCP\Util::addStyle('files_sharing', 'sharetabview');
+		\OCP\Util::addStyle('files_sharing', 'sharebreadcrumb');
 	}
 );
 
 // \OCP\Util::addStyle('files_sharing', 'sharetabview');
-
-\OC::$server->getActivityManager()->registerExtension(function() {
-		return new \OCA\Files_Sharing\Activity(
-			\OC::$server->query('L10NFactory'),
-			\OC::$server->getURLGenerator(),
-			\OC::$server->getActivityManager()
-		);
-});
 
 $config = \OC::$server->getConfig();
 if ($config->getAppValue('core', 'shareapi_enabled', 'yes') === 'yes') {

@@ -15,22 +15,30 @@
 	<licence>AGPL</licence>
 	<author>Frank Karlitschek, Joas Schilling</author>
 	<shipped>true</shipped>
-	<version>2.3.2</version>
+	<version>2.4.1</version>
 	<default_enable/>
 	<types>
 		<filesystem/>
 	</types>
 
 	<documentation>
-		<admin>https://docs.nextcloud.org/server/10/admin_manual/configuration_server/activity_configuration.html</admin>
+		<admin>https://docs.nextcloud.org/server/11/admin_manual/configuration_server/activity_configuration.html</admin>
 	</documentation>
 	<website>https://github.com/nextcloud/activity/</website>
 	<bugs>https://github.com/nextcloud/activity/issues</bugs>
 	<repository type="git">https://github.com/nextcloud/activity.git</repository>
 
 	<dependencies>
-		<owncloud min-version="9.1" max-version="9.1" />
+		<nextcloud min-version="11" max-version="11" />
 	</dependencies>
+
+	<activity>
+		<filters>
+			<filter>OCA\Activity\Filter\AllFilter</filter>
+			<filter>OCA\Activity\Filter\SelfFilter</filter>
+			<filter>OCA\Activity\Filter\ByFilter</filter>
+		</filters>
+	</activity>
 
 	<background-jobs>
 		<job>OCA\Activity\BackgroundJob\EmailNotification</job>

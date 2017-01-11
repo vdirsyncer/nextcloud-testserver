@@ -23,7 +23,6 @@
 namespace OCA\Activity\BackgroundJob;
 
 use OC\BackgroundJob\TimedJob;
-use OCA\Activity\AppInfo\Application;
 use OCA\Activity\Data;
 use OCP\IConfig;
 
@@ -42,23 +41,12 @@ class ExpireActivities extends TimedJob {
 	 * @param Data $data
 	 * @param IConfig $config
 	 */
-	public function __construct(Data $data = null, IConfig $config = null) {
+	public function __construct(Data $data, IConfig $config) {
 		// Run once per day
 		$this->setInterval(60 * 60 * 24);
 
-		if ($data === null || $config === null) {
-			$this->fixDIForJobs();
-		} else {
-			$this->data = $data;
-			$this->config = $config;
-		}
-	}
-
-	protected function fixDIForJobs() {
-		$application = new Application();
-
-		$this->data = $application->getContainer()->query('ActivityData');
-		$this->config = \OC::$server->getConfig();
+		$this->data = $data;
+		$this->config = $config;
 	}
 
 	protected function run($argument) {

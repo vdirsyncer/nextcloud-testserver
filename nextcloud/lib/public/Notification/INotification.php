@@ -32,7 +32,7 @@ interface INotification {
 	/**
 	 * @param string $app
 	 * @return $this
-	 * @throws \InvalidArgumentException if the app id are invalid
+	 * @throws \InvalidArgumentException if the app id is invalid
 	 * @since 9.0.0
 	 */
 	public function setApp($app);
@@ -46,7 +46,7 @@ interface INotification {
 	/**
 	 * @param string $user
 	 * @return $this
-	 * @throws \InvalidArgumentException if the user id are invalid
+	 * @throws \InvalidArgumentException if the user id is invalid
 	 * @since 9.0.0
 	 */
 	public function setUser($user);
@@ -116,7 +116,7 @@ interface INotification {
 	/**
 	 * @param string $subject
 	 * @return $this
-	 * @throws \InvalidArgumentException if the subject are invalid
+	 * @throws \InvalidArgumentException if the subject is invalid
 	 * @since 9.0.0
 	 */
 	public function setParsedSubject($subject);
@@ -126,6 +126,27 @@ interface INotification {
 	 * @since 9.0.0
 	 */
 	public function getParsedSubject();
+
+	/**
+	 * @param string $subject
+	 * @param array $parameters
+	 * @return $this
+	 * @throws \InvalidArgumentException if the subject or parameters are invalid
+	 * @since 11.0.0
+	 */
+	public function setRichSubject($subject, array $parameters = []);
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getRichSubject();
+
+	/**
+	 * @return array[]
+	 * @since 11.0.0
+	 */
+	public function getRichSubjectParameters();
 
 	/**
 	 * @param string $message
@@ -151,7 +172,7 @@ interface INotification {
 	/**
 	 * @param string $message
 	 * @return $this
-	 * @throws \InvalidArgumentException if the message are invalid
+	 * @throws \InvalidArgumentException if the message is invalid
 	 * @since 9.0.0
 	 */
 	public function setParsedMessage($message);
@@ -163,9 +184,30 @@ interface INotification {
 	public function getParsedMessage();
 
 	/**
+	 * @param string $message
+	 * @param array $parameters
+	 * @return $this
+	 * @throws \InvalidArgumentException if the message or parameters are invalid
+	 * @since 11.0.0
+	 */
+	public function setRichMessage($message, array $parameters = []);
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getRichMessage();
+
+	/**
+	 * @return array[]
+	 * @since 11.0.0
+	 */
+	public function getRichMessageParameters();
+
+	/**
 	 * @param string $link
 	 * @return $this
-	 * @throws \InvalidArgumentException if the link are invalid
+	 * @throws \InvalidArgumentException if the link is invalid
 	 * @since 9.0.0
 	 */
 	public function setLink($link);
@@ -177,6 +219,20 @@ interface INotification {
 	public function getLink();
 
 	/**
+	 * @param string $icon
+	 * @return $this
+	 * @throws \InvalidArgumentException if the icon is invalid
+	 * @since 11.0.0
+	 */
+	public function setIcon($icon);
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getIcon();
+
+	/**
 	 * @return IAction
 	 * @since 9.0.0
 	 */
@@ -185,7 +241,7 @@ interface INotification {
 	/**
 	 * @param IAction $action
 	 * @return $this
-	 * @throws \InvalidArgumentException if the action are invalid
+	 * @throws \InvalidArgumentException if the action is invalid
 	 * @since 9.0.0
 	 */
 	public function addAction(IAction $action);
@@ -199,7 +255,7 @@ interface INotification {
 	/**
 	 * @param IAction $action
 	 * @return $this
-	 * @throws \InvalidArgumentException if the action are invalid
+	 * @throws \InvalidArgumentException if the action is invalid
 	 * @since 9.0.0
 	 */
 	public function addParsedAction(IAction $action);

@@ -15,7 +15,7 @@
 		'<div class="fileName">' +
 			'<h3 title="{{name}}" class="ellipsis">{{name}}</h3>' +
 			'<a class="permalink" href="{{permalink}}" title="{{permalinkTitle}}">' +
-				'<span class="icon icon-public"></span>' +
+				'<span class="icon icon-clippy"></span>' +
 				'<span class="hidden-visually">{{permalinkTitle}}</span>' +
 			'</a>' +
 		'</div>' +
@@ -24,7 +24,7 @@
 		'		class="action action-favorite favorite">' +
 		'			<img class="svg" alt="{{starAltText}}" src="{{starIcon}}" />' +
 		'		</a>' +
-		'		{{#if hasSize}}<span class="size" title="{{altSize}}">{{size}}</span>, {{/if}}<span class="date" title="{{altDate}}">{{date}}</span>' +
+		'		{{#if hasSize}}<span class="size" title="{{altSize}}">{{size}}</span>, {{/if}}<span class="date live-relative-timestamp" data-timestamp="{{timestamp}}" title="{{altDate}}">{{date}}</span>' +
 		'	</div>' +
 		'</div>' +
 		'<div class="hidden permalink-field">' +
@@ -152,11 +152,12 @@
 					altSize: n('files', '%n byte', '%n bytes', this.model.get('size')),
 					dateLabel: t('files', 'Modified'),
 					altDate: OC.Util.formatDate(this.model.get('mtime')),
+					timestamp: this.model.get('mtime'),
 					date: OC.Util.relativeModifiedDate(this.model.get('mtime')),
 					starAltText: isFavorite ? t('files', 'Favorited') : t('files', 'Favorite'),
 					starIcon: OC.imagePath('core', isFavorite ? 'actions/starred' : 'actions/star'),
 					permalink: this._makePermalink(this.model.get('id')),
-					permalinkTitle: t('files', 'Local link')
+					permalinkTitle: t('files', 'Copy local link')
 				}));
 
 				// TODO: we really need OC.Previews

@@ -1,9 +1,11 @@
 { "translations": {
-    "Could not revert: %s" : "Geri alınamayan: %s",
+    "Could not revert: %s" : "Geri alınamadı: %s",
     "Versions" : "Sürümler",
-    "Failed to revert {file} to revision {timestamp}." : "{file} dosyası {timestamp} gözden geçirmesine geri alınamadı.",
+    "Failed to revert {file} to revision {timestamp}." : "{file} dosyası {timestamp} sürümüne geri alınamadı.",
+    "_%n byte_::_%n bytes_" : ["%n bayt","%n bayt"],
     "Restore" : "Geri yükle",
-    "No other versions available" : "Başka sürüm mevcut değil",
-    "More versions..." : "Daha fazla sürüm..."
+    "No versions available" : "Herhangi bir sürüm yok",
+    "More versions..." : "Diğer sürümler...",
+    "No other versions available" : "Başka bir sürüm yok"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }

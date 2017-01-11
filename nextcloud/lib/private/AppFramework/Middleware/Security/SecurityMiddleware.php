@@ -32,17 +32,23 @@ namespace OC\AppFramework\Middleware\Security;
 use OC\AppFramework\Middleware\Security\Exceptions\AppNotEnabledException;
 use OC\AppFramework\Middleware\Security\Exceptions\CrossSiteRequestForgeryException;
 use OC\AppFramework\Middleware\Security\Exceptions\NotAdminException;
+use OC\AppFramework\Middleware\Security\Exceptions\NotConfirmedException;
 use OC\AppFramework\Middleware\Security\Exceptions\NotLoggedInException;
 use OC\AppFramework\Middleware\Security\Exceptions\StrictCookieMissingException;
 use OC\AppFramework\Utility\ControllerMethodReflector;
 use OC\Security\CSP\ContentSecurityPolicyManager;
+use OC\Security\CSP\ContentSecurityPolicyNonceManager;
+use OC\Security\CSRF\CsrfTokenManager;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\EmptyContentSecurityPolicy;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Middleware;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\OCSController;
 use OCP\INavigationManager;
+use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IRequest;
 use OCP\ILogger;
@@ -69,12 +75,18 @@ class SecurityMiddleware extends Middleware {
 	private $urlGenerator;
 	/** @var ILogger */
 	private $logger;
+	/** @var ISession */
+	private $session;
 	/** @var bool */
 	private $isLoggedIn;
 	/** @var bool */
 	private $isAdminUser;
 	/** @var ContentSecurityPolicyManager */
 	private $contentSecurityPolicyManager;
+	/** @var CsrfTokenManager */
+	private $csrfTokenManager;
+	/** @var ContentSecurityPolicyNonceManager */
+	private $cspNonceManager;
 
 	/**
 	 * @param IRequest $request
@@ -82,29 +94,38 @@ class SecurityMiddleware extends Middleware {
 	 * @param INavigationManager $navigationManager
 	 * @param IURLGenerator $urlGenerator
 	 * @param ILogger $logger
+	 * @param ISession $session
 	 * @param string $appName
 	 * @param bool $isLoggedIn
 	 * @param bool $isAdminUser
 	 * @param ContentSecurityPolicyManager $contentSecurityPolicyManager
+	 * @param CSRFTokenManager $csrfTokenManager
+	 * @param ContentSecurityPolicyNonceManager $cspNonceManager
 	 */
 	public function __construct(IRequest $request,
 								ControllerMethodReflector $reflector,
 								INavigationManager $navigationManager,
 								IURLGenerator $urlGenerator,
 								ILogger $logger,
+								ISession $session,
 								$appName,
 								$isLoggedIn,
 								$isAdminUser,
-								ContentSecurityPolicyManager $contentSecurityPolicyManager) {
+								ContentSecurityPolicyManager $contentSecurityPolicyManager,
+								CsrfTokenManager $csrfTokenManager,
+								ContentSecurityPolicyNonceManager $cspNonceManager) {
 		$this->navigationManager = $navigationManager;
 		$this->request = $request;
 		$this->reflector = $reflector;
 		$this->appName = $appName;
 		$this->urlGenerator = $urlGenerator;
 		$this->logger = $logger;
+		$this->session = $session;
 		$this->isLoggedIn = $isLoggedIn;
 		$this->isAdminUser = $isAdminUser;
 		$this->contentSecurityPolicyManager = $contentSecurityPolicyManager;
+		$this->csrfTokenManager = $csrfTokenManager;
+		$this->cspNonceManager = $cspNonceManager;
 	}
 
 
@@ -112,7 +133,7 @@ class SecurityMiddleware extends Middleware {
 	 * This runs all the security checks before a method call. The
 	 * security checks are determined by inspecting the controller method
 	 * annotations
-	 * @param string $controller the controllername or string
+	 * @param Controller $controller the controller
 	 * @param string $methodName the name of the method
 	 * @throws SecurityException when a security check fails
 	 */
@@ -136,6 +157,13 @@ class SecurityMiddleware extends Middleware {
 			}
 		}
 
+		if ($this->reflector->hasAnnotation('PasswordConfirmationRequired')) {
+			$lastConfirm = (int) $this->session->get('last-password-confirm');
+			if ($lastConfirm < (time() - (30 * 60 + 15))) { // allow 15 seconds delay
+				throw new NotConfirmedException();
+			}
+		}
+
 		// Check for strict cookie requirement
 		if($this->reflector->hasAnnotation('StrictCookieRequired') || !$this->reflector->hasAnnotation('NoCSRFRequired')) {
 			if(!$this->request->passesStrictCookieCheck()) {
@@ -145,7 +173,14 @@ class SecurityMiddleware extends Middleware {
 		// CSRF check - also registers the CSRF token since the session may be closed later
 		Util::callRegister();
 		if(!$this->reflector->hasAnnotation('NoCSRFRequired')) {
-			if(!$this->request->passesCSRFCheck()) {
+			/*
+			 * Only allow the CSRF check to fail on OCS Requests. This kind of
+			 * hacks around that we have no full token auth in place yet and we
+			 * do want to offer CSRF checks for web requests.
+			 */
+			if(!$this->request->passesCSRFCheck() && !(
+					$controller instanceof OCSController &&
+					$this->request->getHeader('OCS-APIREQUEST') === 'true')) {
 				throw new CrossSiteRequestForgeryException();
 			}
 		}
@@ -174,8 +209,16 @@ class SecurityMiddleware extends Middleware {
 	public function afterController($controller, $methodName, Response $response) {
 		$policy = !is_null($response->getContentSecurityPolicy()) ? $response->getContentSecurityPolicy() : new ContentSecurityPolicy();
 
+		if (get_class($policy) === EmptyContentSecurityPolicy::class) {
+			return $response;
+		}
+
 		$defaultPolicy = $this->contentSecurityPolicyManager->getDefaultPolicy();
 		$defaultPolicy = $this->contentSecurityPolicyManager->mergePolicies($defaultPolicy, $policy);
+
+		if($this->cspNonceManager->browserSupportsCspV3()) {
+			$defaultPolicy->useJsNonce($this->csrfTokenManager->getToken()->getEncryptedValue());
+		}
 
 		$response->setContentSecurityPolicy($defaultPolicy);
 
@@ -207,7 +250,7 @@ class SecurityMiddleware extends Middleware {
 					$url = $this->urlGenerator->linkToRoute(
 						'core.login.showLoginForm',
 						[
-							'redirect_url' => urlencode($this->request->server['REQUEST_URI']),
+							'redirect_url' => $this->request->server['REQUEST_URI'],
 						]
 					);
 					$response = new RedirectResponse($url);

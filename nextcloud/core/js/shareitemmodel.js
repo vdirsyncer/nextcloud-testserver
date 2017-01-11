@@ -417,78 +417,6 @@
 			return (share.permissions & permission) === permission;
 		},
 
-		notificationMailWasSent: function(shareIndex) {
-			/** @type OC.Share.Types.ShareInfo **/
-			var share = this.get('shares')[shareIndex];
-			if(!_.isObject(share)) {
-				throw "Unknown Share";
-			}
-			return share.mail_send === 1;
-		},
-
-		/**
-		 * Sends an email notification for the given share
-		 *
-		 * @param {int} shareType share type
-		 * @param {string} shareWith recipient
-		 * @param {bool} state whether to set the notification flag or remove it
-		 */
-		sendNotificationForShare: function(shareType, shareWith, state) {
-			var itemType = this.get('itemType');
-			var itemSource = this.get('itemSource');
-
-			return $.post(
-				OC.generateUrl('core/ajax/share.php'),
-				{
-					action: state ? 'informRecipients' : 'informRecipientsDisabled',
-					recipient: shareWith,
-					shareType: shareType,
-					itemSource: itemSource,
-					itemType: itemType
-				},
-				function(result) {
-					if (result.status !== 'success') {
-						// FIXME: a model should not show dialogs
-						OC.dialogs.alert(t('core', result.data.message), t('core', 'Warning'));
-					}
-				}
-			);
-		},
-
-		/**
-		 * Send the link share information by email
-		 *
-		 * @param {string} recipientEmail recipient email address
-		 */
-		sendEmailPrivateLink: function(recipientEmail) {
-			var deferred = $.Deferred();
-			var itemType = this.get('itemType');
-			var itemSource = this.get('itemSource');
-			var linkShare = this.get('linkShare');
-
-			$.post(
-				OC.generateUrl('core/ajax/share.php'), {
-					action: 'email',
-					toaddress: recipientEmail,
-					link: linkShare.link,
-					itemType: itemType,
-					itemSource: itemSource,
-					file: this.fileInfoModel.get('name'),
-					expiration: linkShare.expiration || ''
-				},
-				function(result) {
-					if (!result || result.status !== 'success') {
-						// FIXME: a model should not show dialogs
-						OC.dialogs.alert(result.data.message, t('core', 'Error while sending notification'));
-						deferred.reject();
-					} else {
-						deferred.resolve();
-					}
-			});
-
-			return deferred.promise();
-		},
-
 		/**
 		 * @returns {boolean}
 		 */
@@ -763,7 +691,7 @@
 						 * FIXME: Find a way to display properly
 						 */
 						if (share.uid_owner !== OC.currentUser) {
-							return share;
+							return;
 						}
 
 						var link = window.location.protocol + '//' + window.location.host;

@@ -28,12 +28,16 @@ use OCP\Notification\IApp;
 use OCP\Notification\IManager;
 use OCP\Notification\INotification;
 use OCP\Notification\INotifier;
+use OCP\RichObjectStrings\IValidator;
 
 class Manager implements IManager {
+	/** @var IValidator */
+	protected $validator;
+
 	/** @var IApp[] */
 	protected $apps;
 
-	/** @var INotifier */
+	/** @var INotifier[] */
 	protected $notifiers;
 
 	/** @var array[] */
@@ -48,7 +52,13 @@ class Manager implements IManager {
 	/** @var \Closure[] */
 	protected $notifiersInfoClosures;
 
-	public function __construct() {
+	/**
+	 * Manager constructor.
+	 *
+	 * @param IValidator $validator
+	 */
+	public function __construct(IValidator $validator) {
+		$this->validator = $validator;
 		$this->apps = [];
 		$this->notifiers = [];
 		$this->notifiersInfo = [];
@@ -60,7 +70,6 @@ class Manager implements IManager {
 	/**
 	 * @param \Closure $service The service must implement IApp, otherwise a
 	 *                          \InvalidArgumentException is thrown later
-	 * @return null
 	 * @since 8.2.0
 	 */
 	public function registerApp(\Closure $service) {
@@ -73,7 +82,6 @@ class Manager implements IManager {
 	 *                          \InvalidArgumentException is thrown later
 	 * @param \Closure $info    An array with the keys 'id' and 'name' containing
 	 *                          the app id and the app name
-	 * @return null
 	 * @since 8.2.0 - Parameter $info was added in 9.0.0
 	 */
 	public function registerNotifier(\Closure $service, \Closure $info) {
@@ -151,7 +159,7 @@ class Manager implements IManager {
 	 * @since 8.2.0
 	 */
 	public function createNotification() {
-		return new Notification();
+		return new Notification($this->validator);
 	}
 
 	/**
@@ -164,7 +172,6 @@ class Manager implements IManager {
 
 	/**
 	 * @param INotification $notification
-	 * @return null
 	 * @throws \InvalidArgumentException When the notification is not valid
 	 * @since 8.2.0
 	 */
@@ -214,7 +221,6 @@ class Manager implements IManager {
 
 	/**
 	 * @param INotification $notification
-	 * @return null
 	 */
 	public function markProcessed(INotification $notification) {
 		$apps = $this->getApps();

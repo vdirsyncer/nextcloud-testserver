@@ -51,7 +51,7 @@ class ObjectHomeMountProvider implements IHomeMountProvider {
 	 *
 	 * @param IUser $user
 	 * @param IStorageFactory $loader
-	 * @return \OCP\Files\Mount\IMountPoint[]
+	 * @return \OCP\Files\Mount\IMountPoint
 	 */
 	public function getHomeMountForUser(IUser $user, IStorageFactory $loader) {
 
@@ -121,7 +121,8 @@ class ObjectHomeMountProvider implements IHomeMountProvider {
 				$config['arguments']['bucket'] = '';
 			}
 			$mapper = new \OC\Files\ObjectStore\Mapper($user);
-			$config['arguments']['bucket'] .= $mapper->getBucket();
+			$numBuckets = isset($config['arguments']['num_buckets']) ? $config['arguments']['num_buckets'] : 64;
+			$config['arguments']['bucket'] .= $mapper->getBucket($numBuckets);
 
 			$this->config->setUserValue($user->getUID(), 'homeobjectstore', 'bucket', $config['arguments']['bucket']);
 		} else {

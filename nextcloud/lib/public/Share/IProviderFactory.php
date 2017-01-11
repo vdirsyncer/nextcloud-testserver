@@ -55,4 +55,10 @@ interface IProviderFactory {
 	 * @since 9.0.0
 	 */
 	public function getProviderForType($shareType);
+
+	/**
+	 * @return IShareProvider[]
+	 * @since 11.0.0
+	 */
+	public function getAllProviders();
 }

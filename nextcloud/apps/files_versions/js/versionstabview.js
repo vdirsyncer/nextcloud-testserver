@@ -13,19 +13,36 @@
 (function() {
 	var TEMPLATE_ITEM =
 		'<li data-revision="{{timestamp}}">' +
-		'<img class="preview" src="{{previewUrl}}"/>' +
+		'<div>' +
+		'<div class="preview-container">' +
+		'<img class="preview" src="{{previewUrl}}" width="44" height="44"/>' +
+		'</div>' +
+		'<div class="version-container">' +
+		'<div>' +
 		'<a href="{{downloadUrl}}" class="downloadVersion"><img src="{{downloadIconUrl}}" />' +
-		'<span class="versiondate has-tooltip" title="{{formattedTimestamp}}">{{relativeTimestamp}}</span>' +
+		'<span class="versiondate has-tooltip live-relative-timestamp" data-timestamp="{{millisecondsTimestamp}}" title="{{formattedTimestamp}}">{{relativeTimestamp}}</span>' +
 		'</a>' +
+		'</div>' +
+		'{{#hasDetails}}' +
+		'<div class="version-details">' +
+		'<span class="size has-tooltip" title="{{altSize}}">{{humanReadableSize}}</span>' +
+		'</div>' +
+		'{{/hasDetails}}' +
+		'</div>' +
 		'{{#canRevert}}' +
 		'<a href="#" class="revertVersion" title="{{revertLabel}}"><img src="{{revertIconUrl}}" /></a>' +
 		'{{/canRevert}}' +
+		'</div>' +
 		'</li>';
 
 	var TEMPLATE =
 		'<ul class="versions"></ul>' +
 		'<div class="clear-float"></div>' +
-		'<div class="empty hidden">{{emptyResultLabel}}</div>' +
+		'<div class="empty hidden">' +
+		'<div class="emptycontent">' +
+		'<div class="icon-history"></div>' +
+		'<p>{{emptyResultLabel}}</p>' +
+		'</div></div>' +
 		'<input type="button" class="showMoreVersions hidden" value="{{moreVersionsLabel}}"' +
 		' name="show-more-versions" id="show-more-versions" />' +
 		'<div class="loading hidden" style="height: 50px"></div>';
@@ -149,6 +166,15 @@
 		_onAddModel: function(model) {
 			var $el = $(this.itemTemplate(this._formatItem(model)));
 			this.$versionsContainer.append($el);
+
+			var preview = $el.find('.preview')[0];
+			this._lazyLoadPreview({
+				url: model.getPreviewUrl(),
+				mime: model.get('mimetype'),
+				callback: function(url) {
+					preview.src = url;
+				}
+			});
 			$el.find('.has-tooltip').tooltip();
 		},
 
@@ -182,13 +208,17 @@
 
 		_formatItem: function(version) {
 			var timestamp = version.get('timestamp') * 1000;
+			var size = version.has('size') ? version.get('size') : 0;
 			return _.extend({
+				millisecondsTimestamp: timestamp,
 				formattedTimestamp: OC.Util.formatDate(timestamp),
 				relativeTimestamp: OC.Util.relativeModifiedDate(timestamp),
+				humanReadableSize: OC.Util.humanFileSize(size, true),
+				altSize: n('files', '%n byte', '%n bytes', size),
+				hasDetails: version.has('size'),
 				downloadUrl: version.getDownloadUrl(),
 				downloadIconUrl: OC.imagePath('core', 'actions/download'),
 				revertIconUrl: OC.imagePath('core', 'actions/history'),
-				previewUrl: version.getPreviewUrl(),
 				revertLabel: t('files_versions', 'Restore'),
 				canRevert: (this.collection.getFileInfo().get('permissions') & OC.PERMISSION_UPDATE) !== 0
 			}, version.attributes);
@@ -199,7 +229,7 @@
 		 */
 		render: function() {
 			this.$el.html(this.template({
-				emptyResultLabel: t('files_versions', 'No other versions available'),
+				emptyResultLabel: t('files_versions', 'No versions available'),
 				moreVersionsLabel: t('files_versions', 'More versions...')
 			}));
 			this.$el.find('.has-tooltip').tooltip();
@@ -217,6 +247,38 @@
 				return false;
 			}
 			return !fileInfo.isDirectory();
+		},
+
+		/**
+		 * Lazy load a file's preview.
+		 *
+		 * @param path path of the file
+		 * @param mime mime type
+		 * @param callback callback function to call when the image was loaded
+		 * @param etag file etag (for caching)
+		 */
+		_lazyLoadPreview : function(options) {
+			var url = options.url;
+			var mime = options.mime;
+			var ready = options.callback;
+
+			// get mime icon url
+			var iconURL = OC.MimeType.getIconUrl(mime);
+			ready(iconURL); // set mimeicon URL
+
+			var img = new Image();
+			img.onload = function(){
+				// if loading the preview image failed (no preview for the mimetype) then img.width will < 5
+				if (img.width > 5) {
+					ready(url, img);
+				} else if (options.error) {
+					options.error();
+				}
+			};
+			if (options.error) {
+				img.onerror = options.error;
+			}
+			img.src = url;
 		}
 	});
 

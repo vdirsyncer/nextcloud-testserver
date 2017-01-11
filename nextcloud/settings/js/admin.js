@@ -3,8 +3,13 @@ $(document).ready(function(){
 
 	// Hack to add a trusted domain
 	if (params.trustDomain) {
-		OC.dialogs.confirm(t('settings', 'Are you really sure you want add "{domain}" as trusted domain?',
-				{domain: params.trustDomain}),
+		var potentialDomain = params.trustDomain;
+		potentialDomain = encodeURI(escapeHTML(potentialDomain));
+		potentialDomain = '<span class="trusted-domain-warning">' + potentialDomain + '</span>';
+
+		OC.dialogs.confirmHtml(t('settings', 'Are you really sure you want add {domain} as trusted domain?', {
+				domain: potentialDomain
+			}, undefined, {escape: false}),
 			t('settings', 'Add trusted domain'), function(answer) {
 				if(answer) {
 					$.ajax({
@@ -24,7 +29,7 @@ $(document).ready(function(){
 		$(element).change(function(ev) {
 			var groups = ev.val || [];
 			groups = JSON.stringify(groups);
-			OC.AppConfig.setValue('core', $(this).attr('name'), groups);
+			OCP.AppConfig.setValue('core', $(this).attr('name'), groups);
 		});
 	});
 
@@ -41,9 +46,9 @@ $(document).ready(function(){
 		if($(this).is(':checked')){
 			var mode = $(this).val();
 			if (mode === 'ajax' || mode === 'webcron' || mode === 'cron') {
-				OC.AppConfig.setValue('core', 'backgroundjobs_mode', mode);
+				OCP.AppConfig.setValue('core', 'backgroundjobs_mode', mode);
 				// clear cron errors on background job mode change
-				OC.AppConfig.deleteKey('core', 'cronErrors');
+				OCP.AppConfig.deleteKey('core', 'cronErrors');
 			}
 		}
 	});
@@ -59,7 +64,7 @@ $(document).ready(function(){
 	$('#reallyEnableEncryption').click(function() {
 		$('#encryptionAPI div#EncryptionWarning').toggleClass('hidden');
 		$('#encryptionAPI div#EncryptionSettingsArea').toggleClass('hidden');
-		OC.AppConfig.setValue('core', 'encryption_enabled', 'yes');
+		OCP.AppConfig.setValue('core', 'encryption_enabled', 'yes');
 		$('#enableEncryption').attr('disabled', 'disabled');
 	});
 
@@ -90,7 +95,7 @@ $(document).ready(function(){
 		}
 	});
 
-	$('#shareAPI input:not(#excludedGroups)').change(function() {
+	$('#shareAPI input:not(.noJSAutoUpdate)').change(function() {
 		var value = $(this).val();
 		if ($(this).attr('type') === 'checkbox') {
 			if (this.checked) {
@@ -99,11 +104,41 @@ $(document).ready(function(){
 				value = 'no';
 			}
 		}
-		OC.AppConfig.setValue('core', $(this).attr('name'), value);
+		OCP.AppConfig.setValue('core', $(this).attr('name'), value);
 	});
 
 	$('#shareapiDefaultExpireDate').change(function() {
 		$("#setDefaultExpireDate").toggleClass('hidden', !this.checked);
+	});
+
+	$('#publicShareDisclaimer').change(function() {
+		$("#publicShareDisclaimerText").toggleClass('hidden', !this.checked);
+		if(!this.checked) {
+			savePublicShareDisclaimerText('');
+		}
+	});
+
+	var savePublicShareDisclaimerText = _.debounce(function(value) {
+		var options = {
+			success: function() {
+				OC.msg.finishedSuccess('#publicShareDisclaimerStatus', t('core', 'Saved'));
+			},
+			error: function() {
+				OC.msg.finishedError('#publicShareDisclaimerStatus', t('core', 'Not saved'));
+			}
+		};
+
+		OC.msg.startSaving('#publicShareDisclaimerStatus');
+		if (_.isString(value) && value !== '') {
+			OCP.AppConfig.setValue('core', 'shareapi_public_link_disclaimertext', value, options);
+		} else {
+			$('#publicShareDisclaimerText').val('');
+			OCP.AppConfig.deleteKey('core', 'shareapi_public_link_disclaimertext', options);
+		}
+	}, 500);
+
+	$('#publicShareDisclaimerText').on('change, keyup', function() {
+		savePublicShareDisclaimerText(this.value);
 	});
 
 	$('#allowLinks').change(function() {
@@ -137,21 +172,48 @@ $(document).ready(function(){
 		}
 	});
 
-	$('#mail_general_settings_form').change(function(){
-		OC.msg.startSaving('#mail_settings_msg');
-		var post = $( "#mail_general_settings_form" ).serialize();
-		$.post(OC.generateUrl('/settings/admin/mailsettings'), post, function(data){
-			OC.msg.finishedSaving('#mail_settings_msg', data);
-		});
-	});
+	var changeEmailSettings = function() {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(changeEmailSettings);
+			return;
+		}
 
-	$('#mail_credentials_settings_submit').click(function(){
 		OC.msg.startSaving('#mail_settings_msg');
-		var post = $( "#mail_credentials_settings" ).serialize();
-		$.post(OC.generateUrl('/settings/admin/mailsettings/credentials'), post, function(data){
-			OC.msg.finishedSaving('#mail_settings_msg', data);
+		$.ajax({
+			url: OC.generateUrl('/settings/admin/mailsettings'),
+			type: 'POST',
+			data: $('#mail_general_settings_form').serialize(),
+			success: function(data){
+				OC.msg.finishedSaving('#mail_settings_msg', data);
+			},
+			error: function(data){
+				OC.msg.finishedError('#mail_settings_msg', data.responseJSON.message);
+			}
 		});
-	});
+	};
+
+	var toggleEmailCredentials = function() {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(toggleEmailCredentials);
+			return;
+		}
+
+		OC.msg.startSaving('#mail_settings_msg');
+		$.ajax({
+			url: OC.generateUrl('/settings/admin/mailsettings/credentials'),
+			type: 'POST',
+			data: $('#mail_credentials_settings').serialize(),
+			success: function(data){
+				OC.msg.finishedSaving('#mail_settings_msg', data);
+			},
+			error: function(data){
+				OC.msg.finishedError('#mail_settings_msg', data.responseJSON.message);
+			}
+		});
+	};
+
+	$('#mail_general_settings_form').change(changeEmailSettings);
+	$('#mail_credentials_settings_submit').click(toggleEmailCredentials);
 
 	$('#sendtestemail').click(function(event){
 		event.preventDefault();

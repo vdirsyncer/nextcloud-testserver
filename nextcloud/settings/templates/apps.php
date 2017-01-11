@@ -1,16 +1,9 @@
 <?php
 style('settings', 'settings');
-vendor_style(
-	'core',
-	[
-		'select2/select2',
-	]
-);
 vendor_script(
 	'core',
 	[
-		'handlebars/handlebars',
-		'select2/select2'
+		'handlebars/handlebars'
 	]
 );
 script(
@@ -31,21 +24,12 @@ script(
 
 <?php if($_['appstoreEnabled']): ?>
 	<li>
-		<a class="app-external" target="_blank" rel="noreferrer" href="https://docs.nextcloud.org/server/10/developer_manual/"><?php p($l->t('Developer documentation'));?> ↗</a>
+		<a class="app-external" target="_blank" rel="noreferrer" href="https://docs.nextcloud.org/server/11/developer_manual/"><?php p($l->t('Developer documentation'));?> ↗</a>
 	</li>
 <?php endif; ?>
 </script>
 
 <script id="app-template" type="text/x-handlebars">
-	{{#if firstExperimental}}
-		<div class="section apps-experimental">
-			<h2><?php p($l->t('Experimental applications ahead')) ?></h2>
-			<p>
-				<?php p($l->t('Experimental apps are not checked for security issues, new or known to be unstable and under heavy development. Installing them can cause data loss or security breaches.')) ?>
-			</p>
-		</div>
-	{{/if}}
-
 	<div class="section" id="app-{{id}}">
 	{{#if preview}}
 	<div class="app-image{{#if previewAsIcon}} app-image-icon{{/if}} hidden">
@@ -69,7 +53,7 @@ script(
 	<div class="app-level">
 		{{{level}}}
 	</div>
-	{{#if score}}
+	{{#if ratingNumThresholdReached }}
 	<div class="app-score">{{{score}}}</div>
 	{{/if}}
 	<div class="app-detailpage"></div>
@@ -141,11 +125,10 @@ script(
 	<input class="update hidden" type="submit" value="<?php p($l->t('Update to %s', array('{{update}}'))); ?>" data-appid="{{id}}" />
 	{{#if active}}
 	<input class="enable" type="submit" data-appid="{{id}}" data-active="true" value="<?php p($l->t("Disable"));?>"/>
-	<span class="groups-enable">
+	<div class="groups-enable">
 		<input type="checkbox" class="groups-enable__checkbox checkbox" id="groups_enable-{{id}}"/>
 		<label for="groups_enable-{{id}}"><?php p($l->t('Enable only for specific groups')); ?></label>
-	</span>
-	<br />
+	</div>
 	<input type="hidden" id="group_select" title="<?php p($l->t('All')); ?>" style="width: 200px">
 	{{else}}
 	<input class="enable{{#if needsDownload}} needs-download{{/if}}" type="submit" data-appid="{{id}}" data-active="false" {{#unless canInstall}}disabled="disabled"{{/unless}} value="<?php p($l->t("Enable"));?>"/>
@@ -163,21 +146,6 @@ script(
 	<ul id="apps-categories">
 
 	</ul>
-	<div id="app-settings">
-		<div id="app-settings-header">
-			<button class="settings-button" data-apps-slide-toggle="#app-settings-content"></button>
-		</div>
-
-		<div id="app-settings-content" class="apps-experimental">
-			<input type="checkbox" id="enable-experimental-apps" <?php if($_['experimentalEnabled']) { print_unescaped('checked="checked"'); }?> class="checkbox">
-			<label for="enable-experimental-apps"><?php p($l->t('Enable experimental apps')) ?></label>
-			<p>
-				<small>
-					<?php p($l->t('Experimental apps are not checked for security issues, new or known to be unstable and under heavy development. Installing them can cause data loss or security breaches.')) ?>
-				</small>
-			</p>
-		</div>
-	</div>
 </div>
 <div id="app-content">
 	<svg height="0">

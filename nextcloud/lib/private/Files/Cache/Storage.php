@@ -40,8 +40,20 @@ namespace OC\Files\Cache;
  * @package OC\Files\Cache
  */
 class Storage {
+	/** @var StorageGlobal|null */
+	private static $globalCache = null;
 	private $storageId;
 	private $numericId;
+
+	/**
+	 * @return StorageGlobal
+	 */
+	public static function getGlobalCache() {
+		if (is_null(self::$globalCache)) {
+			self::$globalCache = new StorageGlobal(\OC::$server->getDatabaseConnection());
+		}
+		return self::$globalCache;
+	}
 
 	/**
 	 * @param \OC\Files\Storage\Storage|string $storage
@@ -57,15 +69,15 @@ class Storage {
 		$this->storageId = self::adjustStorageId($this->storageId);
 
 		if ($row = self::getStorageById($this->storageId)) {
-			$this->numericId = $row['numeric_id'];
+			$this->numericId = (int)$row['numeric_id'];
 		} else {
 			$connection = \OC::$server->getDatabaseConnection();
 			$available = $isAvailable ? 1 : 0;
 			if ($connection->insertIfNotExist('*PREFIX*storages', ['id' => $this->storageId, 'available' => $available])) {
-				$this->numericId = $connection->lastInsertId('*PREFIX*storages');
+				$this->numericId = (int)$connection->lastInsertId('*PREFIX*storages');
 			} else {
 				if ($row = self::getStorageById($this->storageId)) {
-					$this->numericId = $row['numeric_id'];
+					$this->numericId = (int)$row['numeric_id'];
 				} else {
 					throw new \RuntimeException('Storage could neither be inserted nor be selected from the database');
 				}
@@ -75,12 +87,10 @@ class Storage {
 
 	/**
 	 * @param string $storageId
-	 * @return array|null
+	 * @return array
 	 */
 	public static function getStorageById($storageId) {
-		$sql = 'SELECT * FROM `*PREFIX*storages` WHERE `id` = ?';
-		$result = \OC_DB::executeAudited($sql, array($storageId));
-		return $result->fetchRow();
+		return self::getGlobalCache()->getStorageInfo($storageId);
 	}
 
 	/**
@@ -132,7 +142,7 @@ class Storage {
 		$storageId = self::adjustStorageId($storageId);
 
 		if ($row = self::getStorageById($storageId)) {
-			return $row['numeric_id'];
+			return (int)$row['numeric_id'];
 		} else {
 			return null;
 		}

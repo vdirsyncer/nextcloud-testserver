@@ -28,20 +28,22 @@
 namespace OCA\Files_Sharing\AppInfo;
 
 use OCA\FederatedFileSharing\DiscoveryManager;
+use OCA\Files_Sharing\Middleware\OCSShareAPIMiddleware;
 use OCA\Files_Sharing\MountProvider;
 use OCP\AppFramework\App;
 use OC\AppFramework\Utility\SimpleContainer;
-use OCA\Files_Sharing\Controllers\ExternalSharesController;
-use OCA\Files_Sharing\Controllers\ShareController;
+use OCA\Files_Sharing\Controller\ExternalSharesController;
+use OCA\Files_Sharing\Controller\ShareController;
 use OCA\Files_Sharing\Middleware\SharingCheckMiddleware;
 use \OCP\IContainer;
-use OCA\Files_Sharing\Capabilities;
+use OCP\IServerContainer;
 
 class Application extends App {
 	public function __construct(array $urlParams = array()) {
 		parent::__construct('files_sharing', $urlParams);
 
 		$container = $this->getContainer();
+		/** @var IServerContainer $server */
 		$server = $container->getServer();
 
 		/**
@@ -62,7 +64,9 @@ class Application extends App {
 				$server->getPreviewManager(),
 				$server->getRootFolder(),
 				$federatedSharingApp->getFederatedShareProvider(),
-				$server->getEventDispatcher()
+				$server->getEventDispatcher(),
+				$server->getL10N($c->query('AppName')),
+				$server->getThemingDefaults()
 			);
 		});
 		$container->registerService('ExternalSharesController', function (SimpleContainer $c) {
@@ -91,12 +95,13 @@ class Application extends App {
 				$server->getDatabaseConnection(),
 				\OC\Files\Filesystem::getMountManager(),
 				\OC\Files\Filesystem::getLoader(),
-				$server->getHTTPHelper(),
+				$server->getHTTPClientService(),
 				$server->getNotificationManager(),
 				$discoveryManager,
 				$uid
 			);
 		});
+		$container->registerAlias('OCA\Files_Sharing\External\Manager', 'ExternalManager');
 
 		/**
 		 * Middleware
@@ -110,8 +115,16 @@ class Application extends App {
 			);
 		});
 
+		$container->registerService('OCSShareAPIMiddleware', function (SimpleContainer $c) use ($server) {
+			return new OCSShareAPIMiddleware(
+				$server->getShareManager(),
+				$server->getL10N($c->query('AppName'))
+			);
+		});
+
 		// Execute middlewares
-		$container->registerMiddleware('SharingCheckMiddleware');
+		$container->registerMiddleWare('SharingCheckMiddleware');
+		$container->registerMiddleWare('OCSShareAPIMiddleware');
 
 		$container->registerService('MountProvider', function (IContainer $c) {
 			/** @var \OCP\IServerContainer $server */

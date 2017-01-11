@@ -8,6 +8,8 @@
  *
  */
 
+/* globals Clipboard, Handlebars */
+
 (function() {
 	if (!OC.Share) {
 		OC.Share = {};
@@ -131,15 +133,20 @@
 
 			var clipboard = new Clipboard('.clipboardButton');
 			clipboard.on('success', function(e) {
-				$input = $(e.trigger);
-				$input.tooltip({placement: 'bottom', trigger: 'manual', title: t('core', 'Copied!')});
-				$input.tooltip('show');
+				var $input = $(e.trigger);
+				$input.tooltip('hide')
+					.attr('data-original-title', t('core', 'Copied!'))
+					.tooltip('fixTitle')
+					.tooltip({placement: 'bottom', trigger: 'manual'})
+					.tooltip('show');
 				_.delay(function() {
-					$input.tooltip('hide');
+					$input.tooltip('hide')
+						.attr('data-original-title', t('core', 'Copy'))
+						.tooltip('fixTitle');
 				}, 3000);
 			});
 			clipboard.on('error', function (e) {
-				$input = $(e.trigger);
+				var $input = $(e.trigger);
 				var actionMsg = '';
 				if (/iPhone|iPad/i.test(navigator.userAgent)) {
 					actionMsg = t('core', 'Not supported!');
@@ -149,14 +156,15 @@
 					actionMsg = t('core', 'Press Ctrl-C to copy.');
 				}
 
-				$input.tooltip({
-					placement: 'bottom',
-					trigger: 'manual',
-					title: actionMsg
-				});
-				$input.tooltip('show');
+				$input.tooltip('hide')
+					.attr('data-original-title', actionMsg)
+					.tooltip('fixTitle')
+					.tooltip({placement: 'bottom', trigger: 'manual'})
+					.tooltip('show');
 				_.delay(function () {
-					$input.tooltip('hide');
+					$input.tooltip('hide')
+						.attr('data-original-title', t('core', 'Copy'))
+						.tooltip('fixTitle');
 				}, 3000);
 			});
 
@@ -206,7 +214,7 @@
 		},
 
 		onPasswordKeyUp: function(event) {
-			if(event.keyCode == 13) {
+			if(event.keyCode === 13) {
 				this.onPasswordEntered();
 			}
 		},
@@ -328,12 +336,13 @@
 				publicUpload: publicUpload && isLinkShare,
 				publicUploadChecked: publicUploadChecked,
 				hideFileListChecked: hideFileListChecked,
-				publicUploadLabel: t('core', 'Allow editing'),
-				hideFileListLabel: t('core', 'Hide file listing'),
-				mailPublicNotificationEnabled: isLinkShare && this.configModel.isMailPublicNotificationEnabled(),
+				publicUploadLabel: t('core', 'Allow upload and editing'),
+				hideFileListLabel: t('core', 'File drop (upload only)'),
 				mailPrivatePlaceholder: t('core', 'Email link to person'),
 				mailButtonText: t('core', 'Send')
 			}));
+
+			this.$el.find('.clipboardButton').tooltip({placement: 'bottom', title: t('core', 'Copy'), trigger: 'hover'});
 
 			this.delegateEvents();
 

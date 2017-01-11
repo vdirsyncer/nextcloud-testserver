@@ -60,14 +60,14 @@ class AuthSettingsController extends Controller {
 	 * @param IUserManager $userManager
 	 * @param ISession $session
 	 * @param ISecureRandom $random
-	 * @param string $uid
+	 * @param string $userId
 	 */
 	public function __construct($appName, IRequest $request, IProvider $tokenProvider, IUserManager $userManager,
-		ISession $session, ISecureRandom $random, $uid) {
+		ISession $session, ISecureRandom $random, $userId) {
 		parent::__construct($appName, $request);
 		$this->tokenProvider = $tokenProvider;
 		$this->userManager = $userManager;
-		$this->uid = $uid;
+		$this->uid = $userId;
 		$this->session = $session;
 		$this->random = $random;
 	}
@@ -111,7 +111,9 @@ class AuthSettingsController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 * @NoSubadminRequired
+	 * @PasswordConfirmationRequired
 	 *
+	 * @param string $name
 	 * @return JSONResponse
 	 */
 	public function create($name) {
@@ -135,12 +137,14 @@ class AuthSettingsController extends Controller {
 
 		$token = $this->generateRandomDeviceToken();
 		$deviceToken = $this->tokenProvider->generateToken($token, $this->uid, $loginName, $password, $name, IToken::PERMANENT_TOKEN);
+		$tokenData = $deviceToken->jsonSerialize();
+		$tokenData['canDelete'] = true;
 
-		return [
+		return new JSONResponse([
 			'token' => $token,
 			'loginName' => $loginName,
-			'deviceToken' => $deviceToken
-		];
+			'deviceToken' => $tokenData,
+		]);
 	}
 
 	private function getServiceNotAvailableResponse() {
@@ -180,4 +184,19 @@ class AuthSettingsController extends Controller {
 		return [];
 	}
 
+	/**
+	 * @NoAdminRequired
+	 * @NoSubadminRequired
+	 *
+	 * @param int $id
+	 * @param array $scope
+	 */
+	public function update($id, array $scope) {
+		$token = $this->tokenProvider->getTokenById($id);
+		$token->setScope([
+			'filesystem' => $scope['filesystem']
+		]);
+		$this->tokenProvider->updateToken($token);
+		return [];
+	}
 }

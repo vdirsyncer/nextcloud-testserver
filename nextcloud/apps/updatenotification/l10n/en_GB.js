@@ -3,11 +3,9 @@ OC.L10N.register(
     {
     "Update notifications" : "Update notifications",
     "{version} is available. Get more information on how to update." : "{version} is available. Get more information on how to update.",
-    "Updated channel" : "Updated channel",
     "Nextcloud core" : "Nextcloud core",
     "Update for %1$s to version %2$s is available." : "Update for %1$s to version %2$s is available.",
     "A new version is available: %s" : "A new version is available: %s",
-    "Open updater" : "Open updater",
     "Your version is up to date." : "Your version is up to date.",
     "Checked on %s" : "Checked on %s",
     "Update channel:" : "Update channel:",

@@ -27,7 +27,9 @@ namespace OCA\Files\Command;
 use OC\Files\Filesystem;
 use OC\Files\View;
 use OCP\Files\FileInfo;
+use OCP\Files\IHomeStorage;
 use OCP\Files\Mount\IMountManager;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Share\IManager;
 use OCP\Share\IShare;
@@ -90,21 +92,26 @@ class TransferOwnership extends Command {
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$this->sourceUser = $input->getArgument('source-user');
-		$this->destinationUser = $input->getArgument('destination-user');
-		if (!$this->userManager->userExists($this->sourceUser)) {
+		$sourceUserObject = $this->userManager->get($input->getArgument('source-user'));
+		$destinationUserObject = $this->userManager->get($input->getArgument('destination-user'));
+
+		if (!$sourceUserObject instanceof IUser) {
 			$output->writeln("<error>Unknown source user $this->sourceUser</error>");
-			return;
+			return 1;
 		}
-		if (!$this->userManager->userExists($this->destinationUser)) {
+
+		if (!$destinationUserObject instanceof IUser) {
 			$output->writeln("<error>Unknown destination user $this->destinationUser</error>");
-			return;
+			return 1;
 		}
-		
+
+		$this->sourceUser = $sourceUserObject->getUID();
+		$this->destinationUser = $destinationUserObject->getUID();
+
 		// target user has to be ready
 		if (!\OC::$server->getEncryptionManager()->isReadyForUser($this->destinationUser)) {
 			$output->writeln("<error>The target user is not ready to accept files. The user has at least to be logged in once.</error>");
-			return;
+			return 2;
 		}
 
 		$date = date('c');
@@ -151,6 +158,10 @@ class TransferOwnership extends Command {
 		$this->walkFiles($view, "$this->sourceUser/files",
 				function (FileInfo $fileInfo) use ($progress, $self) {
 					if ($fileInfo->getType() === FileInfo::TYPE_FOLDER) {
+						// only analyze into folders from main storage,
+						if (!$fileInfo->getStorage()->instanceOfStorage(IHomeStorage::class)) {
+							return false;
+						}
 						return true;
 					}
 					$progress->advance();
@@ -182,7 +193,7 @@ class TransferOwnership extends Command {
 		$output->writeln("Collecting all share information for files and folder of $this->sourceUser ...");
 
 		$progress = new ProgressBar($output, count($this->shares));
-		foreach([\OCP\Share::SHARE_TYPE_USER, \OCP\Share::SHARE_TYPE_GROUP, \OCP\Share::SHARE_TYPE_LINK, \OCP\Share::SHARE_TYPE_REMOTE] as $shareType) {
+		foreach([\OCP\Share::SHARE_TYPE_GROUP, \OCP\Share::SHARE_TYPE_USER, \OCP\Share::SHARE_TYPE_LINK, \OCP\Share::SHARE_TYPE_REMOTE] as $shareType) {
 		$offset = 0;
 			while (true) {
 				$sharePage = $this->shareManager->getSharesBy($this->sourceUser, $shareType, null, true, 50, $offset);
@@ -218,22 +229,28 @@ class TransferOwnership extends Command {
 		$progress = new ProgressBar($output, count($this->shares));
 
 		foreach($this->shares as $share) {
-			if ($share->getSharedWith() === $this->destinationUser) {
-				// Unmount the shares before deleting, so we don't try to get the storage later on.
-				$shareMountPoint = $this->mountManager->find('/' . $this->destinationUser . '/files' . $share->getTarget());
-				if ($shareMountPoint) {
-					$this->mountManager->removeMount($shareMountPoint->getMountPoint());
-				}
-				$this->shareManager->deleteShare($share);
-			} else {
-				if ($share->getShareOwner() === $this->sourceUser) {
-					$share->setShareOwner($this->destinationUser);
-				}
-				if ($share->getSharedBy() === $this->sourceUser) {
-					$share->setSharedBy($this->destinationUser);
-				}
+			try {
+				if ($share->getSharedWith() === $this->destinationUser) {
+					// Unmount the shares before deleting, so we don't try to get the storage later on.
+					$shareMountPoint = $this->mountManager->find('/' . $this->destinationUser . '/files' . $share->getTarget());
+					if ($shareMountPoint) {
+						$this->mountManager->removeMount($shareMountPoint->getMountPoint());
+					}
+					$this->shareManager->deleteShare($share);
+				} else {
+					if ($share->getShareOwner() === $this->sourceUser) {
+						$share->setShareOwner($this->destinationUser);
+					}
+					if ($share->getSharedBy() === $this->sourceUser) {
+						$share->setSharedBy($this->destinationUser);
+					}
 
-				$this->shareManager->updateShare($share);
+					$this->shareManager->updateShare($share);
+				}
+			} catch (\OCP\Files\NotFoundException $e) {
+				$output->writeln('<error>Share with id ' . $share->getId() . ' points at deleted file, skipping</error>');
+			} catch (\Exception $e) {
+				$output->writeln('<error>Could not restore share with id ' . $share->getId() . ':' . $e->getTraceAsString() . '</error>');
 			}
 			$progress->advance();
 		}

@@ -23,6 +23,7 @@
 namespace OCA\Activity\Parameter;
 
 
+use OCA\Activity\CurrentUser;
 use OCA\Activity\Formatter\IFormatter;
 use OCA\Activity\Formatter\BaseFormatter;
 use OCA\Activity\Formatter\CloudIDFormatter;
@@ -32,7 +33,6 @@ use OCA\Activity\ViewInfoCache;
 use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\Contacts\IManager as IContactsManager;
-use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -66,7 +66,7 @@ class Factory {
 	 * @param IContactsManager $contactsManager
 	 * @param ViewInfoCache $infoCache,
 	 * @param IL10N $l
-	 * @param string $user
+	 * @param CurrentUser $currentUser
 	 */
 	public function __construct(IManager $activityManager,
 								IUserManager $userManager,
@@ -74,14 +74,14 @@ class Factory {
 								IContactsManager $contactsManager,
 								ViewInfoCache $infoCache,
 								IL10N $l,
-								$user) {
+								CurrentUser $currentUser) {
 		$this->activityManager = $activityManager;
 		$this->userManager = $userManager;
 		$this->urlGenerator = $urlGenerator;
 		$this->contactsManager = $contactsManager;
 		$this->infoCache = $infoCache;
 		$this->l = $l;
-		$this->user = $user;
+		$this->user = (string) $currentUser->getUID();
 	}
 
 	/**
@@ -125,14 +125,21 @@ class Factory {
 	 * @return IFormatter
 	 */
 	protected function getFormatter($formatter) {
-		if ($formatter === 'file') {
-			return new FileFormatter($this->infoCache, $this->urlGenerator, $this->l, $this->user);
-		} else if ($formatter === 'username') {
-			return new UserFormatter($this->userManager, $this->l);
-		} else if ($formatter === 'federated_cloud_id') {
-			return new CloudIDFormatter($this->contactsManager);
-		} else {
-			return new BaseFormatter();
+		switch ($formatter) {
+			case 'file':
+				/** @var \OCA\Activity\Formatter\FileFormatter $fileFormatter */
+				$fileFormatter = \OC::$server->query(FileFormatter::class);
+				$fileFormatter->setUser($this->user);
+				return $fileFormatter;
+			case 'username':
+				/** @var \OCA\Activity\Formatter\UserFormatter */
+				return \OC::$server->query(UserFormatter::class);
+			case 'federated_cloud_id':
+				/** @var \OCA\Activity\Formatter\CloudIDFormatter */
+				return \OC::$server->query(CloudIDFormatter::class);
+			default:
+				/** @var \OCA\Activity\Formatter\BaseFormatter */
+				return \OC::$server->query(BaseFormatter::class);
 		}
 	}
 }

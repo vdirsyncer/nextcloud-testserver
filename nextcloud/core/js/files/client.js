@@ -287,6 +287,13 @@
 				data.hasPreview = true;
 			}
 
+			var isFavorite = props['{' + Client.NS_OWNCLOUD + '}favorite'];
+			if (!_.isUndefined(isFavorite)) {
+				data.isFavorite = isFavorite === '1';
+			} else {
+				data.isFavorite = false;
+			}
+
 			var contentType = props['{' + Client.NS_DAV + '}getcontenttype'];
 			if (!_.isUndefined(contentType)) {
 				data.mimetype = contentType;
@@ -437,6 +444,7 @@
 		 *
 		 * @param {Object} filter filter criteria
 		 * @param {Object} [filter.systemTagIds] list of system tag ids to filter by
+		 * @param {bool} [filter.favorite] set it to filter by favorites
 		 * @param {Object} [options] options
 		 * @param {Array} [options.properties] list of Webdav properties to retrieve
 		 *
@@ -454,7 +462,7 @@
 				properties = options.properties;
 			}
 
-			if (!filter || !filter.systemTagIds || !filter.systemTagIds.length) {
+			if (!filter || (!filter.systemTagIds && _.isUndefined(filter.favorite))) {
 				throw 'Missing filter argument';
 			}
 
@@ -480,6 +488,9 @@
 			_.each(filter.systemTagIds, function(systemTagIds) {
 				body += '        <oc:systemtag>' + escapeHTML(systemTagIds) + '</oc:systemtag>\n';
 			});
+			if (filter.favorite) {
+				body += '        <oc:favorite>' + (filter.favorite ? '1': '0') + '</oc:favorite>\n';
+			}
 			body += '    </oc:filter-rules>\n';
 
 			// end of root
@@ -718,8 +729,47 @@
 		 */
 		addFileInfoParser: function(parserFunction) {
 			this._fileInfoParsers.push(parserFunction);
-		}
+		},
 
+		/**
+		 * Returns the dav.Client instance used internally
+		 *
+		 * @since 11.0.0
+		 * @return {dav.Client}
+		 */
+		getClient: function() {
+			return this._client;
+		},
+
+		/**
+		 * Returns the user name
+		 *
+		 * @since 11.0.0
+		 * @return {String} userName
+		 */
+		getUserName: function() {
+			return this._client.userName;
+		},
+
+		/**
+		 * Returns the password 
+		 *
+		 * @since 11.0.0
+		 * @return {String} password
+		 */
+		getPassword: function() {
+			return this._client.password;
+		},
+
+		/**
+		 * Returns the base URL
+		 *
+		 * @since 11.0.0
+		 * @return {String} base URL
+		 */
+		getBaseUrl: function() {
+			return this._client.baseUrl;
+		}
 	};
 
 	/**

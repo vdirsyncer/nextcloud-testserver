@@ -27,13 +27,22 @@
 
 	var TEMPLATE_TOKEN =
 		'<tr data-id="{{id}}">'
-		+ '<td class="has-tooltip" title="{{title}}"><span class="token-name">{{name}}</span></td>'
+		+ '<td class="has-tooltip" title="{{title}}">'
+		+ '<span class="token-name">{{name}}</span>'
+		+ '</td>'
 		+ '<td><span class="last-activity has-tooltip" title="{{lastActivityTime}}">{{lastActivity}}</span></td>'
-		+ '{{#if canDelete}}'
-		+ '<td><a class="icon-delete has-tooltip" title="' + t('core', 'Disconnect') + '"></a></td>'
-		+ '{{else}}'
-		+ '<td></td>'
+		+ '<td class="more">'
+		+ '{{#if showMore}}<a class="icon icon-more"/>{{/if}}'
+		+ '<div class="popovermenu bubble open menu configure">'
+		+ '{{#if canScope}}'
+		+ '<input class="filesystem checkbox" type="checkbox" id="{{id}}_filesystem" {{#if scope.filesystem}}checked{{/if}}/>'
+		+ '<label for="{{id}}_filesystem">' + t('core', 'Allow filesystem access') + '</label><br/>'
 		+ '{{/if}}'
+		+ '{{#if canDelete}}'
+		+ '<a class="icon icon-delete has-tooltip" title="' + t('core', 'Disconnect') + '">' + t('core', 'Revoke') +'</a>'
+		+ '{{/if}}'
+		+ '</div>'
+		+ '</td>'
 		+ '<tr>';
 
 	var SubView = OC.Backbone.View.extend({
@@ -70,7 +79,7 @@
 
 			var list = this.$('.token-list');
 			var tokens = this.collection.filter(function (token) {
-				return parseInt(token.get('type'), 10) === _this.type;
+				return token.get('type') === _this.type;
 			});
 			list.html('');
 
@@ -78,7 +87,7 @@
 			this._toggleHeader(tokens.length > 0);
 
 			tokens.forEach(function (token) {
-				var viewData = this._formatViewData(token.toJSON());
+				var viewData = this._formatViewData(token);
 				var html = _this.template(viewData);
 				var $html = $(html);
 				$html.find('.has-tooltip').tooltip({container: 'body'});
@@ -87,17 +96,20 @@
 		},
 
 		toggleLoading: function (state) {
-			this.$('.token-list').toggleClass('icon-loading', state);
+			this.$('table').toggleClass('icon-loading', state);
 		},
 
 		_toggleHeader: function (show) {
 			this.$('.hidden-when-empty').toggleClass('hidden', !show);
 		},
 
-		_formatViewData: function (viewData) {
+		_formatViewData: function (token) {
+			var viewData = token.toJSON();
 			var ts = viewData.lastActivity * 1000;
 			viewData.lastActivity = OC.Util.relativeModifiedDate(ts);
 			viewData.lastActivityTime = OC.Util.formatDate(ts, 'LLL');
+			viewData.canScope = token.get('type') === 1;
+			viewData.showMore = viewData.canScope || viewData.canDelete;
 
 			// preserve title for cases where we format it further
 			viewData.title = viewData.name;
@@ -106,7 +118,7 @@
 			var matches = viewData.name.match(/Mozilla\/5\.0 \((\w+)\) (?:mirall|csyncoC)\/(\d+\.\d+\.\d+)/);
 
 			var userAgentMap = {
-				ie: /(?:MSIE|Trident) (\d+)/,
+				ie: /(?:MSIE|Trident|Trident\/7.0; rv)[ :](\d+)/,
 				// Microsoft Edge User Agent from https://msdn.microsoft.com/en-us/library/hh869301(v=vs.85).aspx
 				edge: /^Mozilla\/5\.0 \([^)]+\) AppleWebKit\/[0-9.]+ \(KHTML, like Gecko\) Chrome\/[0-9.]+ (?:Mobile Safari|Safari)\/[0-9.]+ Edge\/[0-9.]+$/,
 				// Firefox User Agent from https://developer.mozilla.org/en-US/docs/Web/HTTP/Gecko_user_agent_string_reference
@@ -117,7 +129,8 @@
 				safari: /^Mozilla\/5\.0 \([^)]*(Windows|OS X)[^)]+\) AppleWebKit\/[0-9.]+ \(KHTML, like Gecko\)(?: Version\/([0-9]+)[0-9.]+)? Safari\/[0-9.A-Z]+$/,
 				// Android Chrome user agent: https://developers.google.com/chrome/mobile/docs/user-agent
 				androidChrome: /Android.*(?:; (.*) Build\/).*Chrome\/(\d+)[0-9.]+/,
-				iphone: / *CPU +iPhone +OS +(\d+)_\d+ +like +Mac +OS +X */,
+				iphone: / *CPU +iPhone +OS +([0-9]+)_(?:[0-9_])+ +like +Mac +OS +X */,
+				ipad: /\(iPad\; *CPU +OS +([0-9]+)_(?:[0-9_])+ +like +Mac +OS +X */,
 				iosClient: /^Mozilla\/5\.0 \(iOS\) ownCloud\-iOS.*$/,
 				androidClient:/^Mozilla\/5\.0 \(Android\) ownCloud\-android.*$/,
 				// DAVdroid/1.2 (2016/07/03; dav4android; okhttp3) Android/6.0.1
@@ -134,7 +147,8 @@
 				chrome: t('setting', 'Google Chrome'),
 				safari: t('setting', 'Safari'),
 				androidChrome: t('setting', 'Google Chrome for Android'),
-				iphone: t('setting', 'iPhone'),
+				iphone: t('setting', 'iPhone iOS'),
+				ipad: t('setting', 'iPad iOS'),
 				iosClient: t('setting', 'iOS Client'),
 				androidClient: t('setting', 'Android Client'),
 				davDroid: 'DAVdroid',
@@ -203,7 +217,13 @@
 				}));
 
 				var $el = $(el);
+				$('body').on('click', _.bind(_this._hideConfigureToken, _this));
+				$el.on('click', '.popovermenu', function(event) {
+					event.stopPropagation();
+				});
 				$el.on('click', 'a.icon-delete', _.bind(_this._onDeleteToken, _this));
+				$el.on('click', '.icon-more', _.bind(_this._onConfigureToken, _this));
+				$el.on('change', 'input.filesystem', _.bind(_this._onSetTokenScope, _this));
 			});
 
 			this._form = $('#app-password-form');
@@ -219,14 +239,21 @@
 			this._hideAppPasswordBtn = $('#app-password-hide');
 			this._hideAppPasswordBtn.click(_.bind(this._hideToken, this));
 
+			this._result.find('.clipboardButton').tooltip({placement: 'bottom', title: t('core', 'Copy'), trigger: 'hover'});
+
 			// Clipboard!
 			var clipboard = new Clipboard('.clipboardButton');
 			clipboard.on('success', function(e) {
 				var $input = $(e.trigger);
-				$input.tooltip({placement: 'bottom', trigger: 'manual', title: t('core', 'Copied!')});
-				$input.tooltip('show');
+				$input.tooltip('hide')
+					.attr('data-original-title', t('core', 'Copied!'))
+					.tooltip('fixTitle')
+					.tooltip({placement: 'bottom', trigger: 'manual'})
+					.tooltip('show');
 				_.delay(function() {
-					$input.tooltip('hide');
+					$input.tooltip('hide')
+						.attr('data-original-title', t('core', 'Copy'))
+						.tooltip('fixTitle');
 				}, 3000);
 			});
 			clipboard.on('error', function (e) {
@@ -240,14 +267,15 @@
 					actionMsg = t('core', 'Press Ctrl-C to copy.');
 				}
 
-				$input.tooltip({
-					placement: 'bottom',
-					trigger: 'manual',
-					title: actionMsg
-				});
-				$input.tooltip('show');
+				$input.tooltip('hide')
+					.attr('data-original-title', actionMsg)
+					.tooltip('fixTitle')
+					.tooltip({placement: 'bottom', trigger: 'manual'})
+					.tooltip('show');
 				_.delay(function () {
-					$input.tooltip('hide');
+					$input.tooltip('hide')
+						.attr('data-original-title', t('core', 'Copy'))
+						.tooltip('fixTitle');
 				}, 3000);
 			});
 		},
@@ -277,10 +305,15 @@
 		},
 
 		_addAppPassword: function () {
+			if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+				OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this._addAppPassword, this));
+				return;
+			}
+
 			var _this = this;
 			this._toggleAddingToken(true);
 
-			var deviceName = this._tokenName.val();
+			var deviceName = this._tokenName.val() !== '' ? this._tokenName.val() : new Date();
 			var creatingToken = $.ajax(OC.generateUrl('/settings/personal/authtokens'), {
 				method: 'POST',
 				data: {
@@ -325,6 +358,19 @@
 			this._addAppPasswordBtn.toggleClass('icon-loading-small', state);
 		},
 
+		_onConfigureToken: function (event) {
+			event.stopPropagation();
+			this._hideConfigureToken();
+			var $target = $(event.target);
+			var $row = $target.closest('tr');
+			$row.toggleClass('active');
+			var id = $row.data('id');
+		},
+
+		_hideConfigureToken: function() {
+			$('.token-list tr').removeClass('active');
+		},
+
 		_onDeleteToken: function (event) {
 			var $target = $(event.target);
 			var $row = $target.closest('tr');
@@ -351,6 +397,24 @@
 			$.when(destroyingToken).always(function () {
 				_this.render();
 			});
+		},
+
+		_onSetTokenScope: function (event) {
+			var $target = $(event.target);
+			var $row = $target.closest('tr');
+			var id = $row.data('id');
+
+			var token = this.collection.get(id);
+			if (_.isUndefined(token)) {
+				// Ignore event
+				return;
+			}
+
+			var scope = token.get('scope');
+			scope.filesystem = $target.is(":checked");
+
+			token.set('scope', scope);
+			token.save();
 		},
 
 		_toggleFormResult: function (showForm) {

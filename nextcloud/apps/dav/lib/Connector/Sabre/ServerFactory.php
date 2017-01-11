@@ -29,6 +29,7 @@
 
 namespace OCA\DAV\Connector\Sabre;
 
+use OC\Files\Node\Folder;
 use OCA\DAV\Files\BrowserErrorPagePlugin;
 use OCP\Files\Mount\IMountManager;
 use OCP\IConfig;
@@ -135,7 +136,11 @@ class ServerFactory {
 			
 			/** @var \OC\Files\View $view */
 			$view = $viewCallBack($server);
-			$rootInfo = $view->getFileInfo('');
+			if ($userFolder instanceof Folder && $userFolder->getPath() === $view->getRoot()) {
+				$rootInfo = $userFolder;
+			} else {
+				$rootInfo = $view->getFileInfo('');
+			}
 
 			// Create ownCloud Dir
 			if ($rootInfo->getType() === 'dir') {
@@ -148,7 +153,6 @@ class ServerFactory {
 			$server->addPlugin(
 				new \OCA\DAV\Connector\Sabre\FilesPlugin(
 					$objectTree,
-					$view,
 					$this->config,
 					$this->request,
 					$this->previewManager,
@@ -172,6 +176,7 @@ class ServerFactory {
 					$view,
 					\OC::$server->getSystemTagManager(),
 					\OC::$server->getSystemTagObjectMapper(),
+					\OC::$server->getTagManager(),
 					$this->userSession,
 					\OC::$server->getGroupManager(),
 					$userFolder

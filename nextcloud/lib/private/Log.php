@@ -106,7 +106,12 @@ class Log implements ILogger {
 
 		// FIXME: Add this for backwards compatibility, should be fixed at some point probably
 		if($logger === null) {
-			$this->logger = 'OC\\Log\\'.ucfirst($this->config->getValue('log_type', 'owncloud'));
+			// TODO: Drop backwards compatibility for config in the future
+			$logType = $this->config->getValue('log_type', 'file');
+			if($logType==='owncloud') {
+				$logType = 'file';
+			}
+			$this->logger = 'OC\\Log\\'.ucfirst($logType);
 			call_user_func(array($this->logger, 'init'));
 		} else {
 			$this->logger = $logger;
@@ -228,7 +233,7 @@ class Log implements ILogger {
 	 * @return void
 	 */
 	public function log($level, $message, array $context = array()) {
-		$minLevel = min($this->config->getValue('loglevel', Util::WARN), Util::ERROR);
+		$minLevel = min($this->config->getValue('loglevel', Util::WARN), Util::FATAL);
 		$logCondition = $this->config->getValue('log.condition', []);
 
 		array_walk($context, [$this->normalizer, 'format']);
@@ -272,7 +277,7 @@ class Log implements ILogger {
 					$request = \OC::$server->getRequest();
 
 					// if token is found in the request change set the log condition to satisfied
-					if($request && hash_equals($logCondition['shared_secret'], $request->getParam('log_secret'))) {
+					if($request && hash_equals($logCondition['shared_secret'], $request->getParam('log_secret', ''))) {
 						$this->logConditionSatisfied = true;
 					}
 				}

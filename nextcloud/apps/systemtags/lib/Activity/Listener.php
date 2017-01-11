@@ -28,6 +28,7 @@ use OCP\App\IAppManager;
 use OCP\Files\Config\IMountProviderCollection;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -46,6 +47,8 @@ class Listener {
 	protected $activityManager;
 	/** @var IUserSession */
 	protected $session;
+	/** @var IConfig */
+	protected $config;
 	/** @var \OCP\SystemTag\ISystemTagManager */
 	protected $tagManager;
 	/** @var \OCP\App\IAppManager */
@@ -61,6 +64,7 @@ class Listener {
 	 * @param IGroupManager $groupManager
 	 * @param IManager $activityManager
 	 * @param IUserSession $session
+	 * @param IConfig $config
 	 * @param ISystemTagManager $tagManager
 	 * @param IAppManager $appManager
 	 * @param IMountProviderCollection $mountCollection
@@ -69,6 +73,7 @@ class Listener {
 	public function __construct(IGroupManager $groupManager,
 								IManager $activityManager,
 								IUserSession $session,
+								IConfig $config,
 								ISystemTagManager $tagManager,
 								IAppManager $appManager,
 								IMountProviderCollection $mountCollection,
@@ -76,6 +81,7 @@ class Listener {
 		$this->groupManager = $groupManager;
 		$this->activityManager = $activityManager;
 		$this->session = $session;
+		$this->config = $config;
 		$this->tagManager = $tagManager;
 		$this->appManager = $appManager;
 		$this->mountCollection = $mountCollection;
@@ -92,24 +98,26 @@ class Listener {
 		} else {
 			$actor = '';
 		}
+		$tag = $event->getTag();
 
 		$activity = $this->activityManager->generateEvent();
-		$activity->setApp(Extension::APP_NAME)
-			->setType(Extension::APP_NAME)
-			->setAuthor($actor);
+		$activity->setApp('systemtags')
+			->setType('systemtags')
+			->setAuthor($actor)
+			->setObject('systemtag', $tag->getId(), $tag->getName());
 		if ($event->getEvent() === ManagerEvent::EVENT_CREATE) {
-			$activity->setSubject(Extension::CREATE_TAG, [
+			$activity->setSubject(Provider::CREATE_TAG, [
 				$actor,
 				$this->prepareTagAsParameter($event->getTag()),
 			]);
 		} else if ($event->getEvent() === ManagerEvent::EVENT_UPDATE) {
-			$activity->setSubject(Extension::UPDATE_TAG, [
+			$activity->setSubject(Provider::UPDATE_TAG, [
 				$actor,
 				$this->prepareTagAsParameter($event->getTag()),
 				$this->prepareTagAsParameter($event->getTagBefore()),
 			]);
 		} else if ($event->getEvent() === ManagerEvent::EVENT_DELETE) {
-			$activity->setSubject(Extension::DELETE_TAG, [
+			$activity->setSubject(Provider::DELETE_TAG, [
 				$actor,
 				$this->prepareTagAsParameter($event->getTag()),
 			]);
@@ -123,6 +131,11 @@ class Listener {
 				$activity->setAffectedUser($user->getUID());
 				$this->activityManager->publish($activity);
 			}
+		}
+
+
+		if ($actor !== '' && ($event->getEvent() === ManagerEvent::EVENT_CREATE || $event->getEvent() === ManagerEvent::EVENT_UPDATE)) {
+			$this->updateLastUsedTags($actor, $event->getTag());
 		}
 	}
 
@@ -181,10 +194,10 @@ class Listener {
 		}
 
 		$activity = $this->activityManager->generateEvent();
-		$activity->setApp(Extension::APP_NAME)
-			->setType(Extension::APP_NAME)
+		$activity->setApp('systemtags')
+			->setType('systemtags')
 			->setAuthor($actor)
-			->setObject($event->getObjectType(), $event->getObjectId());
+			->setObject($event->getObjectType(), (int) $event->getObjectId());
 
 		foreach ($users as $user => $path) {
 			$activity->setAffectedUser($user);
@@ -195,13 +208,13 @@ class Listener {
 					continue;
 				}
 				if ($event->getEvent() === MapperEvent::EVENT_ASSIGN) {
-					$activity->setSubject(Extension::ASSIGN_TAG, [
+					$activity->setSubject(Provider::ASSIGN_TAG, [
 						$actor,
 						$path,
 						$this->prepareTagAsParameter($tag),
 					]);
 				} else if ($event->getEvent() === MapperEvent::EVENT_UNASSIGN) {
-					$activity->setSubject(Extension::UNASSIGN_TAG, [
+					$activity->setSubject(Provider::UNASSIGN_TAG, [
 						$actor,
 						$path,
 						$this->prepareTagAsParameter($tag),
@@ -211,6 +224,27 @@ class Listener {
 				$this->activityManager->publish($activity);
 			}
 		}
+
+		if ($actor !== '' && $event->getEvent() === MapperEvent::EVENT_ASSIGN) {
+			foreach ($tags as $tag) {
+				$this->updateLastUsedTags($actor, $tag);
+			}
+		}
+	}
+
+	/**
+	 * @param string $actor
+	 * @param ISystemTag $tag
+	 */
+	protected function updateLastUsedTags($actor, ISystemTag $tag) {
+		$lastUsedTags = $this->config->getUserValue($actor, 'systemtags', 'last_used', '[]');
+		$lastUsedTags = json_decode($lastUsedTags, true);
+
+		array_unshift($lastUsedTags, $tag->getId());
+		array_unique($lastUsedTags);
+		$lastUsedTags = array_slice($lastUsedTags, 0, 10);
+
+		$this->config->setUserValue($actor, 'systemtags', 'last_used', json_encode($lastUsedTags));
 	}
 
 	/**
@@ -218,12 +252,11 @@ class Listener {
 	 * @return string
 	 */
 	protected function prepareTagAsParameter(ISystemTag $tag) {
-		if (!$tag->isUserVisible()) {
-			return '{{{' . $tag->getName() . '|||invisible}}}';
-		} else if (!$tag->isUserAssignable()) {
-			return '{{{' . $tag->getName() . '|||not-assignable}}}';
-		} else {
-			return '{{{' . $tag->getName() . '|||assignable}}}';
-		}
+		return json_encode([
+			'id' => $tag->getId(),
+			'name' => $tag->getName(),
+			'assignable' => $tag->isUserAssignable(),
+			'visible' => $tag->isUserVisible(),
+		]);
 	}
 }

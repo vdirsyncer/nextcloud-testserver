@@ -38,39 +38,37 @@ use OCP\Files\Storage\IStorage;
  */
 class Cache extends CacheJail {
 	/**
-	 * @var \OC\Files\Storage\Shared
+	 * @var \OCA\Files_Sharing\SharedStorage
 	 */
 	private $storage;
-
-	/**
-	 * @var IStorage
-	 */
-	private $sourceStorage;
 
 	/**
 	 * @var ICacheEntry
 	 */
 	private $sourceRootInfo;
 
-	/**
-	 * @var \OCP\Files\Cache\ICache
-	 */
-	private $sourceCache;
+	private $rootUnchanged = true;
+
+	private $ownerDisplayName;
 
 	/**
-	 * @param \OC\Files\Storage\Shared $storage
-	 * @param IStorage $sourceStorage
+	 * @param \OCA\Files_Sharing\SharedStorage $storage
 	 * @param ICacheEntry $sourceRootInfo
 	 */
-	public function __construct($storage, IStorage $sourceStorage, ICacheEntry $sourceRootInfo) {
+	public function __construct($storage, ICacheEntry $sourceRootInfo) {
 		$this->storage = $storage;
-		$this->sourceStorage = $sourceStorage;
 		$this->sourceRootInfo = $sourceRootInfo;
-		$this->sourceCache = $sourceStorage->getCache();
 		parent::__construct(
-			$this->sourceCache,
+			null,
 			$this->sourceRootInfo->getPath()
 		);
+	}
+
+	public function getCache() {
+		if (is_null($this->cache)) {
+			$this->cache = $this->storage->getSourceStorage()->getCache();
+		}
+		return $this->cache;
 	}
 
 	public function getNumericStorageId() {
@@ -79,6 +77,33 @@ class Cache extends CacheJail {
 		} else {
 			return false;
 		}
+	}
+
+	public function get($file) {
+		if ($this->rootUnchanged && ($file === '' || $file === $this->sourceRootInfo->getId())) {
+			return $this->formatCacheEntry(clone $this->sourceRootInfo);
+		}
+		return parent::get($file);
+	}
+
+	public function update($id, array $data) {
+		$this->rootUnchanged = false;
+		parent::update($id, $data);
+	}
+
+	public function insert($file, array $data) {
+		$this->rootUnchanged = false;
+		return parent::insert($file, $data);
+	}
+
+	public function remove($file) {
+		$this->rootUnchanged = false;
+		parent::remove($file);
+	}
+
+	public function moveFromCache(\OCP\Files\Cache\ICache $sourceCache, $sourcePath, $targetPath) {
+		$this->rootUnchanged = false;
+		return parent::moveFromCache($sourceCache, $sourcePath, $targetPath);
 	}
 
 	protected function formatCacheEntry($entry) {
@@ -91,11 +116,18 @@ class Cache extends CacheJail {
 			$entry['permissions'] = $sharePermissions;
 		}
 		$entry['uid_owner'] = $this->storage->getOwner($path);
-		$entry['displayname_owner'] = \OC_User::getDisplayName($entry['uid_owner']);
+		$entry['displayname_owner'] = $this->getOwnerDisplayName();
 		if ($path === '') {
 			$entry['is_share_mount_point'] = true;
 		}
 		return $entry;
+	}
+
+	private function getOwnerDisplayName() {
+		if (!$this->ownerDisplayName) {
+			$this->ownerDisplayName = \OC_User::getDisplayName($this->storage->getOwner(''));
+		}
+		return $this->ownerDisplayName;
 	}
 
 	/**

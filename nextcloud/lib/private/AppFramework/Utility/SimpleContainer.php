@@ -62,7 +62,19 @@ class SimpleContainer extends Container implements IContainer {
 					$resolveName = $parameterClass->name;
 				}
 
-				$parameters[] = $this->query($resolveName);
+				try {
+					$parameters[] = $this->query($resolveName);
+				} catch (\Exception $e) {
+					// Service not found, use the default value when available
+					if ($parameter->isDefaultValueAvailable()) {
+						$parameters[] = $parameter->getDefaultValue();
+					} else if ($parameterClass !== null) {
+						$resolveName = $parameter->getName();
+						$parameters[] = $this->query($resolveName);
+					} else {
+						throw $e;
+					}
+				}
 			}
 			return $class->newInstanceArgs($parameters);
 		}
@@ -157,7 +169,10 @@ class SimpleContainer extends Container implements IContainer {
 	 * @return string
 	 */
 	protected function sanitizeName($name) {
-		return ltrim($name, '\\');
+		if (isset($name[0]) && $name[0] === '\\') {
+			return ltrim($name, '\\');
+		}
+		return $name;
 	}
 
 }

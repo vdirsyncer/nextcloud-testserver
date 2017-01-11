@@ -8,18 +8,19 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
 {
     public static $files = array (
         '383eaff206634a77a1be54e64e6459c7' => __DIR__ . '/..' . '/sabre/uri/lib/functions.php',
-        'ad155f8f1cf0d418fe49e248db8c661b' => __DIR__ . '/..' . '/react/promise/src/functions_include.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
-        'e40631d46120a9c38ea139981f8dab26' => __DIR__ . '/..' . '/ircmaxell/password-compat/lib/password.php',
-        'fe1bcd0336136e435eaf197895daf81a' => __DIR__ . '/..' . '/nikic/php-parser/lib/bootstrap.php',
-        'ebdb698ed4152ae445614b69b5e4bb6a' => __DIR__ . '/..' . '/sabre/http/lib/functions.php',
         '3569eecfeed3bcf0bad3c998a494ecb8' => __DIR__ . '/..' . '/sabre/xml/lib/Deserializer/functions.php',
         '93aa591bc4ca510c520999e34229ee79' => __DIR__ . '/..' . '/sabre/xml/lib/Serializer/functions.php',
+        '2b9d0f43f9552984cfa82fee95491826' => __DIR__ . '/..' . '/sabre/event/lib/coroutine.php',
+        'd81bab31d3feb45bfe2f283ea3c8fdf7' => __DIR__ . '/..' . '/sabre/event/lib/Loop/functions.php',
+        'a1cce3d26cc15c00fcd0b3354bd72c88' => __DIR__ . '/..' . '/sabre/event/lib/Promise/functions.php',
+        'ad155f8f1cf0d418fe49e248db8c661b' => __DIR__ . '/..' . '/react/promise/src/functions_include.php',
+        'fe1bcd0336136e435eaf197895daf81a' => __DIR__ . '/..' . '/nikic/php-parser/lib/bootstrap.php',
+        'ebdb698ed4152ae445614b69b5e4bb6a' => __DIR__ . '/..' . '/sabre/http/lib/functions.php',
         '5255c38a0faeba867671b61dfda6d864' => __DIR__ . '/..' . '/paragonie/random_compat/lib/random.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
         '023d27dca8066ef29e6739335ea73bad' => __DIR__ . '/..' . '/symfony/polyfill-php70/bootstrap.php',
-        'bd9634f2d41831496de0d3dfe4c94881' => __DIR__ . '/..' . '/symfony/polyfill-php56/bootstrap.php',
-        'edc6464955a37aa4d5fbf39d40fb6ee7' => __DIR__ . '/..' . '/symfony/polyfill-php55/bootstrap.php',
+        'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -41,16 +42,14 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         ),
         'S' => 
         array (
-            'Symfony\\Polyfill\\Util\\' => 22,
             'Symfony\\Polyfill\\Php70\\' => 23,
-            'Symfony\\Polyfill\\Php56\\' => 23,
-            'Symfony\\Polyfill\\Php55\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Component\\Routing\\' => 26,
             'Symfony\\Component\\Process\\' => 26,
             'Symfony\\Component\\EventDispatcher\\' => 34,
             'Symfony\\Component\\Console\\' => 26,
             'SuperClosure\\' => 13,
+            'Stecman\\Component\\Symfony\\Console\\BashCompletion\\' => 49,
             'Sabre\\Xml\\' => 10,
             'Sabre\\VObject\\' => 14,
             'Sabre\\Uri\\' => 10,
@@ -68,6 +67,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'P' => 
         array (
             'Punic\\' => 6,
+            'Psr\\Log\\' => 8,
             'Patchwork\\' => 10,
         ),
         'L' => 
@@ -90,6 +90,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'D' => 
         array (
             'Doctrine\\Common\\Cache\\' => 22,
+            'Doctrine\\Common\\' => 16,
         ),
     );
 
@@ -110,21 +111,9 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         array (
             0 => __DIR__ . '/..' . '/mcnetic/zipstreamer/src',
         ),
-        'Symfony\\Polyfill\\Util\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/polyfill-util',
-        ),
         'Symfony\\Polyfill\\Php70\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php70',
-        ),
-        'Symfony\\Polyfill\\Php56\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/polyfill-php56',
-        ),
-        'Symfony\\Polyfill\\Php55\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/polyfill-php55',
         ),
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (
@@ -149,6 +138,10 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'SuperClosure\\' => 
         array (
             0 => __DIR__ . '/..' . '/jeremeamia/SuperClosure/src',
+        ),
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/stecman/symfony-console-completion/src',
         ),
         'Sabre\\Xml\\' => 
         array (
@@ -194,6 +187,10 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         array (
             0 => __DIR__ . '/..' . '/punic/punic/code',
         ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
         'Patchwork\\' => 
         array (
             0 => __DIR__ . '/..' . '/patchwork/utf8/src/Patchwork',
@@ -234,6 +231,10 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Doctrine\\Common\\Cache\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/cache/lib/Doctrine/Common/Cache',
+        ),
+        'Doctrine\\Common\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/common/lib/Doctrine/Common',
         ),
     );
 
@@ -297,10 +298,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
             'Doctrine\\Common\\Annotations\\' => 
             array (
                 0 => __DIR__ . '/..' . '/doctrine/annotations/lib',
-            ),
-            'Doctrine\\Common\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/doctrine/common/lib',
             ),
         ),
         'C' => 
@@ -1264,6 +1261,16 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Patchwork\\Utf8\\WindowsStreamWrapper' => __DIR__ . '/..' . '/patchwork/utf8/src/Patchwork/Utf8/WindowsStreamWrapper.php',
         'Pimple\\Container' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/Container.php',
         'Pimple\\ServiceProviderInterface' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/ServiceProviderInterface.php',
+        'Psr\\Log\\AbstractLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/AbstractLogger.php',
+        'Psr\\Log\\InvalidArgumentException' => __DIR__ . '/..' . '/psr/log/Psr/Log/InvalidArgumentException.php',
+        'Psr\\Log\\LogLevel' => __DIR__ . '/..' . '/psr/log/Psr/Log/LogLevel.php',
+        'Psr\\Log\\LoggerAwareInterface' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerAwareInterface.php',
+        'Psr\\Log\\LoggerAwareTrait' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerAwareTrait.php',
+        'Psr\\Log\\LoggerInterface' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerInterface.php',
+        'Psr\\Log\\LoggerTrait' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerTrait.php',
+        'Psr\\Log\\NullLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/NullLogger.php',
+        'Psr\\Log\\Test\\DummyTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/LoggerInterfaceTest.php',
+        'Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/LoggerInterfaceTest.php',
         'Punic\\Calendar' => __DIR__ . '/..' . '/punic/punic/code/Calendar.php',
         'Punic\\Comparer' => __DIR__ . '/..' . '/punic/punic/code/Comparer.php',
         'Punic\\Currency' => __DIR__ . '/..' . '/punic/punic/code/Currency.php',
@@ -1301,6 +1308,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\CalDAV\\Backend\\PDO' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/PDO.php',
         'Sabre\\CalDAV\\Backend\\SchedulingSupport' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/SchedulingSupport.php',
         'Sabre\\CalDAV\\Backend\\SharingSupport' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/SharingSupport.php',
+        'Sabre\\CalDAV\\Backend\\SimplePDO' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/SimplePDO.php',
         'Sabre\\CalDAV\\Backend\\SubscriptionSupport' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/SubscriptionSupport.php',
         'Sabre\\CalDAV\\Backend\\SyncSupport' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Backend/SyncSupport.php',
         'Sabre\\CalDAV\\Calendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Calendar.php',
@@ -1313,7 +1321,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\CalDAV\\ICalendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/ICalendar.php',
         'Sabre\\CalDAV\\ICalendarObject' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/ICalendarObject.php',
         'Sabre\\CalDAV\\ICalendarObjectContainer' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/ICalendarObjectContainer.php',
-        'Sabre\\CalDAV\\IShareableCalendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/IShareableCalendar.php',
         'Sabre\\CalDAV\\ISharedCalendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/ISharedCalendar.php',
         'Sabre\\CalDAV\\Notifications\\Collection' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Notifications/Collection.php',
         'Sabre\\CalDAV\\Notifications\\ICollection' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Notifications/ICollection.php',
@@ -1335,7 +1342,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\CalDAV\\Schedule\\Outbox' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Schedule/Outbox.php',
         'Sabre\\CalDAV\\Schedule\\Plugin' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Schedule/Plugin.php',
         'Sabre\\CalDAV\\Schedule\\SchedulingObject' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Schedule/SchedulingObject.php',
-        'Sabre\\CalDAV\\ShareableCalendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/ShareableCalendar.php',
         'Sabre\\CalDAV\\SharedCalendar' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/SharedCalendar.php',
         'Sabre\\CalDAV\\SharingPlugin' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/SharingPlugin.php',
         'Sabre\\CalDAV\\Subscriptions\\ISubscription' => __DIR__ . '/..' . '/sabre/dav/lib/CalDAV/Subscriptions/ISubscription.php',
@@ -1382,6 +1388,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\CardDAV\\Xml\\Property\\SupportedCollationSet' => __DIR__ . '/..' . '/sabre/dav/lib/CardDAV/Xml/Property/SupportedCollationSet.php',
         'Sabre\\CardDAV\\Xml\\Request\\AddressBookMultiGetReport' => __DIR__ . '/..' . '/sabre/dav/lib/CardDAV/Xml/Request/AddressBookMultiGetReport.php',
         'Sabre\\CardDAV\\Xml\\Request\\AddressBookQueryReport' => __DIR__ . '/..' . '/sabre/dav/lib/CardDAV/Xml/Request/AddressBookQueryReport.php',
+        'Sabre\\DAVACL\\ACLTrait' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/ACLTrait.php',
         'Sabre\\DAVACL\\AbstractPrincipalCollection' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/AbstractPrincipalCollection.php',
         'Sabre\\DAVACL\\Exception\\AceConflict' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Exception/AceConflict.php',
         'Sabre\\DAVACL\\Exception\\NeedPrivileges' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Exception/NeedPrivileges.php',
@@ -1406,10 +1413,13 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\DAVACL\\Xml\\Property\\CurrentUserPrivilegeSet' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Property/CurrentUserPrivilegeSet.php',
         'Sabre\\DAVACL\\Xml\\Property\\Principal' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Property/Principal.php',
         'Sabre\\DAVACL\\Xml\\Property\\SupportedPrivilegeSet' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Property/SupportedPrivilegeSet.php',
+        'Sabre\\DAVACL\\Xml\\Request\\AclPrincipalPropSetReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Request/AclPrincipalPropSetReport.php',
         'Sabre\\DAVACL\\Xml\\Request\\ExpandPropertyReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Request/ExpandPropertyReport.php',
+        'Sabre\\DAVACL\\Xml\\Request\\PrincipalMatchReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Request/PrincipalMatchReport.php',
         'Sabre\\DAVACL\\Xml\\Request\\PrincipalPropertySearchReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Request/PrincipalPropertySearchReport.php',
         'Sabre\\DAVACL\\Xml\\Request\\PrincipalSearchPropertySetReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAVACL/Xml/Request/PrincipalSearchPropertySetReport.php',
         'Sabre\\DAV\\Auth\\Backend\\AbstractBasic' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Auth/Backend/AbstractBasic.php',
+        'Sabre\\DAV\\Auth\\Backend\\AbstractBearer' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Auth/Backend/AbstractBearer.php',
         'Sabre\\DAV\\Auth\\Backend\\AbstractDigest' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Auth/Backend/AbstractDigest.php',
         'Sabre\\DAV\\Auth\\Backend\\Apache' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Auth/Backend/Apache.php',
         'Sabre\\DAV\\Auth\\Backend\\BackendInterface' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Auth/Backend/BackendInterface.php',
@@ -1480,6 +1490,8 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\DAV\\PropertyStorage\\Plugin' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/PropertyStorage/Plugin.php',
         'Sabre\\DAV\\Server' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Server.php',
         'Sabre\\DAV\\ServerPlugin' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/ServerPlugin.php',
+        'Sabre\\DAV\\Sharing\\ISharedNode' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Sharing/ISharedNode.php',
+        'Sabre\\DAV\\Sharing\\Plugin' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Sharing/Plugin.php',
         'Sabre\\DAV\\SimpleCollection' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/SimpleCollection.php',
         'Sabre\\DAV\\SimpleFile' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/SimpleFile.php',
         'Sabre\\DAV\\StringUtil' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/StringUtil.php',
@@ -1491,11 +1503,15 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\DAV\\Version' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Version.php',
         'Sabre\\DAV\\Xml\\Element\\Prop' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Element/Prop.php',
         'Sabre\\DAV\\Xml\\Element\\Response' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Element/Response.php',
+        'Sabre\\DAV\\Xml\\Element\\Sharee' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Element/Sharee.php',
         'Sabre\\DAV\\Xml\\Property\\Complex' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/Complex.php',
         'Sabre\\DAV\\Xml\\Property\\GetLastModified' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/GetLastModified.php',
         'Sabre\\DAV\\Xml\\Property\\Href' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/Href.php',
+        'Sabre\\DAV\\Xml\\Property\\Invite' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/Invite.php',
+        'Sabre\\DAV\\Xml\\Property\\LocalHref' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/LocalHref.php',
         'Sabre\\DAV\\Xml\\Property\\LockDiscovery' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/LockDiscovery.php',
         'Sabre\\DAV\\Xml\\Property\\ResourceType' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/ResourceType.php',
+        'Sabre\\DAV\\Xml\\Property\\ShareAccess' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/ShareAccess.php',
         'Sabre\\DAV\\Xml\\Property\\SupportedLock' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/SupportedLock.php',
         'Sabre\\DAV\\Xml\\Property\\SupportedMethodSet' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/SupportedMethodSet.php',
         'Sabre\\DAV\\Xml\\Property\\SupportedReportSet' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Property/SupportedReportSet.php',
@@ -1503,12 +1519,14 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\DAV\\Xml\\Request\\MkCol' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Request/MkCol.php',
         'Sabre\\DAV\\Xml\\Request\\PropFind' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Request/PropFind.php',
         'Sabre\\DAV\\Xml\\Request\\PropPatch' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Request/PropPatch.php',
+        'Sabre\\DAV\\Xml\\Request\\ShareResource' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Request/ShareResource.php',
         'Sabre\\DAV\\Xml\\Request\\SyncCollectionReport' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Request/SyncCollectionReport.php',
         'Sabre\\DAV\\Xml\\Response\\MultiStatus' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Response/MultiStatus.php',
         'Sabre\\DAV\\Xml\\Service' => __DIR__ . '/..' . '/sabre/dav/lib/DAV/Xml/Service.php',
         'Sabre\\Event\\EventEmitter' => __DIR__ . '/..' . '/sabre/event/lib/EventEmitter.php',
         'Sabre\\Event\\EventEmitterInterface' => __DIR__ . '/..' . '/sabre/event/lib/EventEmitterInterface.php',
         'Sabre\\Event\\EventEmitterTrait' => __DIR__ . '/..' . '/sabre/event/lib/EventEmitterTrait.php',
+        'Sabre\\Event\\Loop\\Loop' => __DIR__ . '/..' . '/sabre/event/lib/Loop/Loop.php',
         'Sabre\\Event\\Promise' => __DIR__ . '/..' . '/sabre/event/lib/Promise.php',
         'Sabre\\Event\\PromiseAlreadyResolvedException' => __DIR__ . '/..' . '/sabre/event/lib/PromiseAlreadyResolvedException.php',
         'Sabre\\Event\\Version' => __DIR__ . '/..' . '/sabre/event/lib/Version.php',
@@ -1535,6 +1553,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\HTTP\\Util' => __DIR__ . '/..' . '/sabre/http/lib/Util.php',
         'Sabre\\HTTP\\Version' => __DIR__ . '/..' . '/sabre/http/lib/Version.php',
         'Sabre\\Uri\\Version' => __DIR__ . '/..' . '/sabre/uri/lib/Version.php',
+        'Sabre\\VObject\\BirthdayCalendarGenerator' => __DIR__ . '/..' . '/sabre/vobject/lib/BirthdayCalendarGenerator.php',
         'Sabre\\VObject\\Cli' => __DIR__ . '/..' . '/sabre/vobject/lib/Cli.php',
         'Sabre\\VObject\\Component' => __DIR__ . '/..' . '/sabre/vobject/lib/Component.php',
         'Sabre\\VObject\\Component\\Available' => __DIR__ . '/..' . '/sabre/vobject/lib/Component/Available.php',
@@ -1551,17 +1570,22 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\VObject\\Document' => __DIR__ . '/..' . '/sabre/vobject/lib/Document.php',
         'Sabre\\VObject\\ElementList' => __DIR__ . '/..' . '/sabre/vobject/lib/ElementList.php',
         'Sabre\\VObject\\EofException' => __DIR__ . '/..' . '/sabre/vobject/lib/EofException.php',
+        'Sabre\\VObject\\FreeBusyData' => __DIR__ . '/..' . '/sabre/vobject/lib/FreeBusyData.php',
         'Sabre\\VObject\\FreeBusyGenerator' => __DIR__ . '/..' . '/sabre/vobject/lib/FreeBusyGenerator.php',
         'Sabre\\VObject\\ITip\\Broker' => __DIR__ . '/..' . '/sabre/vobject/lib/ITip/Broker.php',
         'Sabre\\VObject\\ITip\\ITipException' => __DIR__ . '/..' . '/sabre/vobject/lib/ITip/ITipException.php',
         'Sabre\\VObject\\ITip\\Message' => __DIR__ . '/..' . '/sabre/vobject/lib/ITip/Message.php',
         'Sabre\\VObject\\ITip\\SameOrganizerForAllComponentsException' => __DIR__ . '/..' . '/sabre/vobject/lib/ITip/SameOrganizerForAllComponentsException.php',
+        'Sabre\\VObject\\InvalidDataException' => __DIR__ . '/..' . '/sabre/vobject/lib/InvalidDataException.php',
         'Sabre\\VObject\\Node' => __DIR__ . '/..' . '/sabre/vobject/lib/Node.php',
+        'Sabre\\VObject\\PHPUnitAssertions' => __DIR__ . '/..' . '/sabre/vobject/lib/PHPUnitAssertions.php',
         'Sabre\\VObject\\Parameter' => __DIR__ . '/..' . '/sabre/vobject/lib/Parameter.php',
         'Sabre\\VObject\\ParseException' => __DIR__ . '/..' . '/sabre/vobject/lib/ParseException.php',
         'Sabre\\VObject\\Parser\\Json' => __DIR__ . '/..' . '/sabre/vobject/lib/Parser/Json.php',
         'Sabre\\VObject\\Parser\\MimeDir' => __DIR__ . '/..' . '/sabre/vobject/lib/Parser/MimeDir.php',
         'Sabre\\VObject\\Parser\\Parser' => __DIR__ . '/..' . '/sabre/vobject/lib/Parser/Parser.php',
+        'Sabre\\VObject\\Parser\\XML' => __DIR__ . '/..' . '/sabre/vobject/lib/Parser/XML.php',
+        'Sabre\\VObject\\Parser\\XML\\Element\\KeyValue' => __DIR__ . '/..' . '/sabre/vobject/lib/Parser/XML/Element/KeyValue.php',
         'Sabre\\VObject\\Property' => __DIR__ . '/..' . '/sabre/vobject/lib/Property.php',
         'Sabre\\VObject\\Property\\Binary' => __DIR__ . '/..' . '/sabre/vobject/lib/Property/Binary.php',
         'Sabre\\VObject\\Property\\Boolean' => __DIR__ . '/..' . '/sabre/vobject/lib/Property/Boolean.php',
@@ -1586,10 +1610,11 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\VObject\\Property\\VCard\\TimeStamp' => __DIR__ . '/..' . '/sabre/vobject/lib/Property/VCard/TimeStamp.php',
         'Sabre\\VObject\\Reader' => __DIR__ . '/..' . '/sabre/vobject/lib/Reader.php',
         'Sabre\\VObject\\Recur\\EventIterator' => __DIR__ . '/..' . '/sabre/vobject/lib/Recur/EventIterator.php',
+        'Sabre\\VObject\\Recur\\MaxInstancesExceededException' => __DIR__ . '/..' . '/sabre/vobject/lib/Recur/MaxInstancesExceededException.php',
         'Sabre\\VObject\\Recur\\NoInstancesException' => __DIR__ . '/..' . '/sabre/vobject/lib/Recur/NoInstancesException.php',
         'Sabre\\VObject\\Recur\\RDateIterator' => __DIR__ . '/..' . '/sabre/vobject/lib/Recur/RDateIterator.php',
         'Sabre\\VObject\\Recur\\RRuleIterator' => __DIR__ . '/..' . '/sabre/vobject/lib/Recur/RRuleIterator.php',
-        'Sabre\\VObject\\RecurrenceIterator' => __DIR__ . '/..' . '/sabre/vobject/lib/RecurrenceIterator.php',
+        'Sabre\\VObject\\Settings' => __DIR__ . '/..' . '/sabre/vobject/lib/Settings.php',
         'Sabre\\VObject\\Splitter\\ICalendar' => __DIR__ . '/..' . '/sabre/vobject/lib/Splitter/ICalendar.php',
         'Sabre\\VObject\\Splitter\\SplitterInterface' => __DIR__ . '/..' . '/sabre/vobject/lib/Splitter/SplitterInterface.php',
         'Sabre\\VObject\\Splitter\\VCard' => __DIR__ . '/..' . '/sabre/vobject/lib/Splitter/VCard.php',
@@ -1598,6 +1623,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\VObject\\UUIDUtil' => __DIR__ . '/..' . '/sabre/vobject/lib/UUIDUtil.php',
         'Sabre\\VObject\\VCardConverter' => __DIR__ . '/..' . '/sabre/vobject/lib/VCardConverter.php',
         'Sabre\\VObject\\Version' => __DIR__ . '/..' . '/sabre/vobject/lib/Version.php',
+        'Sabre\\VObject\\Writer' => __DIR__ . '/..' . '/sabre/vobject/lib/Writer.php',
         'Sabre\\Xml\\ContextStackTrait' => __DIR__ . '/..' . '/sabre/xml/lib/ContextStackTrait.php',
         'Sabre\\Xml\\Element' => __DIR__ . '/..' . '/sabre/xml/lib/Element.php',
         'Sabre\\Xml\\Element\\Base' => __DIR__ . '/..' . '/sabre/xml/lib/Element/Base.php',
@@ -1614,6 +1640,15 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Sabre\\Xml\\Writer' => __DIR__ . '/..' . '/sabre/xml/lib/Writer.php',
         'Sabre\\Xml\\XmlDeserializable' => __DIR__ . '/..' . '/sabre/xml/lib/XmlDeserializable.php',
         'Sabre\\Xml\\XmlSerializable' => __DIR__ . '/..' . '/sabre/xml/lib/XmlSerializable.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\Completion' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/Completion.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\CompletionCommand' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/CompletionCommand.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\CompletionContext' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/CompletionContext.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\CompletionHandler' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/CompletionHandler.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\Completion\\CompletionAwareInterface' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/Completion/CompletionAwareInterface.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\Completion\\CompletionInterface' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/Completion/CompletionInterface.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\Completion\\ShellPathCompletion' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/Completion/ShellPathCompletion.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\EnvironmentCompletionContext' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/EnvironmentCompletionContext.php',
+        'Stecman\\Component\\Symfony\\Console\\BashCompletion\\HookFactory' => __DIR__ . '/..' . '/stecman/symfony-console-completion/src/HookFactory.php',
         'SuperClosure\\Analyzer\\AstAnalyzer' => __DIR__ . '/..' . '/jeremeamia/SuperClosure/src/Analyzer/AstAnalyzer.php',
         'SuperClosure\\Analyzer\\ClosureAnalyzer' => __DIR__ . '/..' . '/jeremeamia/SuperClosure/src/Analyzer/ClosureAnalyzer.php',
         'SuperClosure\\Analyzer\\Token' => __DIR__ . '/..' . '/jeremeamia/SuperClosure/src/Analyzer/Token.php',
@@ -1656,7 +1691,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Console\\Formatter\\OutputFormatterStyleStack' => __DIR__ . '/..' . '/symfony/console/Formatter/OutputFormatterStyleStack.php',
         'Symfony\\Component\\Console\\Helper\\DebugFormatterHelper' => __DIR__ . '/..' . '/symfony/console/Helper/DebugFormatterHelper.php',
         'Symfony\\Component\\Console\\Helper\\DescriptorHelper' => __DIR__ . '/..' . '/symfony/console/Helper/DescriptorHelper.php',
-        'Symfony\\Component\\Console\\Helper\\DialogHelper' => __DIR__ . '/..' . '/symfony/console/Helper/DialogHelper.php',
         'Symfony\\Component\\Console\\Helper\\FormatterHelper' => __DIR__ . '/..' . '/symfony/console/Helper/FormatterHelper.php',
         'Symfony\\Component\\Console\\Helper\\Helper' => __DIR__ . '/..' . '/symfony/console/Helper/Helper.php',
         'Symfony\\Component\\Console\\Helper\\HelperInterface' => __DIR__ . '/..' . '/symfony/console/Helper/HelperInterface.php',
@@ -1664,13 +1698,11 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Console\\Helper\\InputAwareHelper' => __DIR__ . '/..' . '/symfony/console/Helper/InputAwareHelper.php',
         'Symfony\\Component\\Console\\Helper\\ProcessHelper' => __DIR__ . '/..' . '/symfony/console/Helper/ProcessHelper.php',
         'Symfony\\Component\\Console\\Helper\\ProgressBar' => __DIR__ . '/..' . '/symfony/console/Helper/ProgressBar.php',
-        'Symfony\\Component\\Console\\Helper\\ProgressHelper' => __DIR__ . '/..' . '/symfony/console/Helper/ProgressHelper.php',
         'Symfony\\Component\\Console\\Helper\\ProgressIndicator' => __DIR__ . '/..' . '/symfony/console/Helper/ProgressIndicator.php',
         'Symfony\\Component\\Console\\Helper\\QuestionHelper' => __DIR__ . '/..' . '/symfony/console/Helper/QuestionHelper.php',
         'Symfony\\Component\\Console\\Helper\\SymfonyQuestionHelper' => __DIR__ . '/..' . '/symfony/console/Helper/SymfonyQuestionHelper.php',
         'Symfony\\Component\\Console\\Helper\\Table' => __DIR__ . '/..' . '/symfony/console/Helper/Table.php',
         'Symfony\\Component\\Console\\Helper\\TableCell' => __DIR__ . '/..' . '/symfony/console/Helper/TableCell.php',
-        'Symfony\\Component\\Console\\Helper\\TableHelper' => __DIR__ . '/..' . '/symfony/console/Helper/TableHelper.php',
         'Symfony\\Component\\Console\\Helper\\TableSeparator' => __DIR__ . '/..' . '/symfony/console/Helper/TableSeparator.php',
         'Symfony\\Component\\Console\\Helper\\TableStyle' => __DIR__ . '/..' . '/symfony/console/Helper/TableStyle.php',
         'Symfony\\Component\\Console\\Input\\ArgvInput' => __DIR__ . '/..' . '/symfony/console/Input/ArgvInput.php',
@@ -1693,7 +1725,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Console\\Question\\ChoiceQuestion' => __DIR__ . '/..' . '/symfony/console/Question/ChoiceQuestion.php',
         'Symfony\\Component\\Console\\Question\\ConfirmationQuestion' => __DIR__ . '/..' . '/symfony/console/Question/ConfirmationQuestion.php',
         'Symfony\\Component\\Console\\Question\\Question' => __DIR__ . '/..' . '/symfony/console/Question/Question.php',
-        'Symfony\\Component\\Console\\Shell' => __DIR__ . '/..' . '/symfony/console/Shell.php',
         'Symfony\\Component\\Console\\Style\\OutputStyle' => __DIR__ . '/..' . '/symfony/console/Style/OutputStyle.php',
         'Symfony\\Component\\Console\\Style\\StyleInterface' => __DIR__ . '/..' . '/symfony/console/Style/StyleInterface.php',
         'Symfony\\Component\\Console\\Style\\SymfonyStyle' => __DIR__ . '/..' . '/symfony/console/Style/SymfonyStyle.php',
@@ -1717,6 +1748,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Process\\Exception\\ProcessTimedOutException' => __DIR__ . '/..' . '/symfony/process/Exception/ProcessTimedOutException.php',
         'Symfony\\Component\\Process\\Exception\\RuntimeException' => __DIR__ . '/..' . '/symfony/process/Exception/RuntimeException.php',
         'Symfony\\Component\\Process\\ExecutableFinder' => __DIR__ . '/..' . '/symfony/process/ExecutableFinder.php',
+        'Symfony\\Component\\Process\\InputStream' => __DIR__ . '/..' . '/symfony/process/InputStream.php',
         'Symfony\\Component\\Process\\PhpExecutableFinder' => __DIR__ . '/..' . '/symfony/process/PhpExecutableFinder.php',
         'Symfony\\Component\\Process\\PhpProcess' => __DIR__ . '/..' . '/symfony/process/PhpProcess.php',
         'Symfony\\Component\\Process\\Pipes\\AbstractPipes' => __DIR__ . '/..' . '/symfony/process/Pipes/AbstractPipes.php',
@@ -1750,8 +1782,6 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Routing\\Loader\\PhpFileLoader' => __DIR__ . '/..' . '/symfony/routing/Loader/PhpFileLoader.php',
         'Symfony\\Component\\Routing\\Loader\\XmlFileLoader' => __DIR__ . '/..' . '/symfony/routing/Loader/XmlFileLoader.php',
         'Symfony\\Component\\Routing\\Loader\\YamlFileLoader' => __DIR__ . '/..' . '/symfony/routing/Loader/YamlFileLoader.php',
-        'Symfony\\Component\\Routing\\Matcher\\ApacheUrlMatcher' => __DIR__ . '/..' . '/symfony/routing/Matcher/ApacheUrlMatcher.php',
-        'Symfony\\Component\\Routing\\Matcher\\Dumper\\ApacheMatcherDumper' => __DIR__ . '/..' . '/symfony/routing/Matcher/Dumper/ApacheMatcherDumper.php',
         'Symfony\\Component\\Routing\\Matcher\\Dumper\\DumperCollection' => __DIR__ . '/..' . '/symfony/routing/Matcher/Dumper/DumperCollection.php',
         'Symfony\\Component\\Routing\\Matcher\\Dumper\\DumperPrefixCollection' => __DIR__ . '/..' . '/symfony/routing/Matcher/Dumper/DumperPrefixCollection.php',
         'Symfony\\Component\\Routing\\Matcher\\Dumper\\DumperRoute' => __DIR__ . '/..' . '/symfony/routing/Matcher/Dumper/DumperRoute.php',
@@ -1774,14 +1804,7 @@ class ComposerStaticInit2f23f73bc0cc116b4b1eee1521aa8652
         'Symfony\\Component\\Routing\\Router' => __DIR__ . '/..' . '/symfony/routing/Router.php',
         'Symfony\\Component\\Routing\\RouterInterface' => __DIR__ . '/..' . '/symfony/routing/RouterInterface.php',
         'Symfony\\Polyfill\\Mbstring\\Mbstring' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/Mbstring.php',
-        'Symfony\\Polyfill\\Php55\\Php55' => __DIR__ . '/..' . '/symfony/polyfill-php55/Php55.php',
-        'Symfony\\Polyfill\\Php55\\Php55ArrayColumn' => __DIR__ . '/..' . '/symfony/polyfill-php55/Php55ArrayColumn.php',
-        'Symfony\\Polyfill\\Php56\\Php56' => __DIR__ . '/..' . '/symfony/polyfill-php56/Php56.php',
         'Symfony\\Polyfill\\Php70\\Php70' => __DIR__ . '/..' . '/symfony/polyfill-php70/Php70.php',
-        'Symfony\\Polyfill\\Util\\Binary' => __DIR__ . '/..' . '/symfony/polyfill-util/Binary.php',
-        'Symfony\\Polyfill\\Util\\BinaryNoFuncOverload' => __DIR__ . '/..' . '/symfony/polyfill-util/BinaryNoFuncOverload.php',
-        'Symfony\\Polyfill\\Util\\BinaryOnFuncOverload' => __DIR__ . '/..' . '/symfony/polyfill-util/BinaryOnFuncOverload.php',
-        'Symfony\\Polyfill\\Util\\TestListener' => __DIR__ . '/..' . '/symfony/polyfill-util/TestListener.php',
         'System' => __DIR__ . '/..' . '/pear/pear-core-minimal/src/System.php',
         'TypeError' => __DIR__ . '/..' . '/symfony/polyfill-php70/Resources/stubs/TypeError.php',
         'ZipStreamer\\COMPR' => __DIR__ . '/..' . '/mcnetic/zipstreamer/src/ZipStreamer.php',

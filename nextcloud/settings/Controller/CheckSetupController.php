@@ -36,6 +36,7 @@ use OCP\AppFramework\Http\RedirectResponse;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
+use OCP\ILogger;
 use OCP\IRequest;
 use OC_Util;
 use OCP\IURLGenerator;
@@ -56,6 +57,8 @@ class CheckSetupController extends Controller {
 	private $l10n;
 	/** @var Checker */
 	private $checker;
+	/** @var ILogger */
+	private $logger;
 
 	/**
 	 * @param string $AppName
@@ -66,6 +69,7 @@ class CheckSetupController extends Controller {
 	 * @param \OC_Util $util
 	 * @param IL10N $l10n
 	 * @param Checker $checker
+	 * @param ILogger $logger
 	 */
 	public function __construct($AppName,
 								IRequest $request,
@@ -74,7 +78,8 @@ class CheckSetupController extends Controller {
 								IURLGenerator $urlGenerator,
 								\OC_Util $util,
 								IL10N $l10n,
-								Checker $checker) {
+								Checker $checker,
+								ILogger $logger) {
 		parent::__construct($AppName, $request);
 		$this->config = $config;
 		$this->clientService = $clientService;
@@ -82,6 +87,7 @@ class CheckSetupController extends Controller {
 		$this->urlGenerator = $urlGenerator;
 		$this->l10n = $l10n;
 		$this->checker = $checker;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -93,14 +99,35 @@ class CheckSetupController extends Controller {
 			return false;
 		}
 
+		$siteArray = ['www.nextcloud.com',
+						'www.google.com',
+						'www.github.com'];
+
+		foreach($siteArray as $site) {
+			if ($this->isSiteReachable($site)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	* Chceks if the ownCloud server can connect to a specific URL using both HTTPS and HTTP
+	* @return bool
+	*/
+	private function isSiteReachable($sitename) {
+		$httpSiteName = 'http://' . $sitename . '/';
+		$httpsSiteName = 'https://' . $sitename . '/';
+
 		try {
 			$client = $this->clientService->newClient();
-			$client->get('https://www.owncloud.org/');
-			$client->get('http://www.owncloud.org/');
-			return true;
+			$client->get($httpSiteName);
+			$client->get($httpsSiteName);
 		} catch (\Exception $e) {
+			$this->logger->logException($e, ['app' => 'internet_connection_check']);
 			return false;
 		}
+		return true;
 	}
 
 	/**
@@ -147,19 +174,13 @@ class CheckSetupController extends Controller {
 	 * @return string
 	 */
 	private function isUsedTlsLibOutdated() {
-		// Appstore is disabled by default in EE
-		$appStoreDefault = false;
-		if (\OC_Util::getEditionString() === '') {
-			$appStoreDefault = true;
-		}
-
 		// Don't run check when:
 		// 1. Server has `has_internet_connection` set to false
 		// 2. AppStore AND S2S is disabled
 		if(!$this->config->getSystemValue('has_internet_connection', true)) {
 			return '';
 		}
-		if(!$this->config->getSystemValue('appstoreenabled', $appStoreDefault)
+		if(!$this->config->getSystemValue('appstoreenabled', true)
 			&& $this->config->getAppValue('files_sharing', 'outgoing_server2server_share_enabled', 'yes') === 'no'
 			&& $this->config->getAppValue('files_sharing', 'incoming_server2server_share_enabled', 'yes') === 'no') {
 			return '';
@@ -173,7 +194,7 @@ class CheckSetupController extends Controller {
 		}
 
 		$features = (string)$this->l10n->t('installing and updating apps via the app store or Federated Cloud Sharing');
-		if(!$this->config->getSystemValue('appstoreenabled', $appStoreDefault)) {
+		if(!$this->config->getSystemValue('appstoreenabled', true)) {
 			$features = (string)$this->l10n->t('Federated Cloud Sharing');
 		}
 
@@ -215,6 +236,7 @@ class CheckSetupController extends Controller {
 		if (version_compare(PHP_VERSION, '5.5.0') === -1) {
 			return true;
 		}
+
 		return false;
 	}
 

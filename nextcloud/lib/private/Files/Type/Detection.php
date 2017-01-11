@@ -166,9 +166,11 @@ class Detection implements IMimeTypeDetector {
 	public function detectPath($path) {
 		$this->loadMappings();
 
-		if (strpos($path, '.')) {
+		$fileName = basename($path);
+		// note: leading dot doesn't qualify as extension
+		if (strpos($fileName, '.') > 0) {
 			//try to guess the type by the file extension
-			$extension = strtolower(strrchr(basename($path), "."));
+			$extension = strtolower(strrchr($fileName, '.'));
 			$extension = substr($extension, 1); //remove leading .
 			return (isset($this->mimetypes[$extension]) && isset($this->mimetypes[$extension][0]))
 				? $this->mimetypes[$extension][0]
@@ -200,7 +202,7 @@ class Detection implements IMimeTypeDetector {
 			$info = @strtolower(finfo_file($finfo, $path));
 			finfo_close($finfo);
 			if ($info) {
-				$mimeType = substr($info, 0, strpos($info, ';'));
+				$mimeType = strpos($info, ';') !== false ? substr($info, 0, strpos($info, ';')) : $info;
 				return empty($mimeType) ? 'application/octet-stream' : $mimeType;
 			}
 
@@ -238,7 +240,8 @@ class Detection implements IMimeTypeDetector {
 	public function detectString($data) {
 		if (function_exists('finfo_open') and function_exists('finfo_file')) {
 			$finfo = finfo_open(FILEINFO_MIME);
-			return finfo_buffer($finfo, $data);
+			$info = finfo_buffer($finfo, $data);
+			return strpos($info, ';') !== false ? substr($info, 0, strpos($info, ';')) : $info;
 		} else {
 			$tmpFile = \OC::$server->getTempManager()->getTemporaryFile();
 			$fh = fopen($tmpFile, 'wb');

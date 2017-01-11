@@ -1126,6 +1126,15 @@
 			</field>
 
 			<field>
+				<name>remember</name>
+				<type>integer</type>
+				<default>0</default>
+				<notnull>true</notnull>
+				<unsigned>true</unsigned>
+				<length>1</length>
+			</field>
+
+			<field>
 				<name>last_activity</name>
 				<type>integer</type>
 				<default>0</default>
@@ -1141,6 +1150,13 @@
 				<notnull>true</notnull>
 				<unsigned>true</unsigned>
 				<length>4</length>
+			</field>
+
+			<field>
+				<name>scope</name>
+				<type>clob</type>
+				<default></default>
+				<notnull>false</notnull>
 			</field>
 
 			<index>
@@ -2090,6 +2106,38 @@
 				<unique>false</unique>
 				<field>
 					<name>section</name>
+					<sorting>ascending</sorting>
+				</field>
+			</index>
+
+		</declaration>
+	</table>
+
+	<table>
+
+		<name>*dbprefix*accounts</name>
+
+		<declaration>
+			<field>
+				<name>uid</name>
+				<type>text</type>
+				<default></default>
+				<notnull>true</notnull>
+				<length>64</length>
+			</field>
+			<field>
+				<name>data</name>
+				<type>clob</type>
+				<default></default>
+				<notnull>true</notnull>
+			</field>
+
+			<index>
+				<name>uid_index</name>
+				<primary>true</primary>
+				<unique>true</unique>
+				<field>
+					<name>uid</name>
 					<sorting>ascending</sorting>
 				</field>
 			</index>

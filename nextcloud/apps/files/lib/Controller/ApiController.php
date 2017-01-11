@@ -31,15 +31,18 @@ namespace OCA\Files\Controller;
 
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Controller;
+use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\AppFramework\Http\DataResponse;
-use OCP\AppFramework\Http\DataDisplayResponse;
+use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\Response;
 use OCA\Files\Service\TagService;
 use OCP\IPreview;
 use OCP\Share\IManager;
-use OCP\Files\Node;
+use OC\Files\Node\Node;
 use OCP\IUserSession;
 
 /**
@@ -58,12 +61,18 @@ class ApiController extends Controller {
 	private $userSession;
 	/** IConfig */
 	private $config;
+	/** @var Folder */
+	private $userFolder;
 
 	/**
 	 * @param string $appName
 	 * @param IRequest $request
+	 * @param IUserSession $userSession
 	 * @param TagService $tagService
 	 * @param IPreview $previewManager
+	 * @param IManager $shareManager
+	 * @param IConfig $config
+	 * @param Folder $userFolder
 	 */
 	public function __construct($appName,
 								IRequest $request,
@@ -71,13 +80,15 @@ class ApiController extends Controller {
 								TagService $tagService,
 								IPreview $previewManager,
 								IManager $shareManager,
-								IConfig $config) {
+								IConfig $config,
+								Folder $userFolder) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->tagService = $tagService;
 		$this->previewManager = $previewManager;
 		$this->shareManager = $shareManager;
 		$this->config = $config;
+		$this->userFolder = $userFolder;
 	}
 
 	/**
@@ -92,18 +103,27 @@ class ApiController extends Controller {
 	 * @param int $x
 	 * @param int $y
 	 * @param string $file URL-encoded filename
-	 * @return DataResponse|DataDisplayResponse
+	 * @return DataResponse|FileDisplayResponse
 	 */
 	public function getThumbnail($x, $y, $file) {
 		if($x < 1 || $y < 1) {
 			return new DataResponse(['message' => 'Requested size must be numeric and a positive value.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$preview = $this->previewManager->createPreview('files/'.$file, $x, $y, true);
-		if ($preview->valid()) {
-			return new DataDisplayResponse($preview->data(), Http::STATUS_OK, ['Content-Type' => 'image/png']);
-		} else {
+		try {
+			$file = $this->userFolder->get($file);
+			if ($file instanceof Folder) {
+				throw new NotFoundException();
+			}
+
+			/** @var File $file */
+			$preview = $this->previewManager->getPreview($file, $x, $y, true);
+
+			return new FileDisplayResponse($preview, Http::STATUS_OK, ['Content-Type' => $preview->getMimeType()]);
+		} catch (NotFoundException $e) {
 			return new DataResponse(['message' => 'File not found.'], Http::STATUS_NOT_FOUND);
+		} catch (\Exception $e) {
+			return new DataResponse([], Http::STATUS_BAD_REQUEST);
 		}
 	}
 
@@ -143,32 +163,37 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * Returns a list of all files tagged with the given tag.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @param string $tagName tag name to filter by
-	 * @return DataResponse
+	 * @param \OCP\Files\Node[] $nodes
+	 * @return array
 	 */
-	public function getFilesByTag($tagName) {
-		$files = array();
-		$nodes = $this->tagService->getFilesByTag($tagName);
-		foreach ($nodes as &$node) {
+	private function formatNodes(array $nodes) {
+		return array_values(array_map(function (Node $node) {
+			/** @var \OC\Files\Node\Node $shareTypes */
 			$shareTypes = $this->getShareTypes($node);
-			$fileInfo = $node->getFileInfo();
-			$file = \OCA\Files\Helper::formatFileInfo($fileInfo);
-			$parts = explode('/', dirname($fileInfo->getPath()), 4);
-			if(isset($parts[3])) {
+			$file = \OCA\Files\Helper::formatFileInfo($node->getFileInfo());
+			$parts = explode('/', dirname($node->getPath()), 4);
+			if (isset($parts[3])) {
 				$file['path'] = '/' . $parts[3];
 			} else {
 				$file['path'] = '/';
 			}
-			$file['tags'] = [$tagName];
 			if (!empty($shareTypes)) {
 				$file['shareTypes'] = $shareTypes;
 			}
-			$files[] = $file;
-		}
+			return $file;
+		}, $nodes));
+	}
+
+	/**
+	 * Returns a list of recently modifed files.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return DataResponse
+	 */
+	public function getRecentFiles() {
+		$nodes = $this->userFolder->getRecent(100);
+		$files = $this->formatNodes($nodes);
 		return new DataResponse(['files' => $files]);
 	}
 
@@ -186,7 +211,8 @@ class ApiController extends Controller {
 			\OCP\Share::SHARE_TYPE_USER,
 			\OCP\Share::SHARE_TYPE_GROUP,
 			\OCP\Share::SHARE_TYPE_LINK,
-			\OCP\Share::SHARE_TYPE_REMOTE
+			\OCP\Share::SHARE_TYPE_REMOTE,
+			\OCP\Share::SHARE_TYPE_EMAIL
 		];
 		foreach ($requestedShareTypes as $requestedShareType) {
 			// one of each type is enough to find out about the types

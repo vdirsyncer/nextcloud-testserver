@@ -33,6 +33,8 @@ namespace OC\Security\CSRF;
 class CsrfToken {
 	/** @var string */
 	private $value;
+	/** @var string */
+	private $encryptedValue = '';
 
 	/**
 	 * @param string $value Value of the token. Can be encrypted or not encrypted.
@@ -48,8 +50,12 @@ class CsrfToken {
 	 * @return string
 	 */
 	public function getEncryptedValue() {
-		$sharedSecret = base64_encode(random_bytes(strlen($this->value)));
-		return base64_encode($this->value ^ $sharedSecret) .':'.$sharedSecret;
+		if($this->encryptedValue === '') {
+			$sharedSecret = random_bytes(strlen($this->value));
+			$this->encryptedValue = base64_encode($this->value ^ $sharedSecret) . ':' . base64_encode($sharedSecret);
+		}
+
+		return $this->encryptedValue;
 	}
 
 	/**
@@ -65,6 +71,6 @@ class CsrfToken {
 		}
 		$obfuscatedToken = $token[0];
 		$secret = $token[1];
-		return base64_decode($obfuscatedToken) ^ $secret;
+		return base64_decode($obfuscatedToken) ^ base64_decode($secret);
 	}
 }

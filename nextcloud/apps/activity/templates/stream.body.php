@@ -23,8 +23,9 @@
  *
  */
 script('activity', [
-	'formatter',
-	'script'
+	'richObjectStringParser',
+	'script',
+	'feedSettings',
 ]);
 style('activity', 'style');
 ?>

@@ -79,6 +79,17 @@ $(document).ready(function() {
 			form.append(input);
 		}
 
+		// Add redirect_url
+		var redirectURL = getURLParameter('redirect_url');
+		if (redirectURL) {
+			var redirectURLInput = $('<input type="hidden">');
+			redirectURLInput.attr({
+				name: 'redirect_url',
+				value: redirectURL
+			});
+			form.append(redirectURLInput);
+		}
+
 		// Submit the form
 		form.appendTo(document.body);
 		form.submit();
@@ -103,7 +114,7 @@ $(document).ready(function() {
 	}
 
 	$('#adminpass').strengthify({
-		zxcvbn: OC.linkTo('core','vendor/zxcvbn/zxcvbn.js'),
+		zxcvbn: OC.linkTo('core','vendor/zxcvbn/dist/zxcvbn.js'),
 		titles: [
 			t('core', 'Very weak password'),
 			t('core', 'Weak password'),

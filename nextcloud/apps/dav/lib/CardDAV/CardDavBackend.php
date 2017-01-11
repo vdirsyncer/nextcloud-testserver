@@ -33,6 +33,8 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCA\DAV\DAV\Sharing\Backend;
 use OCA\DAV\DAV\Sharing\IShareable;
 use OCP\IDBConnection;
+use OCP\IUser;
+use OCP\IUserManager;
 use PDO;
 use Sabre\CardDAV\Backend\BackendInterface;
 use Sabre\CardDAV\Backend\SyncSupport;
@@ -45,6 +47,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
 class CardDavBackend implements BackendInterface, SyncSupport {
+
+	const PERSONAL_ADDRESSBOOK_URI = 'contacts';
+	const PERSONAL_ADDRESSBOOK_NAME = 'Contacts';
 
 	/** @var Principal */
 	private $principalBackend;
@@ -66,6 +71,14 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			'BDAY', 'UID', 'N', 'FN', 'TITLE', 'ROLE', 'NOTE', 'NICKNAME',
 			'ORG', 'CATEGORIES', 'EMAIL', 'TEL', 'IMPP', 'ADR', 'URL', 'GEO', 'CLOUD');
 
+	/**
+	 * @var string[] Map of uid => display name
+	 */
+	protected $userDisplayNames;
+
+	/** @var IUserManager */
+	private $userManager;
+
 	/** @var EventDispatcherInterface */
 	private $dispatcher;
 
@@ -74,15 +87,34 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 	 *
 	 * @param IDBConnection $db
 	 * @param Principal $principalBackend
+	 * @param IUserManager $userManager
 	 * @param EventDispatcherInterface $dispatcher
 	 */
 	public function __construct(IDBConnection $db,
 								Principal $principalBackend,
+								IUserManager $userManager,
 								EventDispatcherInterface $dispatcher = null) {
 		$this->db = $db;
 		$this->principalBackend = $principalBackend;
+		$this->userManager = $userManager;
 		$this->dispatcher = $dispatcher;
 		$this->sharingBackend = new Backend($this->db, $principalBackend, 'addressbook');
+	}
+
+	/**
+	 * Return the number of address books for a principal
+	 *
+	 * @param $principalUri
+	 * @return int
+	 */
+	public function getAddressBooksForUserCount($principalUri) {
+		$principalUri = $this->convertPrincipal($principalUri, true);
+		$query = $this->db->getQueryBuilder();
+		$query->select($query->createFunction('COUNT(*)'))
+			->from('addressbooks')
+			->where($query->expr()->eq('principaluri', $query->createNamedParameter($principalUri)));
+
+		return (int)$query->execute()->fetchColumn();
 	}
 
 	/**
@@ -143,7 +175,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		while($row = $result->fetch()) {
 			list(, $name) = URLUtil::splitPath($row['principaluri']);
 			$uri = $row['uri'] . '_shared_by_' . $name;
-			$displayName = $row['displayname'] . "($name)";
+			$displayName = $row['displayname'] . ' (' . $this->getUserDisplayName($name) . ')';
 			if (!isset($addressBooks[$row['id']])) {
 				$addressBooks[$row['id']] = [
 					'id'  => $row['id'],
@@ -161,6 +193,20 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		$result->closeCursor();
 
 		return array_values($addressBooks);
+	}
+
+	private function getUserDisplayName($uid) {
+		if (!isset($this->userDisplayNames[$uid])) {
+			$user = $this->userManager->get($uid);
+
+			if ($user instanceof IUser) {
+				$this->userDisplayNames[$uid] = $user->getDisplayName();
+			} else {
+				$this->userDisplayNames[$uid] = $uid;
+			}
+		}
+
+		return $this->userDisplayNames[$uid];
 	}
 
 	/**
@@ -439,23 +485,30 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 	 * @return array
 	 */
 	function getMultipleCards($addressBookId, array $uris) {
+		if (empty($uris)) {
+			return [];
+		}
+
+		$chunks = array_chunk($uris, 100);
+		$cards = [];
+
 		$query = $this->db->getQueryBuilder();
 		$query->select(['id', 'uri', 'lastmodified', 'etag', 'size', 'carddata'])
 			->from('cards')
 			->where($query->expr()->eq('addressbookid', $query->createNamedParameter($addressBookId)))
-			->andWhere($query->expr()->in('uri', $query->createParameter('uri')))
-			->setParameter('uri', $uris, IQueryBuilder::PARAM_STR_ARRAY);
+			->andWhere($query->expr()->in('uri', $query->createParameter('uri')));
 
-		$cards = [];
+		foreach ($chunks as $uris) {
+			$query->setParameter('uri', $uris, IQueryBuilder::PARAM_STR_ARRAY);
+			$result = $query->execute();
 
-		$result = $query->execute();
-		while($row = $result->fetch()) {
-			$row['etag'] = '"' . $row['etag'] . '"';
-			$row['carddata'] = $this->readBlob($row['carddata']);
-			$cards[] = $row;
+			while ($row = $result->fetch()) {
+				$row['etag'] = '"' . $row['etag'] . '"';
+				$row['carddata'] = $this->readBlob($row['carddata']);
+				$cards[] = $row;
+			}
+			$result->closeCursor();
 		}
-		$result->closeCursor();
-
 		return $cards;
 	}
 
@@ -904,7 +957,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 				]
 			);
 
-		foreach ($vCard->children as $property) {
+		foreach ($vCard->children() as $property) {
 			if(!in_array($property->name, self::$indexProperties)) {
 				continue;
 			}

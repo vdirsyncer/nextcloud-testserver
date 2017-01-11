@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Nextcloud Deployment Recommendations &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Nextcloud Deployment Recommendations &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Installation Wizard" href="installation_wizard.html" />
+    <link rel="next" title="Manual Installation on Linux" href="source_installation.html" />
     <link rel="prev" title="System Requirements" href="system_requirements.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Nextcloud Deployment Recommendations</a><ul>
@@ -83,16 +82,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
 <li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -120,7 +119,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="installation_wizard.html" title="Next Chapter: Installation Wizard"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
+    <a href="source_installation.html" title="Next Chapter: Manual Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Manual Instal... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -145,11 +144,13 @@ keep individual Nextcloud instances to a manageable size.</p>
 <li>Operating system: Linux.</li>
 <li>Web server: Apache 2.4.</li>
 <li>Database: MySQL/MariaDB.</li>
-<li>PHP 5.5+. PHP 5.4 is the minimum supported version; note that it reached
-end-of-life in September 2015 and is no longer supported by the PHP team.
-Some Linux vendors, such as Red Hat, still support PHP 5.4.
-5.6+ is recommended. <code class="docutils literal"><span class="pre">mod_php</span></code> is the recommended Apache module because it
-provides the best performance.</li>
+<li>PHP 5.6+. PHP 5.6 is the minimum supported version. We recommend to deploy
+on PHP 7 if possible. This version is known to offer significan performance
+advantages. <code class="docutils literal"><span class="pre">mod_php</span></code> is the recommended Apache module due to
+vendor support and ease of configuration. <code class="docutils literal"><span class="pre">php-fpm</span></code> with Apache Event
+MPM (or nginx) is an alternative with potentially better scalability in
+high load and limited RAM environments. For the best results we recommend
+working with the Nextcloud GmbH enterprise suppor team for large deployments.</li>
 </ul>
 </div>
 <div class="section" id="small-workgroups-or-departments">
@@ -233,7 +234,7 @@ Mount DB partitions with the &#8220;nodatacow&#8221; option to prevent fragmenta
 <li>Start Apache.</li>
 </ul>
 <p class="last">Then optionally rsync to a backup storage or tape backup. (See the
-<a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/maintenance/index.html">Maintenance</a> section of the Administration manual for tips on backups
+<a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/maintenance/index.html">Maintenance</a> section of the Administration manual for tips on backups
 and restores.)</p>
 </dd>
 </dl>
@@ -241,7 +242,7 @@ and restores.)</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory servers. (See
-<a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a> for information on configuring Nextcloud to
+<a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a> for information on configuring Nextcloud to
 use LDAP and AD.)</p>
 </dd>
 </dl>
@@ -261,7 +262,7 @@ for example:
 <li><dl class="first docutils">
 <dt>Memory Caching</dt>
 <dd><p class="first last">A memcache speeds up server performance, and Nextcloud supports four
-memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
+memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
 selecting and configuring a memcache.</p>
 </dd>
 </dl>
@@ -269,13 +270,6 @@ selecting and configuring a memcache.</p>
 <li><dl class="first docutils">
 <dt>Storage</dt>
 <dd><p class="first last">Local storage.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Nextcloud Edition</dt>
-<dd><p class="first last">Standard Edition. (See <a class="reference external" href="https://nextcloud.com/enterprise/">Nextcloud Server or Enterprise Edition</a> for
-comparisons of the Nextcloud editions.)</p>
 </dd>
 </dl>
 </li>
@@ -377,7 +371,7 @@ be replicated to a backup MySQL/MariaDB slave instance.</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory servers.
-(See <a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>  for information on configuring
+(See <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>  for information on configuring
 Nextcloud to use LDAP and AD.)</p>
 </dd>
 </dl>
@@ -404,7 +398,7 @@ for example:
 <li><dl class="first docutils">
 <dt>Memory Caching</dt>
 <dd><p class="first last">A memcache speeds up server performance, and Nextcloud supports four
-memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
+memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
 selecting and configuring a memcache.</p>
 </dd>
 </dl>
@@ -413,13 +407,6 @@ selecting and configuring a memcache.</p>
 <dt>Storage</dt>
 <dd><p class="first last">Use an off-the-shelf NFS solution, such as IBM Elastic Storage or RedHat
 Ceph.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Nextcloud Edition</dt>
-<dd><p class="first last">Enterprise Edition. (See <a class="reference external" href="https://nextcloud.com/enterprise/">Nextcloud Server or Enterprise Edition</a> for
-comparisons of the Nextcloud editions.)</p>
 </dd>
 </dl>
 </li>
@@ -518,7 +505,7 @@ be replicated to a backup MySQL/MariaDB slave instance.</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory
-servers, or SAML/Shibboleth. (See <a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>.)</p>
+servers, or SAML/Shibboleth. (See <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>.)</p>
 </dd>
 </dl>
 </li>
@@ -537,7 +524,7 @@ optimal scalability.</p>
 </li>
 <li><dl class="first docutils">
 <dt>Caching</dt>
-<dd><p class="first last">Redis for distributed in-memory caching (see <a class="reference external" href="https://docs.nextcloud.org/server/10/admin_manual/configuration_server/caching_configuration.html">Configuring Memory
+<dd><p class="first last">Redis for distributed in-memory caching (see <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory
 Caching</a>).</p>
 </dd>
 </dl>
@@ -547,13 +534,6 @@ Caching</a>).</p>
 <dd><p class="first last">An off-the-shelf NFS solution should be used. Examples are IBM Elastic
 Storage or RedHAT Ceph. Optionally, an S3 compatible object store can also
 be used.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Nextcloud Edition</dt>
-<dd><p class="first last">Enterprise Edition. (See <a class="reference external" href="https://nextcloud.com/enterprise/">Nextcloud Server or Enterprise Edition</a> for
-comparisons of the Nextcloud editions.)</p>
 </dd>
 </dl>
 </li>
@@ -697,7 +677,7 @@ used to scale-out shibd session storage (see <a class="reference external" href=
     </a>
   </li>
   <li class="next">
-    <a href="installation_wizard.html" title="Next Chapter: Installation Wizard"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
+    <a href="source_installation.html" title="Next Chapter: Manual Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Manual Instal... &raquo;</span>
     </a>
   </li>
 </ul>

@@ -44,9 +44,12 @@ use OC\AppFramework\Middleware\Security\SecurityMiddleware;
 use OC\AppFramework\Middleware\SessionMiddleware;
 use OC\AppFramework\Utility\SimpleContainer;
 use OC\Core\Middleware\TwoFactorMiddleware;
+use OC\RichObjectStrings\Validator;
 use OCP\AppFramework\IApi;
 use OCP\AppFramework\IAppContainer;
-
+use OCP\Files\IAppData;
+use OCP\Files\Mount\IMountManager;
+use OCP\RichObjectStrings\IValidator;
 
 class DIContainer extends SimpleContainer implements IAppContainer {
 
@@ -94,6 +97,9 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 
 		$this->registerService('OCP\\Activity\\IManager', function($c) {
 			return $this->getServer()->getActivityManager();
+		});
+		$this->registerService(\OCP\Activity\IEventMerger::class, function($c) {
+			return $this->getServer()->query(\OCP\Activity\IEventMerger::class);
 		});
 
 		$this->registerService('OCP\\ICache', function($c) {
@@ -160,8 +166,16 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 			return $this->getServer()->getRootFolder();
 		});
 
+		$this->registerService('OCP\\Files\\Folder', function() {
+			return $this->getServer()->getUserFolder();
+		});
+
 		$this->registerService('OCP\\Http\\Client\\IClientService', function($c) {
 			return $this->getServer()->getHTTPClientService();
+		});
+
+		$this->registerService(IAppData::class, function (SimpleContainer $c) {
+			return $this->getServer()->getAppDataDir($c->query('AppName'));
 		});
 
 		$this->registerService('OCP\\IGroupManager', function($c) {
@@ -279,6 +293,7 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 		$this->registerService('OCP\\IUserSession', function($c) {
 			return $this->getServer()->getUserSession();
 		});
+		$this->registerAlias(\OC\User\Session::class, \OCP\IUserSession::class);
 
 		$this->registerService('OCP\\ISession', function($c) {
 			return $this->getServer()->getSession();
@@ -304,6 +319,9 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 		$this->registerService('OCP\\AppFramework\\IAppContainer', function ($c) {
 			return $c;
 		});
+		$this->registerService(IMountManager::class, function () {
+			return $this->getServer()->getMountManager();
+		});
 
 		// commonly used attributes
 		$this->registerService('UserId', function ($c) {
@@ -316,6 +334,10 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 
 		$this->registerService('OCP\Encryption\IManager', function ($c) {
 			return $this->getServer()->getEncryptionManager();
+		});
+
+		$this->registerService(IValidator::class, function($c) {
+			return $c->query(Validator::class);
 		});
 
 
@@ -346,6 +368,12 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 			);
 		});
 
+		/**
+		 * App Framework default arguments
+		 */
+		$this->registerParameter('corsMethods', 'PUT, POST, GET, DELETE, PATCH');
+		$this->registerParameter('corsAllowedHeaders', 'Authorization, Content-Type, Accept');
+		$this->registerParameter('corsMaxAge', 1728000);
 
 		/**
 		 * Middleware
@@ -358,10 +386,13 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 				$app->getServer()->getNavigationManager(),
 				$app->getServer()->getURLGenerator(),
 				$app->getServer()->getLogger(),
+				$app->getServer()->getSession(),
 				$c['AppName'],
 				$app->isLoggedIn(),
 				$app->isAdminUser(),
-				$app->getServer()->getContentSecurityPolicyManager()
+				$app->getServer()->getContentSecurityPolicyManager(),
+				$app->getServer()->getCsrfTokenManager(),
+				$app->getServer()->getContentSecurityPolicyNonceManager()
 			);
 		});
 
@@ -402,6 +433,7 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 		$this->registerService('MiddlewareDispatcher', function($c) use (&$middleWares) {
 			$dispatcher = new MiddlewareDispatcher();
 			$dispatcher->registerMiddleware($c['CORSMiddleware']);
+			$dispatcher->registerMiddleware($c['OCSMiddleware']);
 			$dispatcher->registerMiddleware($c['SecurityMiddleware']);
 			$dispatcher->registerMiddleWare($c['TwoFactorMiddleware']);
 
@@ -410,7 +442,6 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 			}
 
 			$dispatcher->registerMiddleware($c['SessionMiddleware']);
-			$dispatcher->registerMiddleware($c['OCSMiddleware']);
 			return $dispatcher;
 		});
 
@@ -507,6 +538,9 @@ class DIContainer extends SimpleContainer implements IAppContainer {
 		$this->query('OC\CapabilitiesManager')->registerCapability(function() use ($serviceName) {
 			return $this->query($serviceName);
 		});
+	}
 
+	public function query($name) {
+		return parent::query($name);
 	}
 }

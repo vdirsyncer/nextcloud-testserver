@@ -28,6 +28,8 @@ interface IToken extends JsonSerializable {
 
 	const TEMPORARY_TOKEN = 0;
 	const PERMANENT_TOKEN = 1;
+	const DO_NOT_REMEMBER = 0;
+	const REMEMBER = 1;
 
 	/**
 	 * Get the token ID
@@ -65,9 +67,30 @@ interface IToken extends JsonSerializable {
 	public function getLastCheck();
 
 	/**
-	 * Get the timestamp of the last password check
+	 * Set the timestamp of the last password check
 	 *
 	 * @param int $time
 	 */
 	public function setLastCheck($time);
+
+	/**
+	 * Get the authentication scope for this token
+	 *
+	 * @return string
+	 */
+	public function getScope();
+
+	/**
+	 * Get the authentication scope for this token
+	 *
+	 * @return array
+	 */
+	public function getScopeAsArray();
+
+	/**
+	 * Set the authentication scope for this token
+	 *
+	 * @param array $scope
+	 */
+	public function setScope($scope);
 }

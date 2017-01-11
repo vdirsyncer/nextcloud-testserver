@@ -21,13 +21,14 @@
  */
 namespace OCA\DAV;
 
-use OCA\DAV\CalDAV\BirthdayService;
 use OCA\DAV\CalDAV\CalDavBackend;
 use OCA\DAV\CardDAV\CardDavBackend;
 use OCA\DAV\CardDAV\SyncService;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Util;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 class HookManager {
 
@@ -46,14 +47,25 @@ class HookManager {
 	/** @var CardDavBackend */
 	private $cardDav;
 
+	/** @var array */
+	private $calendarsToDelete;
+
+	/** @var array */
+	private $addressBooksToDelete;
+
+	/** @var EventDispatcher */
+	private $eventDispatcher;
+
 	public function __construct(IUserManager $userManager,
 								SyncService $syncService,
 								CalDavBackend $calDav,
-								CardDavBackend $cardDav) {
+								CardDavBackend $cardDav,
+								EventDispatcher $eventDispatcher) {
 		$this->userManager = $userManager;
 		$this->syncService = $syncService;
 		$this->calDav = $calDav;
 		$this->cardDav = $cardDav;
+		$this->eventDispatcher = $eventDispatcher;
 	}
 
 	public function setup() {
@@ -73,10 +85,6 @@ class HookManager {
 			'changeUser',
 			$this,
 			'changeUser');
-		Util::connectHook('OC_User',
-			'post_login',
-			$this,
-			'postLogin');
 	}
 
 	public function postCreateUser($params) {
@@ -85,13 +93,25 @@ class HookManager {
 	}
 
 	public function preDeleteUser($params) {
-		$this->usersToDelete[$params['uid']] = $this->userManager->get($params['uid']);
+		$uid = $params['uid'];
+		$this->usersToDelete[$uid] = $this->userManager->get($uid);
+		$this->calendarsToDelete = $this->calDav->getUsersOwnCalendars('principals/users/' . $uid);
+		$this->addressBooksToDelete = $this->cardDav->getAddressBooksForUser('principals/users/' . $uid);
 	}
 
 	public function postDeleteUser($params) {
 		$uid = $params['uid'];
 		if (isset($this->usersToDelete[$uid])){
 			$this->syncService->deleteUser($this->usersToDelete[$uid]);
+		}
+
+		foreach ($this->calendarsToDelete as $calendar) {
+			$this->calDav->deleteCalendar($calendar['id']);
+		}
+		$this->calDav->deleteAllSharesByUser('principals/users/' . $uid);
+
+		foreach ($this->addressBooksToDelete as $addressBook) {
+			$this->cardDav->deleteAddressBook($addressBook['id']);
 		}
 	}
 
@@ -100,24 +120,23 @@ class HookManager {
 		$this->syncService->updateUser($user);
 	}
 
-	public function postLogin($params) {
-		$user = $this->userManager->get($params['uid']);
+	public function firstLogin(IUser $user = null) {
 		if (!is_null($user)) {
 			$principal = 'principals/users/' . $user->getUID();
-			$calendars = $this->calDav->getCalendarsForUser($principal);
-			if (empty($calendars) || (count($calendars) === 1 && $calendars[0]['uri'] === BirthdayService::BIRTHDAY_CALENDAR_URI)) {
+			if ($this->calDav->getCalendarsForUserCount($principal) === 0) {
 				try {
-					$this->calDav->createCalendar($principal, 'personal', [
-						'{DAV:}displayname' => 'Personal']);
+					$this->calDav->createCalendar($principal, CalDavBackend::PERSONAL_CALENDAR_URI, [
+						'{DAV:}displayname' => CalDavBackend::PERSONAL_CALENDAR_NAME,
+					]);
 				} catch (\Exception $ex) {
 					\OC::$server->getLogger()->logException($ex);
 				}
 			}
-			$books = $this->cardDav->getAddressBooksForUser($principal);
-			if (empty($books)) {
+			if ($this->cardDav->getAddressBooksForUserCount($principal) === 0) {
 				try {
-					$this->cardDav->createAddressBook($principal, 'contacts', [
-						'{DAV:}displayname' => 'Contacts']);
+					$this->cardDav->createAddressBook($principal, CardDavBackend::PERSONAL_ADDRESSBOOK_URI, [
+						'{DAV:}displayname' => CardDavBackend::PERSONAL_ADDRESSBOOK_NAME,
+					]);
 				} catch (\Exception $ex) {
 					\OC::$server->getLogger()->logException($ex);
 				}

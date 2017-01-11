@@ -26,6 +26,7 @@ namespace OC\Comments;
 use Doctrine\DBAL\Exception\DriverException;
 use OCP\Comments\CommentsEvent;
 use OCP\Comments\IComment;
+use OCP\Comments\ICommentsEventHandler;
 use OCP\Comments\ICommentsManager;
 use OCP\Comments\NotFoundException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -33,7 +34,6 @@ use OCP\IDBConnection;
 use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IUser;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Manager implements ICommentsManager {
 
@@ -46,11 +46,17 @@ class Manager implements ICommentsManager {
 	/** @var IConfig */
 	protected $config;
 
-	/** @var EventDispatcherInterface */
-	protected $dispatcher;
-
 	/** @var IComment[]  */
 	protected $commentsCache = [];
+
+	/** @var  \Closure[] */
+	protected $eventHandlerClosures = [];
+
+	/** @var  ICommentsEventHandler[] */
+	protected $eventHandlers = [];
+
+	/** @var \Closure[] */
+	protected $displayNameResolvers = [];
 
 	/**
 	 * Manager constructor.
@@ -58,18 +64,15 @@ class Manager implements ICommentsManager {
 	 * @param IDBConnection $dbConn
 	 * @param ILogger $logger
 	 * @param IConfig $config
-	 * @param EventDispatcherInterface $dispatcher
 	 */
 	public function __construct(
 		IDBConnection $dbConn,
 		ILogger $logger,
-		IConfig $config,
-		EventDispatcherInterface $dispatcher
+		IConfig $config
 	) {
 		$this->dbConn = $dbConn;
 		$this->logger = $logger;
 		$this->config = $config;
-		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -455,10 +458,7 @@ class Manager implements ICommentsManager {
 		}
 
 		if ($affectedRows > 0 && $comment instanceof IComment) {
-			$this->dispatcher->dispatch(CommentsEvent::EVENT_DELETE, new CommentsEvent(
-				CommentsEvent::EVENT_DELETE,
-				$comment
-			));
+			$this->sendEvent(CommentsEvent::EVENT_DELETE, $comment);
 		}
 
 		return ($affectedRows > 0);
@@ -525,12 +525,8 @@ class Manager implements ICommentsManager {
 
 		if ($affectedRows > 0) {
 			$comment->setId(strval($qb->getLastInsertId()));
+			$this->sendEvent(CommentsEvent::EVENT_ADD, $comment);
 		}
-
-		$this->dispatcher->dispatch(CommentsEvent::EVENT_ADD, new CommentsEvent(
-			CommentsEvent::EVENT_ADD,
-			$comment
-		));
 
 		return $affectedRows > 0;
 	}
@@ -543,6 +539,12 @@ class Manager implements ICommentsManager {
 	 * @throws NotFoundException
 	 */
 	protected function update(IComment $comment) {
+		// for properly working preUpdate Events we need the old comments as is
+		// in the DB and overcome caching. Also avoid that outdated information stays.
+		$this->uncache($comment->getId());
+		$this->sendEvent(CommentsEvent::EVENT_PRE_UPDATE, $this->get($comment->getId()));
+		$this->uncache($comment->getId());
+
 		$qb = $this->dbConn->getQueryBuilder();
 		$affectedRows = $qb
 			->update('comments')
@@ -565,10 +567,7 @@ class Manager implements ICommentsManager {
 			throw new NotFoundException('Comment to update does ceased to exist');
 		}
 
-		$this->dispatcher->dispatch(CommentsEvent::EVENT_UPDATE, new CommentsEvent(
-			CommentsEvent::EVENT_UPDATE,
-			$comment
-		));
+		$this->sendEvent(CommentsEvent::EVENT_UPDATE, $comment);
 
 		return $affectedRows > 0;
 	}
@@ -750,5 +749,96 @@ class Manager implements ICommentsManager {
 			return false;
 		}
 		return ($affectedRows > 0);
+	}
+
+	/**
+	 * registers an Entity to the manager, so event notifications can be send
+	 * to consumers of the comments infrastructure
+	 *
+	 * @param \Closure $closure
+	 */
+	public function registerEventHandler(\Closure $closure) {
+		$this->eventHandlerClosures[] = $closure;
+		$this->eventHandlers = [];
+	}
+
+	/**
+	 * registers a method that resolves an ID to a display name for a given type
+	 *
+	 * @param string $type
+	 * @param \Closure $closure
+	 * @throws \OutOfBoundsException
+	 * @since 11.0.0
+	 *
+	 * Only one resolver shall be registered per type. Otherwise a
+	 * \OutOfBoundsException has to thrown.
+	 */
+	public function registerDisplayNameResolver($type, \Closure $closure) {
+		if(!is_string($type)) {
+			throw new \InvalidArgumentException('String expected.');
+		}
+		if(isset($this->displayNameResolvers[$type])) {
+			throw new \OutOfBoundsException('Displayname resolver for this type already registered');
+		}
+		$this->displayNameResolvers[$type] = $closure;
+	}
+
+	/**
+	 * resolves a given ID of a given Type to a display name.
+	 *
+	 * @param string $type
+	 * @param string $id
+	 * @return string
+	 * @throws \OutOfBoundsException
+	 * @since 11.0.0
+	 *
+	 * If a provided type was not registered, an \OutOfBoundsException shall
+	 * be thrown. It is upon the resolver discretion what to return of the
+	 * provided ID is unknown. It must be ensured that a string is returned.
+	 */
+	public function resolveDisplayName($type, $id) {
+		if(!is_string($type)) {
+			throw new \InvalidArgumentException('String expected.');
+		}
+		if(!isset($this->displayNameResolvers[$type])) {
+			throw new \OutOfBoundsException('No Displayname resolver for this type registered');
+		}
+		return (string)$this->displayNameResolvers[$type]($id);
+	}
+
+	/**
+	 * returns valid, registered entities
+	 *
+	 * @return \OCP\Comments\ICommentsEventHandler[]
+	 */
+	private function getEventHandlers() {
+		if(!empty($this->eventHandlers)) {
+			return $this->eventHandlers;
+		}
+
+		$this->eventHandlers = [];
+		foreach ($this->eventHandlerClosures as $name => $closure) {
+			$entity = $closure();
+			if (!($entity instanceof ICommentsEventHandler)) {
+				throw new \InvalidArgumentException('The given entity does not implement the ICommentsEntity interface');
+			}
+			$this->eventHandlers[$name] = $entity;
+		}
+
+		return $this->eventHandlers;
+	}
+
+	/**
+	 * sends notifications to the registered entities
+	 *
+	 * @param $eventType
+	 * @param IComment $comment
+	 */
+	private function sendEvent($eventType, IComment $comment) {
+		$entities = $this->getEventHandlers();
+		$event = new CommentsEvent($eventType, $comment);
+		foreach ($entities as $entity) {
+			$entity->handle($event);
+		}
 	}
 }

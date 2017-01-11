@@ -4,6 +4,7 @@
  *
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Bernhard Posselt <dev@bernhard-posselt.com>
+ * @author Felix Anand Epp <work@felixepp.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -71,7 +72,7 @@ class Router implements IRouter {
 	public function __construct(ILogger $logger) {
 		$this->logger = $logger;
 		$baseUrl = \OC::$WEBROOT;
-		if(!(getenv('front_controller_active') === 'true')) {
+		if(!(\OC::$server->getConfig()->getSystemValue('htaccess.IgnoreFrontController', false) === true || getenv('front_controller_active') === 'true')) {
 			$baseUrl = \OC::$server->getURLGenerator()->linkTo('', 'index.php');
 		}
 		if (!\OC::$CLI) {
@@ -154,7 +155,7 @@ class Router implements IRouter {
 
 				// Also add the OCS collection
 				$collection = $this->getCollection($app.'.ocs');
-				$collection->addPrefix('/ocsapp/apps/' . $app);
+				$collection->addPrefix('/ocsapp');
 				$this->root->addCollection($collection);
 			}
 		}
@@ -163,6 +164,11 @@ class Router implements IRouter {
 			$this->useCollection('root');
 			require_once __DIR__ . '/../../../settings/routes.php';
 			require_once __DIR__ . '/../../../core/routes.php';
+
+			// Also add the OCS collection
+			$collection = $this->getCollection('root.ocs');
+			$collection->addPrefix('/ocsapp');
+			$this->root->addCollection($collection);
 		}
 		if ($this->loaded) {
 			// include ocs routes, must be loaded last for /ocs prefix

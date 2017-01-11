@@ -5,6 +5,12 @@ input, textarea, select, button {
 	font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
 }
 
+.select2-container-multi .select2-choices .select2-search-field input,
+.select2-search input,
+.ui-widget {
+	font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif !important;
+}
+
 input[type="text"],
 input[type="password"],
 input[type="search"],
@@ -215,17 +221,157 @@ select:hover {
 	background-color: #fefefe;
 }
 
-.select2-choices {
-	border: 1px solid #ddd;
+
+/* select2 adjustments */
+#select2-drop {
+	margin-top: -2px;
+}
+#select2-drop.select2-drop-active {
+	border-color: #ddd;
+}
+#select2-drop .avatar {
+	display: inline-block;
+	margin-right: 8px;
+	vertical-align: middle;
+}
+#select2-drop .avatar img,
+.select2-chosen .avatar img,
+#select2-drop .avatar,
+.select2-chosen .avatar {
+	cursor: pointer;
+}
+#select2-drop .select2-search input {
+	width: calc(100% - 14px);
+	min-height: auto;
+	background: url('../img/actions/search.svg') no-repeat right center !important;
+	background-origin: content-box !important;
+}
+#select2-drop .select2-results {
+	max-height: 250px;
+	margin: 0;
+	padding: 0;
+}
+#select2-drop .select2-results .select2-result-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+#select2-drop .select2-results .select2-result-label span {
+	cursor: pointer;
+}
+#select2-drop .select2-results .select2-result,
+#select2-drop .select2-results .select2-no-results,
+#select2-drop .select2-results .select2-searching {
+	position: relative;
+	display: list-item;
+	padding: 12px;
+	background-color: #fff;
+	cursor: pointer;
+	color: #222;
+}
+#select2-drop .select2-results .select2-result.select2-selected {
+	background-color: #f8f8f8;
+}
+#select2-drop .select2-results .select2-result.select2-highlighted {
+	background-color: #f8f8f8;
+	color: #000;
+}
+
+.select2-container-multi .select2-choices,
+.select2-container-multi.select2-container-active .select2-choices,
+.select2-container .select2-choice {
+	box-shadow: none;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	background: #fff;
+	color: #555;
+	box-sizing: content-box;
 	border-radius: 3px;
-	color: #333;
+	border: 1px solid #ddd;
+	margin: 0;
+	padding: 2px 0;
+	min-height: auto;
+}
+.select2-container-multi .select2-choices .select2-search-choice,
+.select2-container-multi.select2-container-active .select2-choices .select2-search-choice,
+.select2-container .select2-choice .select2-search-choice {
+	line-height: 20px;
+	padding-left: 5px;
 	background-image: none;
+	background-color: #f8f8f8;
+	border-color: #f8f8f8;
 }
-.select2-dropdown-open .select2-choices {
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
-	border: 1px solid #3875d7;
+.select2-container-multi .select2-choices .select2-search-choice.select2-search-choice-focus, .select2-container-multi .select2-choices .select2-search-choice:hover,
+.select2-container-multi.select2-container-active .select2-choices .select2-search-choice.select2-search-choice-focus,
+.select2-container-multi.select2-container-active .select2-choices .select2-search-choice:hover,
+.select2-container .select2-choice .select2-search-choice.select2-search-choice-focus,
+.select2-container .select2-choice .select2-search-choice:hover {
+	background-color: #f0f0f0;
+	border-color: #f0f0f0;
 }
+.select2-container-multi .select2-choices .select2-search-choice .select2-search-choice-close,
+.select2-container-multi.select2-container-active .select2-choices .select2-search-choice .select2-search-choice-close,
+.select2-container .select2-choice .select2-search-choice .select2-search-choice-close {
+	display: none;
+}
+.select2-container-multi .select2-choices .select2-search-field input,
+.select2-container-multi.select2-container-active .select2-choices .select2-search-field input,
+.select2-container .select2-choice .select2-search-field input {
+	line-height: 20px;
+}
+
+.select2-container {
+	margin: 3px 3px 3px 0;
+}
+.select2-container.select2-container-multi .select2-choices {
+	display: flex;
+	flex-wrap: wrap;
+}
+.select2-container.select2-container-multi .select2-choices li {
+	float: none;
+}
+.select2-container .select2-choice {
+	padding-left: 38px;
+}
+.select2-container .select2-choice .select2-arrow {
+	background: none;
+	border-radius: 0;
+	border: none;
+}
+.select2-container .select2-choice .select2-arrow b {
+	background: url('../img/actions/triangle-s.svg') no-repeat center !important;
+	opacity: .5;
+}
+.select2-container .select2-choice:hover .select2-arrow b,
+.select2-container .select2-choice:focus .select2-arrow b,
+.select2-container .select2-choice:active .select2-arrow b {
+	opacity: .7;
+}
+
+
+/* jQuery UI fixes */
+.ui-menu {
+	padding: 0;
+}
+.ui-menu .ui-menu-item a.ui-state-focus, .ui-menu .ui-menu-item a.ui-state-active {
+    font-weight: inherit;
+    margin: 0;
+}
+.ui-widget-content {
+	background: #fff;
+	border-top: none;
+}
+.ui-corner-all {
+	border-radius: 0;
+	border-bottom-left-radius: 3px;
+	border-bottom-right-radius: 3px;
+}
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+    border: none;
+    background: #f8f8f8;
+}
+
+
 
 /* correctly align images inside of buttons */
 input img, button img, .button img {
@@ -296,7 +442,7 @@ input:disabled+label, input:disabled:hover+label, input:disabled:focus+label {
 .primary, input[type="submit"].primary, input[type="button"].primary, button.primary, .button.primary {
 	border: 1px solid #0082c9;
 	background-color: #00a2e9;
-	color: #ddd;
+	color: #fff;
 }
 .primary:hover, input[type="submit"].primary:hover, input[type="button"].primary:hover, button.primary:hover, .button.primary:hover,
 .primary:focus, input[type="submit"].primary:focus, input[type="button"].primary:focus, button.primary:focus, .button.primary:focus {

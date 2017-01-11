@@ -27,12 +27,12 @@
 
 namespace OC;
 
-use OCP\Files\Folder;
+use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;
 use OCP\IAvatarManager;
+use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IUserManager;
-use OCP\Files\IRootFolder;
 use OCP\IL10N;
 
 /**
@@ -43,8 +43,8 @@ class AvatarManager implements IAvatarManager {
 	/** @var  IUserManager */
 	private $userManager;
 
-	/** @var  IRootFolder */
-	private $rootFolder;
+	/** @var IAppData */
+	private $appData;
 
 	/** @var IL10N */
 	private $l;
@@ -52,23 +52,29 @@ class AvatarManager implements IAvatarManager {
 	/** @var ILogger  */
 	private $logger;
 
+	/** @var IConfig */
+	private $config;
+
 	/**
 	 * AvatarManager constructor.
 	 *
 	 * @param IUserManager $userManager
-	 * @param IRootFolder $rootFolder
+	 * @param IAppData $appData
 	 * @param IL10N $l
 	 * @param ILogger $logger
+	 * @param IConfig $config
 	 */
 	public function __construct(
 			IUserManager $userManager,
-			IRootFolder $rootFolder,
+			IAppData $appData,
 			IL10N $l,
-			ILogger $logger) {
+			ILogger $logger,
+			IConfig $config) {
 		$this->userManager = $userManager;
-		$this->rootFolder = $rootFolder;
+		$this->appData = $appData;
 		$this->l = $l;
 		$this->logger = $logger;
+		$this->config = $config;
 	}
 
 	/**
@@ -85,15 +91,15 @@ class AvatarManager implements IAvatarManager {
 			throw new \Exception('user does not exist');
 		}
 
-		/*
-		 * Fix for #22119
-		 * Basically we do not want to copy the skeleton folder
-		 */
-		\OC\Files\Filesystem::initMountPoints($userId);
-		$dir = '/' . $userId;
-		/** @var Folder $folder */
-		$folder = $this->rootFolder->get($dir);
+		// sanitize userID - fixes casing issue (needed for the filesystem stuff that is done below)
+		$userId = $user->getUID();
 
-		return new Avatar($folder, $this->l, $user, $this->logger);
+		try {
+			$folder = $this->appData->getFolder($userId);
+		} catch (NotFoundException $e) {
+			$folder = $this->appData->newFolder($userId);
+		}
+
+		return new Avatar($folder, $this->l, $user, $this->logger, $this->config);
 	}
 }

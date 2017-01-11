@@ -28,12 +28,21 @@
 OC_JSON::checkAdminUser();
 OCP\JSON::callCheck();
 
+$lastConfirm = (int) \OC::$server->getSession()->get('last-password-confirm');
+if ($lastConfirm < (time() - 30 * 60 + 15)) { // allow 15 seconds delay
+	$l = \OC::$server->getL10N('core');
+	OC_JSON::error(array( 'data' => array( 'message' => $l->t('Password confirmation is required'))));
+	exit();
+}
+
 $groups = isset($_POST['groups']) ? (array)$_POST['groups'] : null;
 
 try {
-	$app = OC_App::cleanAppId((string)$_POST['appid']);
-	OC_App::enable($app, $groups);
-	OC_JSON::success(['data' => ['update_required' => \OC_App::shouldUpgrade($app)]]);
+	$app = new OC_App();
+	$appId = (string)$_POST['appid'];
+	$appId = OC_App::cleanAppId($appId);
+	$app->enable($appId, $groups);
+	OC_JSON::success(['data' => ['update_required' => \OC_App::shouldUpgrade($appId)]]);
 } catch (Exception $e) {
 	\OCP\Util::writeLog('core', $e->getMessage(), \OCP\Util::ERROR);
 	OC_JSON::error(array("data" => array("message" => $e->getMessage()) ));

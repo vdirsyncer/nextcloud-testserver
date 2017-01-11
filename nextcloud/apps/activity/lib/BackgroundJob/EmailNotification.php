@@ -24,7 +24,6 @@
 namespace OCA\Activity\BackgroundJob;
 
 use OC\BackgroundJob\TimedJob;
-use OCA\Activity\AppInfo\Application;
 use OCA\Activity\MailQueueHandler;
 use OCP\IConfig;
 use OCP\ILogger;
@@ -54,32 +53,19 @@ class EmailNotification extends TimedJob {
 	 * @param MailQueueHandler $mailQueueHandler
 	 * @param IConfig $config
 	 * @param ILogger $logger
-	 * @param bool|null $isCLI
+	 * @param bool $isCLI
 	 */
-	public function __construct(MailQueueHandler $mailQueueHandler = null,
-								IConfig $config = null,
-								ILogger $logger = null,
-								$isCLI = null) {
+	public function __construct(MailQueueHandler $mailQueueHandler,
+								IConfig $config,
+								ILogger $logger,
+								$isCLI) {
 		// Run all 15 Minutes
 		$this->setInterval(15 * 60);
 
-		if ($mailQueueHandler === null || $config === null || $logger === null || $isCLI === null) {
-			$this->fixDIForJobs();
-		} else {
-			$this->mqHandler = $mailQueueHandler;
-			$this->config = $config;
-			$this->logger = $logger;
-			$this->isCLI = $isCLI;
-		}
-	}
-
-	protected function fixDIForJobs() {
-		$application = new Application();
-
-		$this->mqHandler = $application->getContainer()->query('MailQueueHandler');
-		$this->config = \OC::$server->getConfig();
-		$this->logger = \OC::$server->getLogger();
-		$this->isCLI = \OC::$CLI;
+		$this->mqHandler = $mailQueueHandler;
+		$this->config = $config;
+		$this->logger = $logger;
+		$this->isCLI = $isCLI;
 	}
 
 	protected function run($argument) {
@@ -122,6 +108,8 @@ class EmailNotification extends TimedJob {
 		// Send Email
 		$default_lang = $this->config->getSystemValue('default_language', 'en');
 		$defaultTimeZone = date_default_timezone_get();
+
+		$deleteItemsForUsers = [];
 		foreach ($affectedUsers as $user) {
 			if (empty($userEmails[$user])) {
 				// The user did not setup an email address
@@ -132,11 +120,15 @@ class EmailNotification extends TimedJob {
 
 			$language = (!empty($userLanguages[$user])) ? $userLanguages[$user] : $default_lang;
 			$timezone = (!empty($userTimezones[$user])) ? $userTimezones[$user] : $defaultTimeZone;
-			$this->mqHandler->sendEmailToUser($user, $userEmails[$user], $language, $timezone, $sendTime);
+			if ($this->mqHandler->sendEmailToUser($user, $userEmails[$user], $language, $timezone, $sendTime)) {
+				$deleteItemsForUsers[] = $user;
+			} else {
+				$this->logger->debug("Failed sending activity mail to user '" . $user . "'.", ['app' => 'activity']);
+			}
 		}
 
 		// Delete all entries we dealt with
-		$this->mqHandler->deleteSentItems($affectedUsers, $sendTime);
+		$this->mqHandler->deleteSentItems($deleteItemsForUsers, $sendTime);
 
 		return sizeof($affectedUsers);
 	}

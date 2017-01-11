@@ -28,12 +28,16 @@
 
 namespace OC\Files\Node;
 
+use OC\Cache\CappedMemoryCache;
 use OC\Files\Mount\Manager;
 use OC\Files\Mount\MountPoint;
+use OCP\Files\Config\IUserMountCache;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OC\Hooks\PublicEmitter;
 use OCP\Files\IRootFolder;
+use OCP\ILogger;
+use OCP\IUserManager;
 
 /**
  * Class Root
@@ -55,32 +59,43 @@ use OCP\Files\IRootFolder;
  * @package OC\Files\Node
  */
 class Root extends Folder implements IRootFolder {
-
-	/**
-	 * @var \OC\Files\Mount\Manager $mountManager
-	 */
+	/** @var Manager */
 	private $mountManager;
-
-	/**
-	 * @var \OC\Hooks\PublicEmitter
-	 */
+	/** @var PublicEmitter */
 	private $emitter;
-
-	/**
-	 * @var \OC\User\User $user
-	 */
+	/** @var null|\OC\User\User */
 	private $user;
+	/** @var CappedMemoryCache */
+	private $userFolderCache;
+	/** @var IUserMountCache */
+	private $userMountCache;
+	/** @var ILogger */
+	private $logger;
+	/** @var IUserManager */
+	private $userManager;
 
 	/**
 	 * @param \OC\Files\Mount\Manager $manager
 	 * @param \OC\Files\View $view
 	 * @param \OC\User\User|null $user
+	 * @param IUserMountCache $userMountCache
+	 * @param ILogger $logger
+	 * @param IUserManager $userManager
 	 */
-	public function __construct($manager, $view, $user) {
+	public function __construct($manager,
+								$view,
+								$user,
+								IUserMountCache $userMountCache,
+								ILogger $logger,
+								IUserManager $userManager) {
 		parent::__construct($this, $view, '');
 		$this->mountManager = $manager;
 		$this->user = $user;
 		$this->emitter = new PublicEmitter();
+		$this->userFolderCache = new CappedMemoryCache();
+		$this->userMountCache = $userMountCache;
+		$this->logger = $logger;
+		$this->userManager = $userManager;
 	}
 
 	/**
@@ -333,27 +348,49 @@ class Root extends Folder implements IRootFolder {
 	 *
 	 * @param String $userId user ID
 	 * @return \OCP\Files\Folder
+	 * @throws \OC\User\NoUserException
 	 */
 	public function getUserFolder($userId) {
-		\OC\Files\Filesystem::initMountPoints($userId);
-		$dir = '/' . $userId;
-		$folder = null;
+		$userObject = $this->userManager->get($userId);
 
-		try {
-			$folder = $this->get($dir);
-		} catch (NotFoundException $e) {
-			$folder = $this->newFolder($dir);
+		if (is_null($userObject)) {
+			$this->logger->error(
+				sprintf(
+					'Backends provided no user object for %s',
+					$userId
+				),
+				[
+					'app' => 'files',
+				]
+			);
+			throw new \OC\User\NoUserException('Backends provided no user object');
 		}
 
-		$dir = '/files';
-		try {
-			$folder = $folder->get($dir);
-		} catch (NotFoundException $e) {
-			$folder = $folder->newFolder($dir);
-			\OC_Util::copySkeleton($userId, $folder);
+		$userId = $userObject->getUID();
+
+		if (!$this->userFolderCache->hasKey($userId)) {
+			\OC\Files\Filesystem::initMountPoints($userId);
+
+			try {
+				$folder = $this->get('/' . $userId . '/files');
+			} catch (NotFoundException $e) {
+				if (!$this->nodeExists('/' . $userId)) {
+					$this->newFolder('/' . $userId);
+				}
+				$folder = $this->newFolder('/' . $userId . '/files');
+			}
+
+			$this->userFolderCache->set($userId, $folder);
 		}
 
-		return $folder;
+		return $this->userFolderCache->get($userId);
+	}
 
+	public function clearCache() {
+		$this->userFolderCache = new CappedMemoryCache();
+	}
+
+	public function getUserMountCache() {
+		return $this->userMountCache;
 	}
 }

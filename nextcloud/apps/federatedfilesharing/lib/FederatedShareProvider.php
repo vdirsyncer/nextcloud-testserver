@@ -27,6 +27,7 @@
 namespace OCA\FederatedFileSharing;
 
 use OC\Share20\Share;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -221,6 +222,8 @@ class FederatedShareProvider implements IShareProvider {
 			$token
 		);
 
+		$failure = false;
+
 		try {
 			$sharedByFederatedId = $share->getSharedBy();
 			if ($this->userManager->userExists($sharedByFederatedId)) {
@@ -238,17 +241,22 @@ class FederatedShareProvider implements IShareProvider {
 			);
 
 			if ($send === false) {
-				$message_t = $this->l->t('Sharing %s failed, could not find %s, maybe the server is currently unreachable.',
-					[$share->getNode()->getName(), $share->getSharedWith()]);
-				throw new \Exception($message_t);
+				$failure = true;
 			}
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to notify remote server of federated share, removing share (' . $e->getMessage() . ')');
+			$failure = true;
+		}
+
+		if($failure) {
 			$this->removeShareFromTableById($shareId);
-			throw $e;
+			$message_t = $this->l->t('Sharing %s failed, could not find %s, maybe the server is currently unreachable or uses a self-signed certificate.',
+				[$share->getNode()->getName(), $share->getSharedWith()]);
+			throw new \Exception($message_t);
 		}
 
 		return $shareId;
+
 	}
 
 	/**
@@ -561,6 +569,48 @@ class FederatedShareProvider implements IShareProvider {
 		// apps/files_sharing/lib/external/manager.php
 		// TODO move this code over to this app
 		return;
+	}
+
+
+	public function getSharesInFolder($userId, Folder $node, $reshares) {
+		$qb = $this->dbConnection->getQueryBuilder();
+		$qb->select('*')
+			->from('share', 's')
+			->andWhere($qb->expr()->orX(
+				$qb->expr()->eq('item_type', $qb->createNamedParameter('file')),
+				$qb->expr()->eq('item_type', $qb->createNamedParameter('folder'))
+			))
+			->andWhere(
+				$qb->expr()->eq('share_type', $qb->createNamedParameter(\OCP\Share::SHARE_TYPE_REMOTE))
+			);
+
+		/**
+		 * Reshares for this user are shares where they are the owner.
+		 */
+		if ($reshares === false) {
+			$qb->andWhere($qb->expr()->eq('uid_initiator', $qb->createNamedParameter($userId)));
+		} else {
+			$qb->andWhere(
+				$qb->expr()->orX(
+					$qb->expr()->eq('uid_owner', $qb->createNamedParameter($userId)),
+					$qb->expr()->eq('uid_initiator', $qb->createNamedParameter($userId))
+				)
+			);
+		}
+
+		$qb->innerJoin('s', 'filecache' ,'f', 's.file_source = f.fileid');
+		$qb->andWhere($qb->expr()->eq('f.parent', $qb->createNamedParameter($node->getId())));
+
+		$qb->orderBy('id');
+
+		$cursor = $qb->execute();
+		$shares = [];
+		while ($data = $cursor->fetch()) {
+			$shares[$data['fileid']][] = $this->createShareObject($data);
+		}
+		$cursor->closeCursor();
+
+		return $shares;
 	}
 
 	/**
@@ -891,6 +941,16 @@ class FederatedShareProvider implements IShareProvider {
 	 */
 	public function isIncomingServer2serverShareEnabled() {
 		$result = $this->config->getAppValue('files_sharing', 'incoming_server2server_share_enabled', 'yes');
+		return ($result === 'yes') ? true : false;
+	}
+
+	/**
+	 * Check if querying sharees on the lookup server is enabled
+	 *
+	 * @return bool
+	 */
+	public function isLookupServerQueriesEnabled() {
+		$result = $this->config->getAppValue('files_sharing', 'lookupServerEnabled', 'no');
 		return ($result === 'yes') ? true : false;
 	}
 }

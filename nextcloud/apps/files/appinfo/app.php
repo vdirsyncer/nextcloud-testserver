@@ -26,7 +26,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 $l = \OC::$server->getL10N('files');
 
 \OC::$server->getNavigationManager()->add(function () {
@@ -49,8 +48,7 @@ $templateManager->registerTemplate('application/vnd.oasis.opendocument.presentat
 $templateManager->registerTemplate('application/vnd.oasis.opendocument.text', 'core/templates/filetemplates/template.odt');
 $templateManager->registerTemplate('application/vnd.oasis.opendocument.spreadsheet', 'core/templates/filetemplates/template.ods');
 
-\OCA\Files\App::getNavigationManager()->add(function () {
-	$l = \OC::$server->getL10N('files');
+\OCA\Files\App::getNavigationManager()->add(function () use ($l) {
 	return [
 		'id' => 'files',
 		'appname' => 'files',
@@ -60,15 +58,12 @@ $templateManager->registerTemplate('application/vnd.oasis.opendocument.spreadshe
 	];
 });
 
-\OC::$server->getActivityManager()->registerExtension(function() {
-	return new \OCA\Files\Activity(
-		\OC::$server->query('L10NFactory'),
-		\OC::$server->getURLGenerator(),
-		\OC::$server->getActivityManager(),
-		new \OCA\Files\ActivityHelper(
-			\OC::$server->getTagManager()
-		),
-		\OC::$server->getDatabaseConnection(),
-		\OC::$server->getConfig()
-	);
+\OCA\Files\App::getNavigationManager()->add(function () use ($l) {
+	return [
+		'id' => 'recent',
+		'appname' => 'files',
+		'script' => 'recentlist.php',
+		'order' => 2,
+		'name' => $l->t('Recent'),
+	];
 });

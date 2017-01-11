@@ -24,19 +24,27 @@
 OCP\JSON::checkAdminUser();
 OCP\JSON::callCheck();
 
+$lastConfirm = (int) \OC::$server->getSession()->get('last-password-confirm');
+if ($lastConfirm < (time() - 30 * 60 + 15)) { // allow 15 seconds delay
+	$l = \OC::$server->getL10N('core');
+	OC_JSON::error(array( 'data' => array( 'message' => $l->t('Password confirmation is required'))));
+	exit();
+}
+
 if (!array_key_exists('appid', $_POST)) {
 	OC_JSON::error();
 	exit;
 }
 
+$app = new OC_App();
 $appId = (string)$_POST['appid'];
 $appId = OC_App::cleanAppId($appId);
-
-$result = OC_App::installApp($appId);
+$result = $app->installApp(
+	$appId,
+	\OC::$server->getConfig(),
+	\OC::$server->getL10N('core')
+);
 if($result !== false) {
-	// FIXME: Clear the cache - move that into some sane helper method
-	\OC::$server->getMemCacheFactory()->create('settings')->remove('listApps-0');
-	\OC::$server->getMemCacheFactory()->create('settings')->remove('listApps-1');
 	OC_JSON::success(array('data' => array('appid' => $appId)));
 } else {
 	$l = \OC::$server->getL10N('settings');

@@ -25,7 +25,6 @@ OC.L10N.register(
     "Save" : "Simpan",
     "Empty response from the server" : "Tidak ada respon dari server",
     "Couldn't access. Please logout and login to activate this mount point" : "Tidak dapat mengakses. Log keluar dan log masuk untuk mengaktifkan mount point ini",
-    "Couldn't get the information from the ownCloud server: {code} {type}" : "Tidak bisa mendapatkan informasi dari server ownCloud: {code} {type}",
     "Couldn't get the list of external mount points: {type}" : "Tidak bisa mendapatkan informasi dari mount point eksternal: {type}",
     "There was an error with message: " : "Terjadi kesalahan dengan pesan:",
     "External mount error" : "Kesalahan mount eksternal",
@@ -89,7 +88,6 @@ OC.L10N.register(
     "Google Drive" : "Google Drive",
     "Local" : "Lokal",
     "Location" : "lokasi",
-    "ownCloud" : "ownCloud",
     "SFTP" : "SFTP",
     "Root" : "Root",
     "SFTP with secret key login" : "SFTP dengan kunci rahasia masuk",
@@ -121,12 +119,14 @@ OC.L10N.register(
     "Delete" : "Hapus",
     "Allow users to mount external storage" : "Izinkan pengguna untuk mengaitkan penyimpanan eksternal",
     "Allow users to mount the following external storage" : "Izinkan pengguna untuk mengaitkan penyimpanan eksternal berikut",
+    "Couldn't get the information from the ownCloud server: {code} {type}" : "Tidak bisa mendapatkan informasi dari server ownCloud: {code} {type}",
+    "Access granted" : "Akses diberikan",
     "Global Credentials" : "Kredensial Global",
+    "ownCloud" : "ownCloud",
     "<b>Note:</b> " : "<b>Catatan:</b> ",
     "<b>Note:</b> The cURL support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Catatan:</b> Dukungan cURL di PHP tidak diaktifkan atau belum diinstal. Mengaitkan %s tidak dimungkinkan. Silakan minta administrator sistem Anda untuk menginstalnya.",
     "<b>Note:</b> The FTP support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Catatan:</b> Dukungan FTP di PHP tidak diaktifkan atau belum diinstal. Mengaitkan %s tidak dimungkinkan. Silakan minta administrator sistem Anda untuk menginstalnya.",
     "<b>Note:</b> \"%s\" is not installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "<b>Catatan:</b> \"%s\" belum diinstal. Mengaitkan %s tidak dimungkinkan. Silakan minta administrator sistem Anda untuk menginstalnya.",
-    "External Storage" : "Penyimpanan Eksternal",
-    "Access granted" : "Akses diberikan"
+    "External Storage" : "Penyimpanan Eksternal"
 },
 "nplurals=1; plural=0;");

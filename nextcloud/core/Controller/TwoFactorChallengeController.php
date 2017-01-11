@@ -24,6 +24,8 @@
 namespace OC\Core\Controller;
 
 use OC\Authentication\TwoFactorAuth\Manager;
+use OC_User;
+use OC_Util;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -67,7 +69,7 @@ class TwoFactorChallengeController extends Controller {
 	 * @return string
 	 */
 	protected function getLogoutAttribute() {
-		return \OC_User::getLogoutAttribute();
+		return OC_User::getLogoutAttribute();
 	}
 
 	/**
@@ -80,9 +82,11 @@ class TwoFactorChallengeController extends Controller {
 	public function selectChallenge($redirect_url) {
 		$user = $this->userSession->getUser();
 		$providers = $this->twoFactorManager->getProviders($user);
+		$backupProvider = $this->twoFactorManager->getBackupProvider($user);
 
 		$data = [
 			'providers' => $providers,
+			'backupProvider' => $backupProvider,
 			'redirect_url' => $redirect_url,
 			'logout_attribute' => $this->getLogoutAttribute(),
 		];
@@ -96,13 +100,19 @@ class TwoFactorChallengeController extends Controller {
 	 *
 	 * @param string $challengeProviderId
 	 * @param string $redirect_url
-	 * @return TemplateResponse
+	 * @return TemplateResponse|RedirectResponse
 	 */
 	public function showChallenge($challengeProviderId, $redirect_url) {
 		$user = $this->userSession->getUser();
 		$provider = $this->twoFactorManager->getProvider($user, $challengeProviderId);
 		if (is_null($provider)) {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('core.TwoFactorChallenge.selectChallenge'));
+		}
+
+		$backupProvider = $this->twoFactorManager->getBackupProvider($user);
+		if (!is_null($backupProvider) && $backupProvider->getId() === $provider->getId()) {
+			// Don't show the backup provider link if we're already showing that provider's challenge
+			$backupProvider = null;
 		}
 
 		if ($this->session->exists('two_factor_auth_error')) {
@@ -116,6 +126,7 @@ class TwoFactorChallengeController extends Controller {
 		$data = [
 			'error' => $error,
 			'provider' => $provider,
+			'backupProvider' => $backupProvider,
 			'logout_attribute' => $this->getLogoutAttribute(),
 			'template' => $tmpl->fetchPage(),
 		];
@@ -143,7 +154,7 @@ class TwoFactorChallengeController extends Controller {
 			if (!is_null($redirect_url)) {
 				return new RedirectResponse($this->urlGenerator->getAbsoluteURL(urldecode($redirect_url)));
 			}
-			return new RedirectResponse($this->urlGenerator->linkToRoute('files.view.index'));
+			return new RedirectResponse(OC_Util::getDefaultPageUrl());
 		}
 
 		$this->session->set('two_factor_auth_error', true);

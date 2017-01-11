@@ -72,20 +72,12 @@ class Manager extends PublicEmitter implements IUserManager {
 	/**
 	 * @param \OCP\IConfig $config
 	 */
-	public function __construct(IConfig $config = null) {
+	public function __construct(IConfig $config) {
 		$this->config = $config;
 		$cachedUsers = &$this->cachedUsers;
 		$this->listen('\OC\User', 'postDelete', function ($user) use (&$cachedUsers) {
 			/** @var \OC\User\User $user */
 			unset($cachedUsers[$user->getUID()]);
-		});
-		$this->listen('\OC\User', 'postLogin', function ($user) {
-			/** @var \OC\User\User $user */
-			$user->updateLastLoginTimestamp();
-		});
-		$this->listen('\OC\User', 'postRememberedLogin', function ($user) {
-			/** @var \OC\User\User $user */
-			$user->updateLastLoginTimestamp();
 		});
 	}
 
@@ -157,6 +149,16 @@ class Manager extends PublicEmitter implements IUserManager {
 			return $this->cachedUsers[$uid];
 		}
 
+		if (method_exists($backend, 'loginName2UserName')) {
+			$loginName = $backend->loginName2UserName($uid);
+			if ($loginName !== false) {
+				$uid = $loginName;
+			}
+			if (isset($this->cachedUsers[$uid])) {
+				return $this->cachedUsers[$uid];
+			}
+		}
+
 		$user = new User($uid, $backend, $this, $this->config);
 		if ($cacheUser) {
 			$this->cachedUsers[$uid] = $user;
@@ -187,7 +189,7 @@ class Manager extends PublicEmitter implements IUserManager {
 		$password = str_replace("\0", '', $password);
 		
 		foreach ($this->backends as $backend) {
-			if ($backend->implementsActions(\OC\User\Backend::CHECK_PASSWORD)) {
+			if ($backend->implementsActions(Backend::CHECK_PASSWORD)) {
 				$uid = $backend->checkPassword($loginName, $password);
 				if ($uid !== false) {
 					return $this->getUserObject($uid, $backend);
@@ -291,7 +293,7 @@ class Manager extends PublicEmitter implements IUserManager {
 
 		$this->emit('\OC\User', 'preCreateUser', array($uid, $password));
 		foreach ($this->backends as $backend) {
-			if ($backend->implementsActions(\OC\User\Backend::CREATE_USER)) {
+			if ($backend->implementsActions(Backend::CREATE_USER)) {
 				$backend->createUser($uid, $password);
 				$user = $this->getUserObject($uid, $backend);
 				$this->emit('\OC\User', 'postCreateUser', array($user, $password));
@@ -304,12 +306,18 @@ class Manager extends PublicEmitter implements IUserManager {
 	/**
 	 * returns how many users per backend exist (if supported by backend)
 	 *
-	 * @return array an array of backend class as key and count number as value
+	 * @param boolean $hasLoggedIn when true only users that have a lastLogin
+	 *                entry in the preferences table will be affected
+	 * @return array|int an array of backend class as key and count number as value
+	 *                if $hasLoggedIn is true only an int is returned
 	 */
-	public function countUsers() {
-		$userCountStatistics = array();
+	public function countUsers($hasLoggedIn = false) {
+		if ($hasLoggedIn) {
+			return $this->countSeenUsers();
+		}
+		$userCountStatistics = [];
 		foreach ($this->backends as $backend) {
-			if ($backend->implementsActions(\OC\User\Backend::COUNT_USERS)) {
+			if ($backend->implementsActions(Backend::COUNT_USERS)) {
 				$backendUsers = $backend->countUsers();
 				if($backendUsers !== false) {
 					if($backend instanceof IUserBackend) {
@@ -334,27 +342,119 @@ class Manager extends PublicEmitter implements IUserManager {
 	 *
 	 * @param \Closure $callback
 	 * @param string $search
+	 * @param boolean $onlySeen when true only users that have a lastLogin entry
+	 *                in the preferences table will be affected
 	 * @since 9.0.0
 	 */
-	public function callForAllUsers(\Closure $callback, $search = '') {
-		foreach($this->getBackends() as $backend) {
-			$limit = 500;
-			$offset = 0;
-			do {
-				$users = $backend->getUsers($search, $limit, $offset);
-				foreach ($users as $uid) {
-					if (!$backend->userExists($uid)) {
-						continue;
+	public function callForAllUsers(\Closure $callback, $search = '', $onlySeen = false) {
+		if ($onlySeen) {
+			$this->callForSeenUsers($callback);
+		} else {
+			foreach ($this->getBackends() as $backend) {
+				$limit = 500;
+				$offset = 0;
+				do {
+					$users = $backend->getUsers($search, $limit, $offset);
+					foreach ($users as $uid) {
+						if (!$backend->userExists($uid)) {
+							continue;
+						}
+						$user = $this->getUserObject($uid, $backend, false);
+						$return = $callback($user);
+						if ($return === false) {
+							break;
+						}
 					}
-					$user = $this->getUserObject($uid, $backend, false);
-					$return = $callback($user);
-					if ($return === false) {
-						break;
+					$offset += $limit;
+				} while (count($users) >= $limit);
+			}
+		}
+	}
+
+	/**
+	 * returns how many users have logged in once
+	 *
+	 * @return int
+	 * @since 11.0.0
+	 */
+	public function countSeenUsers() {
+		$queryBuilder = \OC::$server->getDatabaseConnection()->getQueryBuilder();
+		$queryBuilder->select($queryBuilder->createFunction('COUNT(*)'))
+			->from('preferences')
+			->where($queryBuilder->expr()->eq('appid', $queryBuilder->createNamedParameter('login')))
+			->andWhere($queryBuilder->expr()->eq('configkey', $queryBuilder->createNamedParameter('lastLogin')))
+			->andWhere($queryBuilder->expr()->isNotNull('configvalue'));
+
+		$query = $queryBuilder->execute();
+
+		$result = (int)$query->fetchColumn();
+		$query->closeCursor();
+
+		return $result;
+	}
+
+	/**
+	 * @param \Closure $callback
+	 * @since 11.0.0
+	 */
+	public function callForSeenUsers(\Closure $callback) {
+		$limit = 1000;
+		$offset = 0;
+		do {
+			$userIds = $this->getSeenUserIds($limit, $offset);
+			$offset += $limit;
+			foreach ($userIds as $userId) {
+				foreach ($this->backends as $backend) {
+					if ($backend->userExists($userId)) {
+						$user = $this->getUserObject($userId, $backend, false);
+						$return = $callback($user);
+						if ($return === false) {
+							return;
+						}
 					}
 				}
-				$offset += $limit;
-			} while (count($users) >= $limit);
+			}
+		} while (count($userIds) >= $limit);
+	}
+
+	/**
+	 * Getting all userIds that have a listLogin value requires checking the
+	 * value in php because on oracle you cannot use a clob in a where clause,
+	 * preventing us from doing a not null or length(value) > 0 check.
+	 * 
+	 * @param int $limit
+	 * @param int $offset
+	 * @return string[] with user ids
+	 */
+	private function getSeenUserIds($limit = null, $offset = null) {
+		$queryBuilder = \OC::$server->getDatabaseConnection()->getQueryBuilder();
+		$queryBuilder->select(['userid'])
+			->from('preferences')
+			->where($queryBuilder->expr()->eq(
+				'appid', $queryBuilder->createNamedParameter('login'))
+			)
+			->andWhere($queryBuilder->expr()->eq(
+				'configkey', $queryBuilder->createNamedParameter('lastLogin'))
+			)
+			->andWhere($queryBuilder->expr()->isNotNull('configvalue')
+			);
+
+		if ($limit !== null) {
+			$queryBuilder->setMaxResults($limit);
 		}
+		if ($offset !== null) {
+			$queryBuilder->setFirstResult($offset);
+		}
+		$query = $queryBuilder->execute();
+		$result = [];
+
+		while ($row = $query->fetch()) {
+			$result[] = $row['userid'];
+		}
+
+		$query->closeCursor();
+
+		return $result;
 	}
 
 	/**

@@ -25,35 +25,42 @@
 
 namespace OCA\Files\Service;
 
-use OC\Files\FileInfo;
-use OCP\Files\Node;
+use OC\Tags;
+use OCA\Files\Activity\FavoriteProvider;
+use OCP\Activity\IManager;
+use OCP\Files\Folder;
+use OCP\ITags;
+use OCP\IUser;
+use OCP\IUserSession;
 
 /**
  * Service class to manage tags on files.
  */
 class TagService {
 
-	/**
-	 * @var \OCP\IUserSession
-	 */
+	/** @var IUserSession */
 	private $userSession;
-
-	/**
-	 * @var \OCP\ITags
-	 */
+	/** @var IManager */
+	private $activityManager;
+	/** @var ITags */
 	private $tagger;
-
-	/**
-	 * @var \OCP\Files\Folder
-	 */
+	/** @var Folder */
 	private $homeFolder;
 
+	/**
+	 * @param IUserSession $userSession
+	 * @param IManager $activityManager
+	 * @param ITags $tagger
+	 * @param Folder $homeFolder
+	 */
 	public function __construct(
-		\OCP\IUserSession $userSession,
-		\OCP\ITags $tagger,
-		\OCP\Files\Folder $homeFolder
+		IUserSession $userSession,
+		IManager $activityManager,
+		ITags $tagger,
+		Folder $homeFolder
 	) {
 		$this->userSession = $userSession;
+		$this->activityManager = $activityManager;
 		$this->tagger = $tagger;
 		$this->homeFolder = $homeFolder;
 	}
@@ -79,10 +86,16 @@ class TagService {
 
 		$newTags = array_diff($tags, $currentTags);
 		foreach ($newTags as $tag) {
+			if ($tag === Tags::TAG_FAVORITE) {
+				$this->addActivity(true, $fileId, $path);
+			}
 			$this->tagger->tagAs($fileId, $tag);
 		}
 		$deletedTags = array_diff($currentTags, $tags);
 		foreach ($deletedTags as $tag) {
+			if ($tag === Tags::TAG_FAVORITE) {
+				$this->addActivity(false, $fileId, $path);
+			}
 			$this->tagger->unTag($fileId, $tag);
 		}
 
@@ -92,24 +105,25 @@ class TagService {
 	}
 
 	/**
-	 * Get all files for the given tag
-	 *
-	 * @param string $tagName tag name to filter by
-	 * @return Node[] list of matching files
-	 * @throws \Exception if the tag does not exist
+	 * @param bool $addToFavorite
+	 * @param int $fileId
+	 * @param string $path
 	 */
-	public function getFilesByTag($tagName) {
-		try {
-			$fileIds = $this->tagger->getIdsForTag($tagName);
-		} catch (\Exception $e) {
-			return [];
+	protected function addActivity($addToFavorite, $fileId, $path) {
+		$user = $this->userSession->getUser();
+		if (!$user instanceof IUser) {
+			return;
 		}
 
-		$allNodes = [];
-		foreach ($fileIds as $fileId) {
-			$allNodes = array_merge($allNodes, $this->homeFolder->getById((int) $fileId));
-		}
-		return $allNodes;
+		$event = $this->activityManager->generateEvent();
+		$event->setApp('files')
+			->setObject('files', $fileId, $path)
+			->setType('favorite')
+			->setAuthor($user->getUID())
+			->setAffectedUser($user->getUID())
+			->setTimestamp(time())
+			->setSubject($addToFavorite ? FavoriteProvider::SUBJECT_ADDED : FavoriteProvider::SUBJECT_REMOVED);
+		$this->activityManager->publish($event);
 	}
 }
 

@@ -57,8 +57,9 @@ $serverFactory = new OCA\DAV\Connector\Sabre\ServerFactory(
 $requestUri = \OC::$server->getRequest()->getRequestUri();
 
 $linkCheckPlugin = new \OCA\DAV\Files\Sharing\PublicLinkCheckPlugin();
+$filesDropPlugin = new \OCA\DAV\Files\Sharing\FilesDropPlugin();
 
-$server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, function (\Sabre\DAV\Server $server) use ($authBackend, $linkCheckPlugin) {
+$server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, function (\Sabre\DAV\Server $server) use ($authBackend, $linkCheckPlugin, $filesDropPlugin) {
 	$isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest');
 	$federatedSharingApp = new \OCA\FederatedFileSharing\AppInfo\Application();
 	$federatedShareProvider = $federatedSharingApp->getFederatedShareProvider();
@@ -72,13 +73,12 @@ $server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, func
 	$isReadable = $share->getPermissions() & \OCP\Constants::PERMISSION_READ;
 	$fileId = $share->getNodeId();
 
-	if (!$isReadable) {
-		return false;
-	}
-
+	// FIXME: should not add storage wrappers outside of preSetup, need to find a better way
+	$previousLog = \OC\Files\Filesystem::logWarningWhenAddingStorageWrapper(false);
 	\OC\Files\Filesystem::addStorageWrapper('sharePermissions', function ($mountPoint, $storage) use ($share) {
 		return new \OC\Files\Storage\Wrapper\PermissionsMask(array('storage' => $storage, 'mask' => $share->getPermissions() | \OCP\Constants::PERMISSION_SHARE));
 	});
+	\OC\Files\Filesystem::logWarningWhenAddingStorageWrapper($previousLog);
 
 	OC_Util::setupFS($owner);
 	$ownerView = \OC\Files\Filesystem::getView();
@@ -86,10 +86,19 @@ $server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, func
 	$fileInfo = $ownerView->getFileInfo($path);
 	$linkCheckPlugin->setFileInfo($fileInfo);
 
-	return new \OC\Files\View($ownerView->getAbsolutePath($path));
+	// If not readble (files_drop) enable the filesdrop plugin
+	if (!$isReadable) {
+		$filesDropPlugin->enable();
+	}
+
+	$view = new \OC\Files\View($ownerView->getAbsolutePath($path));
+	$filesDropPlugin->setView($view);
+
+	return $view;
 });
 
 $server->addPlugin($linkCheckPlugin);
+$server->addPlugin($filesDropPlugin);
 
 // And off we go!
 $server->exec();

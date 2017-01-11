@@ -32,7 +32,7 @@
 
 try {
 
-	require_once 'lib/base.php';
+	require_once __DIR__ . '/lib/base.php';
 
 	if (\OCP\Util::needUpgrade()) {
 		\OCP\Util::writeLog('cron', 'Update required, skipping cron', \OCP\Util::DEBUG);
@@ -90,7 +90,7 @@ try {
 			exit(0);
 		}
 		$user = posix_getpwuid(posix_getuid());
-		$configUser = posix_getpwuid(fileowner(OC::$SERVERROOT . '/config/config.php'));
+		$configUser = posix_getpwuid(fileowner(OC::$configDir . 'config.php'));
 		if ($user['name'] !== $configUser['name']) {
 			echo "Console has to be executed with the same user as the web server is operated" . PHP_EOL;
 			echo "Current user: " . $user['name'] . PHP_EOL;
@@ -119,6 +119,8 @@ try {
 
 			$logger->debug('Run ' . get_class($job) . ' job with ID ' . $job->getId(), ['app' => 'cron']);
 			$job->execute($jobList, $logger);
+			// clean up after unclean jobs
+			\OC_Util::tearDownFS();
 			$logger->debug('Finished ' . get_class($job) . ' job with ID ' . $job->getId(), ['app' => 'cron']);
 
 			$jobList->setLastJob($job);

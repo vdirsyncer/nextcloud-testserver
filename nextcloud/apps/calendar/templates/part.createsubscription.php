@@ -4,7 +4,7 @@
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
- * @copyright 2016 Raghu Nayyar <beingminimal@gmail.com>
+ * @copyright 2016 Raghu Nayyar <hey@raghunayyar.com>
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -28,22 +28,22 @@
 		class="new-entity"
 		data-apps-slide-toggle=".add-new-subscription"
 		id="new-subscription-button">
-		<span class="new-entity-title"><?php p($l->t('New Subscription')); ?></span>
+		<span class="new-entity-title" role="button"><?php p($l->t('New Subscription')); ?></span>
 	</div>
 
 	<fieldset class="calendarlist-fieldset add-new-subscription hide">
-		<form  ng-submit="createSubscription(newSubscriptionUrl)">
+		<form ng-submit="createSubscription(subscription.newSubscriptionUrl)">
 			<input
 				class="app-navigation-input"
 				type="text"
-				ng-disabled="newSubscriptionLocked"
-				ng-model="newSubscriptionUrl"
+				ng-disabled="subscription.newSubscriptionLocked"
+				ng-model="subscription.newSubscriptionUrl"
 				placeholder="<?php p($l->t('WebCal-URL')); ?>"
 				autofocus />
 			<input
 				id="submitnewSubscription"
 				class="primary accept-button"
-				ng-disabled="newSubscriptionLocked"
+				ng-disabled="subscription.newSubscriptionLocked"
 				oc-click-slide-toggle="{
 						selector: '.add-new-subscription',
 						hideOnFocusLost: false,

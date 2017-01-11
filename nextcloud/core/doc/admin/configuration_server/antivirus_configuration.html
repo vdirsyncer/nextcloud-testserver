@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Configuring the ClamAV Antivirus Scanner &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Configuring the ClamAV Antivirus Scanner &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
-    <link rel="next" title="Configuring Memory Caching" href="caching_configuration.html" />
-    <link rel="prev" title="Configuring the Activity App" href="activity_configuration.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -65,39 +62,11 @@
 										
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
-                  <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+                  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
-<li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
-<li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Configuring the ClamAV Antivirus Scanner</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#installing-clamav">Installing ClamAV</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#enabling-the-antivirus-app-for-files">Enabling the Antivirus App for Files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-clamav-on-nextcloud">Configuring ClamAV on Nextcloud</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="caching_configuration.html">Configuring Memory Caching</a></li>
-<li class="toctree-l2"><a class="reference internal" href="background_jobs_configuration.html">Defining Background Jobs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config_sample_php_parameters.html">Config.php Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="email_configuration.html">Email Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="external_sites.html">Linking External Sites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom_client_repos.html">Custom Client Download Repositories</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knowledgebase_configuration.html">Knowledge Base Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_configuration.html">Language Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="logging_configuration.html">Logging Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="harden_server.html">Hardening and Security Guidance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
-<li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
@@ -116,16 +85,6 @@
 				<div class="col-md-9">
 					<div class="page-content">
             
-<ul class="prevnext-title list-unstyled list-inline">
-  <li class="prev">
-    <a href="activity_configuration.html" title="Previous Chapter: Configuring the Activity App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Configuring t...</span>
-    </a>
-  </li>
-  <li class="next">
-    <a href="caching_configuration.html" title="Next Chapter: Configuring Memory Caching"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Configuring M... &raquo;</span>
-    </a>
-  </li>
-</ul>
 						
   <div class="section" id="configuring-the-clamav-antivirus-scanner">
 <h1>Configuring the ClamAV Antivirus Scanner<a class="headerlink" href="#configuring-the-clamav-antivirus-scanner" title="Permalink to this headline">¶</a></h1>
@@ -202,7 +161,9 @@ and <code class="docutils literal"><span class="pre">freshclam.conf</span></code
 </div>
 <div class="section" id="enabling-the-antivirus-app-for-files">
 <h2>Enabling the Antivirus App for Files<a class="headerlink" href="#enabling-the-antivirus-app-for-files" title="Permalink to this headline">¶</a></h2>
-<p>Simply go to your Nextcloud Apps page to enable it.</p>
+<p>Place the <code class="docutils literal"><span class="pre">files_antivirus</span></code> app into the <code class="docutils literal"><span class="pre">apps</span></code> directory of your Nextcloud
+server. Then the app shows up on the Nextcloud Apps page where it simply can be
+enabled.</p>
 <div class="figure">
 <img alt="../_images/antivirus-app.png" src="../_images/antivirus-app.png" />
 </div>
@@ -255,7 +216,7 @@ infected files.</p>
 <dd><p class="first">For the Daemon option you need the hostname or IP address of the remote
 server running ClamAV, and the server&#8217;s port number.</p>
 <div class="last figure">
-<img alt="../_images/antivirus-daemon-socket.png" src="../_images/antivirus-daemon-socket.png" />
+<img alt="../_images/antivirus-daemon.png" src="../_images/antivirus-daemon.png" />
 </div>
 </dd>
 <dt>Executable</dt>
@@ -273,16 +234,6 @@ back and change all of your logging to less verbose levels.</p>
 
 
             
-<ul class="prevnext-title list-unstyled list-inline">
-  <li class="prev">
-    <a href="activity_configuration.html" title="Previous Chapter: Configuring the Activity App"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Configuring t...</span>
-    </a>
-  </li>
-  <li class="next">
-    <a href="caching_configuration.html" title="Next Chapter: Configuring Memory Caching"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Configuring M... &raquo;</span>
-    </a>
-  </li>
-</ul>
 					</div>
 				</div>
 			</div>

@@ -1,5 +1,5 @@
 <?php
-/** @var OC_L10N $l */
+/** @var \OCP\IL10N $l */
 /** @var array $_ */
 script('federatedfilesharing', 'settings-admin');
 ?>
@@ -23,6 +23,13 @@ script('federatedfilesharing', 'settings-admin');
 			   value="1" <?php if ($_['incomingServer2serverShareEnabled']) print_unescaped('checked="checked"'); ?> />
 		<label for="incomingServer2serverShareEnabled">
 			<?php p($l->t('Allow users on this server to receive shares from other servers'));?>
+		</label><br/>
+	</p>
+	<p>
+		<input type="checkbox" name="lookupServerEnabled" id="lookupServerEnabled" class="checkbox"
+			   value="1" <?php if ($_['lookupServerEnabled']) print_unescaped('checked="checked"'); ?> />
+		<label for="lookupServerEnabled">
+			<?php p($l->t('Search global and public address book for users'));?>
 		</label><br/>
 	</p>
 </div>

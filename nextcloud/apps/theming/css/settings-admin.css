@@ -6,15 +6,34 @@
     display: none;
 }
 
-#theming .theme-undo {
-    cursor: pointer;
-    opacity: .5;
-    padding: 9px;
-    vertical-align: bottom;
+#theming div > label {
+    position: relative;
 }
 
-#theming .icon {
+#theming .theme-undo {
+    position: absolute;
+    top: -7px;
+    right: 7px;
+    cursor: pointer;
+    opacity: .3;
+    padding: 7px;
+    vertical-align: top;
     display: inline-block;
+    visibility: hidden;
+}
+#theming form .theme-undo {
+    position: relative;
+    top: 4px;
+    left: 158px;
+    visibility: visible;
+}
+#theming input[type='text']:focus + .theme-undo,
+#theming input[type='text']:active + .theme-undo {
+    visibility: visible;
+}
+
+#theming .icon-loading-small:after {
+    margin: -10px 0 0 -10px;
 }
 
 #theming label span {
@@ -23,12 +42,28 @@
     padding: 8px 0px;
 }
 
-#theming .icon-upload {
+#theming .icon-upload,
+#theming .icon-loading-small {
     display: inline-flex;
     padding: 8px;
-    margin: 0;
+    margin: 2px 0px;
 }
 
 div#theming_settings_msg {
     margin-left: 10px;
+}
+
+#theming-preview {
+    width: 230px;
+    height: 140px;
+    background-size: cover;
+    background-position: center center;
+    text-align: center;
+    margin-left: 93px;
+}
+
+#theming-preview img {
+    max-width: 20%;
+    max-height: 20%;
+    margin-top: 20px;
 }

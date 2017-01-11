@@ -237,4 +237,41 @@ interface ICommentsManager {
 	 */
 	public function deleteReadMarksOnObject($objectType, $objectId);
 
+	/**
+	 * registers an Entity to the manager, so event notifications can be send
+	 * to consumers of the comments infrastructure
+	 *
+	 * @param \Closure $closure
+	 * @since 11.0.0
+	 */
+	public function registerEventHandler(\Closure $closure);
+
+	/**
+	 * registers a method that resolves an ID to a display name for a given type
+	 *
+	 * @param string $type
+	 * @param \Closure $closure
+	 * @throws \OutOfBoundsException
+	 * @since 11.0.0
+	 *
+	 * Only one resolver shall be registered per type. Otherwise a
+	 * \OutOfBoundsException has to thrown.
+	 */
+	public function registerDisplayNameResolver($type, \Closure $closure);
+
+	/**
+	 * resolves a given ID of a given Type to a display name.
+	 *
+	 * @param string $type
+	 * @param string $id
+	 * @return string
+	 * @throws \OutOfBoundsException
+	 * @since 11.0.0
+	 *
+	 * If a provided type was not registered, an \OutOfBoundsException shall
+	 * be thrown. It is upon the resolver discretion what to return of the
+	 * provided ID is unknown. It must be ensured that a string is returned.
+	 */
+	public function resolveDisplayName($type, $id);
+
 }

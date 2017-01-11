@@ -1,12 +1,12 @@
 <?php
 /**
- * ownCloud - gallery
+ * Gallery
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Bernhard Posselt <dev@bernhard-posselt.com>
- * @author Olivier Paroz <owncloud@interfasys.ch>
+ * @author Olivier Paroz <galleryapps@oparoz.com>
  *
  * @copyright Bernhard Posselt 2014-2015
  * @copyright Olivier Paroz 2014-2016
@@ -16,6 +16,8 @@ namespace OCA\Gallery\Controller;
 
 use Exception;
 
+use OCP\ILogger;
+use OCP\IRequest;
 use OCP\IURLGenerator;
 
 use OCP\AppFramework\Http;
@@ -36,17 +38,29 @@ trait HttpError {
 
 	/**
 	 * @param \Exception $exception
+	 * @param IRequest $request
+	 * @param ILogger $logger
 	 *
 	 * @return JSONResponse
 	 */
-	public function jsonError(Exception $exception) {
-		$message = $exception->getMessage();
+	public function jsonError(Exception $exception,
+							  IRequest $request,
+							  ILogger $logger) {
 		$code = $this->getHttpStatusCode($exception);
+
+		// If the exception is not of type ForbiddenServiceException only show a
+		// generic error message to avoid leaking information.
+		if(!($exception instanceof ForbiddenServiceException)) {
+			$logger->logException($exception, ['app' => 'gallery']);
+			$message = sprintf('An error occurred. Request ID: %s', $request->getId());
+		} else {
+			$message = $exception->getMessage() . ' (' . $code . ')';
+		}
 
 		return new JSONResponse(
 			[
-				'message' => $message . ' (' . $code . ')',
-				'success' => false
+				'message' => $message,
+				'success' => false,
 			],
 			$code
 		);

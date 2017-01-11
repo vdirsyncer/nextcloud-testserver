@@ -4,7 +4,7 @@
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
- * @copyright 2016 Raghu Nayyar <beingminimal@gmail.com>
+ * @copyright 2016 Raghu Nayyar <hey@raghunayyar.com>
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,20 +23,21 @@
  */
 ?>
 <div class="datepicker-heading">
-	<button type="button" class="btn btn-default btn-sm btn-arrow pull-left" ng-click="prev()">
+	<button type="button" class="btn btn-default btn-sm btn-arrow pull-left" ng-click="prev()" aria-label="<?php p($l->t('Go back')) ?>">
 		<i class="glyphicon glyphicon-chevron-left"></i>
 	</button>
 	<button type="button" class="btn btn-default btn-sm btn-date" ng-click="toggle()">
 		<strong ng-cloak>{{ dt | datepickerFilter:selectedView }}</strong>
 	</button>
-	<button type="button" class="btn btn-default btn-sm btn-arrow pull-right" ng-click="next()">
+	<button type="button" class="btn btn-default btn-sm btn-arrow pull-right" ng-click="next()" aria-label="<?php p($l->t('Go forward')) ?>">
 		<i class="glyphicon glyphicon-chevron-right"></i>
 	</button>
 </div>
-<div ng-show="visibility">
-	<uib-datepicker
+<div id="datepicker-ng-show-container" class="ng-hide" ng-show="visibility">
+	<div
 		ng-model="dt"
 		id="datepicker"
+		uib-datepicker
 		datepicker-options="datepickerOptions">
-	</uib-datepicker>
+	</div>
 </div>

@@ -36,14 +36,25 @@ use OCP\Route\IRouter;
  * @package OC\AppFramework\routing
  */
 class RouteConfig {
+	/** @var DIContainer */
 	private $container;
+
+	/** @var IRouter */
 	private $router;
+
+	/** @var array */
 	private $routes;
+
+	/** @var string */
 	private $appName;
+
+	/** @var string[] */
+	private $controllerNameCache = [];
 
 	/**
 	 * @param \OC\AppFramework\DependencyInjection\DIContainer $container
 	 * @param \OCP\Route\IRouter $router
+	 * @param array $routes
 	 * @internal param $appName
 	 */
 	public function __construct(DIContainer $container, IRouter $router, $routes) {
@@ -86,7 +97,13 @@ class RouteConfig {
 				$postfix = $ocsRoute['postfix'];
 			}
 
-			$url = $ocsRoute['url'];
+			if (isset($ocsRoute['root'])) {
+				$root = $ocsRoute['root'];
+			} else {
+				$root = '/apps/'.$this->appName;
+			}
+
+			$url = $root . $ocsRoute['url'];
 			$verb = isset($ocsRoute['verb']) ? strtoupper($ocsRoute['verb']) : 'GET';
 
 			$split = explode('#', $name, 2);
@@ -228,7 +245,10 @@ class RouteConfig {
 	 */
 	private function buildControllerName($controller)
 	{
-		return $this->underScoreToCamelCase(ucfirst($controller)) . 'Controller';
+		if (!isset($this->controllerNameCache[$controller])) {
+			$this->controllerNameCache[$controller] = $this->underScoreToCamelCase(ucfirst($controller)) . 'Controller';
+		}
+		return $this->controllerNameCache[$controller];
 	}
 
 	/**

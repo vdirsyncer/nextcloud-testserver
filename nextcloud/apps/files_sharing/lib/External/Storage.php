@@ -64,10 +64,10 @@ class Storage extends DAV implements ISharedStorage {
 
 	public function __construct($options) {
 		$this->memcacheFactory = \OC::$server->getMemCacheFactory();
-		$this->httpClient = \OC::$server->getHTTPClientService();
+		$this->httpClient = $options['HttpClientService'];
 		$discoveryManager = new DiscoveryManager(
 			$this->memcacheFactory,
-			\OC::$server->getHTTPClientService()
+			$this->httpClient
 		);
 
 		$this->manager = $options['manager'];
@@ -186,7 +186,7 @@ class Storage extends DAV implements ISharedStorage {
 
 	public function test() {
 		try {
-			parent::test();
+			return parent::test();
 		} catch (StorageInvalidException $e) {
 			// check if it needs to be removed
 			$this->checkStorageAvailability();

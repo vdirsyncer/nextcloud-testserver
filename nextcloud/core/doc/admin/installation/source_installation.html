@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Manual Installation on Linux &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Manual Installation on Linux &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Installing PHP 5.4 on RHEL 6 and CentOS 6" href="php_54_installation.html" />
-    <link rel="prev" title="Supported Apps in Nextcloud" href="apps_supported.html" />
+    <link rel="next" title="Installation Wizard" href="installation_wizard.html" />
+    <link rel="prev" title="Nextcloud Deployment Recommendations" href="deployment_recommendations.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,16 +66,11 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Manual Installation on Linux</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-installation-on-ubuntu-14-04-lts-server">Example Installation on Ubuntu 14.04 LTS Server</a></li>
@@ -91,11 +86,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#other-web-servers">Other Web Servers</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -119,11 +118,11 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="apps_supported.html" title="Previous Chapter: Supported Apps in Nextcloud"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Supported App...</span>
+    <a href="deployment_recommendations.html" title="Previous Chapter: Nextcloud Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Dep...</span>
     </a>
   </li>
   <li class="next">
-    <a href="php_54_installation.html" title="Next Chapter: Installing PHP 5.4 on RHEL 6 and CentOS 6"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing PH... &raquo;</span>
+    <a href="installation_wizard.html" title="Next Chapter: Installation Wizard"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -160,7 +159,7 @@ Nextcloud. See <a class="reference internal" href="#selinux-tips-label"><span>SE
 <p>The Nextcloud .tar archive contains all of the required PHP modules. This
 section lists all required and optional PHP modules.  Consult the <a class="reference external" href="http://php.net/manual/en/extensions.php">PHP manual</a> for more information on modules.
 Your Linux distribution should have packages for all required modules. You can
-check the precense of a module by typing <code class="docutils literal"><span class="pre">php</span> <span class="pre">-m</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-i</span> <span class="pre">&lt;module_name&gt;</span></code>.
+check the presence of a module by typing <code class="docutils literal"><span class="pre">php</span> <span class="pre">-m</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-i</span> <span class="pre">&lt;module_name&gt;</span></code>.
 If you get a result, the module is present.</p>
 <p>Required:</p>
 <ul class="simple">
@@ -244,18 +243,24 @@ apt-get install php5-gd php5-json php5-mysql php5-curl
 apt-get install php5-intl php5-mcrypt php5-imagick
 </pre></div>
 </div>
-<ul class="simple">
-<li>This installs the packages for the Nextcloud core system.
+<ul>
+<li><p class="first">This installs the packages for the Nextcloud core system.
 <code class="docutils literal"><span class="pre">libapache2-mod-php5</span></code> provides the following PHP extensions: <code class="docutils literal"><span class="pre">bcmath</span> <span class="pre">bz2</span>
 <span class="pre">calendar</span> <span class="pre">Core</span> <span class="pre">ctype</span> <span class="pre">date</span> <span class="pre">dba</span> <span class="pre">dom</span> <span class="pre">ereg</span> <span class="pre">exif</span> <span class="pre">fileinfo</span> <span class="pre">filter</span> <span class="pre">ftp</span> <span class="pre">gettext</span> <span class="pre">hash</span>
 <span class="pre">iconv</span> <span class="pre">libxml</span> <span class="pre">mbstring</span> <span class="pre">mhash</span> <span class="pre">openssl</span> <span class="pre">pcre</span> <span class="pre">Phar</span> <span class="pre">posix</span> <span class="pre">Reflection</span> <span class="pre">session</span> <span class="pre">shmop</span>
 <span class="pre">SimpleXML</span> <span class="pre">soap</span> <span class="pre">sockets</span> <span class="pre">SPL</span> <span class="pre">standard</span> <span class="pre">sysvmsg</span> <span class="pre">sysvsem</span> <span class="pre">sysvshm</span> <span class="pre">tokenizer</span> <span class="pre">wddx</span>
 <span class="pre">xml</span> <span class="pre">xmlreader</span> <span class="pre">xmlwriter</span> <span class="pre">zip</span> <span class="pre">zlib</span></code>. If you are planning
 on running additional apps, keep in mind that they might require additional
-packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a> for details.</li>
-<li>At the installation of the MySQL/MariaDB server, you will be prompted to
+packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a> for details.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When running php7, you need to manually install <code class="docutils literal"><span class="pre">php7.0-mbstring</span></code>, <code class="docutils literal"><span class="pre">php7.0-xml</span></code> and <code class="docutils literal"><span class="pre">php7.0-zip</span></code>.</p>
+</div>
+</li>
+<li><p class="first">At the installation of the MySQL/MariaDB server, you will be prompted to
 create a root password. Be sure to remember your password as you will need it
-during Nextcloud database setup.</li>
+during Nextcloud database setup.</p>
+</li>
 </ul>
 <p>Now download the archive of the latest Nextcloud version:</p>
 <ul>
@@ -373,7 +378,7 @@ uses Basic authentication internally for DAV services. If you have turned on
 authentication on a parent folder (via e.g. an <code class="docutils literal"><span class="pre">AuthType</span> <span class="pre">Basic</span></code>
 directive), you can turn off the authentication specifically for the
 Nextcloud entry. Following the above example configuration file, add the
-following line in the <code class="docutils literal"><span class="pre">&lt;Directory</span></code> section:</p>
+following line in the <code class="docutils literal"><span class="pre">&lt;Directory&gt;</span></code> section:</p>
 <div class="highlight-python"><div class="highlight"><pre>Satisfy Any
 </pre></div>
 </div>
@@ -520,8 +525,7 @@ confirm your paths, for example:</p>
 </div>
 <p>If any of your system environment variables are not present in the file then
 you must add them.</p>
-<p>When you are using shared hosting or a control panel to manage your Nextcloud
-VM or server, the configuration files are almost certain to be located
+<p>When you are using shared hosting or a control panel to manage your <a class="reference external" href="https://github.com/nextcloud/vm">Nextcloud VM</a> or server, the configuration files are almost certain to be located
 somewhere else, for security and flexibility reasons, so check your
 documentation for the correct locations.</p>
 <p>Please keep in mind that it is possible to create different settings for
@@ -548,11 +552,11 @@ be set in the <code class="docutils literal"><span class="pre">nextcloud/.user.i
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="apps_supported.html" title="Previous Chapter: Supported Apps in Nextcloud"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Supported App...</span>
+    <a href="deployment_recommendations.html" title="Previous Chapter: Nextcloud Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Dep...</span>
     </a>
   </li>
   <li class="next">
-    <a href="php_54_installation.html" title="Next Chapter: Installing PHP 5.4 on RHEL 6 and CentOS 6"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing PH... &raquo;</span>
+    <a href="installation_wizard.html" title="Next Chapter: Installation Wizard"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
     </a>
   </li>
 </ul>

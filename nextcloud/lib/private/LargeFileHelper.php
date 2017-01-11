@@ -1,6 +1,7 @@
 <?php
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ * @copyright Copyright (c) 2016, Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Andreas Fischer <bantu@owncloud.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -51,7 +52,7 @@ class LargeFileHelper {
 	public function __construct() {
 		$pow_2_53 = floatval(self::POW_2_53_MINUS_1) + 1.0;
 		if ($this->formatUnsignedInteger($pow_2_53) !== self::POW_2_53) {
-			throw new \RunTimeException(
+			throw new \RuntimeException(
 				'This class assumes floats to be double precision or "better".'
 			);
 		}
@@ -98,10 +99,6 @@ class LargeFileHelper {
 		if (!is_null($fileSize)) {
 			return $fileSize;
 		}
-		$fileSize = $this->getFileSizeViaCOM($filename);
-		if (!is_null($fileSize)) {
-			return $fileSize;
-		}
 		$fileSize = $this->getFileSizeViaExec($filename);
 		if (!is_null($fileSize)) {
 			return $fileSize;
@@ -138,23 +135,6 @@ class LargeFileHelper {
 	}
 
 	/**
-	* @brief Tries to get the size of a file via the Windows DOM extension.
-	*
-	* @param string $filename Path to the file.
-	*
-	* @return null|int|float Number of bytes as number (float or int) or
-	*                        null on failure.
-	*/
-	public function getFileSizeViaCOM($filename) {
-		if (class_exists('COM')) {
-			$fsObj = new \COM("Scripting.FileSystemObject");
-			$file = $fsObj->GetFile($filename);
-			return 0 + $file->Size;
-		}
-		return null;
-	}
-
-	/**
 	* @brief Tries to get the size of a file via an exec() call.
 	*
 	* @param string $filename Path to the file.
@@ -171,12 +151,6 @@ class LargeFileHelper {
 				$result = $this->exec("stat -c %s $arg");
 			} else if (strpos($os, 'bsd') !== false || strpos($os, 'darwin') !== false) {
 				$result = $this->exec("stat -f %z $arg");
-			} else if (strpos($os, 'win') !== false) {
-				$result = $this->exec("for %F in ($arg) do @echo %~zF");
-				if (is_null($result)) {
-					// PowerShell
-					$result = $this->exec("(Get-Item $arg).length");
-				}
 			}
 			return $result;
 		}
@@ -202,6 +176,23 @@ class LargeFileHelper {
 			return (float) sprintf('%u', $result);
 		}
 		return $result;
+	}
+
+	/**
+	 * Returns the current mtime for $fullPath
+	 *
+	 * @param string $fullPath
+	 * @return int
+	 */
+	public function getFileMtime($fullPath) {
+		if (\OC_Helper::is_function_enabled('exec')) {
+			$os = strtolower(php_uname('s'));
+			if (strpos($os, 'linux') !== false) {
+				return $this->exec('stat -c %Y ' . escapeshellarg($fullPath));
+			}
+		}
+
+		return filemtime($fullPath);
 	}
 
 	protected function exec($cmd) {

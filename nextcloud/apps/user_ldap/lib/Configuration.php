@@ -11,6 +11,7 @@
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
+ * @author Roger Szabo <roger.szabo@web.de>
  *
  * @license AGPL-3.0
  *
@@ -90,6 +91,7 @@ class Configuration {
 		'lastJpegPhotoLookup' => null,
 		'ldapNestedGroups' => false,
 		'ldapPagingSize' => null,
+		'turnOnPasswordChange' => false,
 		'ldapDynamicGroupMemberURL' => null,
 	);
 
@@ -106,12 +108,13 @@ class Configuration {
 
 	/**
 	 * @param string $name
-	 * @return mixed|void
+	 * @return mixed|null
 	 */
 	public function __get($name) {
 		if(isset($this->config[$name])) {
 			return $this->config[$name];
 		}
+		return null;
 	}
 
 	/**
@@ -160,7 +163,7 @@ class Configuration {
 					break;
 				case 'homeFolderNamingRule':
 					$trimmedVal = trim($val);
-					if(!empty($trimmedVal) && strpos($val, 'attr:') === false) {
+					if ($trimmedVal !== '' && strpos($val, 'attr:') === false) {
 						$val = 'attr:'.$trimmedVal;
 					}
 					break;
@@ -182,7 +185,7 @@ class Configuration {
 				$applied[] = $inputKey;
 			}
 		}
-
+		return null;
 	}
 
 	public function readConfiguration() {
@@ -308,7 +311,7 @@ class Configuration {
 			foreach($value as $key => $val) {
 				if(is_string($val)) {
 					$val = trim($val);
-					if(!empty($val)) {
+					if ($val !== '') {
 						//accidental line breaks are not wanted and can cause
 						// odd behaviour. Thus, away with them.
 						$finalValue[] = $val;
@@ -448,6 +451,7 @@ class Configuration {
 			'last_jpegPhoto_lookup'             => 0,
 			'ldap_nested_groups'                => 0,
 			'ldap_paging_size'                  => 500,
+			'ldap_turn_on_pwd_change'           => 0,
 			'ldap_experienced_admin'            => 0,
 			'ldap_dynamic_group_member_url'     => '',
 		);
@@ -504,6 +508,7 @@ class Configuration {
 			'last_jpegPhoto_lookup'             => 'lastJpegPhotoLookup',
 			'ldap_nested_groups'                => 'ldapNestedGroups',
 			'ldap_paging_size'                  => 'ldapPagingSize',
+			'ldap_turn_on_pwd_change'           => 'turnOnPasswordChange',
 			'ldap_experienced_admin'            => 'ldapExperiencedAdmin',
 			'ldap_dynamic_group_member_url'     => 'ldapDynamicGroupMemberURL',
 		);

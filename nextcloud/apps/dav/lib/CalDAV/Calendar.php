@@ -38,6 +38,10 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 		if ($this->getName() === BirthdayService::BIRTHDAY_CALENDAR_URI) {
 			$this->calendarInfo['{DAV:}displayname'] = $l10n->t('Contact birthdays');
 		}
+		if ($this->getName() === CalDavBackend::PERSONAL_CALENDAR_URI &&
+			$this->calendarInfo['{DAV:}displayname'] === CalDavBackend::PERSONAL_CALENDAR_NAME) {
+			$this->calendarInfo['{DAV:}displayname'] = $l10n->t('Personal');
+		}
 	}
 
 	/**
@@ -89,6 +93,13 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 		return $this->calendarInfo['id'];
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getPrincipalURI() {
+		return $this->calendarInfo['principaluri'];
+	}
+
 	function getACL() {
 		$acl =  [
 			[
@@ -117,6 +128,13 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 				];
 			}
 		}
+		if ($this->isPublic()) {
+			$acl[] = [
+				'privilege' => '{DAV:}read',
+				'principal' => 'principals/system/public',
+				'protected' => true,
+			];
+		}
 
 		/** @var CalDavBackend $calDavBackend */
 		$calDavBackend = $this->caldavBackend;
@@ -135,7 +153,8 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 	}
 
 	function delete() {
-		if (isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal'])) {
+		if (isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal']) &&
+			$this->calendarInfo['{http://owncloud.org/ns}owner-principal'] !== $this->calendarInfo['principaluri']) {
 			$principal = 'principal:' . parent::getOwner();
 			$shares = $this->getShares();
 			$shares = array_filter($shares, function($share) use ($principal){
@@ -158,7 +177,7 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 	function propPatch(PropPatch $propPatch) {
 		$mutations = $propPatch->getMutations();
 		// If this is a shared calendar, the user can only change the enabled property, to hide it.
-		if (isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal']) && (sizeof($mutations) !== 1 || !isset($mutations['{http://owncloud.org/ns}calendar-enabled']))) {
+		if ($this->isShared() && (sizeof($mutations) !== 1 || !isset($mutations['{http://owncloud.org/ns}calendar-enabled']))) {
 			throw new Forbidden();
 		}
 		parent::propPatch($propPatch);
@@ -236,6 +255,23 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 		return $uris;
 	}
 
+	/**
+	 * @param boolean $value
+	 * @return string|null
+	 */
+	function setPublishStatus($value) {
+		$publicUri = $this->caldavBackend->setPublishStatus($value, $this);
+		$this->calendarInfo['publicuri'] = $publicUri;
+		return $publicUri;
+	}
+
+	/**
+	 * @return mixed $value
+	 */
+	function getPublishStatus() {
+		return $this->caldavBackend->getPublishStatus($this);
+	}
+
 	private function canWrite() {
 		if (isset($this->calendarInfo['{http://owncloud.org/ns}read-only'])) {
 			return !$this->calendarInfo['{http://owncloud.org/ns}read-only'];
@@ -243,8 +279,20 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IShareable {
 		return true;
 	}
 
+	private function isPublic() {
+		return isset($this->calendarInfo['{http://owncloud.org/ns}public']);
+	}
+
 	private function isShared() {
-		return isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal']);
+		if (!isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal'])) {
+			return false;
+		}
+
+		return $this->calendarInfo['{http://owncloud.org/ns}owner-principal'] !== $this->calendarInfo['principaluri'];
+	}
+
+	public function isSubscription() {
+		return isset($this->calendarInfo['{http://calendarserver.org/ns/}source']);
 	}
 
 }

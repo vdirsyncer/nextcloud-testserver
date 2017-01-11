@@ -47,4 +47,16 @@ interface IQuery {
 	 * @since 8.0.0
 	 */
 	public function getDuration();
+
+	/**
+	 * @return float
+	 * @since 11.0.0
+	 */
+	public function getStartTime();
+
+	/**
+	 * @return array
+	 * @since 11.0.0
+	 */
+	public function getStacktrace();
 }

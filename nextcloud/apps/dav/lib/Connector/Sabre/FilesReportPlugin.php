@@ -39,6 +39,7 @@ use OCP\Files\Folder;
 use OCP\IGroupManager;
 use OCP\SystemTag\ISystemTagManager;
 use OCP\SystemTag\TagNotFoundException;
+use OCP\ITagManager;
 
 class FilesReportPlugin extends ServerPlugin {
 
@@ -75,6 +76,13 @@ class FilesReportPlugin extends ServerPlugin {
 	private $tagMapper;
 
 	/**
+	 * Manager for private tags
+	 *
+	 * @var ITagManager
+	 */
+	private $fileTagger;
+
+	/**
 	 * @var IUserSession
 	 */
 	private $userSession;
@@ -92,11 +100,18 @@ class FilesReportPlugin extends ServerPlugin {
 	/**
 	 * @param Tree $tree
 	 * @param View $view
+	 * @param ISystemTagManager $tagManager
+	 * @param ISystemTagObjectMapper $tagMapper
+	 * @param ITagManager $fileTagger manager for private tags
+	 * @param IUserSession $userSession
+	 * @param IGroupManager $groupManager
+	 * @param Folder $userfolder
 	 */
 	public function __construct(Tree $tree,
 								View $view,
 								ISystemTagManager $tagManager,
 								ISystemTagObjectMapper $tagMapper,
+								ITagManager $fileTagger,
 								IUserSession $userSession,
 								IGroupManager $groupManager,
 								Folder $userFolder
@@ -105,6 +120,7 @@ class FilesReportPlugin extends ServerPlugin {
 		$this->fileView = $view;
 		$this->tagManager = $tagManager;
 		$this->tagMapper = $tagMapper;
+		$this->fileTagger = $fileTagger;
 		$this->userSession = $userSession;
 		$this->groupManager = $groupManager;
 		$this->userFolder = $userFolder;
@@ -154,7 +170,7 @@ class FilesReportPlugin extends ServerPlugin {
 	public function onReport($reportName, $report, $uri) {
 		$reportTargetNode = $this->server->tree->getNodeForPath($uri);
 		if (!$reportTargetNode instanceof Directory || $reportName !== self::REPORT_NAME) {
-			throw new ReportNotSupported();
+			return;
 		}
 
 		$ns = '{' . $this::NS_OWNCLOUD . '}';
@@ -189,7 +205,8 @@ class FilesReportPlugin extends ServerPlugin {
 		// find sabre nodes by file id, restricted to the root node path
 		$results = $this->findNodesByFileIds($reportTargetNode, $resultFileIds);
 
-		$responses = $this->prepareResponses($requestedProps, $results);
+		$filesUri = $this->getFilesBaseUri($uri, $reportTargetNode->getPath());
+		$responses = $this->prepareResponses($filesUri, $requestedProps, $results);
 
 		$xml = $this->server->xml->write(
 			'{DAV:}multistatus',
@@ -204,6 +221,31 @@ class FilesReportPlugin extends ServerPlugin {
 	}
 
 	/**
+	 * Returns the base uri of the files root by removing
+	 * the subpath from the URI
+	 *
+	 * @param string $uri URI from this request
+	 * @param string $subPath subpath to remove from the URI
+	 *
+	 * @return string files base uri
+	 */
+	private function getFilesBaseUri($uri, $subPath) {
+		$uri = trim($uri, '/');
+		$subPath = trim($subPath, '/');
+		$filesUri = '';
+		if (empty($subPath)) {
+			$filesUri = $uri;
+		} else {
+			$filesUri = substr($uri, 0, strlen($uri) - strlen($subPath));
+		}
+		$filesUri = trim($filesUri, '/');
+		if (empty($filesUri)) {
+			return '';
+		}
+		return '/' . $filesUri;
+	}
+
+	/**
 	 * Find file ids matching the given filter rules
 	 *
 	 * @param array $filterRules
@@ -215,11 +257,37 @@ class FilesReportPlugin extends ServerPlugin {
 		$ns = '{' . $this::NS_OWNCLOUD . '}';
 		$resultFileIds = null;
 		$systemTagIds = [];
+		$favoriteFilter = null;
 		foreach ($filterRules as $filterRule) {
 			if ($filterRule['name'] === $ns . 'systemtag') {
 				$systemTagIds[] = $filterRule['value'];
 			}
+			if ($filterRule['name'] === $ns . 'favorite') {
+				$favoriteFilter = true;
+			}
 		}
+
+		if ($favoriteFilter !== null) {
+			$resultFileIds = $this->fileTagger->load('files')->getFavorites();
+			if (empty($resultFileIds)) {
+				return [];
+			}
+		}
+
+		if (!empty($systemTagIds)) {
+			$fileIds = $this->getSystemTagFileIds($systemTagIds);
+			if (empty($resultFileIds)) {
+				$resultFileIds = $fileIds;
+			} else {
+				$resultFileIds = array_intersect($fileIds, $resultFileIds);
+			}
+		}
+
+		return $resultFileIds;
+	}
+
+	private function getSystemTagFileIds($systemTagIds) {
+		$resultFileIds = null;
 
 		// check user permissions, if applicable
 		if (!$this->isAdmin()) {
@@ -264,14 +332,16 @@ class FilesReportPlugin extends ServerPlugin {
 	/**
 	 * Prepare propfind response for the given nodes
 	 *
+	 * @param string $filesUri $filesUri URI leading to root of the files URI,
+	 * with a leading slash but no trailing slash
 	 * @param string[] $requestedProps requested properties
 	 * @param Node[] nodes nodes for which to fetch and prepare responses
 	 * @return Response[]
 	 */
-	public function prepareResponses($requestedProps, $nodes) {
+	public function prepareResponses($filesUri, $requestedProps, $nodes) {
 		$responses = [];
 		foreach ($nodes as $node) {
-			$propFind = new PropFind($node->getPath(), $requestedProps);
+			$propFind = new PropFind($filesUri . $node->getPath(), $requestedProps);
 
 			$this->server->getPropertiesByNode($propFind, $node);
 			// copied from Sabre Server's getPropertiesForPath
@@ -284,7 +354,7 @@ class FilesReportPlugin extends ServerPlugin {
 			}
 
 			$responses[] = new Response(
-				rtrim($this->server->getBaseUri(), '/') . $node->getPath(),
+				rtrim($this->server->getBaseUri(), '/') . $filesUri . $node->getPath(),
 				$result,
 				200
 			);

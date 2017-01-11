@@ -55,10 +55,6 @@
 			   value="1" <?php if ($_['shareDefaultExpireDateSet'] === 'yes') print_unescaped('checked="checked"'); ?> />
 		<label for="shareapiDefaultExpireDate"><?php p($l->t('Set default expiration date'));?></label><br/>
 
-		<input type="checkbox" name="shareapi_allow_public_notification" id="allowPublicMailNotification" class="checkbox"
-			   value="1" <?php if ($_['allowPublicMailNotification'] == 'yes') print_unescaped('checked="checked"'); ?> />
-		<label for="allowPublicMailNotification"><?php p($l->t('Allow users to send mail notification for shared files'));?></label><br/>
-
 	</p>
 	<p id="setDefaultExpireDate" class="double-indent <?php if ($_['allowLinks'] !== 'yes' || $_['shareDefaultExpireDateSet'] === 'no' || $_['shareAPIEnabled'] === 'no') p('hidden');?>">
 		<?php p($l->t( 'Expire after ' )); ?>
@@ -85,17 +81,12 @@
 		<label for="onlyShareWithGroupMembers"><?php p($l->t('Restrict users to only share with users in their groups'));?></label><br/>
 	</p>
 	<p class="<?php if ($_['shareAPIEnabled'] === 'no') p('hidden');?>">
-		<input type="checkbox" name="shareapi_allow_mail_notification" id="allowMailNotification" class="checkbox"
-			   value="1" <?php if ($_['allowMailNotification'] === 'yes') print_unescaped('checked="checked"'); ?> />
-		<label for="allowMailNotification"><?php p($l->t('Allow users to send mail notification for shared files to other users'));?></label><br/>
-	</p>
-	<p class="<?php if ($_['shareAPIEnabled'] === 'no') p('hidden');?>">
 		<input type="checkbox" name="shareapi_exclude_groups" id="shareapiExcludeGroups" class="checkbox"
 			   value="1" <?php if ($_['shareExcludeGroups']) print_unescaped('checked="checked"'); ?> />
 		<label for="shareapiExcludeGroups"><?php p($l->t('Exclude groups from sharing'));?></label><br/>
 	</p>
 	<p id="selectExcludedGroups" class="indent <?php if (!$_['shareExcludeGroups'] || $_['shareAPIEnabled'] === 'no') p('hidden'); ?>">
-		<input name="shareapi_exclude_groups_list" type="hidden" id="excludedGroups" value="<?php p($_['shareExcludedGroupsList']) ?>" style="width: 400px"/>
+		<input name="shareapi_exclude_groups_list" type="hidden" id="excludedGroups" value="<?php p($_['shareExcludedGroupsList']) ?>" style="width: 400px" class="noJSAutoUpdate"/>
 		<br />
 		<em><?php p($l->t('These groups will still be able to receive shares, but not to initiate them.')); ?></em>
 	</p>
@@ -103,5 +94,13 @@
 		<input type="checkbox" name="shareapi_allow_share_dialog_user_enumeration" value="1" id="shareapi_allow_share_dialog_user_enumeration" class="checkbox"
 			<?php if ($_['allowShareDialogUserEnumeration'] === 'yes') print_unescaped('checked="checked"'); ?> />
 		<label for="shareapi_allow_share_dialog_user_enumeration"><?php p($l->t('Allow username autocompletion in share dialog. If this is disabled the full username needs to be entered.'));?></label><br />
+	</p>
+	<p>
+		<input type="checkbox" id="publicShareDisclaimer" class="checkbox noJSAutoUpdate"
+			<?php if ($_['publicShareDisclaimerText'] !== null) print_unescaped('checked="checked"'); ?> />
+		<label for="publicShareDisclaimer"><?php p($l->t('Show disclaimer text on the public link upload page. (Only shown when the file list is hidden.)'));?></label>
+		<span id="publicShareDisclaimerStatus" class="msg" style="display:none"></span>
+		<br/>
+		<textarea placeholder="<?php p($l->t('This text will be shown on the public link upload page when the file list is hidden.')) ?>" id="publicShareDisclaimerText" <?php if ($_['publicShareDisclaimerText'] === null) { print_unescaped('class="hidden"'); } ?>><?php p($_['publicShareDisclaimerText']) ?></textarea>
 	</p>
 </div>

@@ -14,7 +14,7 @@
 		<meta name="apple-itunes-app" content="app-id=<?php p($theme->getiTunesAppId()); ?>">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
-		<meta name="apple-mobile-web-app-title" content="<?php p((!empty($_['application']) && $_['appid']!='files')? $_['application']:'ownCloud'); ?>">
+		<meta name="apple-mobile-web-app-title" content="<?php p((!empty($_['application']) && $_['appid']!='files')? $_['application']:$theme->getTitle()); ?>">
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="theme-color" content="<?php p($theme->getMailHeaderColor()); ?>">
 		<link rel="icon" href="<?php print_unescaped(image_path($_['appid'], 'favicon.ico')); /* IE11+ supports png */ ?>">
@@ -26,8 +26,13 @@
 		<?php foreach($_['printcssfiles'] as $cssfile): ?>
 			<link rel="stylesheet" href="<?php print_unescaped($cssfile); ?>" media="print">
 		<?php endforeach; ?>
+		<?php if (isset($_['inline_ocjs'])): ?>
+			<script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>" type="text/javascript">
+				<?php print_unescaped($_['inline_ocjs']); ?>
+			</script>
+		<?php endif; ?>
 		<?php foreach($_['jsfiles'] as $jsfile): ?>
-			<script src="<?php print_unescaped($jsfile); ?>"></script>
+			<script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>" src="<?php print_unescaped($jsfile); ?>"></script>
 		<?php endforeach; ?>
 		<?php print_unescaped($_['headers']); ?>
 	</head>
@@ -38,7 +43,7 @@
 	</div>
 	<header role="banner"><div id="header">
 			<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
-				id="owncloud" tabindex="1">
+				id="nextcloud" tabindex="1">
 				<div class="logo-icon">
 					<h1 class="hidden-visually">
 						<?php p($theme->getName()); ?>
@@ -48,13 +53,7 @@
 
 			<a href="#" class="header-appname-container menutoggle" tabindex="2">
 				<h1 class="header-appname">
-					<?php
-						if(OC_Util::getEditionString() === '') {
-							p(!empty($_['application'])?$_['application']: $l->t('Apps'));
-						} else {
-							print_unescaped($theme->getHTMLName());
-						}
-					?>
+					<?php p(!empty($_['application'])?$_['application']: $l->t('Apps')); ?>
 				</h1>
 				<div class="icon-caret"></div>
 			</a>
@@ -66,8 +65,8 @@
 					<div class="avatardiv<?php if ($_['userAvatarSet']) { print_unescaped(' avatardiv-shown'); } else { print_unescaped('" style="display: none'); } ?>">
 						<?php if ($_['userAvatarSet']): ?>
 							<img alt="" width="32" height="32"
-							src="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 32]));?>"
-							srcset="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 64]));?> 2x, <?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 128]));?> 4x"
+							src="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 32, 'v' => $_['userAvatarVersion']]));?>"
+							srcset="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 64, 'v' => $_['userAvatarVersion']]));?> 2x, <?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.getAvatar', ['userId' => $_['user_uid'], 'size' => 128, 'v' => $_['userAvatarVersion']]));?> 4x"
 							>
 						<?php endif; ?>
 					</div>
@@ -146,6 +145,14 @@
 				</ul>
 			</div>
 		</div></nav>
+
+		<div id="sudo-login-background" class="hidden"></div>
+		<div id="sudo-login-form" class="hidden">
+			<?php p($l->t('This action requires you to confirm your password:')); ?><br>
+			<input type="password" class="question" autocomplete="off" name="question" value=" <?php /* Hack against firefox ignoring autocomplete="off" */ ?>"
+				placeholder="<?php p($l->t('Confirm your password')); ?>" />
+			<input class="confirm icon-confirm" title="<?php p($l->t('Confirm')); ?>" value="" type="submit">
+		</div>
 
 		<div id="content-wrapper">
 			<div id="content" class="app-<?php p($_['appid']) ?>" role="main">

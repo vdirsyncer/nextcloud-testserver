@@ -23,6 +23,7 @@
 
 namespace OC\Diagnostics;
 
+use OC\Cache\CappedMemoryCache;
 use OCP\Diagnostics\IQueryLogger;
 
 class QueryLogger implements IQueryLogger {
@@ -34,7 +35,15 @@ class QueryLogger implements IQueryLogger {
 	/**
 	 * @var \OC\Diagnostics\Query[]
 	 */
-	protected $queries = array();
+	protected $queries;
+
+	/**
+	 * QueryLogger constructor.
+	 */
+	public function __construct() {
+		$this->queries = new CappedMemoryCache(1024);
+	}
+
 
 	/**
 	 * @param string $sql
@@ -42,7 +51,15 @@ class QueryLogger implements IQueryLogger {
 	 * @param array $types
 	 */
 	public function startQuery($sql, array $params = null, array $types = null) {
-		$this->activeQuery = new Query($sql, $params, microtime(true));
+		$this->activeQuery = new Query($sql, $params, microtime(true), $this->getStack());
+	}
+
+	private function getStack() {
+		$stack = debug_backtrace();
+		array_shift($stack);
+		array_shift($stack);
+		array_shift($stack);
+		return $stack;
 	}
 
 	public function stopQuery() {
@@ -57,6 +74,6 @@ class QueryLogger implements IQueryLogger {
 	 * @return Query[]
 	 */
 	public function getQueries() {
-		return $this->queries;
+		return $this->queries->getData();
 	}
 }

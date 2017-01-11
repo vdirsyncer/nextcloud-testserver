@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Transactional File Locking &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Transactional File Locking &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Previews Configuration" href="previews_configuration.html" />
     <link rel="prev" title="Encryption Configuration" href="encryption_configuration.html" />
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -76,15 +75,16 @@
 <li class="toctree-l2"><a class="reference internal" href="file_sharing_configuration.html">File Sharing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="federated_cloud_sharing_configuration.html">Configuring Federation Sharing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="big_file_upload_configuration.html">Uploading big files &gt; 512MB</a></li>
-<li class="toctree-l2"><a class="reference internal" href="collaborative_documents_configuration.html">Configuring the Collaborative Documents App</a></li>
 <li class="toctree-l2"><a class="reference internal" href="default_files_configuration.html">Providing Default Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage_configuration_gui.html">Configuring External Storage (GUI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage_configuration.html">Configuring External Storage (Configuration File)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage/auth_mechanisms.html">External Storage Authentication mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="primary_storage.html">Primary Storage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="encryption_configuration.html">Encryption Configuration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Transactional File Locking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="previews_configuration.html">Previews Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_versioning.html">Controlling File Versions and Aging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files_access_control.html">Files Access Control</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
@@ -130,21 +130,11 @@ from multiple users</li>
 <li>Manages locks correctly on external storage mounts</li>
 <li>Manages encrypted files correctly</li>
 </ul>
-<p>What Transactional File locking is not for: it is not for preventing collisions
-in collaborative document editing (see
-<a class="reference internal" href="collaborative_documents_configuration.html"><em>Configuring the Collaborative Documents App</em></a> to learn about collaboration with
-the Documents app), nor will it prevent multiple users from editing the same
-document, or give notice that other users are working on the same document.
-Multiple users can open and edit a file at the same time and Transactional File
-locking does not prevent this. Rather, it prevents simultaneous file saving.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Transactional file locking is in Nextcloud core, and replaces the old
-File Locking app. The File Locking app has been removed from Nextcloud in
-version 8.2.1. If your Nextcloud server still has the File Locking app, you
-must visit your Apps page to verify that it is disabled; the File Locking
-app and Transactional File Locking cannot both operate at the same time.</p>
-</div>
+<p>What Transactional File locking is not for: it will not prevent multiple users
+from editing the same document, or give notice that other users are working on
+the same document. Multiple users can open and edit a file at the same time and
+Transactional File locking does not prevent this. Rather, it prevents
+simultaneous file saving.</p>
 <p>File locking is enabled by default, using the database locking backend. This
 places a significant load on your database. Using <code class="docutils literal"><span class="pre">memcache.locking</span></code> relieves
 the database load and improves performance. Admins of Nextcloud servers with

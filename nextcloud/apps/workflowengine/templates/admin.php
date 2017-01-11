@@ -25,7 +25,14 @@
 <div id="<?php p($_['appid']); ?>" class="section workflowengine">
 	<h2 class="inlineblock"><?php p($_['heading']); ?></h2>
 
-	<?php if ($_['description']): ?>
+	<?php if (!empty($_['docs'])): ?>
+		<a target="_blank" rel="noreferrer" class="icon-info svg"
+		   title="<?php p($l->t('Open documentation'));?>"
+		   href="<?php p(link_to_docs($_['docs'])); ?>">
+		</a>
+	<?php endif; ?>
+
+	<?php if (!empty($_['description'])): ?>
 		<p><?php p($_['description']); ?></p>
 	<?php endif; ?>
 
@@ -48,12 +55,12 @@
 				<div class="check" data-id="{{@index}}">
 					<select class="check-class">
 						{{#each ../classes}}
-						<option value="{{class}}" {{selectItem class ../class}}>{{name}}</option>
+						<option value="{{class}}" {{{selectItem class ../class}}}>{{name}}</option>
 						{{/each}}
 					</select>
 					<select class="check-operator">
 						{{#each (getOperators class)}}
-						<option value="{{operator}}" {{selectItem operator ../operator}}>{{name}}</option>
+						<option value="{{operator}}" {{{selectItem operator ../operator}}}>{{name}}</option>
 						{{/each}}
 					</select>
 					<input type="text" class="check-value" value="{{value}}">

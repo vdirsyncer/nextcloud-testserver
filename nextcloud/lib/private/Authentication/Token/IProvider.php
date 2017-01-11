@@ -28,6 +28,7 @@ use OCP\IUser;
 
 interface IProvider {
 
+
 	/**
 	 * Create and persist a new token
 	 *
@@ -37,9 +38,10 @@ interface IProvider {
 	 * @param string|null $password
 	 * @param string $name
 	 * @param int $type token type
+	 * @param int $remember whether the session token should be used for remember-me
 	 * @return IToken
 	 */
-	public function generateToken($token, $uid, $loginName, $password, $name, $type = IToken::TEMPORARY_TOKEN);
+	public function generateToken($token, $uid, $loginName, $password, $name, $type = IToken::TEMPORARY_TOKEN, $remember = IToken::DO_NOT_REMEMBER);
 
 	/**
 	 * Get a token by token id
@@ -48,7 +50,25 @@ interface IProvider {
 	 * @throws InvalidTokenException
 	 * @return IToken
 	 */
-	public function getToken($tokenId) ;
+	public function getToken($tokenId);
+
+	/**
+	 * Get a token by token id
+	 *
+	 * @param string $tokenId
+	 * @throws InvalidTokenException
+	 * @return DefaultToken
+	 */
+	public function getTokenById($tokenId);
+
+	/**
+	 * Duplicate an existing session token
+	 *
+	 * @param string $oldSessionId
+	 * @param string $sessionId
+	 * @throws InvalidTokenException
+	 */
+	public function renewSessionToken($oldSessionId, $sessionId);
 
 	/**
 	 * Invalidate (delete) the given session token
@@ -64,6 +84,11 @@ interface IProvider {
 	 * @param int $id
 	 */
 	public function invalidateTokenById(IUser $user, $id);
+
+	/**
+	 * Invalidate (delete) old session tokens
+	 */
+	public function invalidateOldTokens();
 
 	/**
 	 * Save the updated token

@@ -1,5 +1,4 @@
 { "translations": {
-    "Activity" : "Активност",
     "Activities" : "Активности",
     "Error loading activities" : "Грешка при вчитување на активностите",
     "No activities" : "Нема активности",
@@ -10,6 +9,7 @@
     "There are no events for this filter" : "Нема настани за овој филтер",
     "Today" : "Денеска",
     "Yesterday" : "Вчера",
+    "Activity" : "Активност",
     "Personal activity feed for %s" : "Feed на лични активности за %s",
     "Your feed URL is invalid" : "Вашиот URL за feed не е исправен",
     "Your settings have been updated." : "Вашите нагодувања беа освежени.",
@@ -17,9 +17,6 @@
     "Stream" : "Стрим",
     "\"remote user\"" : "\"далечен корисник\"",
     "Activity notification" : "Известување за Активности",
-    "All Activities" : "Сите активности",
-    "Activities by you" : "Ваши активности",
-    "Activities by others" : "Активности на други",
     "%s and %s" : "%s и %s",
     "Hello %s," : "Здраво %s,",
     "* %1$s - %2$s" : "* %1$s - %2$s",

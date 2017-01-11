@@ -363,15 +363,6 @@ class Setup {
 			$group =\OC::$server->getGroupManager()->createGroup('admin');
 			$group->addUser($user);
 
-			// Create a session token for the newly created user
-			// The token provider requires a working db, so it's not injected on setup
-			/* @var $userSession User\Session */
-			$userSession = \OC::$server->getUserSession();
-			$defaultTokenProvider = \OC::$server->query('OC\Authentication\Token\DefaultTokenProvider');
-			$userSession->setTokenProvider($defaultTokenProvider);
-			$userSession->login($username, $password);
-			$userSession->createSessionToken($request, $userSession->getUser()->getUID(), $username, $password);
-
 			//guess what this does
 			Installer::installShippedApps();
 
@@ -392,6 +383,15 @@ class Setup {
 
 			//and we are done
 			$config->setSystemValue('installed', true);
+
+			// Create a session token for the newly created user
+			// The token provider requires a working db, so it's not injected on setup
+			/* @var $userSession User\Session */
+			$userSession = \OC::$server->getUserSession();
+			$defaultTokenProvider = \OC::$server->query('OC\Authentication\Token\DefaultTokenProvider');
+			$userSession->setTokenProvider($defaultTokenProvider);
+			$userSession->login($username, $password);
+			$userSession->createSessionToken($request, $userSession->getUser()->getUID(), $username, $password);
 		}
 
 		return $error;
@@ -410,6 +410,7 @@ class Setup {
 
 	/**
 	 * Append the correct ErrorDocument path for Apache hosts
+	 * @return bool True when success, False otherwise
 	 */
 	public static function updateHtaccess() {
 		$config = \OC::$server->getConfig();
@@ -418,7 +419,7 @@ class Setup {
 		if(\OC::$CLI) {
 			$webRoot = $config->getSystemValue('overwrite.cli.url', '');
 			if($webRoot === '') {
-				return;
+				return false;
 			}
 			$webRoot = parse_url($webRoot, PHP_URL_PATH);
 			$webRoot = rtrim($webRoot, '/');
@@ -472,9 +473,10 @@ class Setup {
 
 		if ($content !== '') {
 			//suppress errors in case we don't have permissions for it
-			@file_put_contents($setupHelper->pathToHtaccess(), $htaccessContent.$content . "\n");
+			return (bool) @file_put_contents($setupHelper->pathToHtaccess(), $htaccessContent.$content . "\n");
 		}
 
+		return false;
 	}
 
 	public static function protectDataDirectory() {

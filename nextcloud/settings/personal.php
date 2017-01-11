@@ -40,6 +40,7 @@ OC_Util::checkLoggedIn();
 
 $defaults = \OC::$server->getThemingDefaults();
 $certificateManager = \OC::$server->getCertificateManager();
+$accountManager = new \OC\Accounts\AccountManager(\OC::$server->getDatabaseConnection(), \OC::$server->getEventDispatcher());
 $config = \OC::$server->getConfig();
 $urlGenerator = \OC::$server->getURLGenerator();
 
@@ -47,7 +48,10 @@ $urlGenerator = \OC::$server->getURLGenerator();
 OC_Util::addScript('settings', 'authtoken');
 OC_Util::addScript('settings', 'authtoken_collection');
 OC_Util::addScript('settings', 'authtoken_view');
-OC_Util::addScript( 'settings', 'personal' );
+OC_Util::addScript('settings', 'usersettings');
+OC_Util::addScript('settings', 'federationsettingsview');
+OC_Util::addScript('settings', 'federationscopemenu');
+OC_Util::addScript('settings', 'personal');
 OC_Util::addScript('settings', 'certificates');
 OC_Util::addStyle( 'settings', 'settings' );
 \OC_Util::addVendorScript('strengthify/jquery.strengthify');
@@ -66,9 +70,8 @@ OC::$server->getNavigationManager()->setActiveEntry('personal');
 $storageInfo=OC_Helper::getStorageInfo('/');
 
 $user = OC::$server->getUserManager()->get(OC_User::getUser());
-$email = $user->getEMailAddress();
 
-$userLang=$config->getUserValue( OC_User::getUser(), 'core', 'lang', OC_L10N::findLanguage() );
+$userLang=$config->getUserValue( OC_User::getUser(), 'core', 'lang', \OC::$server->getL10NFactory()->findLanguage() );
 $languageCodes = \OC::$server->getL10NFactory()->findAvailableLanguages();
 
 // array of common languages
@@ -76,7 +79,6 @@ $commonLangCodes = array(
 	'en', 'es', 'fr', 'de', 'de_DE', 'ja', 'ar', 'ru', 'nl', 'it', 'pt_BR', 'pt_PT', 'da', 'fi_FI', 'nb_NO', 'sv', 'tr', 'zh_CN', 'ko'
 );
 
-$languageNames=include 'languageCodes.php';
 $languages=array();
 $commonLanguages = array();
 foreach($languageCodes as $lang) {
@@ -84,9 +86,9 @@ foreach($languageCodes as $lang) {
 	// TRANSLATORS this is the language name for the language switcher in the personal settings and should be the localized version
 	$potentialName = (string) $l->t('__language_name__');
 	if($l->getLanguageCode() === $lang && substr($potentialName, 0, 1) !== '_') {//first check if the language name is in the translation file
-		$ln=array('code'=>$lang, 'name'=> $potentialName);
-	}elseif(isset($languageNames[$lang])) {
-		$ln=array('code'=>$lang, 'name'=>$languageNames[$lang]);
+		$ln = array('code' => $lang, 'name' => $potentialName);
+	} elseif ($lang === 'en') {
+		$ln = ['code' => $lang, 'name' => 'English'];
 	}else{//fallback to language code
 		$ln=array('code'=>$lang, 'name'=>$lang);
 	}
@@ -152,16 +154,34 @@ if ($storageInfo['quota'] === \OCP\Files\FileInfo::SPACE_UNLIMITED) {
 } else {
 	$totalSpace = OC_Helper::humanFileSize($storageInfo['total']);
 }
+
+$uid = $user->getUID();
+$userData = $accountManager->getUser($user);
+
 $tmpl->assign('total_space', $totalSpace);
 $tmpl->assign('usage_relative', $storageInfo['relative']);
 $tmpl->assign('clients', $clients);
-$tmpl->assign('email', $email);
+$tmpl->assign('email', $userData[\OC\Accounts\AccountManager::PROPERTY_EMAIL]['value']);
 $tmpl->assign('languages', $languages);
 $tmpl->assign('commonlanguages', $commonLanguages);
 $tmpl->assign('activelanguage', $userLang);
 $tmpl->assign('passwordChangeSupported', OC_User::canUserChangePassword(OC_User::getUser()));
 $tmpl->assign('displayNameChangeSupported', OC_User::canUserChangeDisplayName(OC_User::getUser()));
-$tmpl->assign('displayName', OC_User::getDisplayName());
+$tmpl->assign('displayName', $userData[\OC\Accounts\AccountManager::PROPERTY_DISPLAYNAME]['value']);
+
+$tmpl->assign('phone', $userData[\OC\Accounts\AccountManager::PROPERTY_PHONE]['value']);
+$tmpl->assign('website', $userData[\OC\Accounts\AccountManager::PROPERTY_WEBSITE]['value']);
+$tmpl->assign('twitter', $userData[\OC\Accounts\AccountManager::PROPERTY_TWITTER]['value']);
+$tmpl->assign('address', $userData[\OC\Accounts\AccountManager::PROPERTY_ADDRESS]['value']);
+
+$tmpl->assign('avatarScope', $userData[\OC\Accounts\AccountManager::PROPERTY_AVATAR]['scope']);
+$tmpl->assign('displayNameScope', $userData[\OC\Accounts\AccountManager::PROPERTY_DISPLAYNAME]['scope']);
+$tmpl->assign('phoneScope', $userData[\OC\Accounts\AccountManager::PROPERTY_PHONE]['scope']);
+$tmpl->assign('emailScope', $userData[\OC\Accounts\AccountManager::PROPERTY_EMAIL]['scope']);
+$tmpl->assign('websiteScope', $userData[\OC\Accounts\AccountManager::PROPERTY_WEBSITE]['scope']);
+$tmpl->assign('twitterScope', $userData[\OC\Accounts\AccountManager::PROPERTY_TWITTER]['scope']);
+$tmpl->assign('addressScope', $userData[\OC\Accounts\AccountManager::PROPERTY_ADDRESS]['scope']);
+
 $tmpl->assign('enableAvatars', $config->getSystemValue('enable_avatars', true) === true);
 $tmpl->assign('avatarChangeSupported', OC_User::canUserChangeAvatar(OC_User::getUser()));
 $tmpl->assign('certs', $certificateManager->listCertificates());

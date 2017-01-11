@@ -6,6 +6,8 @@
  * See the COPYING-README file.
  */
 
+/* globals escapeHTML, GroupList, DeleteHandler, UserManagementFilter */
+
 var $userList;
 var $userListBody;
 
@@ -46,10 +48,8 @@ var UserList = {
 	 *				'email':			'username@example.org'
 	 *				'isRestoreDisabled':false
 	 * 			}
-	 * @param sort
-	 * @returns table row created for this user
 	 */
-	add: function (user, sort) {
+	add: function (user) {
 		if (this.currentGid && this.currentGid !== '_everyone' && _.indexOf(user.groups, this.currentGid) < 0) {
 			return;
 		}
@@ -57,9 +57,6 @@ var UserList = {
 		var $tr = $userListBody.find('tr:first-child').clone();
 		// this removes just the `display:none` of the template row
 		$tr.removeAttr('style');
-		var subAdminsEl;
-		var subAdminSelect;
-		var groupsSelect;
 
 		/**
 		 * Avatar or placeholder
@@ -86,32 +83,17 @@ var UserList = {
 		$tr.find('td.mailAddress > .action').tooltip({placement: 'top'});
 		$tr.find('td.password > .action').tooltip({placement: 'top'});
 
+
 		/**
 		 * groups and subadmins
 		 */
-		// make them look like the multiselect buttons
-		// until they get time to really get initialized
-		groupsSelect = $('<select multiple="multiple" class="groupsselect multiselect button" data-placehoder="Groups" title="' + t('settings', 'no group') + '"></select>')
-			.data('username', user.name)
-			.data('user-groups', user.groups);
-		if ($tr.find('td.subadmins').length > 0) {
-			subAdminSelect = $('<select multiple="multiple" class="subadminsselect multiselect button" data-placehoder="subadmins" title="' + t('settings', 'no group') + '">')
-				.data('username', user.name)
-				.data('user-groups', user.groups)
-				.data('subadmin', user.subadmin);
-			$tr.find('td.subadmins').empty();
-		}
-		$.each(this.availableGroups, function (i, group) {
-			groupsSelect.append($('<option value="' + escapeHTML(group) + '">' + escapeHTML(group) + '</option>'));
-			if (typeof subAdminSelect !== 'undefined' && group !== 'admin') {
-				subAdminSelect.append($('<option value="' + escapeHTML(group) + '">' + escapeHTML(group) + '</option>'));
-			}
-		});
-		$tr.find('td.groups').empty().append(groupsSelect);
-		subAdminsEl = $tr.find('td.subadmins');
-		if (subAdminsEl.length > 0) {
-			subAdminsEl.append(subAdminSelect);
-		}
+		var $tdGroups = $tr.find('td.groups');
+		this._updateGroupListLabel($tdGroups, user.groups);
+		$tdGroups.find('.action').tooltip({placement: 'top'});
+
+		var $tdSubadmins = $tr.find('td.subadmins');
+		this._updateGroupListLabel($tdSubadmins, user.subadmin);
+		$tdSubadmins.find('.action').tooltip({placement: 'top'});
 
 		/**
 		 * remove action
@@ -186,24 +168,12 @@ var UserList = {
 			UserList.checkUsersToLoad();
 		}
 
-		/**
-		 * sort list
-		 */
-		if (sort) {
-			UserList.doSort();
-		}
-
 		$quotaSelect.on('change', UserList.onQuotaSelect);
 
 		// defer init so the user first sees the list appear more quickly
 		window.setTimeout(function(){
 			$quotaSelect.singleSelect();
-			UserList.applyGroupSelect(groupsSelect);
-			if (subAdminSelect) {
-				UserList.applySubadminSelect(subAdminSelect);
-			}
 		}, 0);
-		return $tr;
 	},
 	// From http://my.opera.com/GreyWyvern/blog/show.dml/1671288
 	alphanum: function(a, b) {
@@ -322,7 +292,7 @@ var UserList = {
 	},
 	markRemove: function(uid) {
 		var $tr = UserList.getRow(uid);
-		var groups = $tr.find('.groups .groupsselect').val();
+		var groups = $tr.find('.groups').data('groups');
 		for(var i in groups) {
 			var gid = groups[i];
 			var $li = GroupList.getGroupLI(gid);
@@ -337,7 +307,7 @@ var UserList = {
 	},
 	undoRemove: function(uid) {
 		var $tr = UserList.getRow(uid);
-		var groups = $tr.find('.groups .groupsselect').val();
+		var groups = $tr.find('.groups').data('groups');
 		for(var i in groups) {
 			var gid = groups[i];
 			var $li = GroupList.getGroupLI(gid);
@@ -383,6 +353,14 @@ var UserList = {
 		$userListBody.on('click', '.delete', function () {
 			// Call function for handling delete/undo
 			var uid = UserList.getUID(this);
+
+			if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+				OC.PasswordConfirmation.requirePasswordConfirmation(function() {
+					UserDeleteHandler.mark(uid);
+				});
+				return;
+			}
+
 			UserDeleteHandler.mark(uid);
 		});
 
@@ -409,8 +387,6 @@ var UserList = {
 			OC.generateUrl('/settings/users/users'),
 			{ offset: UserList.offset, limit: limit, gid: gid, pattern: pattern },
 			function (result) {
-				var loadedUsers = 0;
-				var trs = [];
 				//The offset does not mirror the amount of users available,
 				//because it is backend-dependent. For correct retrieval,
 				//always the limit(requested amount of users) needs to be added.
@@ -418,9 +394,7 @@ var UserList = {
 					if(UserList.has(user.name)) {
 						return true;
 					}
-					var $tr = UserList.add(user, user.lastLogin, false, user.backend);
-					trs.push($tr);
-					loadedUsers++;
+					UserList.add(user);
 				});
 				if (result.length > 0) {
 					UserList.doSort();
@@ -438,26 +412,21 @@ var UserList = {
 			});
 	},
 
-	applyGroupSelect: function (element) {
-		var checked = [];
-		var $element = $(element);
-		var user = UserList.getUID($element);
-
-		if ($element.data('user-groups')) {
-			if (typeof $element.data('user-groups') === 'string') {
-				checked = $element.data('user-groups').split(", ");
-			}
-			else {
-				checked = $element.data('user-groups');
-			}
+	applyGroupSelect: function (element, user, checked) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this.applySubadminSelect, this, element, user, checked));
+			return;
 		}
+
+		var $element = $(element);
+
 		var checkHandler = null;
 		if(user) { // Only if in a user row, and not the #newusergroups select
 			checkHandler = function (group) {
 				if (user === OC.currentUser && group === 'admin') {
 					return false;
 				}
-				if (!oc_isadmin && checked.length === 1 && checked[0] === group) {
+				if (!OC.isUserAdmin() && checked.length === 1 && checked[0] === group) {
 					return false;
 				}
 				$.post(
@@ -490,18 +459,11 @@ var UserList = {
 			};
 		}
 		var addGroup = function (select, group) {
-			$('select[multiple]').each(function (index, element) {
-				$element = $(element);
-				if ($element.find('option').filterAttr('value', group).length === 0 &&
-					select.data('msid') !== $element.data('msid')) {
-					$element.append('<option value="' + escapeHTML(group) + '">' + escapeHTML(group) + '</option>');
-				}
-			});
 			GroupList.addGroup(escapeHTML(group));
 		};
 		var label;
-		if (oc_isadmin) {
-			label = t('settings', 'add group');
+		if (OC.isUserAdmin()) {
+			label = t('settings', 'Add group');
 		}
 		else {
 			label = null;
@@ -517,19 +479,13 @@ var UserList = {
 		});
 	},
 
-	applySubadminSelect: function (element) {
-		var checked = [];
-		var $element = $(element);
-		var user = UserList.getUID($element);
-
-		if ($element.data('subadmin')) {
-			if (typeof $element.data('subadmin') === 'string') {
-				checked = $element.data('subadmin').split(", ");
-			}
-			else {
-				checked = $element.data('subadmin');
-			}
+	applySubadminSelect: function (element, user, checked) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this.applySubadminSelect, this, element, user, checked));
+			return;
 		}
+
+		var $element = $(element);
 		var checkHandler = function (group) {
 			if (group === 'admin') {
 				return false;
@@ -540,20 +496,15 @@ var UserList = {
 					username: user,
 					group: group
 				},
-				function () {
+				function (response) {
+					if (response.data !== undefined && response.data.message) {
+						OC.Notification.show(response.data.message);
+					}
 				}
 			);
 		};
 
-		var addSubAdmin = function (group) {
-			$('select[multiple]').each(function (index, element) {
-				if ($(element).find('option').filterAttr('value', group).length === 0) {
-					$(element).append('<option value="' + escapeHTML(group) + '">' + escapeHTML(group) + '</option>');
-				}
-			});
-		};
 		$element.multiSelect({
-			createCallback: addSubAdmin,
 			createText: null,
 			checked: checked,
 			oncheck: checkHandler,
@@ -582,13 +533,13 @@ var UserList = {
 		if (quota === 'other') {
 			return;
 		}
-		if (isNaN(parseInt(quota, 10)) || parseInt(quota, 10) < 0) {
+		if ((quota !== 'default' && quota !=="none") && (isNaN(parseInt(quota, 10)) || parseInt(quota, 10) < 0)) {
 			// the select component has added the bogus value, delete it again
 			$select.find('option[selected]').remove();
 			OC.Notification.showTemporary(t('core', 'Invalid quota value "{val}"', {val: quota}));
 			return;
 		}
-		UserList._updateQuota(uid, quota, function(returnedQuota){
+		UserList._updateQuota(uid, quota, function(returnedQuota) {
 			if (quota !== returnedQuota) {
 				$select.find(':selected').text(returnedQuota);
 			}
@@ -602,15 +553,94 @@ var UserList = {
 	 * @param {Function} ready callback after save
 	 */
 	_updateQuota: function(uid, quota, ready) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this._updateQuota, this, uid, quota, ready));
+			return;
+		}
+
 		$.post(
 			OC.filePath('settings', 'ajax', 'setquota.php'),
 			{username: uid, quota: quota},
 			function (result) {
-				if (ready) {
-					ready(result.data.quota);
+				if (result.status === 'error') {
+					OC.Notification.showTemporary(result.data.message);
+				} else {
+					if (ready) {
+						ready(result.data.quota);
+					}
 				}
 			}
 		);
+	},
+
+	/**
+	 * Creates a temporary jquery.multiselect selector on the given group field
+	 */
+	_triggerGroupEdit: function($td, isSubadminSelect) {
+		var $groupsListContainer = $td.find('.groupsListContainer');
+		var placeholder = $groupsListContainer.attr('data-placeholder') || t('settings', 'no group');
+		var user = UserList.getUID($td);
+		var checked = $td.data('groups') || [];
+		var extraGroups = [].concat(checked);
+
+		$td.find('.multiselectoptions').remove();
+
+		// jquery.multiselect can only work with select+options in DOM ? We'll give jquery.multiselect what it wants...
+		var $groupsSelect;
+		if (isSubadminSelect) {
+			$groupsSelect = $('<select multiple="multiple" class="groupsselect multiselect button" title="' + placeholder + '"></select>');
+		} else {
+			$groupsSelect = $('<select multiple="multiple" class="subadminsselect multiselect button" title="' + placeholder + '"></select>')
+		}
+
+		function createItem(group) {
+			if (isSubadminSelect && group === 'admin') {
+				// can't become subadmin of "admin" group
+				return;
+			}
+			$groupsSelect.append($('<option value="' + escapeHTML(group) + '">' + escapeHTML(group) + '</option>'));
+		}
+
+		$.each(this.availableGroups, function (i, group) {
+			// some new groups might be selected but not in the available groups list yet
+			var extraIndex = extraGroups.indexOf(group);
+			if (extraIndex >= 0) {
+				// remove extra group as it was found
+				extraGroups.splice(extraIndex, 1);
+			}
+			createItem(group);
+		});
+		$.each(extraGroups, function (i, group) {
+			createItem(group);
+		});
+
+		$td.append($groupsSelect);
+
+		if (isSubadminSelect) {
+			UserList.applySubadminSelect($groupsSelect, user, checked);
+		} else {
+			UserList.applyGroupSelect($groupsSelect, user, checked);
+		}
+
+		$groupsListContainer.addClass('hidden');
+		$td.find('.multiselect:not(.groupsListContainer):first').click();
+		$groupsSelect.on('dropdownclosed', function(e) {
+			$groupsSelect.remove();
+			$td.find('.multiselect:not(.groupsListContainer)').parent().remove();
+			$td.find('.multiselectoptions').remove();
+			$groupsListContainer.removeClass('hidden');
+			UserList._updateGroupListLabel($td, e.checked);
+		});
+	},
+
+	/**
+	 * Updates the groups list td with the given groups selection
+	 */
+	_updateGroupListLabel: function($td, groups) {
+		var placeholder = $td.find('.groupsListContainer').attr('data-placeholder');
+		var $groupsEl = $td.find('.groupsList');
+		$groupsEl.text(groups.join(', ') || placeholder || t('settings', 'no group'));
+		$td.data('groups', groups);
 	}
 };
 
@@ -635,12 +665,27 @@ $(document).ready(function () {
 	// TODO: move other init calls inside of initialize
 	UserList.initialize($('#userlist'));
 
-	$('.groupsselect').each(function (index, element) {
-		UserList.applyGroupSelect(element);
-	});
-	$('.subadminsselect').each(function (index, element) {
-		UserList.applySubadminSelect(element);
-	});
+	var _submitPasswordChange = function(uid, password, recoveryPasswordVal, blurFunction) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(function() {
+				_submitPasswordChange(uid, password, recoveryPasswordVal, blurFunction);
+			});
+			return;
+		}
+
+		$.post(
+			OC.generateUrl('/settings/users/changepassword'),
+			{username: uid, password: password, recoveryPassword: recoveryPasswordVal},
+			function (result) {
+				blurFunction();
+				if (result.status === 'success') {
+					OC.Notification.showTemporary(t('admin', 'Password successfully changed'));
+				} else {
+					OC.Notification.showTemporary(t('admin', result.data.message));
+				}
+			}
+		).fail(blurFunction);
+	};
 
 	$userListBody.on('click', '.password', function (event) {
 		event.stopPropagation();
@@ -650,6 +695,13 @@ $(document).ready(function () {
 		var uid = UserList.getUID($td);
 		var $input = $('<input type="password">');
 		var isRestoreDisabled = UserList.getRestoreDisabled($td) === true;
+		var blurFunction = function () {
+			$(this).replaceWith($('<span>●●●●●●●</span>'));
+			$td.find('img').show();
+			// remove highlight class from users without recovery ability
+			$tr.removeClass('row-warning');
+		};
+		blurFunction = _.bind(blurFunction, $input);
 		if(isRestoreDisabled) {
 			$tr.addClass('row-warning');
 			// add tipsy if the password change could cause data loss - no recovery enabled
@@ -664,33 +716,50 @@ $(document).ready(function () {
 				if (event.keyCode === 13) {
 					if ($(this).val().length > 0) {
 						var recoveryPasswordVal = $('input:password[id="recoveryPassword"]').val();
-						$.post(
-							OC.generateUrl('/settings/users/changepassword'),
-							{username: uid, password: $(this).val(), recoveryPassword: recoveryPasswordVal},
-							function (result) {
-								if (result.status === 'success') {
-									OC.Notification.showTemporary(t('admin', 'Password successfully changed'));
-								} else {
-									OC.Notification.showTemporary(t('admin', result.data.message));
-								}
-							}
-						);
-						$input.blur();
+						$input.off('blur');
+						_submitPasswordChange(uid, $(this).val(), recoveryPasswordVal, blurFunction);
 					} else {
 						$input.blur();
 					}
 				}
 			})
-			.blur(function () {
-				$(this).replaceWith($('<span>●●●●●●●</span>'));
-				$td.find('img').show();
-				// remove highlight class from users without recovery ability
-				$tr.removeClass('row-warning');
-			});
+			.blur(blurFunction);
 	});
 	$('input:password[id="recoveryPassword"]').keyup(function() {
 		OC.Notification.hide();
 	});
+
+	var _submitDisplayNameChange = function($tr, uid, displayName, blurFunction) {
+		var $div = $tr.find('div.avatardiv');
+		if ($div.length) {
+			$div.imageplaceholder(uid, displayName);
+		}
+
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(function() {
+				_submitDisplayNameChange($tr, uid, displayName, blurFunction);
+			});
+			return;
+		}
+
+		$.ajax({
+			type: 'POST',
+			url: OC.generateUrl('/settings/users/{id}/displayName', {id: uid}),
+			data: {
+				username: uid,
+				displayName: displayName
+			}
+		}).success(function (result) {
+			if (result && result.status==='success' && $div.length){
+				$div.avatar(result.data.username, 32);
+			}
+			$tr.data('displayname', displayName);
+			blurFunction();
+		}).fail(function (result) {
+			OC.Notification.showTemporary(result.responseJSON.message);
+			$tr.find('.displayName input').blur(blurFunction);
+		});
+	};
 
 	$userListBody.on('click', '.displayName', function (event) {
 		event.stopPropagation();
@@ -699,6 +768,11 @@ $(document).ready(function () {
 		var uid = UserList.getUID($td);
 		var displayName = escapeHTML(UserList.getDisplayName($td));
 		var $input = $('<input type="text" value="' + displayName + '">');
+		var blurFunction = function() {
+			var displayName = $tr.data('displayname');
+			$input.replaceWith('<span>' + escapeHTML(displayName) + '</span>');
+			$td.find('img').show();
+		};
 		$td.find('img').hide();
 		$td.children('span').replaceWith($input);
 		$input
@@ -706,33 +780,52 @@ $(document).ready(function () {
 			.keypress(function (event) {
 				if (event.keyCode === 13) {
 					if ($(this).val().length > 0) {
-						var $div = $tr.find('div.avatardiv');
-						if ($div.length) {
-							$div.imageplaceholder(uid, displayName);
-						}
-						$.post(
-							OC.generateUrl('/settings/users/{id}/displayName', {id: uid}),
-							{username: uid, displayName: $(this).val()},
-							function (result) {
-								if (result && result.status==='success' && $div.length){
-									$div.avatar(result.data.username, 32);
-								}
-							}
-						);
-						var displayName = $input.val();
-						$tr.data('displayname', displayName);
-						$input.blur();
+						$input.off('blur');
+						_submitDisplayNameChange($tr, uid, $(this).val(), blurFunction);
 					} else {
 						$input.blur();
 					}
 				}
 			})
-			.blur(function () {
-				var displayName = $tr.data('displayname');
-				$input.replaceWith('<span>' + escapeHTML(displayName) + '</span>');
-				$td.find('img').show();
-			});
+			.blur(blurFunction);
 	});
+
+	var _submitEmailChange = function($tr, $td, $input, uid, mailAddress, blurFunction) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(function() {
+				_submitEmailChange($tr, $td, $input, uid, mailAddress, blurFunction);
+			});
+			return;
+		}
+
+		$.ajax({
+			type: 'PUT',
+			url: OC.generateUrl('/settings/users/{id}/mailAddress', {id: uid}),
+			data: {
+				mailAddress: mailAddress
+			}
+		}).success(function () {
+			// set data attribute to new value
+			// will in blur() be used to show the text instead of the input field
+			$tr.data('mailAddress', mailAddress);
+			$td.find('.loading-small').css('display', '');
+			$input.removeAttr('disabled')
+				.triggerHandler('blur'); // needed instead of $input.blur() for Firefox
+			blurFunction();
+		}).fail(function (result) {
+			if (!_.isUndefined(result.responseJSON.data)) {
+				OC.Notification.showTemporary(result.responseJSON.data.message);
+			} else if (!_.isUndefined(result.responseJSON.message)) {
+				OC.Notification.showTemporary(result.responseJSON.message);
+			} else {
+				OC.Notification.showTemporary(t('settings', 'Could not change the users email'));
+			}
+			$td.find('.loading-small').css('display', '');
+			$input.removeAttr('disabled')
+				.css('padding-right', '6px');
+			$input.blur(blurFunction);
+		});
+	};
 
 	$userListBody.on('click', '.mailAddress', function (event) {
 		event.stopPropagation();
@@ -741,6 +834,15 @@ $(document).ready(function () {
 		var uid = UserList.getUID($td);
 		var mailAddress = escapeHTML(UserList.getMailAddress($td));
 		var $input = $('<input type="text">').val(mailAddress);
+		var blurFunction = function() {
+			if($td.find('.loading-small').css('display') === 'inline-block') {
+				// in Chrome the blur event is fired too early by the browser - even if the request is still running
+				return;
+			}
+			var $span = $('<span>').text($tr.data('mailAddress'));
+			$input.replaceWith($span);
+			$td.find('img').show();
+		};
 		$td.children('span').replaceWith($input);
 		$td.find('img').hide();
 		$input
@@ -749,40 +851,26 @@ $(document).ready(function () {
 				if (event.keyCode === 13) {
 					// enter key
 
-					var mailAddress = $input.val();
 					$td.find('.loading-small').css('display', 'inline-block');
 					$input.css('padding-right', '26px');
 					$input.attr('disabled', 'disabled');
-					$.ajax({
-						type: 'PUT',
-						url: OC.generateUrl('/settings/users/{id}/mailAddress', {id: uid}),
-						data: {
-							mailAddress: $(this).val()
-						}
-					}).success(function () {
-						// set data attribute to new value
-						// will in blur() be used to show the text instead of the input field
-						$tr.data('mailAddress', mailAddress);
-						$td.find('.loading-small').css('display', '');
-						$input.removeAttr('disabled')
-							.triggerHandler('blur'); // needed instead of $input.blur() for Firefox
-					}).fail(function (result) {
-						OC.Notification.showTemporary(result.responseJSON.data.message);
-						$td.find('.loading-small').css('display', '');
-						$input.removeAttr('disabled')
-							.css('padding-right', '6px');
-					});
+					$input.off('blur');
+					_submitEmailChange($tr, $td, $input, uid, $(this).val(), blurFunction);
 				}
 			})
-			.blur(function () {
-				if($td.find('.loading-small').css('display') === 'inline-block') {
-					// in Chrome the blur event is fired too early by the browser - even if the request is still running
-					return;
-				}
-				var $span = $('<span>').text($tr.data('mailAddress'));
-				$input.replaceWith($span);
-				$td.find('img').show();
-			});
+			.blur(blurFunction);
+	});
+
+	$('#newuser .groupsListContainer').on('click', function (event) {
+		event.stopPropagation();
+		var $div = $(this).closest('.groups');
+		UserList._triggerGroupEdit($div);
+	});
+	$userListBody.on('click', '.groups .groupsListContainer, .subadmins .groupsListContainer', function (event) {
+		event.stopPropagation();
+		var $td = $(this).closest('td');
+		var isSubadminSelect = $td.hasClass('subadmins');
+		UserList._triggerGroupEdit($td, isSubadminSelect);
 	});
 
 	// init the quota field select box after it is shown the first time
@@ -790,8 +878,16 @@ $(document).ready(function () {
 		$(this).find('#default_quota').singleSelect().on('change', UserList.onQuotaSelect);
 	});
 
-	$('#newuser').submit(function (event) {
+	UserList._updateGroupListLabel($('#newuser .groups'), []);
+	var _submitNewUserForm = function (event) {
 		event.preventDefault();
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(function() {
+				_submitNewUserForm(event);
+			});
+			return;
+		}
+
 		var username = $('#newusername').val();
 		var password = $('#newuserpassword').val();
 		var email = $('#newemail').val();
@@ -825,7 +921,7 @@ $(document).ready(function () {
 		}
 
 		promise.then(function() {
-			var groups = $('#newusergroups').val() || [];
+			var groups = $('#newuser .groups').data('groups') || [];
 			$.post(
 				OC.generateUrl('/settings/users/users'),
 				{
@@ -841,13 +937,14 @@ $(document).ready(function () {
 							if(UserList.availableGroups.indexOf(gid) === -1) {
 								UserList.availableGroups.push(gid);
 							}
-							$li = GroupList.getGroupLI(gid);
-							userCount = GroupList.getUserCount($li);
+							var $li = GroupList.getGroupLI(gid);
+							var userCount = GroupList.getUserCount($li);
 							GroupList.setUserCount($li, userCount + 1);
 						}
 					}
 					if(!UserList.has(username)) {
-						UserList.add(result, true);
+						UserList.add(result);
+						UserList.doSort();
 					}
 					$('#newusername').focus();
 					GroupList.incEveryoneCount();
@@ -859,7 +956,8 @@ $(document).ready(function () {
 					$('#newuser').get(0).reset();
 				});
 		});
-	});
+	};
+	$('#newuser').submit(_submitNewUserForm);
 
 	if ($('#CheckboxStorageLocation').is(':checked')) {
 		$("#userlist .storageLocation").show();
@@ -867,11 +965,17 @@ $(document).ready(function () {
 	// Option to display/hide the "Storage location" column
 	$('#CheckboxStorageLocation').click(function() {
 		if ($('#CheckboxStorageLocation').is(':checked')) {
-			$("#userlist .storageLocation").show();
-			OC.AppConfig.setValue('core', 'umgmt_show_storage_location', 'true');
+			OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'true', {
+				success: function () {
+					$("#userlist .storageLocation").show();
+				}
+			});
 		} else {
-			$("#userlist .storageLocation").hide();
-			OC.AppConfig.setValue('core', 'umgmt_show_storage_location', 'false');
+			OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'false', {
+				success: function () {
+					$("#userlist .storageLocation").hide();
+				}
+			});
 		}
 	});
 
@@ -882,10 +986,10 @@ $(document).ready(function () {
 	$('#CheckboxLastLogin').click(function() {
 		if ($('#CheckboxLastLogin').is(':checked')) {
 			$("#userlist .lastLogin").show();
-			OC.AppConfig.setValue('core', 'umgmt_show_last_login', 'true');
+			OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'true');
 		} else {
 			$("#userlist .lastLogin").hide();
-			OC.AppConfig.setValue('core', 'umgmt_show_last_login', 'false');
+			OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'false');
 		}
 	});
 
@@ -896,10 +1000,10 @@ $(document).ready(function () {
 	$('#CheckboxEmailAddress').click(function() {
 		if ($('#CheckboxEmailAddress').is(':checked')) {
 			$("#userlist .mailAddress").show();
-			OC.AppConfig.setValue('core', 'umgmt_show_email', 'true');
+			OCP.AppConfig.setValue('core', 'umgmt_show_email', 'true');
 		} else {
 			$("#userlist .mailAddress").hide();
-			OC.AppConfig.setValue('core', 'umgmt_show_email', 'false');
+			OCP.AppConfig.setValue('core', 'umgmt_show_email', 'false');
 		}
 	});
 
@@ -910,10 +1014,10 @@ $(document).ready(function () {
 	$('#CheckboxUserBackend').click(function() {
 		if ($('#CheckboxUserBackend').is(':checked')) {
 			$("#userlist .userBackend").show();
-			OC.AppConfig.setValue('core', 'umgmt_show_backend', 'true');
+			OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'true');
 		} else {
 			$("#userlist .userBackend").hide();
-			OC.AppConfig.setValue('core', 'umgmt_show_backend', 'false');
+			OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'false');
 		}
 	});
 
@@ -924,10 +1028,10 @@ $(document).ready(function () {
 	$('#CheckboxMailOnUserCreate').click(function() {
 		if ($('#CheckboxMailOnUserCreate').is(':checked')) {
 			$("#newemail").show();
-			OC.AppConfig.setValue('core', 'umgmt_send_email', 'true');
+			OCP.AppConfig.setValue('core', 'umgmt_send_email', 'true');
 		} else {
 			$("#newemail").hide();
-			OC.AppConfig.setValue('core', 'umgmt_send_email', 'false');
+			OCP.AppConfig.setValue('core', 'umgmt_send_email', 'false');
 		}
 	});
 

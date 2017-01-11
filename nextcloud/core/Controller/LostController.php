@@ -33,14 +33,15 @@ namespace OC\Core\Controller;
 use \OCP\AppFramework\Controller;
 use \OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\Encryption\IManager;
 use \OCP\IURLGenerator;
 use \OCP\IRequest;
 use \OCP\IL10N;
 use \OCP\IConfig;
 use OCP\IUserManager;
 use OCP\Mail\IMailer;
+use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
-use OCP\Security\StringUtils;
 
 /**
  * Class LostController
@@ -61,8 +62,8 @@ class LostController extends Controller {
 	protected $l10n;
 	/** @var string */
 	protected $from;
-	/** @var bool */
-	protected $isDataEncrypted;
+	/** @var IManager */
+	protected $encryptionManager;
 	/** @var IConfig */
 	protected $config;
 	/** @var ISecureRandom */
@@ -71,6 +72,8 @@ class LostController extends Controller {
 	protected $mailer;
 	/** @var ITimeFactory */
 	protected $timeFactory;
+	/** @var ICrypto */
+	protected $crypto;
 
 	/**
 	 * @param string $appName
@@ -81,10 +84,11 @@ class LostController extends Controller {
 	 * @param IL10N $l10n
 	 * @param IConfig $config
 	 * @param ISecureRandom $secureRandom
-	 * @param string $from
-	 * @param string $isDataEncrypted
+	 * @param string $defaultMailAddress
+	 * @param IManager $encryptionManager
 	 * @param IMailer $mailer
 	 * @param ITimeFactory $timeFactory
+	 * @param ICrypto $crypto
 	 */
 	public function __construct($appName,
 								IRequest $request,
@@ -94,21 +98,23 @@ class LostController extends Controller {
 								IL10N $l10n,
 								IConfig $config,
 								ISecureRandom $secureRandom,
-								$from,
-								$isDataEncrypted,
+								$defaultMailAddress,
+								IManager $encryptionManager,
 								IMailer $mailer,
-								ITimeFactory $timeFactory) {
+								ITimeFactory $timeFactory,
+								ICrypto $crypto) {
 		parent::__construct($appName, $request);
 		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
 		$this->defaults = $defaults;
 		$this->l10n = $l10n;
 		$this->secureRandom = $secureRandom;
-		$this->from = $from;
-		$this->isDataEncrypted = $isDataEncrypted;
+		$this->from = $defaultMailAddress;
+		$this->encryptionManager = $encryptionManager;
 		$this->config = $config;
 		$this->mailer = $mailer;
 		$this->timeFactory = $timeFactory;
+		$this->crypto = $crypto;
 	}
 
 	/**
@@ -144,14 +150,25 @@ class LostController extends Controller {
 	}
 
 	/**
-	 * @param string $userId
+	 * @param string $token
 	 * @param string $userId
 	 * @throws \Exception
 	 */
 	private function checkPasswordResetToken($token, $userId) {
 		$user = $this->userManager->get($userId);
+		if($user === null) {
+			throw new \Exception($this->l10n->t('Couldn\'t reset password because the token is invalid'));
+		}
 
-		$splittedToken = explode(':', $this->config->getUserValue($userId, 'owncloud', 'lostpassword', null));
+		try {
+			$encryptedToken = $this->config->getUserValue($userId, 'core', 'lostpassword', null);
+			$mailAddress = !is_null($user->getEMailAddress()) ? $user->getEMailAddress() : '';
+			$decryptedToken = $this->crypto->decrypt($encryptedToken, $mailAddress.$this->config->getSystemValue('secret'));
+		} catch (\Exception $e) {
+			throw new \Exception($this->l10n->t('Couldn\'t reset password because the token is invalid'));
+		}
+
+		$splittedToken = explode(':', $decryptedToken);
 		if(count($splittedToken) !== 2) {
 			throw new \Exception($this->l10n->t('Couldn\'t reset password because the token is invalid'));
 		}
@@ -161,7 +178,7 @@ class LostController extends Controller {
 			throw new \Exception($this->l10n->t('Couldn\'t reset password because the token is expired'));
 		}
 
-		if (!StringUtils::equals($splittedToken[1], $token)) {
+		if (!hash_equals($splittedToken[1], $token)) {
 			throw new \Exception($this->l10n->t('Couldn\'t reset password because the token is invalid'));
 		}
 	}
@@ -208,7 +225,7 @@ class LostController extends Controller {
 	 * @return array
 	 */
 	public function setPassword($token, $userId, $password, $proceed) {
-		if ($this->isDataEncrypted && !$proceed) {
+		if ($this->encryptionManager->isEnabled() && !$proceed) {
 			return $this->error('', array('encryption' => true));
 		}
 
@@ -222,7 +239,7 @@ class LostController extends Controller {
 
 			\OC_Hook::emit('\OC\Core\LostPassword\Controller\LostController', 'post_passwordReset', array('uid' => $userId, 'password' => $password));
 
-			$this->config->deleteUserValue($userId, 'owncloud', 'lostpassword');
+			$this->config->deleteUserValue($userId, 'core', 'lostpassword');
 			@\OC_User::unsetMagicInCookie();
 		} catch (\Exception $e){
 			return $this->error($e->getMessage());
@@ -249,11 +266,20 @@ class LostController extends Controller {
 			);
 		}
 
-		$token = $this->secureRandom->generate(21,
+		// Generate the token. It is stored encrypted in the database with the
+		// secret being the users' email address appended with the system secret.
+		// This makes the token automatically invalidate once the user changes
+		// their email address.
+		$token = $this->secureRandom->generate(
+			21,
 			ISecureRandom::CHAR_DIGITS.
 			ISecureRandom::CHAR_LOWER.
-			ISecureRandom::CHAR_UPPER);
-		$this->config->setUserValue($user, 'owncloud', 'lostpassword', $this->timeFactory->getTime() .':'. $token);
+			ISecureRandom::CHAR_UPPER
+		);
+		$tokenValue = $this->timeFactory->getTime() .':'. $token;
+		$mailAddress = !is_null($userObject->getEMailAddress()) ? $userObject->getEMailAddress() : '';
+		$encryptedValue = $this->crypto->encrypt($tokenValue, $mailAddress.$this->config->getSystemValue('secret'));
+		$this->config->setUserValue($user, 'core', 'lostpassword', $encryptedValue);
 
 		$link = $this->urlGenerator->linkToRouteAbsolute('core.lost.resetform', array('userId' => $user, 'token' => $token));
 

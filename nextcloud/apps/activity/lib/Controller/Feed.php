@@ -34,7 +34,6 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
-use OCP\Util;
 
 class Feed extends Controller {
 	const DEFAULT_PAGE_SIZE = 30;
@@ -63,12 +62,6 @@ class Feed extends Controller {
 	/** @var IL10N */
 	protected $l;
 
-	/** @var string */
-	protected $user;
-
-	/** @var string */
-	protected $tokenUser;
-
 	/**
 	 * constructor of the controller
 	 *
@@ -81,7 +74,6 @@ class Feed extends Controller {
 	 * @param IManager $activityManager
 	 * @param IFactory $l10nFactory
 	 * @param IConfig $config
-	 * @param string $user
 	 */
 	public function __construct($appName,
 								IRequest $request,
@@ -91,8 +83,7 @@ class Feed extends Controller {
 								IURLGenerator $urlGenerator,
 								IManager $activityManager,
 								IFactory $l10nFactory,
-								IConfig $config,
-								$user) {
+								IConfig $config) {
 		parent::__construct($appName, $request);
 		$this->data = $data;
 		$this->helper = $helper;
@@ -101,7 +92,6 @@ class Feed extends Controller {
 		$this->activityManager = $activityManager;
 		$this->l10nFactory = $l10nFactory;
 		$this->config = $config;
-		$this->user = $user;
 	}
 
 	/**
@@ -124,14 +114,7 @@ class Feed extends Controller {
 
 			$description = (string) $this->l->t('Personal activity feed for %s', $user);
 			$response = $this->data->get($this->helper, $this->settings, $user, 0, self::DEFAULT_PAGE_SIZE, 'desc', 'all');
-			$data = $response['data'];
-
-			$activities = [];
-			foreach ($data as $activity) {
-				$activity['subject_prepared'] = $parser->parseMessage($activity['subject_prepared']);
-				$activity['message_prepared'] = $parser->parseMessage($activity['message_prepared']);
-				$activities[] = $activity;
-			}
+			$activities = $response['data'];
 
 		} catch (\UnexpectedValueException $e) {
 			$this->l = $this->l10nFactory->get('activity');

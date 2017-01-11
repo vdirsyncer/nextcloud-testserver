@@ -13,6 +13,8 @@ listed above. The Provisioning API app is enabled by default.
 
 The base URL for all calls to the share API is **nextcloud_base_url/ocs/v1.php/cloud**.
 
+All calls to OCS endpoints require the ``OCS-APIRequest`` header to be set to ``true``.
+
 Instruction Set For Users
 =========================
 
@@ -158,11 +160,11 @@ Status codes:
 Examples
 ^^^^^^^^
 
-  * PUT ``PUT http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank -d 
+  * PUT ``http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank -d 
     key="email" -d value="franksnewemail@example.org"``
   * Updates the email address for the user ``Frank``
   
-  * PUT ``PUT http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank -d 
+  * PUT ``http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank -d 
     key="quota" -d value="100MB"``
   * Updates the quota for the user ``Frank``
   
@@ -176,6 +178,78 @@ XML Output
     <meta>
       <statuscode>100</statuscode>
       <status>ok</status>
+    </meta>
+    <data/>
+  </ocs>
+
+**users / disableuser**
+-----------------------
+
+Disables a user on the Nextcloud server so that the user cannot login anymore.
+Authentication is done by sending a Basic HTTP Authorization header.
+
+**Syntax: ocs/v1.php/cloud/users/{userid}/disable**
+
+* HTTP method: PUT
+
+Statuscodes:
+
+* 100 - successful
+* 101 - failure
+
+Example
+^^^^^^^
+
+  * PUT ``http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank/disable``
+  * Disables the user ``Frank``
+
+XML Output
+^^^^^^^^^^
+
+::
+
+  <?xml version="1.0"?>
+  <ocs>
+    <meta>
+      <status>ok</status>
+      <statuscode>100</statuscode>
+      <message/>
+    </meta>
+    <data/>
+  </ocs>
+
+**users / enableuser**
+----------------------
+
+Enables a user on the Nextcloud server so that the user can login again.
+Authentication is done by sending a Basic HTTP Authorization header.
+
+**Syntax: ocs/v1.php/cloud/users/{userid}/enable**
+
+* HTTP method: PUT
+
+Statuscodes:
+
+* 100 - successful
+* 101 - failure
+
+Example
+^^^^^^^
+
+  * PUT ``http://admin:secret@example.com/ocs/v1.php/cloud/users/Frank/enable``
+  * Enables the user ``Frank``
+
+XML Output
+^^^^^^^^^^
+
+::
+
+  <?xml version="1.0"?>
+  <ocs>
+    <meta>
+      <status>ok</status>
+      <statuscode>100</statuscode>
+      <message/>
     </meta>
     <data/>
   </ocs>
@@ -304,7 +378,7 @@ sending a Basic HTTP Authorization header.
 **Syntax: ocs/v1.php/cloud/users/{userid}/groups**
 
 * HTTP method: DELETE
-* POST argument: groupid, string - the group to remove the user from
+* DELETE argument: groupid, string - the group to remove the user from
 
 Status codes:
 

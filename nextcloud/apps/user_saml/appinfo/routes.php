@@ -21,41 +21,32 @@
 
 namespace OCA\User_SAML\AppInfo;
 
-(new Application())->registerRoutes(
-	$this,
-	[
-		'resources' => [
-			'AuthSettings' => [
-				'url' => '/authtokens'
-			],
+return [
+	'routes' => [
+		[
+			'name' => 'SAML#login',
+			'url' => '/saml/login',
+			'verb' => 'GET',
 		],
-		'routes' => [
-			[
-				'name' => 'SAML#login',
-				'url' => '/saml/login',
-				'verb' => 'GET',
-			],
-			[
-				'name' => 'SAML#getMetadata',
-				'url' => '/saml/metadata',
-				'verb' => 'GET',
-			],
-			[
-				'name' => 'SAML#assertionConsumerService',
-				'url' => '/saml/acs',
-				'verb' => 'POST',
-			],
-			[
-				'name' => 'SAML#singleLogoutService',
-				'url' => '/saml/sls',
-				'verb' => 'GET',
-			],
-			[
-				'name' => 'SAML#notProvisioned',
-				'url' => '/saml/notProvisioned',
-				'verb' => 'GET',
-			],
-		]
-	]
-);
-
+		[
+			'name' => 'SAML#getMetadata',
+			'url' => '/saml/metadata',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'SAML#assertionConsumerService',
+			'url' => '/saml/acs',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'SAML#singleLogoutService',
+			'url' => '/saml/sls',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'SAML#notProvisioned',
+			'url' => '/saml/notProvisioned',
+			'verb' => 'GET',
+		],
+	],
+];

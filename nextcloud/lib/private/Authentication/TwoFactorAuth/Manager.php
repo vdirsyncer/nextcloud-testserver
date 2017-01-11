@@ -35,6 +35,9 @@ use OCP\IUser;
 class Manager {
 
 	const SESSION_UID_KEY = 'two_factor_auth_uid';
+	const BACKUP_CODES_APP_ID = 'twofactor_backupcodes';
+	const BACKUP_CODES_PROVIDER_ID = 'backup_codes';
+	const REMEMBER_LOGIN = 'two_factor_remember_login';
 
 	/** @var AppManager */
 	private $appManager;
@@ -93,21 +96,39 @@ class Manager {
 	 * @return IProvider|null
 	 */
 	public function getProvider(IUser $user, $challengeProviderId) {
-		$providers = $this->getProviders($user);
+		$providers = $this->getProviders($user, true);
 		return isset($providers[$challengeProviderId]) ? $providers[$challengeProviderId] : null;
+	}
+
+	/**
+	 * @param IUser $user
+	 * @return IProvider|null the backup provider, if enabled for the given user
+	 */
+	public function getBackupProvider(IUser $user) {
+		$providers = $this->getProviders($user, true);
+		if (!isset($providers[self::BACKUP_CODES_PROVIDER_ID])) {
+			return null;
+		}
+		return $providers[self::BACKUP_CODES_PROVIDER_ID];
 	}
 
 	/**
 	 * Get the list of 2FA providers for the given user
 	 *
 	 * @param IUser $user
+	 * @param bool $includeBackupApp
 	 * @return IProvider[]
+	 * @throws Exception
 	 */
-	public function getProviders(IUser $user) {
+	public function getProviders(IUser $user, $includeBackupApp = false) {
 		$allApps = $this->appManager->getEnabledAppsForUser($user);
 		$providers = [];
 
 		foreach ($allApps as $appId) {
+			if (!$includeBackupApp && $appId === self::BACKUP_CODES_APP_ID) {
+				continue;
+			}
+
 			$info = $this->appManager->getAppInfo($appId);
 			if (isset($info['two-factor-providers'])) {
 				$providerClasses = $info['two-factor-providers'];
@@ -155,29 +176,50 @@ class Manager {
 			return false;
 		}
 
-		$result = $provider->verifyChallenge($user, $challenge);
-		if ($result) {
+		$passed = $provider->verifyChallenge($user, $challenge);
+		if ($passed) {
+			if ($this->session->get(self::REMEMBER_LOGIN) === true) {
+				// TODO: resolve cyclic dependency and use DI
+				\OC::$server->getUserSession()->createRememberMeToken($user);
+			}
 			$this->session->remove(self::SESSION_UID_KEY);
+			$this->session->remove(self::REMEMBER_LOGIN);
 		}
-		return $result;
+		return $passed;
 	}
 
 	/**
 	 * Check if the currently logged in user needs to pass 2FA
 	 *
+	 * @param IUser $user the currently logged in user
 	 * @return boolean
 	 */
-	public function needsSecondFactor() {
-		return $this->session->exists(self::SESSION_UID_KEY);
+	public function needsSecondFactor(IUser $user = null) {
+		if (is_null($user) || !$this->session->exists(self::SESSION_UID_KEY)) {
+			return false;
+		}
+
+		if (!$this->isTwoFactorAuthenticated($user)) {
+			// There is no second factor any more -> let the user pass
+			//   This prevents infinite redirect loops when a user is about
+			//   to solve the 2FA challenge, and the provider app is
+			//   disabled the same time
+			$this->session->remove(self::SESSION_UID_KEY);
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
-	 * Prepare the 2FA login (set session value)
+	 * Prepare the 2FA login
 	 *
 	 * @param IUser $user
+	 * @param boolean $rememberMe
 	 */
-	public function prepareTwoFactorLogin(IUser $user) {
+	public function prepareTwoFactorLogin(IUser $user, $rememberMe) {
 		$this->session->set(self::SESSION_UID_KEY, $user->getUID());
+		$this->session->set(self::REMEMBER_LOGIN, $rememberMe);
 	}
 
 }

@@ -35,6 +35,8 @@ use OCP\AppFramework\Db\Entity;
  * @method string getToken()
  * @method void setType(string $type)
  * @method int getType()
+ * @method void setRemember(int $remember)
+ * @method int getRemember()
  * @method void setLastActivity(int $lastActivity)
  * @method int getLastActivity()
  */
@@ -73,12 +75,28 @@ class DefaultToken extends Entity implements IToken {
 	/**
 	 * @var int
 	 */
+	protected $remember;
+
+	/**
+	 * @var int
+	 */
 	protected $lastActivity;
 
 	/**
 	 * @var int
 	 */
 	protected $lastCheck;
+
+	/**
+	 * @var string
+	 */
+	protected $scope;
+
+	public function __construct() {
+		$this->addType('type', 'int');
+		$this->addType('lastActivity', 'int');
+		$this->addType('lastCheck', 'int');
+	}
 
 	public function getId() {
 		return $this->id;
@@ -112,6 +130,7 @@ class DefaultToken extends Entity implements IToken {
 			'name' => $this->name,
 			'lastActivity' => $this->lastActivity,
 			'type' => $this->type,
+			'scope' => $this->getScopeAsArray()
 		];
 	}
 
@@ -133,4 +152,25 @@ class DefaultToken extends Entity implements IToken {
 		return parent::setLastCheck($time);
 	}
 
+	public function getScope() {
+		return parent::getScope();
+	}
+
+	public function getScopeAsArray() {
+		$scope = json_decode($this->getScope(), true);
+		if (!$scope) {
+			return [
+				'filesystem'=> true
+			];
+		}
+		return $scope;
+	}
+
+	public function setScope($scope) {
+		if (is_array($scope)) {
+			parent::setScope(json_encode($scope));
+		} else {
+			parent::setScope((string)$scope);
+		}
+	}
 }

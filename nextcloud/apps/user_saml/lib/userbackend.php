@@ -301,8 +301,13 @@ class UserBackend implements IApacheBackend, UserInterface, IUserBackend {
 		$uidMapping = $this->config->getAppValue('user_saml', 'general-uid_mapping', '');
 
 		if($uidMapping !== '' && isset($samlData[$uidMapping])) {
-			$uid = $samlData[$uidMapping][0];
+			if(is_array($samlData[$uidMapping])) {
+				$uid = $samlData[$uidMapping][0];
+			} else {
+				$uid = $samlData[$uidMapping];
+			}
 			if($this->userExists($uid)) {
+				$this->session->set('last-password-confirm', time());
 				return $uid;
 			}
 		}

@@ -1,4 +1,4 @@
-<?php /** @var $l OC_L10N */ ?>
+<?php /** @var $l \OCP\IL10N */ ?>
 <?php
 vendor_script('jsTimezoneDetect/jstz');
 script('core', [
@@ -53,7 +53,6 @@ script('core', [
 				<?php p($_['user_autofocus'] ? '' : 'autofocus'); ?>
 				autocomplete="on" autocapitalize="off" autocorrect="off" required>
 			<label for="password" class="infield"><?php p($l->t('Password')); ?></label>
-			<input type="submit" id="submit" class="login primary icon-confirm" title="<?php p($l->t('Log in')); ?>" value="" disabled="disabled"/>
 		</p>
 
 		<?php if (!empty($_['invalidpassword']) && !empty($_['canResetPassword'])) { ?>
@@ -65,17 +64,23 @@ script('core', [
 				<?php p($l->t('Wrong password.')); ?>
 			</p>
 		<?php } ?>
-		<?php if ($_['rememberLoginAllowed'] === true) : ?>
-		<div class="remember-login-container">
-			<?php if ($_['rememberLoginState'] === 0) { ?>
-			<input type="checkbox" name="remember_login" value="1" id="remember_login" class="checkbox checkbox--white">
-			<?php } else { ?>
-			<input type="checkbox" name="remember_login" value="1" id="remember_login" class="checkbox checkbox--white" checked="checked">
-			<?php } ?>
-			<label for="remember_login"><?php p($l->t('Stay logged in')); ?></label>
+
+		<input type="submit" id="submit" class="login primary icon-confirm-white" title="" value="<?php p($l->t('Log in')); ?>" disabled="disabled" />
+
+		<div class="login-additional">
+			<?php if ($_['rememberLoginAllowed'] === true) : ?>
+			<div class="remember-login-container">
+				<?php if ($_['rememberLoginState'] === 0) { ?>
+				<input type="checkbox" name="remember_login" value="1" id="remember_login" class="checkbox checkbox--white">
+				<?php } else { ?>
+				<input type="checkbox" name="remember_login" value="1" id="remember_login" class="checkbox checkbox--white" checked="checked">
+				<?php } ?>
+				<label for="remember_login"><?php p($l->t('Stay logged in')); ?></label>
+			</div>
+			<?php endif; ?>
 		</div>
-		<?php endif; ?>
-		<input type="hidden" name="timezone-offset" id="timezone-offset"/>
+
+		<input type="hidden" name="timezone_offset" id="timezone_offset"/>
 		<input type="hidden" name="timezone" id="timezone"/>
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']) ?>">
 	</fieldset>

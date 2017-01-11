@@ -52,8 +52,6 @@ class Sharing implements ISettings {
 			// Built-In Sharing
 			'allowGroupSharing'               => $this->config->getAppValue('core', 'shareapi_allow_group_sharing', 'yes'),
 			'allowLinks'                      => $this->config->getAppValue('core', 'shareapi_allow_links', 'yes'),
-			'allowMailNotification'           => $this->config->getAppValue('core', 'shareapi_allow_mail_notification', 'no'),
-			'allowPublicMailNotification'     => $this->config->getAppValue('core', 'shareapi_allow_public_notification', 'no'),
 			'allowPublicUpload'               => $this->config->getAppValue('core', 'shareapi_allow_public_upload', 'yes'),
 			'allowResharing'                  => $this->config->getAppValue('core', 'shareapi_allow_resharing', 'yes'),
 			'allowShareDialogUserEnumeration' => $this->config->getAppValue('core', 'shareapi_allow_share_dialog_user_enumeration', 'yes'),
@@ -65,6 +63,7 @@ class Sharing implements ISettings {
 			'shareEnforceExpireDate'          => $this->config->getAppValue('core', 'shareapi_enforce_expire_date', 'no'),
 			'shareExcludeGroups'              => $this->config->getAppValue('core', 'shareapi_exclude_groups', 'no') === 'yes' ? true : false,
 			'shareExcludedGroupsList'         => $excludeGroupsList,
+			'publicShareDisclaimerText'       => $this->config->getAppValue('core', 'shareapi_public_link_disclaimertext', null),
 		];
 
 		return new TemplateResponse('settings', 'admin/sharing', $parameters, '');

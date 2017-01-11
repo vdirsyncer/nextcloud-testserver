@@ -104,7 +104,7 @@ OCA.External.StatusManager = {
 						// In this case the error is because  mount point use Login credentials and don't exist in the session
 						message = t('files_external', 'Couldn\'t access. Please logout and login to activate this mount point');
 					} else {
-						message = t('files_external', 'Couldn\'t get the information from the ownCloud server: {code} {type}', {
+						message = t('files_external', 'Couldn\'t get the information from the remote server: {code} {type}', {
 							code: jqxhr.status,
 							type: error
 						});
@@ -182,7 +182,7 @@ OCA.External.StatusManager = {
 					} else {
 						OC.dialogs.confirm(t('files_external', 'There was an error with message: ') + mountData.error + '. Do you want to review mount point config in admin settings page?', t('files_external', 'External mount error'), function (e) {
 							if (e === true) {
-								OC.redirect(OC.generateUrl('/settings/admin#files_external'));
+								OC.redirect(OC.generateUrl('/settings/admin/externalstorages'));
 							}
 						});
 					}
@@ -539,7 +539,11 @@ OCA.External.StatusManager.Utils = {
 	 * of the tr matching the folder name
 	 */
 	getIconRoute: function (tr) {
-		var icon = OC.imagePath('core', 'filetypes/folder-external');
+		if (OCA.Theming) {
+			var icon = OC.generateUrl('/apps/theming/img/core/filetypes/folder-external.svg?v=' + OCA.Theming.cacheBuster);
+		} else {
+			var icon = OC.imagePath('core', 'filetypes/folder-external');
+		}
 		var backend = null;
 
 		if (tr instanceof $) {

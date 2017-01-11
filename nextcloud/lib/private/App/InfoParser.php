@@ -1,6 +1,7 @@
 <?php
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ * @copyright Copyright (c) 2016, Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Andreas Fischer <bantu@owncloud.com>
  * @author Christoph Wurst <christoph@owncloud.com>
@@ -26,18 +27,17 @@
 
 namespace OC\App;
 
-use OCP\IURLGenerator;
+use OCP\ICache;
 
 class InfoParser {
-
-	/** @var IURLGenerator */
-	private $urlGenerator;
+	/** @var \OCP\ICache|null */
+	private $cache;
 
 	/**
-	 * @param IURLGenerator $urlGenerator
+	 * @param ICache|null $cache
 	 */
-	public function __construct(IURLGenerator $urlGenerator) {
-		$this->urlGenerator = $urlGenerator;
+	public function __construct(ICache $cache = null) {
+		$this->cache = $cache;
 	}
 
 	/**
@@ -49,18 +49,28 @@ class InfoParser {
 			return null;
 		}
 
+		if(!is_null($this->cache)) {
+			$fileCacheKey = $file . filemtime($file);
+			if ($cachedValue = $this->cache->get($fileCacheKey)) {
+				return json_decode($cachedValue, true);
+			}
+		}
+
 		libxml_use_internal_errors(true);
 		$loadEntities = libxml_disable_entity_loader(false);
 		$xml = simplexml_load_file($file);
+
 		libxml_disable_entity_loader($loadEntities);
-		if ($xml == false) {
+		if ($xml === false) {
 			libxml_clear_errors();
 			return null;
 		}
 		$array = $this->xmlToArray($xml);
+
 		if (is_null($array)) {
 			return null;
 		}
+
 		if (!array_key_exists('info', $array)) {
 			$array['info'] = [];
 		}
@@ -97,18 +107,22 @@ class InfoParser {
 		if (!array_key_exists('two-factor-providers', $array)) {
 			$array['two-factor-providers'] = [];
 		}
-
-		if (array_key_exists('documentation', $array) && is_array($array['documentation'])) {
-			foreach ($array['documentation'] as $key => $url) {
-				// If it is not an absolute URL we assume it is a key
-				// i.e. admin-ldap will get converted to go.php?to=admin-ldap
-				if (!$this->isHTTPURL($url)) {
-					$url = $this->urlGenerator->linkToDocs($url);
-				}
-
-				$array['documentation'][$key] = $url;
-			}
+		if (!array_key_exists('commands', $array)) {
+			$array['commands'] = [];
 		}
+		if (!array_key_exists('activity', $array)) {
+			$array['activity'] = [];
+		}
+		if (!array_key_exists('filters', $array['activity'])) {
+			$array['activity']['filters'] = [];
+		}
+		if (!array_key_exists('settings', $array['activity'])) {
+			$array['activity']['settings'] = [];
+		}
+		if (!array_key_exists('providers', $array['activity'])) {
+			$array['activity']['providers'] = [];
+		}
+
 		if (array_key_exists('types', $array)) {
 			if (is_array($array['types'])) {
 				foreach ($array['types'] as $type => $v) {
@@ -139,6 +153,22 @@ class InfoParser {
 		if (isset($array['background-jobs']['job']) && is_array($array['background-jobs']['job'])) {
 			$array['background-jobs'] = $array['background-jobs']['job'];
 		}
+		if (isset($array['commands']['command']) && is_array($array['commands']['command'])) {
+			$array['commands'] = $array['commands']['command'];
+		}
+		if (isset($array['activity']['filters']['filter']) && is_array($array['activity']['filters']['filter'])) {
+			$array['activity']['filters'] = $array['activity']['filters']['filter'];
+		}
+		if (isset($array['activity']['settings']['setting']) && is_array($array['activity']['settings']['setting'])) {
+			$array['activity']['settings'] = $array['activity']['settings']['setting'];
+		}
+		if (isset($array['activity']['providers']['provider']) && is_array($array['activity']['providers']['provider'])) {
+			$array['activity']['providers'] = $array['activity']['providers']['provider'];
+		}
+
+		if(!is_null($this->cache)) {
+			$this->cache->set($fileCacheKey, json_encode($array));
+		}
 		return $array;
 	}
 
@@ -156,7 +186,7 @@ class InfoParser {
 			$totalElement = count($xml->{$element});
 
 			if (!isset($array[$element])) {
-				$array[$element] = "";
+				$array[$element] = $totalElement > 1 ? [] : "";
 			}
 			/** @var \SimpleXMLElement $node */
 			// Has attributes
@@ -192,9 +222,5 @@ class InfoParser {
 		}
 
 		return $array;
-	}
-
-	private function isHTTPURL($url) {
-		return stripos($url, 'https://') === 0 || stripos($url, 'http://') === 0;
 	}
 }

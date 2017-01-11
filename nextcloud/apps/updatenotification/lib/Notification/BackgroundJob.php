@@ -22,7 +22,6 @@
 
 namespace OCA\UpdateNotification\Notification;
 
-
 use OC\BackgroundJob\TimedJob;
 use OC\Installer;
 use OC\Updater\VersionCheck;
@@ -98,8 +97,8 @@ class BackgroundJob extends TimedJob {
 
 		$status = $updater->check();
 		if (isset($status['version'])) {
-			$url = $this->urlGenerator->linkToRouteAbsolute('settings_admin') . '#updater';
-			$this->createNotifications('core', $status['version'], $url);
+			$url = $this->urlGenerator->linkToRouteAbsolute('settings.AdminSettings.index') . '#updater';
+			$this->createNotifications('core', $status['version'], $url, $status['versionstring']);
 		}
 	}
 
@@ -123,8 +122,9 @@ class BackgroundJob extends TimedJob {
 	 * @param string $app
 	 * @param string $version
 	 * @param string $url
+	 * @param string $visibleVersion
 	 */
-	protected function createNotifications($app, $version, $url) {
+	protected function createNotifications($app, $version, $url, $visibleVersion = '') {
 		$lastNotification = $this->config->getAppValue('updatenotification', $app, false);
 		if ($lastNotification === $version) {
 			// We already notified about this update
@@ -139,8 +139,13 @@ class BackgroundJob extends TimedJob {
 		$notification->setApp('updatenotification')
 			->setDateTime(new \DateTime())
 			->setObject($app, $version)
-			->setSubject('update_available')
 			->setLink($url);
+
+		if ($visibleVersion !== '') {
+			$notification->setSubject('update_available', ['version' => $visibleVersion]);
+		} else {
+			$notification->setSubject('update_available');
+		}
 
 		foreach ($this->getUsersToNotify() as $uid) {
 			$notification->setUser($uid);
@@ -209,6 +214,6 @@ class BackgroundJob extends TimedJob {
 	 * @return string|false
 	 */
 	protected function isUpdateAvailable($app) {
-		return Installer::isUpdateAvailable($app);
+		return Installer::isUpdateAvailable($app, \OC::$server->getAppFetcher());
 	}
 }

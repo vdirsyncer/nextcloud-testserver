@@ -8,7 +8,7 @@
  *
  */
 
-/* global moment */
+/* global moment, oc_appconfig, oc_config */
 
 (function() {
 	if (!OC.Share) {
@@ -25,6 +25,7 @@
 			isDefaultExpireDateEnforced: oc_appconfig.core.defaultExpireDateEnforced === true,
 			isDefaultExpireDateEnabled: oc_appconfig.core.defaultExpireDateEnabled === true,
 			isRemoteShareAllowed: oc_appconfig.core.remoteShareAllowed,
+			isMailShareAllowed: oc_appconfig.shareByMailEnabled !== undefined,
 			defaultExpireDate: oc_appconfig.core.defaultExpireDate,
 			isResharingAllowed: oc_appconfig.core.resharingAllowed,
 			allowGroupSharing: oc_appconfig.core.allowGroupSharing
@@ -43,20 +44,6 @@
 		isPublicUploadEnabled: function() {
 			var publicUploadEnabled = $('#filestable').data('allow-public-upload');
 			return publicUploadEnabled === 'yes';
-		},
-
-		/**
-		 * @returns {boolean}
-		 */
-		isMailPublicNotificationEnabled: function() {
-			return $('input:hidden[name=mailPublicNotificationEnabled]').val() === 'yes';
-		},
-
-		/**
-		 * @returns {boolean}
-		 */
-		isMailNotificationEnabled: function() {
-			return $('input:hidden[name=mailNotificationEnabled]').val() === 'yes';
 		},
 
 		/**

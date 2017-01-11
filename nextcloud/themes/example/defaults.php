@@ -33,7 +33,7 @@ class OC_Theme {
 	 * @return string URL
 	 */
 	public function getSyncClientUrl() {
-		return 'https://nextcloud.com/install';
+		return 'https://nextcloud.com/install/#install-clients';
 	}
 
 	/**
@@ -139,7 +139,7 @@ class OC_Theme {
 	}
 
 	public function buildDocLinkToKey($key) {
-		return $this->getDocBaseUrl() . '/server/9/go.php?to=' . $key;
+		return $this->getDocBaseUrl() . '/server/11/go.php?to=' . $key;
 	}
 
 

@@ -1,6 +1,7 @@
 <?php
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ * @copyright Copyright (c) 2016, Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Bernhard Posselt <dev@bernhard-posselt.com>
  * @author Joas Schilling <coding@schilljs.com>
@@ -197,6 +198,9 @@ class DependencyAnalyzer {
 		if (!is_array($commands)) {
 			$commands = array($commands);
 		}
+		if (isset($commands['@value'])) {
+			$commands = [$commands];
+		}
 		$os = $this->platform->getOS();
 		foreach ($commands as $command) {
 			if (isset($command['@attributes']['os']) && $command['@attributes']['os'] !== $os) {
@@ -223,6 +227,9 @@ class DependencyAnalyzer {
 		$libs = $dependencies['lib'];
 		if (!is_array($libs)) {
 			$libs = array($libs);
+		}
+		if (isset($libs['@value'])) {
+			$libs = [$libs];
 		}
 		foreach ($libs as $lib) {
 			$libName = $this->getValue($lib);
@@ -288,7 +295,9 @@ class DependencyAnalyzer {
 	private function analyzeOC(array $dependencies, array $appInfo) {
 		$missing = [];
 		$minVersion = null;
-		if (isset($dependencies['owncloud']['@attributes']['min-version'])) {
+		if (isset($dependencies['nextcloud']['@attributes']['min-version'])) {
+			$minVersion = $dependencies['nextcloud']['@attributes']['min-version'];
+		} elseif (isset($dependencies['owncloud']['@attributes']['min-version'])) {
 			$minVersion = $dependencies['owncloud']['@attributes']['min-version'];
 		} elseif (isset($appInfo['requiremin'])) {
 			$minVersion = $appInfo['requiremin'];
@@ -296,7 +305,9 @@ class DependencyAnalyzer {
 			$minVersion = $appInfo['require'];
 		}
 		$maxVersion = null;
-		if (isset($dependencies['owncloud']['@attributes']['max-version'])) {
+		if (isset($dependencies['nextcloud']['@attributes']['max-version'])) {
+			$maxVersion = $dependencies['nextcloud']['@attributes']['max-version'];
+		} elseif (isset($dependencies['owncloud']['@attributes']['max-version'])) {
 			$maxVersion = $dependencies['owncloud']['@attributes']['max-version'];
 		} elseif (isset($appInfo['requiremax'])) {
 			$maxVersion = $appInfo['requiremax'];
@@ -325,13 +336,9 @@ class DependencyAnalyzer {
 		switch ($version) {
 			case '9.1':
 				return '10';
-			case '9.2':
-				return '11';
 			default:
 				if (strpos($version, '9.1.') === 0) {
 					$version = '10.0.' . substr($version, 4);
-				} else if (strpos($version, '9.2.') === 0) {
-					$version = '11.0.' . substr($version, 4);
 				}
 				return $version;
 		}

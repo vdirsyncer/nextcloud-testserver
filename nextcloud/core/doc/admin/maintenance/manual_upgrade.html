@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Manual Nextcloud Upgrade &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Manual Nextcloud Upgrade &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Restoring Nextcloud" href="restore.html" />
     <link rel="prev" title="Upgrading Nextcloud with the Nextcloud App" href="update.html" />
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -83,12 +82,12 @@
 <li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Nextcloud App</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Manual Nextcloud Upgrade</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#previous-nextcloud-releases">Previous Nextcloud Releases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#reverse-upgrade">Reverse Upgrade</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="restore.html">Restoring Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating.html">Migrating to a Different Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mysql_4byte_support.html">Enabling MySQL 4-byte support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations/index.html">Operations</a></li>
@@ -130,7 +129,7 @@ your HTTP user. This example is for Ubuntu Linux:</p>
 <code class="docutils literal"><span class="pre">'maintenance'</span> <span class="pre">=&gt;</span> <span class="pre">false,</span></code> to <code class="docutils literal"><span class="pre">'maintenance'</span> <span class="pre">=&gt;</span> <span class="pre">true,</span></code>.</p>
 <ol class="arabic">
 <li><p class="first">Back up your existing Nextcloud Server database, data directory, and
-<code class="docutils literal"><span class="pre">config.php</span></code> file. (See <a class="reference internal" href="backup.html"><em>Backing up Nextcloud</em></a>.)</p>
+<code class="docutils literal"><span class="pre">config.php</span></code> file. (See <a class="reference internal" href="backup.html"><em>Backing up Nextcloud</em></a>, for restore information see <a class="reference internal" href="restore.html"><em>Restoring Nextcloud</em></a>)</p>
 </li>
 <li><p class="first">Download and unpack the latest Nextcloud Server release (Archive file) from
 <a class="reference external" href="https://nextcloud.com/install/">nextcloud.com/install/</a> into an empty directory outside
@@ -164,11 +163,18 @@ directory to see if they are there. If not, copy them from your old <code class=
 directory to your new one. Make sure the directory permissions of your third
 party application directories are the same as for the other ones.</p>
 </li>
+<li><p class="first">Adjust file ownership and permissions</p>
+<blockquote>
+<div><p>chown -R www-data:www-data nextcloud
+find nextcloud/ -type d -exec chmod 750 {} ;
+find nextcloud/ -type f -exec chmod 640 {} ;</p>
+</div></blockquote>
+</li>
 <li><p class="first">Restart your Web server.</p>
 </li>
 <li><p class="first">Now launch the upgrade from the command  line using <code class="docutils literal"><span class="pre">occ</span></code>, like this
-example on CentOS Linux:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo -u apache php occ upgrade
+example on Ubuntu Linux:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ upgrade
 </pre></div>
 </div>
 </li>
@@ -189,10 +195,6 @@ permissions to your Nextcloud directories (<a class="reference internal" href=".
 <div class="section" id="previous-nextcloud-releases">
 <h2>Previous Nextcloud Releases<a class="headerlink" href="#previous-nextcloud-releases" title="Permalink to this headline">¶</a></h2>
 <p>You&#8217;ll find previous Nextcloud releases in the <a class="reference external" href="https://nextcloud.com/changelog/">Nextcloud Server Changelog</a>.</p>
-</div>
-<div class="section" id="reverse-upgrade">
-<h2>Reverse Upgrade<a class="headerlink" href="#reverse-upgrade" title="Permalink to this headline">¶</a></h2>
-<p>If you need to reverse your upgrade, see <a class="reference internal" href="restore.html"><em>Restoring Nextcloud</em></a>.</p>
 </div>
 <div class="section" id="troubleshooting">
 <h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>

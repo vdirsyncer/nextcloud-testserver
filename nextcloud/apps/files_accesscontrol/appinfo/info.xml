@@ -18,8 +18,12 @@
 	</types>
 
 	<dependencies>
-		<owncloud min-version="9.1" max-version="9.1" />
+		<nextcloud min-version="11" max-version="11" />
 	</dependencies>
+
+	<documentation>
+		<admin>admin-files-access-control</admin>
+	</documentation>
 
 	<settings>
 		<admin-section>OCA\FilesAccessControl\Settings\Section</admin-section>

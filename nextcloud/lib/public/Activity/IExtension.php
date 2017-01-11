@@ -103,6 +103,7 @@ interface IExtension {
 	 * Currently known types are:
 	 * * file		=> will strip away the path of the file and add a tooltip with it
 	 * * username	=> will add the avatar of the user
+	 * * email 	    => will add a mailto link
 	 *
 	 * @param string $app
 	 * @param string $text
@@ -128,6 +129,7 @@ interface IExtension {
 	 *
 	 * @return array|false
 	 * @since 8.0.0
+	 * @deprecated 11.0.0 - Register an IFilter instead
 	 */
 	public function getNavigation();
 
@@ -137,6 +139,7 @@ interface IExtension {
 	 * @param string $filterValue
 	 * @return boolean
 	 * @since 8.0.0
+	 * @deprecated 11.0.0 - Register an IFilter instead
 	 */
 	public function isFilterValid($filterValue);
 
@@ -148,6 +151,7 @@ interface IExtension {
 	 * @param string $filter
 	 * @return array|false
 	 * @since 8.0.0
+	 * @deprecated 11.0.0 - Register an IFilter instead
 	 */
 	public function filterNotificationTypes($types, $filter);
 
@@ -160,6 +164,7 @@ interface IExtension {
 	 * @param string $filter
 	 * @return array|false
 	 * @since 8.0.0
+	 * @deprecated 11.0.0 - Register an IFilter instead
 	 */
 	public function getQueryForFilter($filter);
 }

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Restoring Nextcloud &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Restoring Nextcloud &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Migrating to a Different Server" href="migrating.html" />
     <link rel="prev" title="Manual Nextcloud Upgrade" href="manual_upgrade.html" />
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -88,6 +87,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="migrating.html">Migrating to a Different Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mysql_4byte_support.html">Enabling MySQL 4-byte support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations/index.html">Operations</a></li>
@@ -146,30 +146,62 @@ install and data folder) to your Nextcloud environment. You could use this comma
 </div>
 <div class="section" id="restore-database">
 <h2>Restore Database<a class="headerlink" href="#restore-database" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="clean-database-before-restoring">
+<h3>Clean Database Before Restoring<a class="headerlink" href="#clean-database-before-restoring" title="Permalink to this headline">¶</a></h3>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Before restoring a backup you need to make sure to delete all existing database tables.</p>
+</div>
+<p>The easiest way to do this is to drop and recreate the database.
+SQLite does this automatically.</p>
+<div class="section" id="mysql">
+<h4>MySQL<a class="headerlink" href="#mysql" title="Permalink to this headline">¶</a></h4>
+<p>MySQL is the recommended database engine. To restore MySQL:</p>
+<div class="highlight-python"><div class="highlight"><pre>mysql -h [server] -u [username] -p[password] -e &quot;DROP DATABASE nextcloud&quot;
+mysql -h [server] -u [username] -p[password] -e &quot;CREATE DATABASE nextcloud&quot;
+</pre></div>
+</div>
+<p>If you use UTF8 with multibyte support (e.g. for emoijs in filenames), use:</p>
+<div class="highlight-python"><div class="highlight"><pre>mysql -h [server] -u [username] -p[password] -e &quot;DROP DATABASE nextcloud&quot;
+mysql -h [server] -u [username] -p[password] -e &quot;CREATE DATABASE nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="postgresql">
+<h4>PostgreSQL<a class="headerlink" href="#postgresql" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><div class="highlight"><pre>PGPASSWORD=&quot;password&quot; psql -h [server] -U [username] -d nextcloud -c &quot;DROP DATABASE \&quot;nextcloud\&quot;;&quot;
+PGPASSWORD=&quot;password&quot; psql -h [server] -U [username] -d nextcloud -c &quot;CREATE DATABASE \&quot;nextcloud\&quot;;&quot;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="restoring">
+<h3>Restoring<a class="headerlink" href="#restoring" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This guide assumes that your previous backup is called
 &#8220;nextcloud-sqlbkp.bak&#8221;</p>
 </div>
-<div class="section" id="mysql">
-<h3>MySQL<a class="headerlink" href="#mysql" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>MySQL<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
 <p>MySQL is the recommended database engine. To restore MySQL:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mysql</span> <span class="o">-</span><span class="n">h</span> <span class="p">[</span><span class="n">server</span><span class="p">]</span> <span class="o">-</span><span class="n">u</span> <span class="p">[</span><span class="n">username</span><span class="p">]</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="n">password</span><span class="p">]</span> <span class="p">[</span><span class="n">db_name</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">nextcloud</span><span class="o">-</span><span class="n">sqlbkp</span><span class="o">.</span><span class="n">bak</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="sqlite">
-<h3>SQLite<a class="headerlink" href="#sqlite" title="Permalink to this headline">¶</a></h3>
+<h4>SQLite<a class="headerlink" href="#sqlite" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><div class="highlight"><pre>rm data/owncloud.db
 sqlite3 data/owncloud.db &lt; nextcloud-sqlbkp.bak
 </pre></div>
 </div>
 </div>
-<div class="section" id="postgresql">
-<h3>PostgreSQL<a class="headerlink" href="#postgresql" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h4>PostgreSQL<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><div class="highlight"><pre>PGPASSWORD=&quot;password&quot; pg_restore -c -d nextcloud -h [server] -U [username]
 nextcloud-sqlbkp.bak
 </pre></div>
+</div>
 </div>
 </div>
 </div>

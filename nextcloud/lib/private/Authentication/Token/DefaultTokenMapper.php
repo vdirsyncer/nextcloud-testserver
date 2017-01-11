@@ -40,24 +40,25 @@ class DefaultTokenMapper extends Mapper {
 	 * @param string $token
 	 */
 	public function invalidate($token) {
+		/* @var $qb IQueryBuilder */
 		$qb = $this->db->getQueryBuilder();
 		$qb->delete('authtoken')
-			->andWhere($qb->expr()->eq('token', $qb->createParameter('token')))
+			->where($qb->expr()->eq('token', $qb->createParameter('token')))
 			->setParameter('token', $token)
 			->execute();
 	}
 
 	/**
 	 * @param int $olderThan
+	 * @param int $remember
 	 */
-	public function invalidateOld($olderThan) {
+	public function invalidateOld($olderThan, $remember = IToken::DO_NOT_REMEMBER) {
 		/* @var $qb IQueryBuilder */
 		$qb = $this->db->getQueryBuilder();
 		$qb->delete('authtoken')
-			->where($qb->expr()->lt('last_activity', $qb->createParameter('last_activity')))
-			->andWhere($qb->expr()->eq('type', $qb->createParameter('type')))
-			->setParameter('last_activity', $olderThan, IQueryBuilder::PARAM_INT)
-			->setParameter('type', IToken::TEMPORARY_TOKEN, IQueryBuilder::PARAM_INT)
+			->where($qb->expr()->lt('last_activity', $qb->createNamedParameter($olderThan, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('type', $qb->createNamedParameter(IToken::TEMPORARY_TOKEN, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('remember', $qb->createNamedParameter($remember, IQueryBuilder::PARAM_INT)))
 			->execute();
 	}
 
@@ -71,10 +72,9 @@ class DefaultTokenMapper extends Mapper {
 	public function getToken($token) {
 		/* @var $qb IQueryBuilder */
 		$qb = $this->db->getQueryBuilder();
-		$result = $qb->select('id', 'uid', 'login_name', 'password', 'name', 'type', 'token', 'last_activity', 'last_check')
+		$result = $qb->select('id', 'uid', 'login_name', 'password', 'name', 'type', 'remember', 'token', 'last_activity', 'last_check', 'scope')
 			->from('authtoken')
-			->where($qb->expr()->eq('token', $qb->createParameter('token')))
-			->setParameter('token', $token)
+			->where($qb->expr()->eq('token', $qb->createNamedParameter($token)))
 			->execute();
 
 		$data = $result->fetch();
@@ -82,6 +82,30 @@ class DefaultTokenMapper extends Mapper {
 		if ($data === false) {
 			throw new DoesNotExistException('token does not exist');
 		}
+;
+		return DefaultToken::fromRow($data);
+	}
+
+	/**
+	 * Get the token for $id
+	 *
+	 * @param string $id
+	 * @throws DoesNotExistException
+	 * @return DefaultToken
+	 */
+	public function getTokenById($id) {
+		/* @var $qb IQueryBuilder */
+		$qb = $this->db->getQueryBuilder();
+		$result = $qb->select('id', 'uid', 'login_name', 'password', 'name', 'type', 'token', 'last_activity', 'last_check', 'scope')
+			->from('authtoken')
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id)))
+			->execute();
+
+		$data = $result->fetch();
+		$result->closeCursor();
+		if ($data === false) {
+			throw new DoesNotExistException('token does not exist');
+		};
 		return DefaultToken::fromRow($data);
 	}
 
@@ -97,7 +121,7 @@ class DefaultTokenMapper extends Mapper {
 	public function getTokenByUser(IUser $user) {
 		/* @var $qb IQueryBuilder */
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('id', 'uid', 'login_name', 'password', 'name', 'type', 'token', 'last_activity', 'last_check')
+		$qb->select('id', 'uid', 'login_name', 'password', 'name', 'type', 'remember', 'token', 'last_activity', 'last_check', 'scope')
 			->from('authtoken')
 			->where($qb->expr()->eq('uid', $qb->createNamedParameter($user->getUID())))
 			->setMaxResults(1000);

@@ -19,17 +19,14 @@
 		'</div>';
 	var ACTIVITY_TEMPLATE =
 		'    <li class="activity box">' +
-		'        <div class="activity-icon {{typeIconClass}}"></div>' +
-		'        <div class="activitysubject">{{{subject}}}</div>' +
-		'        <span class="activitytime has-tooltip" title="{{formattedDateTooltip}}">{{formattedDate}}</span>' +
-		'        <div class="activitymessage">{{{message}}}</div>' +
-		'        {{#if previews}}' +
-		'        <div class="previews">' +
-		'        {{#each previews}}' +
-		'            <img class="preview {{previewClass}}" src="{{source}}" alt="" />' +
-		'        {{/each}}' +
-		'        </div>' +
+		'        <div class="activity-icon">' +
+		'        {{#if icon}}' +
+		'          <img src="{{icon}}">' +
 		'        {{/if}}' +
+		'        </div>' +
+		'        <div class="activitysubject">{{{subject}}}</div>' +
+		'        <span class="activitytime has-tooltip live-relative-timestamp" data-timestamp="{{timestamp}}" title="{{formattedDateTooltip}}">{{formattedDate}}</span>' +
+		'        <div class="activitymessage">{{{message}}}</div>' +
 		'    </li>';
 
 	/**
@@ -48,6 +45,7 @@
 		},
 
 		_loading: false,
+		_plugins: [],
 
 		initialize: function() {
 			this.collection = new OCA.Activity.ActivityCollection();
@@ -56,6 +54,13 @@
 			this.collection.on('sync', this._onEndRequest, this);
 			this.collection.on('error', this._onError, this);
 			this.collection.on('add', this._onAddModel, this);
+
+			this._plugins = OC.Plugins.getPlugins('OCA.Activity.RenderingPlugins');
+			_.each(this._plugins, function(plugin) {
+				if (_.isFunction(plugin.initialize)) {
+					plugin.initialize();
+				}
+			});
 		},
 
 		template: function(data) {
@@ -79,8 +84,20 @@
 				this.collection.setObjectId(this._fileInfo.get('id'));
 				this.collection.reset();
 				this.collection.fetch();
+
+				_.each(this._plugins, function(plugin) {
+					if (_.isFunction(plugin.setFileInfo)) {
+						plugin.setFileInfo('files', fileInfo.get('id'));
+					}
+				});
 			} else {
 				this.collection.reset();
+
+				_.each(this._plugins, function(plugin) {
+					if (_.isFunction(plugin.resetFileInfo)) {
+						plugin.resetFileInfo();
+					}
+				});
 			}
 		},
 
@@ -119,16 +136,27 @@
 		 * @return {Object}
 		 */
 		_formatItem: function(activity) {
+
+			var subject = activity.get('subject'),
+				subject_rich = activity.get('subject_rich');
+			if (subject_rich[0].length > 1) {
+				subject = OCA.Activity.RichObjectStringParser.parseMessage(subject_rich[0], subject_rich[1]);
+			}
+			var message = activity.get('message'),
+				message_rich = activity.get('message_rich');
+			if (message_rich[0].length > 1) {
+				message = OCA.Activity.RichObjectStringParser.parseMessage(message_rich[0], message_rich[1]);
+			}
+
 			var output = {
-				subject: OCA.Activity.Formatter.parseMessage(activity.get('subject_prepared'), false),
+				subject: subject,
 				formattedDate: activity.getRelativeDate(),
 				formattedDateTooltip: activity.getFullDate(),
-				message: OCA.Activity.Formatter.parseMessage(activity.get('message_prepared'), false)
+				timestamp: moment(activity.get('datetime')).valueOf(),
+				message: message,
+				icon: activity.get('icon')
 			};
 
-			if (activity.has('typeicon')) {
-				output.typeIconClass = activity.get('typeicon') + ' svg';
-			}
 			/**
 			 * Disable previews in the rightside bar,
 			 * it's always the same image anyway.
@@ -154,6 +182,13 @@
 
 		_onAddModel: function(model, collection, options) {
 			var $el = $(this.activityTemplate(this._formatItem(model)));
+
+			_.each(this._plugins, function(plugin) {
+				if (_.isFunction(plugin.prepareModelForDisplay)) {
+					plugin.prepareModelForDisplay(model, $el, 'ActivityTabView');
+				}
+			});
+
 			if (!_.isUndefined(options.at) && collection.length > 1) {
 				this.$container.find('li').eq(options.at).before($el);
 			} else {
@@ -167,9 +202,9 @@
 			$el.find('.avatar').each(function() {
 				var element = $(this);
 				if (element.data('user-display-name')) {
-					element.avatar(element.data('user'), 28, undefined, false, undefined, element.data('user-display-name'));
+					element.avatar(element.data('user'), 21, undefined, false, undefined, element.data('user-display-name'));
 				} else {
-					element.avatar(element.data('user'), 28);
+					element.avatar(element.data('user'), 21);
 				}
 			});
 			$el.find('.has-tooltip').tooltip({

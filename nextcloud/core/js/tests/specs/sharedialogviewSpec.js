@@ -41,7 +41,6 @@ describe('OC.Share.ShareDialogView', function() {
 	beforeEach(function() {
 		// horrible parameters
 		$('#testArea').append('<input id="allowShareWithLink" type="hidden" value="yes">');
-		$('#testArea').append('<input id="mailPublicNotificationEnabled" name="mailPublicNotificationEnabled" type="hidden" value="yes">');
 		$container = $('#shareContainer');
 		/* jshint camelcase:false */
 		oldAppConfig = _.extend({}, oc_appconfig.core);
@@ -247,7 +246,7 @@ describe('OC.Share.ShareDialogView', function() {
 				expect(slideToggleStub.callCount).toEqual(1);
 				expect(slideToggleStub.getCall(0).thisValue.eq(0).attr('id')).toEqual('linkPass');
 				expect(fakeServer.requests.length).toEqual(0);
-				
+
 				// Now untoggle share by link
 				dialog.$el.find('.linkCheckbox').click();
 				dialog.render();
@@ -402,76 +401,7 @@ describe('OC.Share.ShareDialogView', function() {
 				expect($.datepicker._defaults.maxDate).toEqual(new Date(2014, 0, 27, 0, 0, 0, 0));
 			});
 		});
-		describe('send link by email', function() {
-			var sendEmailPrivateLinkStub;
-			var clock;
 
-			beforeEach(function() {
-				configModel.set({
-					isMailPublicNotificationEnabled: true
-				});
-
-				shareModel.set('linkShare', {
-					isLinkShare: true,
-					token: 'tehtoken',
-					permissions: OC.PERMISSION_READ,
-					expiration: null
-				});
-
-				sendEmailPrivateLinkStub = sinon.stub(dialog.model, "sendEmailPrivateLink");
-				clock = sinon.useFakeTimers();
-			});
-			afterEach(function() {
-				sendEmailPrivateLinkStub.restore();
-				clock.restore();
-			});
-
-			it('displays form when sending emails is enabled', function() {
-				$('input[name=mailPublicNotificationEnabled]').val('yes');
-				dialog.render();
-				expect(dialog.$('.emailPrivateLinkForm').length).toEqual(1);
-			});
-			it('form not rendered when sending emails is disabled', function() {
-				$('input[name=mailPublicNotificationEnabled]').val('no');
-				dialog.render();
-				expect(dialog.$('.emailPrivateLinkForm').length).toEqual(0);
-			});
-			it('input cleared on success', function() {
-				var defer = $.Deferred();
-				sendEmailPrivateLinkStub.returns(defer.promise());
-
-				$('input[name=mailPublicNotificationEnabled]').val('yes');
-				dialog.render();
-
-				dialog.$el.find('.emailPrivateLinkForm .emailField').val('a@b.c');
-				dialog.$el.find('#emailButton').trigger('click');
-
-				expect(sendEmailPrivateLinkStub.callCount).toEqual(1);
-				expect(dialog.$el.find('.emailPrivateLinkForm .emailField').val()).toEqual('Sending ...');
-
-				defer.resolve();
-				expect(dialog.$el.find('.emailPrivateLinkForm .emailField').val()).toEqual('Email sent');
-
-				clock.tick(2000);
-				expect(dialog.$el.find('.emailPrivateLinkForm .emailField').val()).toEqual('');
-			});
-			it('input not cleared on failure', function() {
-				var defer = $.Deferred();
-				sendEmailPrivateLinkStub.returns(defer.promise());
-
-				$('input[name=mailPublicNotificationEnabled]').val('yes');
-				dialog.render();
-
-				dialog.$el.find('.emailPrivateLinkForm .emailField').val('a@b.c');
-				dialog.$el.find('#emailButton').trigger('click');
-
-				expect(sendEmailPrivateLinkStub.callCount).toEqual(1);
-				expect(dialog.$el.find('.emailPrivateLinkForm .emailField').val()).toEqual('Sending ...');
-
-				defer.reject();
-				expect(dialog.$el.find('.emailPrivateLinkForm .emailField').val()).toEqual('a@b.c');
-			});
-		});
 	});
 	describe('check for avatar', function() {
 		beforeEach(function() {
@@ -534,8 +464,9 @@ describe('OC.Share.ShareDialogView', function() {
 
 			it('test avatar user', function() {
 				var args = avatarStub.getCall(1).args;
-				expect(args.length).toEqual(2);
+				expect(args.length).toEqual(6);
 				expect(args[0]).toEqual('user1');
+				expect(args[5]).toEqual('User One');
 			});
 
 			it('test avatar for groups', function() {
@@ -599,7 +530,8 @@ describe('OC.Share.ShareDialogView', function() {
 						},
 						'users'  : [{'label': 'bob', 'value': {'shareType': 0, 'shareWith': 'test'}}],
 						'groups' : [],
-						'remotes': []
+						'remotes': [],
+						'lookup': []
 					}
 				}
 			});
@@ -647,7 +579,8 @@ describe('OC.Share.ShareDialogView', function() {
 								}
 							],
 							'groups': [],
-							'remotes': []
+							'remotes': [],
+							'lookup': []
 						}
 					}
 				});
@@ -705,7 +638,8 @@ describe('OC.Share.ShareDialogView', function() {
 								}
 							],
 							'groups': [],
-							'remotes': []
+							'remotes': [],
+							'lookup': []
 						}
 					}
 				});
@@ -785,7 +719,8 @@ describe('OC.Share.ShareDialogView', function() {
 									}
 								],
 								'groups': [],
-								'remotes': []
+								'remotes': [],
+								'lookup': []
 							}
 						}
 					});
@@ -835,7 +770,8 @@ describe('OC.Share.ShareDialogView', function() {
 										}
 									}
 								],
-								'remotes': []
+								'remotes': [],
+								'lookup': []
 							}
 						}
 					});
@@ -885,7 +821,8 @@ describe('OC.Share.ShareDialogView', function() {
 											'shareWith': 'foo2@bar.com/baz'
 										}
 									}
-								]
+								],
+								'lookup': []
 							}
 						}
 					});

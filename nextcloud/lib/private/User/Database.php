@@ -53,19 +53,25 @@
 namespace OC\User;
 
 use OC\Cache\CappedMemoryCache;
+use OCP\IUserBackend;
+use OCP\Util;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * Class for user management in a SQL Database (e.g. MySQL, SQLite)
  */
-class Database extends \OC\User\Backend implements \OCP\IUserBackend {
+class Database extends Backend implements IUserBackend {
 	/** @var CappedMemoryCache */
 	private $cache;
+
 	/** @var EventDispatcher */
 	private $eventDispatcher;
+
 	/**
-	 * OC_User_Database constructor.
+	 * \OC\User\Database constructor.
+	 *
+	 * @param EventDispatcher $eventDispatcher
 	 */
 	public function __construct($eventDispatcher = null) {
 		$this->cache = new CappedMemoryCache();
@@ -83,8 +89,13 @@ class Database extends \OC\User\Backend implements \OCP\IUserBackend {
 	 */
 	public function createUser($uid, $password) {
 		if (!$this->userExists($uid)) {
+			$event = new GenericEvent($password);
+			$this->eventDispatcher->dispatch('OCP\PasswordPolicy::validate', $event);
 			$query = \OC_DB::prepare('INSERT INTO `*PREFIX*users` ( `uid`, `password` ) VALUES( ?, ? )');
 			$result = $query->execute(array($uid, \OC::$server->getHasher()->hash($password)));
+
+			// Clear cache
+			unset($this->cache[$uid]);
 
 			return $result ? true : false;
 		}
@@ -226,14 +237,16 @@ class Database extends \OC\User\Backend implements \OCP\IUserBackend {
 	 * @return boolean
 	 */
 	private function loadUser($uid) {
-		if (empty($this->cache[$uid])) {
+		if (!isset($this->cache[$uid])) {
 			$query = \OC_DB::prepare('SELECT `uid`, `displayname` FROM `*PREFIX*users` WHERE LOWER(`uid`) = LOWER(?)');
 			$result = $query->execute(array($uid));
 
 			if ($result === false) {
-				\OCP\Util::writeLog('core', \OC_DB::getErrorMessage(), \OCP\Util::ERROR);
+				Util::writeLog('core', \OC_DB::getErrorMessage(), Util::ERROR);
 				return false;
 			}
+
+			$this->cache[$uid] = false;
 
 			while ($row = $result->fetchRow()) {
 				$this->cache[$uid]['uid'] = $row['uid'];
@@ -276,7 +289,7 @@ class Database extends \OC\User\Backend implements \OCP\IUserBackend {
 	 */
 	public function userExists($uid) {
 		$this->loadUser($uid);
-		return !empty($this->cache[$uid]);
+		return $this->cache[$uid] !== false;
 	}
 
 	/**
@@ -308,7 +321,7 @@ class Database extends \OC\User\Backend implements \OCP\IUserBackend {
 		$query = \OC_DB::prepare('SELECT COUNT(*) FROM `*PREFIX*users`');
 		$result = $query->execute();
 		if ($result === false) {
-			\OCP\Util::writeLog('core', \OC_DB::getErrorMessage(), \OCP\Util::ERROR);
+			Util::writeLog('core', \OC_DB::getErrorMessage(), Util::ERROR);
 			return false;
 		}
 		return $result->fetchOne();
@@ -343,7 +356,7 @@ class Database extends \OC\User\Backend implements \OCP\IUserBackend {
 
 		$backends = \OC::$server->getUserManager()->getBackends();
 		foreach ($backends as $backend) {
-			if ($backend instanceof \OC\User\Database) {
+			if ($backend instanceof Database) {
 				/** @var \OC\User\Database $backend */
 				$uid = $backend->loginName2UserName($param['uid']);
 				if ($uid !== false) {

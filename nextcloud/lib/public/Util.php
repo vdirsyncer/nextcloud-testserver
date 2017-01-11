@@ -82,9 +82,7 @@ class Util {
 	 * @since 8.1.0
 	 */
 	public static function setChannel($channel) {
-		//Flush timestamp to reload version.php
-		\OC::$server->getSession()->set('OC_Version_Timestamp', 0);
-		\OC::$server->getAppConfig()->setValue('core', 'OC_Channel', $channel);
+		\OC::$server->getConfig()->setSystemValue('updater.release.channel', $channel);
 	}
 	
 	/**
@@ -194,7 +192,7 @@ class Util {
 	 * get l10n object
 	 * @param string $application
 	 * @param string|null $language
-	 * @return \OC_L10N
+	 * @return \OCP\IL10N
 	 * @since 6.0.0 - parameter $language was added in 8.0.0
 	 */
 	public static function getL10N($application, $language = null) {

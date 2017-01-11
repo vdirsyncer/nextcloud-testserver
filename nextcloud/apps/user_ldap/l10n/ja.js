@@ -47,6 +47,8 @@ OC.L10N.register(
     "The %uid placeholder is missing. It will be replaced with the login name when querying LDAP / AD." : "%uid のプレースフォルダがありません。プレースフォルダでは、LDAP /ADで問合せするときにログイン名で置き換えられます。",
     "Please provide a login name to test against" : "テストの為にログイン名を入力してください。",
     "The group box was disabled, because the LDAP / AD server does not support memberOf." : "グループボックスは無効にされました。LDAP/AD サーバーが MemberOf オプションをサポートしていないからです。",
+    "Password change rejected. Hint: " : "パスワード変更が拒否されました。ヒント：",
+    "LDAP / AD integration" : "LDAP / AD 統合",
     "_%s group found_::_%s groups found_" : ["%s グループが見つかりました"],
     "_%s user found_::_%s users found_" : ["%s ユーザーが見つかりました"],
     "Could not detect user display name attribute. Please specify it yourself in advanced ldap settings." : "ユーザー表示名の属性を検出できませんでした。詳細設定で対応する属性を指定してください。",
@@ -141,6 +143,9 @@ OC.L10N.register(
     "When switched on, groups that contain groups are supported. (Only works if the group member attribute contains DNs.)" : "オンにすると、グループを含むグループが有効になります。(グループメンバーの属性にDNが含まれる場合のみ利用できます。)",
     "Paging chunksize" : "ページ分割サイズ",
     "Chunksize used for paged LDAP searches that may return bulky results like user or group enumeration. (Setting it 0 disables paged LDAP searches in those situations.)" : "ページ分割サイズは、LDAP検索時にユーザーやグループのリスト一覧データを一括で返すデータ量を指定します。(設定が0の場合には、LDAP検索の分割転送は無効)",
+    "Enable LDAP password changes per user" : "ユーザーごとにLDAPパスワードの変更を有効にする",
+    "Allow LDAP users to change their password and allow Super Administrators and Group Administrators to change the password of their LDAP users. Only works when access control policies are configured accordingly on the LDAP server. As passwords are sent in plaintext to the LDAP server, transport encryption must be used and password hashing should be configured on the LDAP server." : "LDAPユーザーがLDAPのパスワードを変更できるようにし、スーパー管理者とグループ管理者がLDAPユーザーのパスワードを変更できるようにします。 これは、LDAPサーバーでアクセス制御ポリシーが設定されている場合にのみ動作します。この時パスワードは平文でLDAPサーバーに送信されるため、TCP接続の暗号化を使用する必要があり、LDAPサーバー側でパスワードをハッシュ化する必要があります。",
+    "(New password is sent as plain text to LDAP)" : "(新しいパスワードは平文テキストで LDAP に送信されます)",
     "Special Attributes" : "特殊属性",
     "Quota Field" : "クォータ属性",
     "Quota Default" : "クォータのデフォルト",
@@ -158,6 +163,8 @@ OC.L10N.register(
     "Username-LDAP User Mapping" : "ユーザー名とLDAPユーザのマッピング",
     "Usernames are used to store and assign (meta) data. In order to precisely identify and recognize users, each LDAP user will have an internal username. This requires a mapping from username to LDAP user. The created username is mapped to the UUID of the LDAP user. Additionally the DN is cached as well to reduce LDAP interaction, but it is not used for identification. If the DN changes, the changes will be found. The internal username is used all over. Clearing the mappings will have leftovers everywhere. Clearing the mappings is not configuration sensitive, it affects all LDAP configurations! Never clear the mappings in a production environment, only in a testing or experimental stage." : "ユーザー名は(メタ)データの保存と割り当てに使用されます。ユーザーを正確に識別して認識するために、個々のLDAPユーザは内部ユーザ名を持っています。これは、ユーザー名からLDAPユーザーへのマッピングが必要であることを意味しています。この生成されたユーザ名は、LDAPユーザのUUIDにマッピングされます。加えて、DNがLDAPとのインタラクションを削減するためにキャッシュされますが、識別には利用されません。DNが変わった場合は、変更が検出されます。内部ユーザ名は全体に亘って利用されます。マッピングをクリアすると、いたるところに使われないままの物が残るでしょう。マッピングのクリアは設定に敏感ではありませんが、すべてのLDAPの設定に影響を与えます！本番の環境では決してマッピングをクリアしないでください。テストもしくは実験の段階でのみマッピングのクリアを行なってください。",
     "Clear Username-LDAP User Mapping" : "ユーザー名とLDAPユーザーのマッピングをクリアする",
-    "Clear Groupname-LDAP Group Mapping" : "グループ名とLDAPグループのマッピングをクリアする"
+    "Clear Groupname-LDAP Group Mapping" : "グループ名とLDAPグループのマッピングをクリアする",
+    "Limit %s access to users meeting these criteria:" : "次の条件を満たしているユーザーに %s アクセスを限定：",
+    "By default the internal username will be created from the UUID attribute. It makes sure that the username is unique and characters do not need to be converted. The internal username has the restriction that only these characters are allowed: [ a-zA-Z0-9_.@- ].  Other characters are replaced with their ASCII correspondence or simply omitted. On collisions a number will be added/increased. The internal username is used to identify a user internally. It is also the default name for the user home folder. It is also a part of remote URLs, for instance for all *DAV services. With this setting, the default behavior can be overridden. To achieve a similar behavior as before ownCloud 5 enter the user display name attribute in the following field. Leave it empty for default behavior. Changes will have effect only on newly mapped (added) LDAP users." : "デフォルトでは、内部ユーザー名はUUID属性から作成されます。 これによりユーザー名がユニークであり、かつ文字の変換が不要であることを保証します。内部ユーザー名には、[a-zA-Z0-9_.@-]という文字のみが使用できるという制限があります。その他の文字は対応するASCII文字に置き換えられるか、単に省略されます。内部名が衝突するとサフィックスの数値が増減します。 内部ユーザー名は、内部的にユーザーを識別するために使用されます。 また、ユーザーホームフォルダの既定の名前です。 また、*DAVサービスなどのすべてのリモートURLの一部です。 この設定では、デフォルトの動作を再定義することができます。 以前のownCloud5 と同様の動作を実現するには、次のフィールドにユーザーの表示名属性を入力します。 デフォルト動作では空のままにします。 変更は新しくマッピング(追加)されたLDAPユーザーにのみ有効です。"
 },
 "nplurals=1; plural=0;");

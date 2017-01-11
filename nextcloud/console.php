@@ -31,10 +31,10 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 define('OC_CONSOLE', 1);
 
-// Show warning if a PHP version below 5.4.0 is used, this has to happen here
-// because base.php will already use 5.4 syntax.
-if (version_compare(PHP_VERSION, '5.4.0') === -1) {
-	echo 'This version of ownCloud requires at least PHP 5.4.0'.PHP_EOL;
+// Show warning if a PHP version below 5.6.0 is used, this has to happen here
+// because base.php will already use 5.6 syntax.
+if (version_compare(PHP_VERSION, '5.6.0') === -1) {
+	echo 'This version of Nextcloud requires at least PHP 5.6.0'.PHP_EOL;
 	echo 'You are currently running ' . PHP_VERSION . '. Please update your PHP version.'.PHP_EOL;
 	return;
 }
@@ -45,21 +45,21 @@ function exceptionHandler($exception) {
 	exit(1);
 }
 try {
-	require_once 'lib/base.php';
+	require_once __DIR__ . '/lib/base.php';
 
 	// set to run indefinitely if needed
 	set_time_limit(0);
 
 	if (!OC::$CLI) {
 		echo "This script can be run from the command line only" . PHP_EOL;
-		exit(0);
+		exit(1);
 	}
 
 	set_exception_handler('exceptionHandler');
 
 	if (!function_exists('posix_getuid')) {
 		echo "The posix extensions are required - see http://php.net/manual/en/book.posix.php" . PHP_EOL;
-		exit(0);
+		exit(1);
 	}
 	$user = posix_getpwuid(posix_getuid());
 	$configUser = posix_getpwuid(fileowner(OC::$configDir . 'config.php'));
@@ -67,8 +67,8 @@ try {
 		echo "Console has to be executed with the user that owns the file config/config.php" . PHP_EOL;
 		echo "Current user: " . $user['name'] . PHP_EOL;
 		echo "Owner of config.php: " . $configUser['name'] . PHP_EOL;
-		echo "Try adding 'sudo -u " . $configUser['name'] . " ' to the beginning of the command (without the single quotes)" . PHP_EOL;  
-		exit(0);
+		echo "Try adding 'sudo -u " . $configUser['name'] . " ' to the beginning of the command (without the single quotes)" . PHP_EOL;
+		exit(1);
 	}
 
 	$oldWorkingDir = getcwd();
@@ -85,7 +85,7 @@ try {
 		echo "The process control (PCNTL) extensions are required in case you want to interrupt long running commands - see http://php.net/manual/en/book.pcntl.php" . PHP_EOL;
 	}
 
-	$application = new Application(\OC::$server->getConfig(), \OC::$server->getEventDispatcher(), \OC::$server->getRequest());
+	$application = new Application(\OC::$server->getConfig(), \OC::$server->getEventDispatcher(), \OC::$server->getRequest(), \OC::$server->getLogger());
 	$application->loadCommands(new ArgvInput(), new ConsoleOutput());
 	$application->run();
 } catch (Exception $ex) {

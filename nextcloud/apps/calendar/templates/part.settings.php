@@ -4,7 +4,7 @@
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
- * @copyright 2016 Raghu Nayyar <beingminimal@gmail.com>
+ * @copyright 2016 Raghu Nayyar <hey@raghunayyar.com>
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
 	<button name="app settings"
 		class="settings-button"
 		data-apps-slide-toggle="#app-settings-content">
-		<?php p($l->t('Settings')); ?>
+		<?php p($l->t('Settings & Import')); ?>
 	</button>
 </div>
 
@@ -36,20 +36,20 @@
 	<fieldset class="settings-fieldset">
 		<ul class="settings-fieldset-interior">
 			<li class="settings-fieldset-interior-item">
-				<label>
-					<input type="checkbox" ng-change="updateSkipPopover()" ng-model="skipPopover" ng-true-value="'yes'" ng-false-value="'no'"/>
+				<input class="checkbox" type="checkbox" ng-change="updateSkipPopover()" ng-model="skipPopover" ng-true-value="'yes'" ng-false-value="'no'" id="skip_popover_checkbox"/>
+				<label for="skip_popover_checkbox">
 					<?php p($l->t('Skip simple event editor')); ?>
 				</label>
 			</li>
 			<li class="settings-fieldset-interior-item settings-fieldset-interior-weeknumbers">
-				<label>
-					<input type="checkbox" ng-change="updateShowWeekNr()" ng-model="settingsShowWeekNr" ng-true-value="'yes'" ng-false-value="'no'"/>
+				<input class="checkbox" type="checkbox" ng-change="updateShowWeekNr()" ng-model="settingsShowWeekNr" ng-true-value="'yes'" ng-false-value="'no'" id="show_weeknumbers_checkbox"/>
+				<label for="show_weeknumbers_checkbox">
 					<?php p($l->t('Show week numbers')); ?>
 				</label>
 			</li>
 			<li class="settings-fieldset-interior-item settings-fieldset-interior-upload">
 				<input type="file" name="file" accept="text/calendar" multiple id="import" />
-				<span href="#" class="settings-upload svg icon-upload"><?php p($l->t('Import calendar')); ?></span>
+				<span href="#" class="settings-upload svg icon-upload" role="button" id="import-button-overlay"><?php p($l->t('Import calendar')); ?></span>
 				<span ng-show="!files.length" class="hide"><?php p($l->t('No Calendars selected for import')); ?></span>
 			</li>
 

@@ -27,7 +27,7 @@
 		getCheck: function() {
 			return {
 				'class': 'OCA\\WorkflowEngine\\Check\\FileMimeType',
-				'name': t('workflowengine', 'File mime type (upload)'),
+				'name': t('workflowengine', 'File mime type'),
 				'operators': [
 					{'operator': 'is', 'name': t('workflowengine', 'is')},
 					{'operator': '!is', 'name': t('workflowengine', 'is not')},
@@ -41,9 +41,9 @@
 				return;
 			}
 
-			var placeholder = t('workflowengine', 'text/plain');
+			var placeholder = 'text/plain';
 			if (check['operator'] === 'matches' || check['operator'] === '!matches') {
-				placeholder = t('workflowengine', '/^text\\/(plain|html)$/i');
+				placeholder = '/^text\\/(plain|html)$/i';
 
 				if (this._validateRegex(check['value'])) {
 					$(element).removeClass('invalid-input');

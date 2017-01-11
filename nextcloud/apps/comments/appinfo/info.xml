@@ -6,11 +6,25 @@
 	<licence>AGPL</licence>
 	<author>Arthur Schiwon, Vincent Petry</author>
 	<default_enable/>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<dependencies>
-		<owncloud min-version="9.1" max-version="9.1" />
+		<nextcloud min-version="11" max-version="11" />
 	</dependencies>
 	<types>
 		<logging/>
 	</types>
+
+	<activity>
+		<settings>
+			<setting>OCA\Comments\Activity\Setting</setting>
+		</settings>
+
+		<filters>
+			<filter>OCA\Comments\Activity\Filter</filter>
+		</filters>
+
+		<providers>
+			<provider>OCA\Comments\Activity\Provider</provider>
+		</providers>
+	</activity>
 </info>

@@ -1,4 +1,4 @@
-<?php /** @var $l OC_L10N */ ?>
+<?php /** @var $l \OCP\IL10N */ ?>
 <div id='notification'></div>
 
 <div id="emptycontent" class="hidden"></div>
@@ -8,7 +8,6 @@
 <div class="nofilterresults hidden">
 	<div class="icon-search"></div>
 	<h2><?php p($l->t('No entries found in this folder')); ?></h2>
-	<p></p>
 </div>
 
 <table id="filestable">

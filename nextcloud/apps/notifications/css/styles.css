@@ -1,7 +1,7 @@
 .notification {
 	display: block;
-	padding: 7px 15px 50px 15px;
-	line-height: 1.75em;
+	padding: 16px 12px;
+	line-height: 1em;
 }
 .notification:not(:last-child) {
 	border-bottom: 1px solid rgb(238, 238, 238);
@@ -36,17 +36,49 @@
 .notification {
 	color: black;
 	position: relative;
+	clear: both;
+}
+
+img.notification-icon {
+	width: 32px;
+	height: 32px;
+	display: block;
+}
+
+/**
+ * Vertical alignment from http://stackoverflow.com/a/39923209
+ */
+.notification-subject {
+	padding-top: 12px;
+	position: relative;
+}
+
+.notification-subject a {
+	display: inline-block;
+}
+
+.notification-subject > span.image,
+.notification-subject > span.text,
+.notification-subject > a > span.image,
+.notification-subject > a > span.text {
+	display:table-cell;
+	vertical-align:middle;
+}
+
+.notification-subject > span.text,
+.notification-subject > a > span.text {
+	padding-left: 10px;
 }
 
 .notification .notification-empty {
 	color: #999;
 }
 
-.notification:hover > .notification-delete{
+.notification:hover > .notification-delete {
 	display: block !important;
 	position: absolute;
 	top: 7px;
-	right: 14px;
+	right: 12px;
 	opacity: 0.3;
 }
 
@@ -57,6 +89,15 @@
 
 .notification-delete img, .notifications-button img {
 	cursor: pointer;
+}
+
+.notification-time {
+	text-align: right;
+	opacity: 0.5;
+	padding-right: 32px;
+	margin-top: -7px;
+	position: absolute;
+	right: 0;
 }
 
 .notifications-button {
@@ -84,15 +125,16 @@
 	padding: 0 10px;
 	box-shadow: none;
 	margin: 0;
-	float: left;
 }
 
 .notification .notification-actions {
-	float:right;
 	padding: 0;
+	display: inline-block;
+	width: 100%;
+	margin: -6px 0;
 }
 
-.notification .notification-actions .action-button.primary{
+.notification .notification-actions .action-button.primary {
 	color: #fff;
 }
 
@@ -101,17 +143,32 @@
 }
 
 .notification .notification-subject {
-	display: inline-block;
-	margin-right: 10px;
-	opacity: .57;
-}
-.notification .notification-subject:hover {
-	opacity: 1;
+	margin-right: 20px;
 }
 
 .notification .notification-message {
 	line-height: 20px;
-	padding-bottom: 5px;
+	padding-bottom: 16px;
+	opacity: .57;
+}
+
+.notification .notification-message img,
+.notification .notification-subject img:not(.notification-icon) {
+	max-width: 32px;
+	max-height: 32px;
+	margin: 0 5px 5px 0;
+}
+
+.notification .avatar {
+	vertical-align: middle;
+	display: inline-block;
+	margin: 0 5px 2px 3px;
+}
+
+.notification strong,
+.notification .notification-subject a:not(.full-subject-link) {
+	font-weight: bold;
+	opacity: 2;
 }
 
 .notification-container {

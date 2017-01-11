@@ -58,15 +58,24 @@ class MySQL extends AbstractDatabase {
 		try{
 			$name = $this->dbName;
 			$user = $this->dbUser;
-			//we can't use OC_BD functions here because we need to connect as the administrative user.
-			$query = "CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8 COLLATE utf8_bin;";
+			//we can't use OC_DB functions here because we need to connect as the administrative user.
+			$characterSet = \OC::$server->getSystemConfig()->getValue('mysql.utf8mb4', false) ? 'utf8mb4' : 'utf8';
+			$query = "CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET $characterSet COLLATE ${characterSet}_bin;";
 			$connection->executeUpdate($query);
+		} catch (\Exception $ex) {
+			$this->logger->error('Database creation failed: {error}', [
+				'app' => 'mysql.setup',
+				'error' => $ex->getMessage()
+			]);
+			return;
+		}
 
+		try {
 			//this query will fail if there aren't the right permissions, ignore the error
 			$query="GRANT ALL PRIVILEGES ON `$name` . * TO '$user'";
 			$connection->executeUpdate($query);
 		} catch (\Exception $ex) {
-			$this->logger->error('Database creation failed: {error}', [
+			$this->logger->debug('Could not automatically grant privileges, this can be ignored if database user already had privileges: {error}', [
 				'app' => 'mysql.setup',
 				'error' => $ex->getMessage()
 			]);
@@ -78,14 +87,22 @@ class MySQL extends AbstractDatabase {
 	 * @throws \OC\DatabaseSetupException
 	 */
 	private function createDBUser($connection) {
-		$name = $this->dbUser;
-		$password = $this->dbPassword;
-		// we need to create 2 accounts, one for global use and one for local user. if we don't specify the local one,
-		// the anonymous user would take precedence when there is one.
-		$query = "CREATE USER '$name'@'localhost' IDENTIFIED BY '$password'";
-		$connection->executeUpdate($query);
-		$query = "CREATE USER '$name'@'%' IDENTIFIED BY '$password'";
-		$connection->executeUpdate($query);
+		try{
+			$name = $this->dbUser;
+			$password = $this->dbPassword;
+			// we need to create 2 accounts, one for global use and one for local user. if we don't specify the local one,
+			// the anonymous user would take precedence when there is one.
+			$query = "CREATE USER '$name'@'localhost' IDENTIFIED BY '$password'";
+			$connection->executeUpdate($query);
+			$query = "CREATE USER '$name'@'%' IDENTIFIED BY '$password'";
+			$connection->executeUpdate($query);
+		}
+		catch (\Exception $ex){
+			$this->logger->error('Database User creation failed: {error}', [
+                                'app' => 'mysql.setup',
+                                'error' => $ex->getMessage()
+                        ]);
+		}
 	}
 
 	/**

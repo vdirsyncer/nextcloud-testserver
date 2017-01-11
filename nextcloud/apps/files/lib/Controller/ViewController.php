@@ -42,7 +42,6 @@ use OCP\IUserSession;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use OCP\Files\Folder;
 use OCP\App\IAppManager;
-use OC\AppFramework\Http\Request;
 
 /**
  * Class ViewController
@@ -161,21 +160,23 @@ class ViewController extends Controller {
 		\OCP\Util::addStyle('files', 'files');
 		\OCP\Util::addStyle('files', 'upload');
 		\OCP\Util::addStyle('files', 'mobile');
-		\OCP\Util::addscript('files', 'app');
-		\OCP\Util::addscript('files', 'file-upload');
-		\OCP\Util::addscript('files', 'newfilemenu');
-		\OCP\Util::addscript('files', 'jquery.fileupload');
-		\OCP\Util::addscript('files', 'jquery-visibility');
-		\OCP\Util::addscript('files', 'fileinfomodel');
-		\OCP\Util::addscript('files', 'filesummary');
-		\OCP\Util::addscript('files', 'breadcrumb');
-		\OCP\Util::addscript('files', 'filelist');
-		\OCP\Util::addscript('files', 'search');
+		\OCP\Util::addScript('files', 'app');
+		\OCP\Util::addScript('files', 'file-upload');
+		\OCP\Util::addScript('files', 'newfilemenu');
+		\OCP\Util::addScript('files', 'jquery.fileupload');
+		\OCP\Util::addScript('files', 'jquery-visibility');
+		\OCP\Util::addScript('files', 'fileinfomodel');
+		\OCP\Util::addScript('files', 'filesummary');
+		\OCP\Util::addScript('files', 'breadcrumb');
+		\OCP\Util::addScript('files', 'filelist');
+		\OCP\Util::addScript('files', 'search');
 
 		\OCP\Util::addScript('files', 'favoritesfilelist');
+		\OCP\Util::addScript('files', 'recentfilelist');
 		\OCP\Util::addScript('files', 'tagsplugin');
 		\OCP\Util::addScript('files', 'gotoplugin');
 		\OCP\Util::addScript('files', 'favoritesplugin');
+		\OCP\Util::addScript('files', 'recentplugin');
 
 		\OCP\Util::addScript('files', 'detailfileinfoview');
 		\OCP\Util::addScript('files', 'sidebarpreviewmanager');
@@ -187,23 +188,11 @@ class ViewController extends Controller {
 
 		\OC_Util::addVendorScript('core', 'handlebars/handlebars');
 
-		\OCP\Util::addscript('files', 'fileactions');
-		\OCP\Util::addscript('files', 'fileactionsmenu');
-		\OCP\Util::addscript('files', 'files');
-		\OCP\Util::addscript('files', 'keyboardshortcuts');
-		\OCP\Util::addscript('files', 'navigation');
-
-		// if IE8 and "?dir=path&view=someview" was specified, reformat the URL to use a hash like "#?dir=path&view=someview"
-		$isIE8 = $this->request->isUserAgent([Request::USER_AGENT_IE_8]);
-		if ($isIE8 && ($dir !== '' || $view !== '')) {
-			$dir = !empty($dir) ? $dir : '/';
-			$view = !empty($view) ? $view : 'files';
-			$hash = '#?dir=' . \OCP\Util::encodePath($dir);
-			if ($view !== 'files') {
-				$hash .= '&view=' . urlencode($view);
-			}
-			return new RedirectResponse($this->urlGenerator->linkToRoute('files.view.index') . $hash);
-		}
+		\OCP\Util::addScript('files', 'fileactions');
+		\OCP\Util::addScript('files', 'fileactionsmenu');
+		\OCP\Util::addScript('files', 'files');
+		\OCP\Util::addScript('files', 'keyboardshortcuts');
+		\OCP\Util::addScript('files', 'navigation');
 
 		// mostly for the home storage's free space
 		// FIXME: Make non static
@@ -246,8 +235,6 @@ class ViewController extends Controller {
 		$params['owner'] = $storageInfo['owner'];
 		$params['ownerDisplayName'] = $storageInfo['ownerDisplayName'];
 		$params['isPublic'] = false;
-		$params['mailNotificationEnabled'] = $this->config->getAppValue('core', 'shareapi_allow_mail_notification', 'no');
-		$params['mailPublicNotificationEnabled'] = $this->config->getAppValue('core', 'shareapi_allow_public_notification', 'no');
 		$params['allowShareWithLink'] = $this->config->getAppValue('core', 'shareapi_allow_links', 'yes');
 		$user = $this->userSession->getUser()->getUID();
 		$params['defaultFileSorting'] = $this->config->getUserValue($user, 'files', 'file_sorting', 'name');

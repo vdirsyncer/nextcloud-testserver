@@ -1,10 +1,10 @@
 <?php
-/** @var $l OC_L10N */
+/** @var $l \OCP\IL10N */
 /** @var $_ array */
 ?>
 
 <?php if ($_['previewSupported']): /* This enables preview images for links (e.g. on Facebook, Google+, ...)*/?>
-	<link rel="image_src" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute( 'core_ajax_public_preview', array('x' => $_['previewMaxX'], 'y' => $_['previewMaxY'], 'file' => $_['directory_path'], 't' => $_['dirToken']))); ?>" />
+	<link rel="image_src" href="<?php p($_['previewImage']); ?>" />
 <?php endif; ?>
 
 <div id="notification-container">
@@ -36,20 +36,14 @@ $maxUploadFilesize = min($upload_max_filesize, $post_max_size);
 
 <header><div id="header" class="<?php p((isset($_['folder']) ? 'share-folder' : 'share-file')) ?>">
 		<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
-		   title="" id="owncloud">
+		   title="" id="nextcloud">
 			<div class="logo-icon svg">
 			</div>
 		</a>
 
 		<div class="header-appname-container">
 			<h1 class="header-appname">
-				<?php
-					if(OC_Util::getEditionString() === '') {
-						p($theme->getName());
-					} else {
-						print_unescaped($theme->getHTMLName());
-					}
-				?>
+				<?php p($theme->getName()); ?>
 			</h1>
 		</div>
 
@@ -110,10 +104,13 @@ $maxUploadFilesize = min($upload_max_filesize, $post_max_size);
 		<?php } else { ?>
 		<input type="hidden" id="upload-only-interface" value="1"/>
 			<div id="public-upload">
-				<div id="emptycontent" class="">
+				<div id="emptycontent" class="<?php if (!empty($_['disclaimer'])) { ?>has-disclaimer<?php } ?>">
 					<div id="displayavatar"><div class="avatardiv"></div></div>
 					<h2><?php p($l->t('Upload files to %s', [$_['shareOwner']])) ?></h2>
 					<p><span class="icon-folder"></span> <?php p($_['filename']) ?></p>
+					<?php if (!empty($_['disclaimer'])) { ?>
+					<p class="disclaimer"><?php p($_['disclaimer']); ?></p>
+					<?php } ?>
 					<input type="file" name="files[]" class="hidden" multiple>
 
 					<a href="#" class="button icon-upload"><?php p($l->t('Select or drop files')) ?></a>

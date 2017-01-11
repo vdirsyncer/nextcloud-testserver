@@ -61,7 +61,7 @@ class Admin implements ISettings {
 		$theme = $this->config->getSystemValue('theme', '');
 		if ($theme !== '') {
 			$themable = false;
-			$errorMessage = $this->l->t('You already use a custom theme');
+			$errorMessage = $this->l->t('You are already using a custom theme');
 		}
 
 		$parameters = [
@@ -71,6 +71,10 @@ class Admin implements ISettings {
 			'url'             => $this->themingDefaults->getBaseUrl(),
 			'slogan'          => $this->themingDefaults->getSlogan(),
 			'color'           => $this->themingDefaults->getMailHeaderColor(),
+			'logo'            => $this->themingDefaults->getLogo(),
+			'logoMime'        => $this->config->getAppValue('theming', 'logoMime', ''),
+			'background'      => $this->themingDefaults->getBackground(),
+			'backgroundMime'  => $this->config->getAppValue('theming', 'backgroundMime', ''),
 			'uploadLogoRoute' => $path,
 		];
 

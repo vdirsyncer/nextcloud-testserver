@@ -54,7 +54,12 @@ class Local extends \OC\Files\Storage\Common {
 			throw new \InvalidArgumentException('No data directory set for local storage');
 		}
 		$this->datadir = $arguments['datadir'];
-		$this->realDataDir = rtrim(realpath($this->datadir), '/') . '/';
+		// some crazy code uses a local storage on root...
+		if ($this->datadir === '/') {
+			$this->realDataDir = $this->datadir;
+		} else {
+			$this->realDataDir = rtrim(realpath($this->datadir), '/') . '/';
+		}
 		if (substr($this->datadir, -1) !== '/') {
 			$this->datadir .= '/';
 		}
@@ -150,7 +155,7 @@ class Local extends \OC\Files\Storage\Common {
 		$fullPath = $this->getSourcePath($path);
 		if (PHP_INT_SIZE === 4) {
 			$helper = new \OC\LargeFileHelper;
-			return $helper->getFilesize($fullPath);
+			return $helper->getFileSize($fullPath);
 		}
 		return filesize($fullPath);
 	}
@@ -168,8 +173,16 @@ class Local extends \OC\Files\Storage\Common {
 	}
 
 	public function filemtime($path) {
-		clearstatcache($this->getSourcePath($path));
-		return $this->file_exists($path) ? filemtime($this->getSourcePath($path)) : false;
+		$fullPath = $this->getSourcePath($path);
+		clearstatcache($fullPath);
+		if (!$this->file_exists($path)) {
+			return false;
+		}
+		if (PHP_INT_SIZE === 4) {
+			$helper = new \OC\LargeFileHelper();
+			return $helper->getFileMtime($fullPath);
+		}
+		return filemtime($fullPath);
 	}
 
 	public function touch($path, $mtime = null) {

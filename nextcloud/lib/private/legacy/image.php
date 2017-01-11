@@ -54,6 +54,8 @@ class OC_Image implements \OCP\IImage {
 	private $fileInfo;
 	/** @var \OCP\ILogger */
 	private $logger;
+	/** @var array */
+	private $exif;
 
 	/**
 	 * Get mime type for an image file.
@@ -82,11 +84,6 @@ class OC_Image implements \OCP\IImage {
 		$this->logger = $logger;
 		if (is_null($logger)) {
 			$this->logger = \OC::$server->getLogger();
-		}
-
-		if (!extension_loaded('gd') || !function_exists('gd_info')) {
-			$this->logger->error(__METHOD__ . '(): GD module not installed', array('app' => 'core'));
-			return false;
 		}
 
 		if (\OC_Util::fileInfoLoaded()) {
@@ -352,6 +349,10 @@ class OC_Image implements \OCP\IImage {
 	 * @return int The orientation or -1 if no EXIF data is available.
 	 */
 	public function getOrientation() {
+		if ($this->exif !== null) {
+			return $this->exif['Orientation'];
+		}
+
 		if ($this->imageType !== IMAGETYPE_JPEG) {
 			$this->logger->debug('OC_Image->fixOrientation() Image is not a JPEG.', array('app' => 'core'));
 			return -1;
@@ -375,7 +376,28 @@ class OC_Image implements \OCP\IImage {
 		if (!isset($exif['Orientation'])) {
 			return -1;
 		}
+		$this->exif = $exif;
 		return $exif['Orientation'];
+	}
+
+	public function readExif($data) {
+		if (!is_callable('exif_read_data')) {
+			$this->logger->debug('OC_Image->fixOrientation() Exif module not enabled.', array('app' => 'core'));
+			return;
+		}
+		if (!$this->valid()) {
+			$this->logger->debug('OC_Image->fixOrientation() No image loaded.', array('app' => 'core'));
+			return;
+		}
+
+		$exif = @exif_read_data('data://image/jpeg;base64,' . base64_encode($data));
+		if (!$exif) {
+			return;
+		}
+		if (!isset($exif['Orientation'])) {
+			return;
+		}
+		$this->exif = $exif;
 	}
 
 	/**
@@ -802,8 +824,8 @@ class OC_Image implements \OCP\IImage {
 			$this->logger->error(__METHOD__ . '(): No image loaded', array('app' => 'core'));
 			return false;
 		}
-		$widthOrig = imageSX($this->resource);
-		$heightOrig = imageSY($this->resource);
+		$widthOrig = imagesx($this->resource);
+		$heightOrig = imagesy($this->resource);
 		$ratioOrig = $widthOrig / $heightOrig;
 
 		if ($ratioOrig > 1) {
@@ -828,8 +850,8 @@ class OC_Image implements \OCP\IImage {
 			$this->logger->error(__METHOD__ . '(): No image loaded', array('app' => 'core'));
 			return false;
 		}
-		$widthOrig = imageSX($this->resource);
-		$heightOrig = imageSY($this->resource);
+		$widthOrig = imagesx($this->resource);
+		$heightOrig = imagesy($this->resource);
 		$process = imagecreatetruecolor($width, $height);
 
 		if ($process == false) {
@@ -867,8 +889,8 @@ class OC_Image implements \OCP\IImage {
 			$this->logger->error('OC_Image->centerCrop, No image loaded', array('app' => 'core'));
 			return false;
 		}
-		$widthOrig = imageSX($this->resource);
-		$heightOrig = imageSY($this->resource);
+		$widthOrig = imagesx($this->resource);
+		$heightOrig = imagesy($this->resource);
 		if ($widthOrig === $heightOrig and $size == 0) {
 			return true;
 		}
@@ -967,8 +989,8 @@ class OC_Image implements \OCP\IImage {
 			$this->logger->error(__METHOD__ . '(): No image loaded', array('app' => 'core'));
 			return false;
 		}
-		$widthOrig = imageSX($this->resource);
-		$heightOrig = imageSY($this->resource);
+		$widthOrig = imagesx($this->resource);
+		$heightOrig = imagesy($this->resource);
 		$ratio = $widthOrig / $heightOrig;
 
 		$newWidth = min($maxWidth, $ratio * $maxHeight);
@@ -990,8 +1012,8 @@ class OC_Image implements \OCP\IImage {
 			$this->logger->error(__METHOD__ . '(): No image loaded', array('app' => 'core'));
 			return false;
 		}
-		$widthOrig = imageSX($this->resource);
-		$heightOrig = imageSY($this->resource);
+		$widthOrig = imagesx($this->resource);
+		$heightOrig = imagesy($this->resource);
 
 		if ($widthOrig > $maxWidth || $heightOrig > $maxHeight) {
 			return $this->fitIn($maxWidth, $maxHeight);
@@ -1024,6 +1046,7 @@ if (!function_exists('imagebmp')) {
 	 * @link http://www.programmierer-forum.de/imagebmp-gute-funktion-gefunden-t143716.htm
 	 * @author mgutt <marc@gutt.it>
 	 * @version 1.00
+	 * @param resource $im
 	 * @param string $fileName [optional] <p>The path to save the file to.</p>
 	 * @param int $bit [optional] <p>Bit depth, (default is 24).</p>
 	 * @param int $compression [optional]

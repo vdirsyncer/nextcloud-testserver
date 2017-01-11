@@ -22,6 +22,7 @@
 
 namespace OCP\Share;
 
+use OCP\Files\Folder;
 use OCP\Files\Node;
 
 use OCP\Share\Exceptions\ShareNotFound;
@@ -86,6 +87,17 @@ interface IManager {
 	 * @since 9.0.0
 	 */
 	public function moveShare(IShare $share, $recipientId);
+
+	/**
+	 * Get all shares shared by (initiated) by the provided user in a folder.
+	 *
+	 * @param string $userId
+	 * @param Folder $node
+	 * @param bool $reshares
+	 * @return IShare[][] [$fileId => IShare[], ...]
+	 * @since 11.0.0
+	 */
+	public function getSharesInFolder($userId, Folder $node, $reshares = false);
 
 	/**
 	 * Get shares shared by (initiated) by the provided user.
@@ -273,5 +285,13 @@ interface IManager {
 	 * @since 9.0.0
 	 */
 	public function outgoingServer2ServerSharesAllowed();
+
+	/**
+	 * Check if a given share provider exists
+	 * @param int $shareType
+	 * @return bool
+	 * @since 11.0.0
+	 */
+	public function shareProviderExists($shareType);
 
 }

@@ -5,7 +5,7 @@
 	<description>WebDAV endpoint</description>
 	<licence>AGPL</licence>
 	<author>owncloud.org</author>
-	<version>1.0.0</version>
+	<version>1.1.1</version>
 	<default_enable/>
 	<types>
 		<filesystem/>
@@ -15,17 +15,39 @@
 		<webdav>appinfo/v1/publicwebdav.php</webdav>
 	</public>
 	<dependencies>
-		<owncloud min-version="9.1" max-version="9.1" />
+		<nextcloud min-version="11" max-version="11" />
 	</dependencies>
 	<background-jobs>
-		<job>OCA\DAV\CardDAV\Sync\SyncJob</job>
+		<job>OCA\DAV\CardDAV\SyncJob</job>
 	</background-jobs>
 	<repair-steps>
 		<post-migration>
-			<step>OCA\DAV\Migration\Classification</step>
+			<step>OCA\DAV\Migration\FixBirthdayCalendarComponent</step>
 		</post-migration>
-		<live-migration>
-			<step>OCA\DAV\Migration\GenerateBirthdays</step>
-		</live-migration>
 	</repair-steps>
+	<commands>
+		<command>OCA\DAV\Command\CreateAddressBook</command>
+		<command>OCA\DAV\Command\CreateCalendar</command>
+		<command>OCA\DAV\Command\SyncBirthdayCalendar</command>
+		<command>OCA\DAV\Command\SyncSystemAddressBook</command>
+	</commands>
+
+	<activity>
+		<filters>
+			<filter>OCA\DAV\CalDAV\Activity\Filter\Calendar</filter>
+			<filter>OCA\DAV\CalDAV\Activity\Filter\Todo</filter>
+		</filters>
+
+		<settings>
+			<setting>OCA\DAV\CalDAV\Activity\Setting\Calendar</setting>
+			<setting>OCA\DAV\CalDAV\Activity\Setting\Event</setting>
+			<setting>OCA\DAV\CalDAV\Activity\Setting\Todo</setting>
+		</settings>
+
+		<providers>
+			<provider>OCA\DAV\CalDAV\Activity\Provider\Calendar</provider>
+			<provider>OCA\DAV\CalDAV\Activity\Provider\Event</provider>
+			<provider>OCA\DAV\CalDAV\Activity\Provider\Todo</provider>
+		</providers>
+	</activity>
 </info>

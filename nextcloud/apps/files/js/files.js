@@ -59,7 +59,6 @@
 				return;
 			}
 			if (response.data !== undefined && response.data.uploadMaxFilesize !== undefined) {
-				$('#max_upload').val(response.data.uploadMaxFilesize);
 				$('#free_space').val(response.data.freeSpace);
 				$('#upload.button').attr('data-original-title', response.data.maxHumanFilesize);
 				$('#usedSpacePercent').val(response.data.usedSpacePercent);
@@ -71,7 +70,6 @@
 				return;
 			}
 			if (response[0].uploadMaxFilesize !== undefined) {
-				$('#max_upload').val(response[0].uploadMaxFilesize);
 				$('#upload.button').attr('data-original-title', response[0].maxHumanFilesize);
 				$('#usedSpacePercent').val(response[0].usedSpacePercent);
 				Files.displayStorageWarnings();
@@ -226,17 +224,6 @@
 			// TODO: move file list related code (upload) to OCA.Files.FileList
 			$('#file_action_panel').attr('activeAction', false);
 
-			// Triggers invisible file input
-			$('#upload a').on('click', function() {
-				$(this).parent().children('#file_upload_start').trigger('click');
-				return false;
-			});
-
-			// Trigger cancelling of file upload
-			$('#uploadprogresswrapper .stop').on('click', function() {
-				OC.Upload.cancelUploads();
-			});
-
 			// drag&drop support using jquery.fileupload
 			// TODO use OC.dialogs
 			$(document).bind('drop dragover', function (e) {
@@ -360,7 +347,7 @@ var createDragShadow = function(event) {
 		tbody.append(newtr);
 		if (elem.type === 'dir') {
 			newtr.find('td.filename')
-				.css('background-image', 'url(' + OC.imagePath('core', 'filetypes/folder.png') + ')');
+				.css('background-image', 'url(' + OC.imagePath('core', 'filetypes/folder.svg') + ')');
 		} else {
 			var path = dir + '/' + elem.name;
 			Files.lazyLoadPreview(path, elem.mimetype, function(previewpath) {
@@ -392,14 +379,19 @@ var dragOptions={
 			$selectedFiles = $(this);
 		}
 		$selectedFiles.closest('tr').addClass('animate-opacity dragging');
+		$selectedFiles.closest('tr').filter('.ui-droppable').droppable( 'disable' );
+
 	},
 	stop: function(event, ui) {
 		var $selectedFiles = $('td.filename input:checkbox:checked');
 		if (!$selectedFiles.length) {
 			$selectedFiles = $(this);
 		}
+
 		var $tr = $selectedFiles.closest('tr');
 		$tr.removeClass('dragging');
+		$tr.filter('.ui-droppable').droppable( 'enable' );
+
 		setTimeout(function() {
 			$tr.removeClass('animate-opacity');
 		}, 300);
@@ -467,4 +459,3 @@ function fileDownloadPath(dir, file) {
 
 // for backward compatibility
 window.Files = OCA.Files.Files;
-

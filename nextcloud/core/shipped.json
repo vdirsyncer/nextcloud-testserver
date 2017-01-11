@@ -21,13 +21,18 @@
     "files_videoplayer",
     "firstrunwizard",
     "gallery",
+    "logreader",
+    "lookup_server_connector",
+    "nextcloud_announcements",
     "notifications",
     "password_policy",
     "provisioning_api",
     "serverinfo",
+    "sharebymail",
     "survey_client",
     "systemtags",
     "templateeditor",
+    "twofactor_backupcodes",
     "theming",
     "updatenotification",
     "user_external",
@@ -39,6 +44,9 @@
     "files",
     "dav",
     "federatedfilesharing",
+    "lookup_server_connector",
+    "provisioning_api",
+    "twofactor_backupcodes",
     "workflowengine"
   ]
 }

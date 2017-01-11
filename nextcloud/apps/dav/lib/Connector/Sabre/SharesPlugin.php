@@ -67,6 +67,8 @@ class SharesPlugin extends \Sabre\DAV\ServerPlugin {
 	 */
 	private $cachedShareTypes;
 
+	private $cachedFolders = [];
+
 	/**
 	 * @param \Sabre\DAV\Tree $tree tree
 	 * @param IUserSession $userSession user session
@@ -118,7 +120,8 @@ class SharesPlugin extends \Sabre\DAV\ServerPlugin {
 			\OCP\Share::SHARE_TYPE_USER,
 			\OCP\Share::SHARE_TYPE_GROUP,
 			\OCP\Share::SHARE_TYPE_LINK,
-			\OCP\Share::SHARE_TYPE_REMOTE
+			\OCP\Share::SHARE_TYPE_REMOTE,
+			\OCP\Share::SHARE_TYPE_EMAIL,
 		];
 		foreach ($requestedShareTypes as $requestedShareType) {
 			// one of each type is enough to find out about the types
@@ -134,6 +137,27 @@ class SharesPlugin extends \Sabre\DAV\ServerPlugin {
 			}
 		}
 		return $shareTypes;
+	}
+
+	private function getSharesTypesInFolder(\OCP\Files\Folder $node) {
+		$shares = $this->shareManager->getSharesInFolder(
+			$this->userId,
+			$node,
+			false
+		);
+
+		$shareTypesByFileId = [];
+
+		foreach($shares as $fileId => $sharesForFile) {
+			$types = array_map(function(IShare $share) {
+				return $share->getShareType();
+			}, $sharesForFile);
+			$types = array_unique($types);
+			sort($types);
+			$shareTypesByFileId[$fileId] = $types;
+		}
+
+		return $shareTypesByFileId;
 	}
 
 	/**
@@ -155,21 +179,31 @@ class SharesPlugin extends \Sabre\DAV\ServerPlugin {
 			&& $propFind->getDepth() !== 0
 			&& !is_null($propFind->getStatus(self::SHARETYPES_PROPERTYNAME))
 		) {
-			$folderNode = $this->userFolder->get($propFind->getPath());
-			$children = $folderNode->getDirectoryListing();
+			$folderNode = $this->userFolder->get($sabreNode->getPath());
 
+			$childShares = $this->getSharesTypesInFolder($folderNode);
+			$this->cachedFolders[] = $sabreNode->getPath();
 			$this->cachedShareTypes[$folderNode->getId()] = $this->getShareTypes($folderNode);
-			foreach ($children as $childNode) {
-				$this->cachedShareTypes[$childNode->getId()] = $this->getShareTypes($childNode);
+			foreach ($childShares as $id => $shares) {
+				$this->cachedShareTypes[$id] = $shares;
 			}
 		}
 
-		$propFind->handle(self::SHARETYPES_PROPERTYNAME, function() use ($sabreNode) {
+		$propFind->handle(self::SHARETYPES_PROPERTYNAME, function () use ($sabreNode) {
 			if (isset($this->cachedShareTypes[$sabreNode->getId()])) {
 				$shareTypes = $this->cachedShareTypes[$sabreNode->getId()];
 			} else {
-				$node = $this->userFolder->get($sabreNode->getPath());
-				$shareTypes = $this->getShareTypes($node);
+				list($parentPath,) = \Sabre\Uri\split($sabreNode->getPath());
+				if ($parentPath === '') {
+					$parentPath = '/';
+				}
+				// if we already cached the folder this file is in we know there are no shares for this file
+				if (array_search($parentPath, $this->cachedFolders) === false) {
+					$node = $this->userFolder->get($sabreNode->getPath());
+					$shareTypes = $this->getShareTypes($node);
+				} else {
+					return [];
+				}
 			}
 
 			return new ShareTypeList($shareTypes);

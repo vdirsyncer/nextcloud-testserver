@@ -125,13 +125,13 @@ class Preview {
 		$sysConfig = \OC::$server->getConfig();
 		$this->configMaxWidth = $sysConfig->getSystemValue('preview_max_x', 2048);
 		$this->configMaxHeight = $sysConfig->getSystemValue('preview_max_y', 2048);
-		$this->maxScaleFactor = $sysConfig->getSystemValue('preview_max_scale_factor', 2);
+		$this->maxScaleFactor = $sysConfig->getSystemValue('preview_max_scale_factor', 1);
 
 		//save parameters
 		$this->setFile($file);
 		$this->setMaxX((int)$maxX);
 		$this->setMaxY((int)$maxY);
-		$this->setScalingUp($scalingUp);
+		$this->setScalingup($scalingUp);
 
 		$this->preview = null;
 
@@ -763,7 +763,7 @@ class Preview {
 
 		$this->preview = null;
 		$fileInfo = $this->getFileInfo();
-		if ($fileInfo === null || $fileInfo === false) {
+		if ($fileInfo === null || $fileInfo === false || !$fileInfo->isReadable()) {
 			return new \OC_Image();
 		}
 
@@ -791,6 +791,7 @@ class Preview {
 	 * @param null|string $mimeTypeForHeaders the media type to use when sending back the reply
 	 *
 	 * @throws NotFoundException
+	 * @throws PreviewNotAvailableException
 	 */
 	public function showPreview($mimeTypeForHeaders = null) {
 		// Check if file is valid
@@ -1172,6 +1173,7 @@ class Preview {
 
 	/**
 	 * Defines the media icon, for the media type of the original file, as the preview
+	 * @throws PreviewNotAvailableException
 	 */
 	private function getMimeIcon() {
 		$image = new \OC_Image();
@@ -1180,6 +1182,10 @@ class Preview {
 			$mimeIconServerPath = \OC::$SERVERROOT . $mimeIconWebPath;
 		} else {
 			$mimeIconServerPath = str_replace(\OC::$WEBROOT, \OC::$SERVERROOT, $mimeIconWebPath);
+		}
+		// we can't load SVGs into an image
+		if (substr($mimeIconWebPath, -4) === '.svg') {
+			throw new PreviewNotAvailableException('SVG mimetype cannot be rendered');
 		}
 		$image->loadFromFile($mimeIconServerPath);
 

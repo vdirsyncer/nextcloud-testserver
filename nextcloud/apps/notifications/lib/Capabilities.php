@@ -42,6 +42,8 @@ class Capabilities implements ICapability {
 					'list',
 					'get',
 					'delete',
+					'icons',
+					'rich-strings',
 				],
 			],
 		];

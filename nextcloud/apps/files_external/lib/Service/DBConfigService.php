@@ -89,6 +89,29 @@ class DBConfigService {
 		return $this->getMountsFromQuery($query);
 	}
 
+	public function getMountsForUser($userId, $groupIds) {
+		$builder = $this->connection->getQueryBuilder();
+		$query = $builder->select(['m.mount_id', 'mount_point', 'storage_backend', 'auth_backend', 'priority', 'm.type'])
+			->from('external_mounts', 'm')
+			->innerJoin('m', 'external_applicable', 'a', $builder->expr()->eq('m.mount_id', 'a.mount_id'))
+			->where($builder->expr()->orX(
+				$builder->expr()->andX( // global mounts
+					$builder->expr()->eq('a.type', $builder->createNamedParameter(self::APPLICABLE_TYPE_GLOBAL, IQueryBuilder::PARAM_INT)),
+					$builder->expr()->isNull('a.value')
+				),
+				$builder->expr()->andX( // mounts for user
+					$builder->expr()->eq('a.type', $builder->createNamedParameter(self::APPLICABLE_TYPE_USER, IQueryBuilder::PARAM_INT)),
+					$builder->expr()->eq('a.value', $builder->createNamedParameter($userId))
+				),
+				$builder->expr()->andX( // mounts for group
+					$builder->expr()->eq('a.type', $builder->createNamedParameter(self::APPLICABLE_TYPE_GROUP, IQueryBuilder::PARAM_INT)),
+					$builder->expr()->in('a.value', $builder->createNamedParameter($groupIds, IQueryBuilder::PARAM_INT_ARRAY))
+				)
+			));
+
+		return $this->getMountsFromQuery($query);
+	}
+
 	/**
 	 * Get admin defined mounts
 	 *
@@ -208,7 +231,7 @@ class DBConfigService {
 				'type' => $builder->createNamedParameter($type, IQueryBuilder::PARAM_INT)
 			]);
 		$query->execute();
-		return (int)$this->connection->lastInsertId('external_mounts');
+		return (int)$this->connection->lastInsertId('*PREFIX*external_mounts');
 	}
 
 	/**

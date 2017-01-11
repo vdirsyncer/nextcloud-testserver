@@ -30,9 +30,9 @@
 .icon-loading-small-dark:after {
 	z-index: 2;
 	content: "";
-	height: 32px;
-	width: 32px;
-	margin: -17px 0 0 -17px;
+	height: 30px;
+	width: 30px;
+	margin: -16px 0 0 -16px;
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -61,9 +61,9 @@
 
 .icon-loading-small:after,
 .icon-loading-small-dark:after {
-	height: 16px;
-	width: 16px;
-	margin: -9px 0 0 -9px;
+	height: 14px;
+	width: 14px;
+	margin: -8px 0 0 -8px;
 }
 
 /* Css replaced elements don't have ::after nor ::before */
@@ -114,6 +114,19 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 	background-image: url('../img/actions/add.svg?v=1');
 }
 
+.icon-audio {
+	background-image: url('../img/actions/audio.svg?v=1');
+}
+.icon-audio-white {
+	background-image: url('../img/actions/audio-white.svg?v=2');
+}
+.icon-audio-off {
+	background-image: url('../img/actions/audio-off.svg?v=1');
+}
+.icon-audio-off-white {
+	background-image: url('../img/actions/audio-off-white.svg?v=1');
+}
+
 .icon-caret {
 	background-image: url('../img/actions/caret.svg?v=1');
 }
@@ -131,6 +144,10 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 	background-image: url('../img/actions/checkmark-color.svg?v=1');
 }
 
+.icon-clippy {
+	background-image: url('../img/actions/clippy.svg?v=2');
+}
+
 .icon-close {
 	background-image: url('../img/actions/close.svg?v=1');
 }
@@ -140,7 +157,10 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 }
 
 .icon-confirm {
-	background-image: url('../img/actions/confirm.svg?v=1');
+	background-image: url('../img/actions/confirm.svg?v=2');
+}
+.icon-confirm-white {
+	background-image: url('../img/actions/confirm-white.svg?v=2');
 }
 
 .icon-delete,
@@ -185,6 +205,13 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 	background-image: url('../img/actions/external.svg?v=1');
 }
 
+.icon-fullscreen {
+	background-image: url('../img/actions/fullscreen.svg?v=1');
+}
+.icon-fullscreen-white {
+	background-image: url('../img/actions/fullscreen-white.svg?v=2');
+}
+
 .icon-history {
 	background-image: url('../img/actions/history.svg?v=1');
 }
@@ -210,6 +237,9 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 
 .icon-more {
 	background-image: url('../img/actions/more.svg?v=1');
+}
+.icon-more-white {
+	background-image: url('../img/actions/more-white.svg?v=1');
 }
 
 .icon-password {
@@ -272,6 +302,10 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 	background-image: url('../img/actions/sound-off.svg?v=1');
 }
 
+.icon-favorite  {
+	background-image: url('../img/actions/star-dark.svg?v=1');
+}
+
 .icon-star,
 .icon-starred:hover,
 .icon-starred:focus {
@@ -282,6 +316,10 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 .icon-star:hover,
 .icon-star:focus {
 	background-image: url('../img/actions/starred.svg?v=1');
+}
+
+.icon-tag {
+	background-image: url('../img/actions/tag.svg?v=1');
 }
 
 .icon-toggle {
@@ -307,6 +345,19 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 
 .icon-user {
 	background-image: url('../img/actions/user.svg?v=1');
+}
+
+.icon-video {
+	background-image: url('../img/actions/video.svg?v=1');
+}
+.icon-video-white {
+	background-image: url('../img/actions/video-white.svg?v=2');
+}
+.icon-video-off {
+	background-image: url('../img/actions/video-off.svg?v=1');
+}
+.icon-video-off-white {
+	background-image: url('../img/actions/video-off-white.svg?v=1');
 }
 
 .icon-view-close {
@@ -344,6 +395,9 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 .icon-files {
 	background-image: url('../img/places/files.svg?v=1');
 }
+.icon-files-dark {
+	background-image: url('../img/places/files-dark.svg?v=1');
+}
 .icon-file,
 .icon-filetype-text {
 	background-image: url('../img/filetypes/text.svg?v=1');
@@ -371,8 +425,4 @@ img.icon-loading-small-dark, object.icon-loading-small-dark, video.icon-loading-
 
 .icon-picture {
 	background-image: url('../img/places/picture.svg?v=1');
-}
-
-.icon-clippy {
-	background-image: url('../img/actions/clippy.svg?v=1');
 }

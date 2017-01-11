@@ -94,7 +94,7 @@
 				if (xhr.status === 200 && data) {
 					if (!data.serverHasInternetConnection) {
 						messages.push({
-							msg: t('core', 'This server has no working Internet connection. This means that some of the features like mounting external storage, notifications about updates or installation of third-party apps will not work. Accessing files remotely and sending of notification emails might not work, either. We suggest to enable Internet connection for this server if you want to have all features.'),
+							msg: t('core', 'This server has no working Internet connection: Multiple endpoints could not be reached. This means that some of the features like mounting external storage, notifications about updates or installation of third-party apps will not work. Accessing files remotely and sending of notification emails might not work, either. We suggest to enable Internet connection for this server if you want to have all features.'),
 							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 						});
 					}
@@ -124,7 +124,7 @@
 					}
 					if(!data.forwardedForHeadersWorking) {
 						messages.push({
-							msg: t('core', 'The reverse proxy headers configuration is incorrect, or you are accessing ownCloud from a trusted proxy. If you are not accessing ownCloud from a trusted proxy, this is a security issue and can allow an attacker to spoof their IP address as visible to ownCloud. Further information can be found in our <a target="_blank" rel="noreferrer" href="{docLink}">documentation</a>.', {docLink: data.reverseProxyDocs}),
+							msg: t('core', 'The reverse proxy headers configuration is incorrect, or you are accessing Nextcloud from a trusted proxy. If you are not accessing Nextcloud from a trusted proxy, this is a security issue and can allow an attacker to spoof their IP address as visible to Nextcloud. Further information can be found in our <a target="_blank" rel="noreferrer" href="{docLink}">documentation</a>.', {docLink: data.reverseProxyDocs}),
 							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 						});
 					}
@@ -198,7 +198,8 @@
 			}
 			var afterCall = function(xhr) {
 				var messages = [];
-				if (xhr.status !== 403 && xhr.status !== 307 && xhr.status !== 301 && xhr.responseText !== '') {
+				// .ocdata is an empty file in the data directory - if this is readable then the data dir is not protected
+				if (xhr.status === 200 && xhr.responseText === '') {
 					messages.push({
 						msg: t('core', 'Your data directory and your files are probably accessible from the Internet. The .htaccess file is not working. We strongly suggest that you configure your web server in a way that the data directory is no longer accessible or you move the data directory outside the web server document root.'),
 						type: OC.SetupChecks.MESSAGE_TYPE_ERROR
@@ -209,7 +210,7 @@
 
 			$.ajax({
 				type: 'GET',
-				url: OC.linkTo('', oc_dataURL+'/htaccesstest.txt?t=' + (new Date()).getTime()),
+				url: OC.linkTo('', oc_dataURL+'/.ocdata?t=' + (new Date()).getTime()),
 				complete: afterCall,
 				allowAuthErrors: true
 			});
@@ -263,6 +264,7 @@
 			var messages = [];
 
 			if (xhr.status === 200) {
+				var tipsUrl = OC.generateUrl('settings/admin/tips-tricks');
 				if(OC.getProtocol() === 'https') {
 					// Extract the value of 'Strict-Transport-Security'
 					var transportSecurityValidity = xhr.getResponseHeader('Strict-Transport-Security');
@@ -278,13 +280,13 @@
 					var minimumSeconds = 15552000;
 					if(isNaN(transportSecurityValidity) || transportSecurityValidity <= (minimumSeconds - 1)) {
 						messages.push({
-							msg: t('core', 'The "Strict-Transport-Security" HTTP header is not configured to at least "{seconds}" seconds. For enhanced security we recommend enabling HSTS as described in our <a href="{docUrl}" rel="noreferrer">security tips</a>.', {'seconds': minimumSeconds, docUrl: '#admin-tips'}),
+							msg: t('core', 'The "Strict-Transport-Security" HTTP header is not configured to at least "{seconds}" seconds. For enhanced security we recommend enabling HSTS as described in our <a href="{docUrl}" rel="noreferrer">security tips</a>.', {'seconds': minimumSeconds, docUrl: tipsUrl}),
 							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 						});
 					}
 				} else {
 					messages.push({
-						msg: t('core', 'You are accessing this site via HTTP. We strongly suggest you configure your server to require using HTTPS instead as described in our <a href="{docUrl}">security tips</a>.', {docUrl: '#admin-tips'}),
+						msg: t('core', 'You are accessing this site via HTTP. We strongly suggest you configure your server to require using HTTPS instead as described in our <a href="{docUrl}">security tips</a>.', {docUrl:  tipsUrl}),
 						type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 					});
 				}

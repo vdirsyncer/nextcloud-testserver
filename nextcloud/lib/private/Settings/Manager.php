@@ -105,10 +105,10 @@ class Manager implements IManager {
 		$appInfo = \OC_App::getAppInfo($appId); // hello static legacy
 
 		if(isset($appInfo['settings'][IManager::KEY_ADMIN_SECTION])) {
-			$this->remove(self::TABLE_ADMIN_SECTIONS, $appInfo['settings'][IManager::KEY_ADMIN_SECTION]);
+			$this->remove(self::TABLE_ADMIN_SECTIONS, trim($appInfo['settings'][IManager::KEY_ADMIN_SECTION], '\\'));
 		}
 		if(isset($appInfo['settings'][IManager::KEY_ADMIN_SETTINGS])) {
-			$this->remove(self::TABLE_ADMIN_SETTINGS, $appInfo['settings'][IManager::KEY_ADMIN_SETTINGS]);
+			$this->remove(self::TABLE_ADMIN_SETTINGS, trim($appInfo['settings'][IManager::KEY_ADMIN_SETTINGS], '\\'));
 		}
 	}
 
@@ -302,7 +302,7 @@ class Manager implements IManager {
 
 		if(!$settings instanceof ISettings) {
 			$this->log->error(
-				'Admin section instance must implement \OCP\ISection. Invalid class: {class}',
+				'Admin section instance must implement \OCP\Settings\ISection. Invalid class: {class}',
 				['class' => $settingsClassName]
 			);
 			return;
@@ -332,7 +332,6 @@ class Manager implements IManager {
 			 0 => [new Section('server',        $this->l->t('Server settings'), 0)],
 			 5 => [new Section('sharing',       $this->l->t('Sharing'), 0)],
 			45 => [new Section('encryption',    $this->l->t('Encryption'), 0)],
-			90 => [new Section('logging',       $this->l->t('Logging'), 0)],
 			98 => [new Section('additional',    $this->l->t('Additional settings'), 0)],
 			99 => [new Section('tips-tricks',   $this->l->t('Tips & tricks'), 0)],
 		];
@@ -369,6 +368,8 @@ class Manager implements IManager {
 				/** @var ISettings $form */
 				$form = new Admin\Server($this->dbc, $this->config, $this->lockingProvider, $this->l);
 				$forms[$form->getPriority()] = [$form];
+				$form = new Admin\ServerDevNotice();
+				$forms[$form->getPriority()] = [$form];
 			}
 			if($section === 'encryption') {
 				/** @var ISettings $form */
@@ -378,11 +379,6 @@ class Manager implements IManager {
 			if($section === 'sharing') {
 				/** @var ISettings $form */
 				$form = new Admin\Sharing($this->config);
-				$forms[$form->getPriority()] = [$form];
-			}
-			if($section === 'logging') {
-				/** @var ISettings $form */
-				$form = new Admin\Logging($this->config);
 				$forms[$form->getPriority()] = [$form];
 			}
 			if($section === 'additional') {

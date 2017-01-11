@@ -1,4 +1,4 @@
-# Reading and deleting notifications as a Client
+# Reading and deleting notifications as a Client v1
 
 ## Checking the capabilities of the server
 

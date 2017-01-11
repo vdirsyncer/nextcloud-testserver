@@ -29,7 +29,7 @@
  * 3. $('.avatardiv').avatar();
  * This will search the DOM for 'user' data, to use as the username. If there
  * is no username available it will default to a placeholder with the value of
- * "x". The size will be determined the same way, as the second example.
+ * "?". The size will be determined the same way, as the second example.
  *
  * 4. $('.avatardiv').avatar('jdoe', 128, true);
  * This will behave like the first example, except it will also append random
@@ -65,7 +65,7 @@
 			if (typeof(this.data('user')) !== 'undefined') {
 				user = this.data('user');
 			} else {
-				this.imageplaceholder('x');
+				this.imageplaceholder('?');
 				return;
 			}
 		}
@@ -74,10 +74,25 @@
 		user = String(user).replace(/\//g,'');
 
 		var $div = this;
+		var url;
 
-		var url = OC.generateUrl(
-			'/avatar/{user}/{size}',
-			{user: user, size: Math.ceil(size * window.devicePixelRatio)});
+		// If this is our own avatar we have to use the version attribute
+		if (user === OC.getCurrentUser().uid) {
+			url = OC.generateUrl(
+				'/avatar/{user}/{size}?v={version}',
+				{
+					user: user,
+					size: Math.ceil(size * window.devicePixelRatio),
+					version: oc_userconfig.avatar.version
+				});
+		} else {
+			url = OC.generateUrl(
+				'/avatar/{user}/{size}',
+				{
+					user: user,
+					size: Math.ceil(size * window.devicePixelRatio)
+				});
+		}
 
 		// If the displayname is not defined we use the old code path
 		if (typeof(displayname) === 'undefined') {
@@ -90,7 +105,7 @@
 							$div.imageplaceholder(user, result.data.displayname);
 						} else {
 							// User does not exist
-							$div.imageplaceholder(user, 'X');
+							$div.imageplaceholder(user, '?');
 							$div.css('background-color', '#b9b9b9');
 						}
 					} else {
@@ -122,7 +137,7 @@
 				$div.show();
 				$div.text('');
 				$div.append(img);
-			}
+			};
 
 			img.width = size;
 			img.height = size;

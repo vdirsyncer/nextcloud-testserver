@@ -30,6 +30,9 @@ class Section implements ISection {
 	/** @var IL10N */
 	private $l;
 
+	/**
+	 * @param IL10N $l
+	 */
 	public function __construct(IL10N $l) {
 		$this->l = $l;
 	}
@@ -45,7 +48,7 @@ class Section implements ISection {
 	 * {@inheritdoc}
 	 */
 	public function getName() {
-		return $this->l->t('SAML authentication');
+		return $this->l->t('SSO & SAML authentication');
 	}
 
 	/**

@@ -47,7 +47,8 @@ class Application extends App {
 				$c->query('TagService'),
 				$server->getPreviewManager(),
 				$server->getShareManager(),
-				$server->getConfig()
+				$server->getConfig(),
+				$server->getUserFolder()
 			);
 		});
 
@@ -83,6 +84,7 @@ class Application extends App {
 			$homeFolder = $c->query('ServerContainer')->getUserFolder();
 			return new TagService(
 				$c->query('ServerContainer')->getUserSession(),
+				$c->query('ServerContainer')->getActivityManager(),
 				$c->query('Tagger'),
 				$homeFolder
 			);

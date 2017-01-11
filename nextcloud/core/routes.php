@@ -46,12 +46,22 @@ $application->registerRoutes($this, [
 		['name' => 'avatar#getTmpAvatar', 'url' => '/avatar/tmp', 'verb' => 'GET'],
 		['name' => 'avatar#postAvatar', 'url' => '/avatar/', 'verb' => 'POST'],
 		['name' => 'login#tryLogin', 'url' => '/login', 'verb' => 'POST'],
+		['name' => 'login#confirmPassword', 'url' => '/login/confirm', 'verb' => 'POST'],
 		['name' => 'login#showLoginForm', 'url' => '/login', 'verb' => 'GET'],
 		['name' => 'login#logout', 'url' => '/logout', 'verb' => 'GET'],
-		['name' => 'token#generateToken', 'url' => '/token/generate', 'verb' => 'POST'],
 		['name' => 'TwoFactorChallenge#selectChallenge', 'url' => '/login/selectchallenge', 'verb' => 'GET'],
 		['name' => 'TwoFactorChallenge#showChallenge', 'url' => '/login/challenge/{challengeProviderId}', 'verb' => 'GET'],
 		['name' => 'TwoFactorChallenge#solveChallenge', 'url' => '/login/challenge/{challengeProviderId}', 'verb' => 'POST'],
+		['name' => 'OCJS#getConfig', 'url' => '/core/js/oc.js', 'verb' => 'GET'],
+		['name' => 'Preview#getPreview', 'url' => '/core/preview', 'verb' => 'GET'],
+		['name' => 'Preview#getPreview', 'url' => '/core/preview.png', 'verb' => 'GET'],
+	],
+	'ocs' => [
+		['root' => '/cloud', 'name' => 'OCS#getCapabilities', 'url' => '/capabilities', 'verb' => 'GET'],
+		['root' => '/cloud', 'name' => 'OCS#getCurrentUser', 'url' => '/user', 'verb' => 'GET'],
+		['root' => '', 'name' => 'OCS#getConfig', 'url' => '/config', 'verb' => 'GET'],
+		['root' => '/person', 'name' => 'OCS#personCheck', 'url' => '/check', 'verb' => 'POST'],
+		['root' => '/identityproof', 'name' => 'OCS#getIdentityProof', 'url' => '/key/{cloudId}', 'verb' => 'GET'],
 	],
 ]);
 
@@ -62,57 +72,7 @@ $application->registerRoutes($this, [
 // Search
 $this->create('search_ajax_search', '/core/search')
 	->actionInclude('core/search/ajax/search.php');
-// AppConfig
-$this->create('core_ajax_appconfig', '/core/ajax/appconfig.php')
-	->actionInclude('core/ajax/appconfig.php');
-// Share
-$this->create('core_ajax_share', '/core/ajax/share.php')
-	->actionInclude('core/ajax/share.php');
-// Tags
-$this->create('core_tags_tags', '/tags/{type}')
-	->get()
-	->action('OC\Core\Tags\Controller', 'getTags')
-	->requirements(array('type'));
-$this->create('core_tags_favorites', '/tags/{type}/favorites')
-	->get()
-	->action('OC\Core\Tags\Controller', 'getFavorites')
-	->requirements(array('type'));
-$this->create('core_tags_ids_for_tag', '/tags/{type}/ids')
-	->get()
-	->action('OC\Core\Tags\Controller', 'getIdsForTag')
-	->requirements(array('type'));
-$this->create('core_tags_favorite', '/tags/{type}/favorite/{id}/')
-	->post()
-	->action('OC\Core\Tags\Controller', 'favorite')
-	->requirements(array('type', 'id'));
-$this->create('core_tags_unfavorite', '/tags/{type}/unfavorite/{id}/')
-	->post()
-	->action('OC\Core\Tags\Controller', 'unFavorite')
-	->requirements(array('type', 'id'));
-$this->create('core_tags_tag', '/tags/{type}/tag/{id}/')
-	->post()
-	->action('OC\Core\Tags\Controller', 'tagAs')
-	->requirements(array('type', 'id'));
-$this->create('core_tags_untag', '/tags/{type}/untag/{id}/')
-	->post()
-	->action('OC\Core\Tags\Controller', 'unTag')
-	->requirements(array('type', 'id'));
-$this->create('core_tags_add', '/tags/{type}/add')
-	->post()
-	->action('OC\Core\Tags\Controller', 'addTag')
-	->requirements(array('type'));
-$this->create('core_tags_delete', '/tags/{type}/delete')
-	->post()
-	->action('OC\Core\Tags\Controller', 'deleteTags')
-	->requirements(array('type'));
-// oC JS config
-$this->create('js_config', '/core/js/oc.js')
-	->actionInclude('core/js/config.php');
 // Routing
-$this->create('core_ajax_preview', '/core/preview')
-	->actionInclude('core/ajax/preview.php');
-$this->create('core_ajax_preview', '/core/preview.png')
-	->actionInclude('core/ajax/preview.php');
 $this->create('core_ajax_update', '/core/ajax/update.php')
 	->actionInclude('core/ajax/update.php');
 

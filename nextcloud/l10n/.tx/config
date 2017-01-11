@@ -26,6 +26,12 @@ source_file = templates/lib.pot
 source_lang = en
 type = PO
 
+[nextcloud.dav]
+file_filter = <lang>/dav.po
+source_file = templates/dav.pot
+source_lang = en
+type = PO
+
 [nextcloud.files_encryption]
 file_filter = <lang>/encryption.po
 source_file = templates/encryption.pot
@@ -89,5 +95,17 @@ type = PO
 [nextcloud.updatenotification]
 file_filter = <lang>/updatenotification.po
 source_file = templates/updatenotification.pot
+source_lang = en
+type = PO
+
+[nextcloud.twofactor_backupcodes]
+file_filter = <lang>/twofactor_backupcodes.po
+source_file = templates/twofactor_backupcodes.pot
+source_lang = en
+type = PO
+
+[nextcloud.workflowengine]
+file_filter = <lang>/workflowengine.po
+source_file = templates/workflowengine.pot
 source_lang = en
 type = PO

@@ -30,6 +30,7 @@ namespace OC\AppFramework;
 use OC\AppFramework\Http\Dispatcher;
 use OC_App;
 use OC\AppFramework\DependencyInjection\DIContainer;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\QueryException;
 use OCP\AppFramework\Http\ICallbackResponse;
 
@@ -41,6 +42,8 @@ use OCP\AppFramework\Http\ICallbackResponse;
  */
 class App {
 
+	/** @var string[] */
+	private static $nameSpaceCache = [];
 
 	/**
 	 * Turns an app id into a namespace by either reading the appinfo.xml's
@@ -51,25 +54,19 @@ class App {
 	 * @return string the starting namespace for the app
 	 */
 	public static function buildAppNamespace($appId, $topNamespace='OCA\\') {
-		// first try to parse the app's appinfo/info.xml <namespace> tag
-		$appPath = OC_App::getAppPath($appId);
-		if ($appPath !== false) {
-			$filePath = "$appPath/appinfo/info.xml";
-			if (is_file($filePath)) {
-				$loadEntities = libxml_disable_entity_loader(false);
-				$xml = @simplexml_load_file($filePath);
-				libxml_disable_entity_loader($loadEntities);
-				if ($xml) {
-					$result = $xml->xpath('/info/namespace');
-					if ($result && count($result) > 0) {
-						// take first namespace result
-						return $topNamespace . trim((string) $result[0]);
-					}
-				}
-			}
+		// Hit the cache!
+		if (isset(self::$nameSpaceCache[$appId])) {
+			return $topNamespace . self::$nameSpaceCache[$appId];
 		}
+
+		$appInfo = \OC_App::getAppInfo($appId);
+		if (isset($appInfo['namespace'])) {
+			return $topNamespace . trim($appInfo['namespace']);
+		}
+
 		// if the tag is not found, fall back to uppercasing the first letter
-		return $topNamespace . ucfirst($appId);
+		self::$nameSpaceCache[$appId] = ucfirst($appId);
+		return $topNamespace . self::$nameSpaceCache[$appId];
 	}
 
 
@@ -93,7 +90,13 @@ class App {
 		try {
 			$controller = $container->query($controllerName);
 		} catch(QueryException $e) {
-			$appNameSpace = self::buildAppNamespace($appName);
+			if ($appName === 'core') {
+				$appNameSpace = 'OC\\Core';
+			} else if ($appName === 'settings') {
+				$appNameSpace = 'OC\\Settings';
+			} else {
+				$appNameSpace = self::buildAppNamespace($appName);
+			}
 			$controllerName = $appNameSpace . '\\Controller\\' . $controllerName;
 			$controller = $container->query($controllerName);
 		}
@@ -136,11 +139,19 @@ class App {
 			);
 		}
 
-		if ($response instanceof ICallbackResponse) {
-			$response->callback($io);
-		} else if(!is_null($output)) {
-			$io->setHeader('Content-Length: ' . strlen($output));
-			$io->setOutput($output);
+		/*
+		 * Status 204 does not have a body and no Content Length
+		 * Status 304 does not have a body and does not need a Content Length
+		 * https://tools.ietf.org/html/rfc7230#section-3.3
+		 * https://tools.ietf.org/html/rfc7230#section-3.3.2
+		 */
+		if ($httpHeaders !== Http::STATUS_NO_CONTENT && $httpHeaders !== Http::STATUS_NOT_MODIFIED) {
+			if ($response instanceof ICallbackResponse) {
+				$response->callback($io);
+			} else if (!is_null($output)) {
+				$io->setHeader('Content-Length: ' . strlen($output));
+				$io->setOutput($output);
+			}
 		}
 
 	}

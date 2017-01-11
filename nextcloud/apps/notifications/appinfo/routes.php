@@ -19,23 +19,10 @@
  *
  */
 
-$application = new \OCA\Notifications\AppInfo\Application();
-
-\OCP\API::register(
-	'get',
-	'/apps/notifications/api/v1/notifications',
-	[$application->getContainer()->query('EndpointController'), 'listNotifications'],
-	'notifications'
-);
-\OCP\API::register(
-	'get',
-	'/apps/notifications/api/v1/notifications/{id}',
-	[$application->getContainer()->query('EndpointController'), 'getNotification'],
-	'notifications'
-);
-\OCP\API::register(
-	'delete',
-	'/apps/notifications/api/v1/notifications/{id}',
-	[$application->getContainer()->query('EndpointController'), 'deleteNotification'],
-	'notifications'
-);
+return [
+	'ocs' => [
+		['name' => 'Endpoint#listNotifications', 'url' => '/api/{apiVersion}/notifications', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v(1|2)']],
+		['name' => 'Endpoint#getNotification', 'url' => '/api/{apiVersion}/notifications/{id}', 'verb' => 'GET', 'requirements' => ['apiVersion' => 'v(1|2)', 'id' => '\d+']],
+		['name' => 'Endpoint#deleteNotification', 'url' => '/api/{apiVersion}/notifications/{id}', 'verb' => 'DELETE', 'requirements' => ['apiVersion' => 'v(1|2)', 'id' => '\d+']],
+	],
+];

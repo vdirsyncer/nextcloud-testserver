@@ -62,6 +62,7 @@ use OC\Cache\CappedMemoryCache;
 use OC\Files\Config\MountProviderCollection;
 use OC\Files\Mount\MountPoint;
 use OC\Files\Storage\StorageFactory;
+use OC\Lockdown\Filesystem\NullStorage;
 use OCP\Files\Config\IMountProvider;
 use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
@@ -213,10 +214,13 @@ class Filesystem {
 
 	/**
 	 * @param bool $shouldLog
+	 * @return bool previous value
 	 * @internal
 	 */
 	public static function logWarningWhenAddingStorageWrapper($shouldLog) {
+		$previousValue = self::$logWarningWhenAddingStorageWrapper;
 		self::$logWarningWhenAddingStorageWrapper = (bool) $shouldLog;
+		return $previousValue;
 	}
 
 	/**
@@ -394,39 +398,68 @@ class Filesystem {
 		if ($user === null || $user === false || $user === '') {
 			throw new \OC\User\NoUserException('Attempted to initialize mount points for null user and no user in session');
 		}
+
 		if (isset(self::$usersSetup[$user])) {
 			return;
 		}
+
+		self::$usersSetup[$user] = true;
 
 		$userManager = \OC::$server->getUserManager();
 		$userObject = $userManager->get($user);
 
 		if (is_null($userObject)) {
 			\OCP\Util::writeLog('files', ' Backends provided no user object for ' . $user, \OCP\Util::ERROR);
+			// reset flag, this will make it possible to rethrow the exception if called again
+			unset(self::$usersSetup[$user]);
 			throw new \OC\User\NoUserException('Backends provided no user object for ' . $user);
 		}
 
-		self::$usersSetup[$user] = true;
+		$realUid = $userObject->getUID();
+		// workaround in case of different casings
+		if ($user !== $realUid) {
+			$stack = json_encode(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 50));
+			\OCP\Util::writeLog('files', 'initMountPoints() called with wrong user casing. This could be a bug. Expected: "' . $realUid . '" got "' . $user . '". Stack: ' . $stack, \OCP\Util::WARN);
+			$user = $realUid;
 
-		/** @var \OC\Files\Config\MountProviderCollection $mountConfigManager */
-		$mountConfigManager = \OC::$server->getMountProviderCollection();
+			// again with the correct casing
+			if (isset(self::$usersSetup[$user])) {
+				return;
+			}
 
-		// home mounts are handled seperate since we need to ensure this is mounted before we call the other mount providers
-		$homeMount = $mountConfigManager->getHomeMountForUser($userObject);
-
-		self::getMountManager()->addMount($homeMount);
-
-		\OC\Files\Filesystem::getStorage($user);
-
-		// Chance to mount for other storages
-		if ($userObject) {
-			$mounts = $mountConfigManager->getMountsForUser($userObject);
-			array_walk($mounts, array(self::$mounts, 'addMount'));
-			$mounts[] = $homeMount;
-			$mountConfigManager->registerMounts($userObject, $mounts);
+			self::$usersSetup[$user] = true;
 		}
 
-		self::listenForNewMountProviders($mountConfigManager, $userManager);
+		if (\OC::$server->getLockdownManager()->canAccessFilesystem()) {
+			/** @var \OC\Files\Config\MountProviderCollection $mountConfigManager */
+			$mountConfigManager = \OC::$server->getMountProviderCollection();
+
+			// home mounts are handled seperate since we need to ensure this is mounted before we call the other mount providers
+			$homeMount = $mountConfigManager->getHomeMountForUser($userObject);
+
+			self::getMountManager()->addMount($homeMount);
+
+			\OC\Files\Filesystem::getStorage($user);
+
+			// Chance to mount for other storages
+			if ($userObject) {
+				$mounts = $mountConfigManager->getMountsForUser($userObject);
+				array_walk($mounts, array(self::$mounts, 'addMount'));
+				$mounts[] = $homeMount;
+				$mountConfigManager->registerMounts($userObject, $mounts);
+			}
+
+			self::listenForNewMountProviders($mountConfigManager, $userManager);
+		} else {
+			self::getMountManager()->addMount(new MountPoint(
+				new NullStorage([]),
+				'/' . $user
+			));
+			self::getMountManager()->addMount(new MountPoint(
+				new NullStorage([]),
+				'/' . $user . '/files'
+			));
+		}
 		\OC_Hook::emit('OC_Filesystem', 'post_initMountPoints', array('user' => $user));
 	}
 

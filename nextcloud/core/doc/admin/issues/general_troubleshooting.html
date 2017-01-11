@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>General Troubleshooting &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>General Troubleshooting &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Issues and Troubleshooting" href="index.html" />
     <link rel="next" title="Code Signing" href="code_signing.html" />
     <link rel="prev" title="Issues and Troubleshooting" href="index.html" />
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -116,18 +115,19 @@
 <h1>General Troubleshooting<a class="headerlink" href="#general-troubleshooting" title="Permalink to this headline">¶</a></h1>
 <p>If you have trouble installing, configuring or maintaining Nextcloud, please
 refer to our community support channels:</p>
-<ul class="simple">
-<li><a class="reference external" href="https://help.nextcloud.com">The Nextcloud Forums</a></li>
-</ul>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The Nextcloud forums have a <a href="#id2"><span class="problematic" id="id3">`FAQ page`_</span></a> where each topic corresponds
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="https://help.nextcloud.com">The Nextcloud Forums</a></dt>
+<dd><p class="first last">The Nextcloud forums have a <a class="reference external" href="https://help.nextcloud.com/c/faq">FAQ page</a> where each topic corresponds
 to typical mistakes or frequently occurring issues</p>
-</div>
-<ul class="simple">
-<li><a class="reference external" href="https://help.nextcloud.com">The Nextcloud forums</a></li>
-<li>The Nextcloud IRC chat channel <code class="docutils literal"><span class="pre">irc://#nextcloud&#64;freenode.net</span></code> on
-freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloudhttps://docs.nextcloud.org/server/10/developer_manual/bugtracker/index.html">webchat</a></li>
+</dd>
+</dl>
+</li>
+<li><p class="first"><a class="reference external" href="https://help.nextcloud.com">The Nextcloud forums</a></p>
+</li>
+<li><p class="first">The Nextcloud IRC chat channel <code class="docutils literal"><span class="pre">irc://#nextcloud&#64;freenode.net</span></code> on
+freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloudhttps://docs.nextcloud.org/server/11/developer_manual/bugtracker/index.html">webchat</a></p>
+</li>
 </ul>
 <p>Please understand that all these channels essentially consist of users like you
 helping each other out. Consider helping others out where you can, to contribute
@@ -142,7 +142,7 @@ note that Nextcloud GmbH offers commercial support options.</p>
 <li>Search for a solution (see the options above)</li>
 <li>Double-check your configuration</li>
 </ul>
-<p>If you can&#8217;t find a solution, please use our <a href="#id4"><span class="problematic" id="id5">`bugtracker`_</span></a>. You can generate a
+<p>If you can&#8217;t find a solution, please use our <a class="reference external" href="https://github.com/nextcloud/server/issues">bugtracker</a>. You can generate a
 configuration report with the <a class="reference internal" href="../configuration_server/occ_command.html#config-commands-label"><span>occ config command</span></a>, with passwords automatically obscured.</p>
 </div>
 <div class="section" id="id1">

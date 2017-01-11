@@ -37,12 +37,33 @@
 		},
 
 		/**
+		 * @param {string} path
+		 * @returns {boolean}
+		 */
+		_isValidPath: function(path) {
+			var sections = path.split('/');
+			for (var i = 0; i < sections.length; i++) {
+				if (sections[i] === '..') {
+					return false;
+				}
+			}
+
+			return path.toLowerCase().indexOf(decodeURI('%0a')) === -1 &&
+				path.toLowerCase().indexOf(decodeURI('%00')) === -1;
+		},
+
+		/**
 		 * Populates the view if there are images or albums to show
 		 *
 		 * @param {string} albumPath
 		 * @param {string|undefined} errorMessage
 		 */
 		init: function (albumPath, errorMessage) {
+			// Set path to an empty value if not a valid one
+			if(!this._isValidPath(albumPath)) {
+				albumPath = '';
+			}
+
 			// Only do it when the app is initialised
 			if (this.requestId === -1) {
 				this._initButtons();
@@ -201,7 +222,7 @@
 			if (!_.isUndefined(errorMessage) && errorMessage !== null) {
 				message += '<h2>' + t('gallery',
 						'Album cannot be shown') + '</h2>';
-				message += '<p>' + errorMessage + '</p>';
+				message += '<p>' + escapeHTML(errorMessage) + '</p>';
 				uploadAllowed = false;
 			} else {
 				message += '<h2>' + t('gallery',

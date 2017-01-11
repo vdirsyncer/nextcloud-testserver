@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How to Upgrade Your Nextcloud Server &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>How to Upgrade Your Nextcloud Server &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
     <link rel="next" title="Upgrade Nextcloud From Packages" href="package_upgrade.html" />
     <link rel="prev" title="Backing up Nextcloud" href="backup.html" />
@@ -66,9 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
@@ -87,6 +86,7 @@
 <li class="toctree-l2"><a class="reference internal" href="manual_upgrade.html">Manual Nextcloud Upgrade</a></li>
 <li class="toctree-l2"><a class="reference internal" href="restore.html">Restoring Nextcloud</a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating.html">Migrating to a Different Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mysql_4byte_support.html">Enabling MySQL 4-byte support</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations/index.html">Operations</a></li>
@@ -117,14 +117,9 @@
 <h1>How to Upgrade Your Nextcloud Server<a class="headerlink" href="#how-to-upgrade-your-nextcloud-server" title="Permalink to this headline">¶</a></h1>
 <p>There are three ways to upgrade your Nextcloud server:</p>
 <ul class="simple">
-<li>Using your <a class="reference internal" href="package_upgrade.html"><em>Linux package manager</em></a> with our official
-Nextcloud repositories. This is the recommended method.</li>
-<li>With the <a class="reference internal" href="update.html"><em>Updater App</em></a> (Server Edition only). Recommended for
-shared hosters, and for users who want an easy way to track different
-release channels. (It is not available and not supported on the Enterprise
-edition.)</li>
+<li>With the <a class="reference internal" href="update.html"><em>Updater App</em></a>.</li>
 <li><a class="reference internal" href="manual_upgrade.html"><em>Manually upgrading</em></a> with the Nextcloud <code class="docutils literal"><span class="pre">.tar</span></code> archive
-from <a href="#id1"><span class="problematic" id="id2">`https://nextcloud.com/install/`_</span></a>.</li>
+from our <a class="reference external" href="https://nextcloud.com/install/">Download page</a>.</li>
 <li>Manually upgrading is also an option for users on shared hosting; download
 and unpack the Nextcloud tarball to your PC. Delete your existing Nextcloud
 files, except <code class="docutils literal"><span class="pre">data/</span></code> and <code class="docutils literal"><span class="pre">config/</span></code> files, on your hosting account. Then

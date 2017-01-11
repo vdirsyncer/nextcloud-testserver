@@ -5,6 +5,8 @@
  * See the COPYING-README file.
  */
 
+/* globals escapeHTML, UserList, DeleteHandler */
+
 var $userGroupList,
 	$sortGroupBy;
 
@@ -126,6 +128,11 @@ GroupList = {
 	},
 
 	createGroup: function (groupname) {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this.createGroup, this, groupname));
+			return;
+		}
+
 		$.post(
 			OC.generateUrl('/settings/users/groups'),
 			{
@@ -136,10 +143,6 @@ GroupList = {
 					var addedGroup = result.groupname;
 					UserList.availableGroups = $.unique($.merge(UserList.availableGroups, [addedGroup]));
 					GroupList.addGroup(result.groupname);
-
-					$('.groupsselect, .subadminsselect')
-						.append($('<option>', { value: result.groupname })
-							.text(result.groupname));
 				}
 				GroupList.toggleAddGroup();
 			}).fail(function(result) {
@@ -269,7 +272,7 @@ GroupList = {
 	},
 	initDeleteHandling: function () {
 		//set up handler
-		GroupDeleteHandler = new DeleteHandler('/settings/users/groups', 'groupname',
+		var GroupDeleteHandler = new DeleteHandler('/settings/users/groups', 'groupname',
 			GroupList.hide, GroupList.remove);
 
 		//configure undo
@@ -280,10 +283,16 @@ GroupList = {
 			GroupList.show);
 
 		//when to mark user for delete
-		$userGroupList.on('click', '.delete', function () {
+		var deleteAction = function () {
+			if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+				OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(deleteAction, this));
+				return;
+			}
+
 			// Call function for handling delete/undo
 			GroupDeleteHandler.mark(GroupList.getElementGID(this));
-		});
+		};
+		$userGroupList.on('click', '.delete', deleteAction);
 
 		//delete a marked user when leaving the page
 		$(window).on('beforeunload', function () {

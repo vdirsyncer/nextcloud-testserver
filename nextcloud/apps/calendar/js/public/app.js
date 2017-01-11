@@ -1,9 +1,9 @@
 
 'use strict';
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 /**
 * Configuration / App Initialization File
@@ -36,12 +36,29 @@ app.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
 			}
 		});
 	});
+
+	var isPublic = angular.element('#fullcalendar').attr('data-isPublic') === '1';
+	$provide.constant('isPublic', isPublic);
 }]);
 
 app.run(['$document', '$rootScope', '$window', function ($document, $rootScope, $window) {
 	'use strict';
 
-	$rootScope.baseUrl = $window.location.origin + $window.location.pathname + ($window.location.pathname.substr(-1) === '/' ? '' : '/') + 'v1/';
+	var origin = $window.location.origin;
+	var pathname = $window.location.pathname;
+	var endsWithSlash = pathname.substr(-1) === '/';
+
+	if (pathname.lastIndexOf('/calendar/public/') === -1) {
+		$rootScope.baseUrl = origin + pathname;
+		if (!endsWithSlash) {
+			$rootScope.baseUrl += '/';
+		}
+	} else {
+		var calendarPathname = pathname.substr(0, pathname.lastIndexOf('/calendar/public/')) + '/calendar/';
+		$rootScope.baseUrl = origin + calendarPathname;
+	}
+
+	$rootScope.baseUrl += 'v1/';
 
 	$document.click(function (event) {
 		$rootScope.$broadcast('documentClicked', event);
@@ -94,7 +111,32 @@ app.controller('AttendeeController', ["$scope", "AutoCompletionService", functio
 	};
 
 	$scope.search = function (value) {
-		return AutoCompletionService.searchAttendee(value);
+		return AutoCompletionService.searchAttendee(value).then(function (attendees) {
+			var arr = [];
+
+			attendees.forEach(function (attendee) {
+				var emailCount = attendee.email.length;
+				attendee.email.forEach(function (email) {
+					var displayname = void 0;
+					if (emailCount === 1) {
+						displayname = attendee.name;
+					} else {
+						displayname = t('calendar', '{name} ({email})', {
+							name: attendee.name,
+							email: email
+						});
+					}
+
+					arr.push({
+						displayname: displayname,
+						email: email,
+						name: attendee.name
+					});
+				});
+			});
+
+			return arr;
+		});
 	};
 
 	$scope.selectFromTypeahead = function (item) {
@@ -118,7 +160,7 @@ app.controller('AttendeeController', ["$scope", "AutoCompletionService", functio
 * Description: The fullcalendar controller.
 */
 
-app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEventService', 'SettingsService', 'TimezoneService', 'VEvent', 'is', 'fc', 'EventsEditorDialogService', 'PopoverPositioningUtility', function ($scope, Calendar, CalendarService, VEventService, SettingsService, TimezoneService, VEvent, is, fc, EventsEditorDialogService, PopoverPositioningUtility) {
+app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEventService', 'SettingsService', 'TimezoneService', 'VEvent', 'is', 'fc', 'EventsEditorDialogService', 'PopoverPositioningUtility', '$window', 'isPublic', function ($scope, Calendar, CalendarService, VEventService, SettingsService, TimezoneService, VEvent, is, fc, EventsEditorDialogService, PopoverPositioningUtility, $window, isPublic) {
 	'use strict';
 
 	is.loading = true;
@@ -207,12 +249,24 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 		$scope.uiConfig.calendar.timezone = 'UTC';
 	});
 
-	CalendarService.getAll().then(function (calendars) {
-		$scope.calendars = calendars;
-		is.loading = false;
-		// TODO - scope.apply should not be necessary here
-		$scope.$apply();
-	});
+	if (!isPublic) {
+		CalendarService.getAll().then(function (calendars) {
+			$scope.calendars = calendars;
+			is.loading = false;
+			// TODO - scope.apply should not be necessary here
+			$scope.$apply();
+		});
+	} else {
+		var url = $window.location.toString();
+		var token = url.substr(url.lastIndexOf('/') + 1);
+
+		CalendarService.getPublicCalendar(token).then(function (calendar) {
+			$scope.calendars = [calendar];
+			is.loading = false;
+			// TODO - scope.apply should not be necessary here
+			$scope.$apply();
+		});
+	}
 
 	/**
   * Calendar UI Configuration.
@@ -225,7 +279,9 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 			});
 
 			if (writableCalendars.length === 0) {
-				OC.Notification.showTemporary(t('calendar', 'Please create a calendar first.'));
+				if (!isPublic) {
+					OC.Notification.showTemporary(t('calendar', 'Please create a calendar first.'));
+				}
 				return;
 			}
 
@@ -264,7 +320,7 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 				});
 			}).then(function (result) {
 				createAndRenderEvent(result.calendar, result.vevent.data, view.start, view.end, $scope.defaulttimezone);
-			}).catch(function () {
+			}).catch(function (reason) {
 				//fcEvent is removed by unlock callback
 				//no need to anything
 				return null;
@@ -297,7 +353,6 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 					deleteAndRemoveEvent(vevent, fcEvent);
 					createAndRenderEvent(result.calendar, result.vevent.data, view.start, view.end, $scope.defaulttimezone);
 				}
-				console.log(result);
 			}).catch(function (reason) {
 				if (reason === 'delete') {
 					deleteAndRemoveEvent(vevent, fcEvent);
@@ -311,7 +366,17 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 			});
 		},
 		eventDrop: function eventDrop(fcEvent, delta, revertFunc) {
-			fcEvent.drop(delta);
+			var isAllDay = !fcEvent.start.hasTime();
+
+			var defaultAllDayEventDuration = fc.elm.fullCalendar('option', 'defaultAllDayEventDuration');
+			var defaultAllDayEventMomentDuration = moment.duration(defaultAllDayEventDuration);
+
+			var defaultTimedEventDuration = fc.elm.fullCalendar('option', 'defaultTimedEventDuration');
+			var defaultTimedEventMomentDuration = moment.duration(defaultTimedEventDuration);
+
+			var timezone = $scope.defaulttimezone;
+
+			fcEvent.drop(delta, isAllDay, timezone, defaultTimedEventMomentDuration, defaultAllDayEventMomentDuration);
 			VEventService.update(fcEvent.vevent).catch(function () {
 				revertFunc();
 			});
@@ -320,7 +385,7 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 			angular.element('#firstrow').find('.datepicker_current').html(view.title).text();
 			angular.element('#datecontrol_date').datepicker('setDate', element.fullCalendar('getDate'));
 			var newView = view.name;
-			if (newView !== $scope.defaultView) {
+			if (newView !== $scope.defaultView && !isPublic) {
 				SettingsService.setView(newView);
 				$scope.defaultView = newView;
 			}
@@ -356,7 +421,7 @@ app.controller('CalController', ['$scope', 'Calendar', 'CalendarService', 'VEven
 * Description: Takes care of CalendarList in App Navigation.
 */
 
-app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'CalendarService', 'WebCalService', 'is', 'CalendarListItem', 'Calendar', 'ColorUtility', function ($scope, $rootScope, $window, CalendarService, WebCalService, is, CalendarListItem, Calendar, ColorUtility) {
+app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'CalendarService', 'WebCalService', 'is', 'CalendarListItem', 'Calendar', 'MailerService', 'ColorUtility', function ($scope, $rootScope, $window, CalendarService, WebCalService, is, CalendarListItem, Calendar, MailerService, ColorUtility) {
 	'use strict';
 
 	$scope.calendarListItems = [];
@@ -364,8 +429,13 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 	$scope.newCalendarInputVal = '';
 	$scope.newCalendarColorVal = '';
 
-	$scope.newSubscriptionUrl = '';
-	$scope.newSubscriptionLocked = false;
+	$scope.subscription = {};
+	$scope.subscription.newSubscriptionUrl = '';
+	$scope.subscription.newSubscriptionLocked = false;
+	$scope.publicdav = 'CalDAV';
+	$scope.publicdavdesc = t('calendar', 'CalDAV address for clients');
+
+	window.scope = $scope;
 
 	$scope.$watchCollection('calendars', function (newCalendars, oldCalendars) {
 		newCalendars = newCalendars || [];
@@ -377,6 +447,7 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 			var item = CalendarListItem(calendar);
 			if (item) {
 				$scope.calendarListItems.push(item);
+				$scope.publicdavurl = $scope.$parent.calendars[0].caldav;
 				calendar.register(Calendar.hookFinishedRendering, function () {
 					if (!$scope.$$phase) {
 						$scope.$apply();
@@ -407,24 +478,24 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 	};
 
 	$scope.createSubscription = function (url) {
-		$scope.newSubscriptionLocked = true;
-		WebCalService.get(url, true).then(function (splittedICal) {
+		$scope.subscription.newSubscriptionLocked = true;
+		WebCalService.get(url).then(function (splittedICal) {
 			var color = splittedICal.color || ColorUtility.randomColor();
 			var name = splittedICal.name || url;
 			CalendarService.createWebCal(name, color, url).then(function (calendar) {
-				$scope.newSubscriptionUrl = '';
 				angular.element('#new-subscription-button').click();
 				$scope.calendars.push(calendar);
+				$scope.subscription.newSubscriptionUrl = '';
 				$scope.$digest();
 				$scope.$parent.$digest();
-				$scope.newSubscriptionLocked = false;
+				$scope.subscription.newSubscriptionLocked = false;
 			}).catch(function () {
 				OC.Notification.showTemporary(t('calendar', 'Error saving WebCal-calendar'));
-				$scope.newSubscriptionLocked = false;
+				$scope.subscription.newSubscriptionLocked = false;
 			});
 		}).catch(function (error) {
 			OC.Notification.showTemporary(error);
-			$scope.newSubscriptionLocked = false;
+			$scope.subscription.newSubscriptionLocked = false;
 		});
 	};
 
@@ -432,8 +503,70 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 		$window.open(item.calendar.downloadUrl);
 	};
 
+	$scope.integration = function (item) {
+		return '<iframe width="400" height="215" src="' + item.calendar.publicurl + '"></iframe>';
+	};
+
+	$scope.$watch('publicdav', function (newvalue) {
+		if ($scope.$parent.calendars[0]) {
+			if (newvalue === 'CalDAV') {
+				// CalDAV address
+				$scope.publicdavurl = $scope.$parent.calendars[0].caldav;
+				$scope.publicdavdesc = t('calendar', 'CalDAV address for clients');
+			} else {
+				// WebDAV address
+				var url = $scope.$parent.calendars[0].url;
+				// cut off last slash to have a fancy name for the ics
+				if (url.slice(url.length - 1) === '/') {
+					url = url.slice(0, url.length - 1);
+				}
+				url += '?export';
+				$scope.publicdavurl = $window.location.origin + url;
+				$scope.publicdavdesc = t('calendar', 'WebDAV address for subscriptions');
+			}
+		}
+	});
+
+	$scope.sendMail = function (item) {
+		item.toggleSendingMail();
+		MailerService.sendMail(item.email, item.calendar.publicurl, item.calendar.displayname).then(function (response) {
+			if (response.status === 200) {
+				item.email = '';
+				OC.Notification.showTemporary(t('calendar', 'EMail has been sent.'));
+			} else {
+				OC.Notification.showTemporary(t('calendar', 'There was an issue while sending your EMail.'));
+			}
+		});
+	};
+
+	$scope.goPublic = function (item) {
+		$window.open(item.calendar.publicurl);
+	};
+
 	$scope.toggleSharesEditor = function (calendar) {
 		calendar.toggleSharesEditor();
+	};
+
+	$scope.togglePublish = function (item) {
+		if (item.calendar.published) {
+			CalendarService.publish(item.calendar).then(function (response) {
+				if (response) {
+					CalendarService.get(item.calendar.url).then(function (calendar) {
+						item.calendar.publishurl = calendar.publishurl;
+						item.calendar.publicurl = calendar.publicurl;
+						item.calendar.published = true;
+					});
+				}
+				$scope.$apply();
+			});
+		} else {
+			CalendarService.unpublish(item.calendar).then(function (response) {
+				if (response) {
+					item.calendar.published = false;
+				}
+				$scope.$apply();
+			});
+		}
 	};
 
 	$scope.prepareUpdate = function (calendar) {
@@ -513,7 +646,7 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 			// Combine users and groups
 			users = users.map(function (item) {
 				return {
-					display: item.value.shareWith,
+					display: item.label,
 					type: OC.Share.SHARE_TYPE_USER,
 					identifier: item.value.shareWith
 				};
@@ -521,7 +654,7 @@ app.controller('CalendarListController', ['$scope', '$rootScope', '$window', 'Ca
 
 			groups = groups.map(function (item) {
 				return {
-					display: item.value.shareWith + ' (group)',
+					display: item.label + ' (' + t('calendar', 'group') + ')',
 					type: OC.Share.SHARE_TYPE_GROUP,
 					identifier: item.value.shareWith
 				};
@@ -653,9 +786,9 @@ app.controller('EditorController', ['$scope', 'TimezoneService', 'AutoCompletion
 	$scope.is_new = isNew;
 	$scope.calendar = calendar;
 	$scope.oldCalendar = isNew ? calendar : vevent.calendar;
-	$scope.readOnly = isNew ? false : !vevent.calendar.isWritable();
+	$scope.readOnly = !vevent.calendar.isWritable();
 	$scope.accessibleViaCalDAV = vevent.calendar.eventsAccessibleViaCalDAV();
-	$scope.selected = 1;
+	$scope.selected = 0;
 	$scope.timezones = [];
 	$scope.emailAddress = emailAddress;
 	$scope.edittimezone = $scope.properties.dtstart.parameters.zone !== 'floating' && $scope.properties.dtstart.parameters.zone !== $scope.defaulttimezone || $scope.properties.dtend.parameters.zone !== 'floating' && $scope.properties.dtend.parameters.zone !== $scope.defaulttimezone;
@@ -663,7 +796,7 @@ app.controller('EditorController', ['$scope', 'TimezoneService', 'AutoCompletion
 	$scope.preEditingHooks = [];
 	$scope.postEditingHooks = [];
 
-	$scope.tabs = [{ title: t('calendar', 'Attendees'), value: 1 }, { title: t('calendar', 'Reminders'), value: 2 }, { title: t('calendar', 'Repeating'), value: 3 }];
+	$scope.tabs = [{ title: t('calendar', 'Details'), value: 0 }, { title: t('calendar', 'Attendees'), value: 1 }, { title: t('calendar', 'Reminders'), value: 2 }, { title: t('calendar', 'Repeating'), value: 3 }];
 
 	$scope.classSelect = [{ displayname: t('calendar', 'When shared show full event'), type: 'PUBLIC' }, { displayname: t('calendar', 'When shared show only busy'), type: 'CONFIDENTIAL' }, { displayname: t('calendar', 'When shared hide this event'), type: 'PRIVATE' }];
 
@@ -682,7 +815,7 @@ app.controller('EditorController', ['$scope', 'TimezoneService', 'AutoCompletion
 			callback();
 		});
 
-		$scope.tabopener(1);
+		$scope.tabopener(0);
 	});
 
 	$scope.registerPostHook = function (callback) {
@@ -760,20 +893,40 @@ app.controller('EditorController', ['$scope', 'TimezoneService', 'AutoCompletion
   */
 	$scope.tabopener = function (val) {
 		$scope.selected = val;
-		if (val === 1) {
+		if (val === 0) {
+			$scope.eventsdetailsview = true;
+			$scope.eventsattendeeview = false;
+			$scope.eventsalarmview = false;
+			$scope.eventsrepeatview = false;
+		} else if (val === 1) {
+			$scope.eventsdetailsview = false;
 			$scope.eventsattendeeview = true;
 			$scope.eventsalarmview = false;
 			$scope.eventsrepeatview = false;
 		} else if (val === 2) {
+			$scope.eventsdetailsview = false;
 			$scope.eventsattendeeview = false;
 			$scope.eventsalarmview = true;
 			$scope.eventsrepeatview = false;
 		} else if (val === 3) {
+			$scope.eventsdetailsview = false;
 			$scope.eventsattendeeview = false;
 			$scope.eventsalarmview = false;
 			$scope.eventsrepeatview = true;
 		}
 	};
+
+	/**
+  * Everything calendar select
+  */
+	$scope.showCalendarSelection = function () {
+		var writableCalendars = $scope.calendars.filter(function (c) {
+			return c.isWritable();
+		});
+
+		return writableCalendars.length > 1;
+	};
+
 	/**
   * Everything date and time
   */
@@ -881,7 +1034,7 @@ app.controller('EditorController', ['$scope', 'TimezoneService', 'AutoCompletion
  * Description: Takes care of importing calendars
  */
 
-app.controller('ImportController', ['$scope', '$filter', 'CalendarService', 'VEventService', '$uibModalInstance', 'files', 'ImportFileWrapper', function ($scope, $filter, CalendarService, VEventService, $uibModalInstance, files, ImportFileWrapper) {
+app.controller('ImportController', ['$scope', '$filter', 'CalendarService', 'VEventService', '$uibModalInstance', 'files', 'ImportFileWrapper', 'ColorUtility', function ($scope, $filter, CalendarService, VEventService, $uibModalInstance, files, ImportFileWrapper, ColorUtility) {
 	'use strict';
 
 	$scope.nameSize = 25;
@@ -914,7 +1067,7 @@ app.controller('ImportController', ['$scope', '$filter', 'CalendarService', 'VEv
 
 		if (fileWrapper.selectedCalendar === 'new') {
 			var name = fileWrapper.splittedICal.name || fileWrapper.file.name;
-			var color = fileWrapper.splittedICal.color || randColour(); // jshint ignore:line
+			var color = fileWrapper.splittedICal.color || ColorUtility.randomColor();
 
 			var components = [];
 			if (fileWrapper.splittedICal.vevents.length > 0) {
@@ -1089,13 +1242,32 @@ app.controller('RecurrenceController', ["$scope", function ($scope) {
  * Description: Takes care of the Calendar Settings.
  */
 
-app.controller('SettingsController', ['$scope', '$uibModal', 'SettingsService', 'fc', function ($scope, $uibModal, SettingsService, fc) {
+app.controller('SettingsController', ['$scope', '$uibModal', '$timeout', 'SettingsService', 'fc', function ($scope, $uibModal, $timeout, SettingsService, fc) {
 	'use strict';
 
 	$scope.settingsCalDavLink = OC.linkToRemote('dav') + '/';
 	$scope.settingsCalDavPrincipalLink = OC.linkToRemote('dav') + '/principals/users/' + escapeHTML(encodeURIComponent(oc_current_user)) + '/';
 	$scope.skipPopover = angular.element('#fullcalendar').attr('data-skipPopover');
 	$scope.settingsShowWeekNr = angular.element('#fullcalendar').attr('data-weekNumbers');
+
+	$timeout(function () {
+		var isFirstRun = angular.element('#fullcalendar').attr('data-firstRun') === 'yes';
+		if (isFirstRun) {
+			angular.element('.settings-button').click();
+			angular.element('#import-button-overlay').tooltip({
+				animation: true,
+				placement: 'bottom',
+				title: t('calendar', 'How about getting started by importing some calendars?')
+			});
+			$timeout(function () {
+				angular.element('#import-button-overlay').tooltip('toggle');
+			}, 500);
+			$timeout(function () {
+				angular.element('#import-button-overlay').tooltip('toggle');
+			}, 10500);
+			SettingsService.passedFirstRun();
+		}
+	}, 1500);
 
 	angular.element('#import').on('change', function () {
 		var filesArray = [];
@@ -1144,42 +1316,6 @@ app.controller('SettingsController', ['$scope', '$uibModal', 'SettingsService', 
 * Description: Takes care of Subscription List in the App Navigation.
 */
 app.controller('SubscriptionController', ['$scope', function ($scope) {}]);
-/*
-app.controller('SubscriptionController', ['$scope', '$rootScope', '$window', 'SubscriptionModel', 'CalendarModel', 'Restangular',
-	function ($scope, $rootScope, $window, SubscriptionModel, CalendarModel, Restangular) {
-		'use strict';
-		
-		$scope.subscriptions = SubscriptionModel.getAll();
-		var subscriptionResource = Restangular.all('subscriptions');
-
-		var backendResource = Restangular.all('backends');
-		backendResource.getList().then(function (backendObject) {
-			$scope.subscriptiontypeSelect = SubscriptionModel.getSubscriptionNames(backendObject);
-			$scope.selectedsubscriptionbackendmodel = $scope.subscriptiontypeSelect[0]; // to remove the empty model.
-		}, function (response) {
-			OC.Notification.show(t('calendar', response.data.message));
-		});
-
-		$scope.newSubscriptionUrl = '';
-
-		$scope.create = function () {
-			subscriptionResource.post({
-				type: $scope.selectedsubscriptionbackendmodel.type,
-				url: $scope.newSubscriptionUrl
-			}).then(function (newSubscription) {
-				SubscriptionModel.create(newSubscription);
-				$rootScope.$broadcast('createdSubscription', {
-					subscription: newSubscription
-				});
-			}, function (response) {
-				OC.Notification.show(t('calendar', response.data.message));
-			});
-
-			$scope.newSubscriptionUrl = '';
-		};
-	}
-]);
-*/
 
 app.controller('VAlarmController', ["$scope", function ($scope) {
 	'use strict';
@@ -1572,22 +1708,24 @@ app.constant('fc', {}).directive('fc', ["fc", "$window", function (fc, $window) 
 				fc.elm.fullCalendar('option', 'height', newHeight);
 			});
 
+			var isPublic = attrs.ispublic === '1';
+
 			var baseConfig = {
 				dayNames: dayNames,
 				dayNamesShort: dayNamesShort,
 				defaultView: attrs.defaultview,
-				editable: true,
-				eventLimit: true,
+				editable: !isPublic,
 				firstDay: firstDay,
+				forceEventDuration: true,
 				header: false,
 				height: windowElement.height() - headerSize,
 				locale: moment.locale(),
 				monthNames: monthNames,
 				monthNamesShort: monthNamesShort,
 				nowIndicator: true,
-				selectable: true,
 				weekNumbers: attrs.weeknumbers === 'yes',
-				weekNumbersWithinDays: true
+				weekNumbersWithinDays: true,
+				selectable: !isPublic
 			};
 			var controllerConfig = scope.$parent.fcConfig;
 			var config = angular.extend({}, baseConfig, controllerConfig);
@@ -1662,6 +1800,387 @@ app.directive('onToggleShow', function () {
 				}
 			});
 		}
+	};
+});
+
+app.service('CalendarFactory', ["$window", "DavClient", "Calendar", "WebCal", function ($window, DavClient, Calendar, WebCal) {
+	'use strict';
+
+	var context = {};
+
+	var SHARE_USER_PREFIX = 'principal:principals/users/';
+	var SHARE_GROUP_PREFIX = 'principal:principals/groups/';
+
+	context.acl = function (props, userPrincipal) {
+		var acl = props['{' + DavClient.NS_DAV + '}acl'] || [];
+		var canWrite = false;
+
+		acl.forEach(function (rule) {
+			var href = rule.getElementsByTagNameNS(DavClient.NS_DAV, 'href');
+			if (href.length === 0) {
+				return;
+			}
+
+			if (href[0].textContent !== userPrincipal) {
+				return;
+			}
+
+			var writeNode = rule.getElementsByTagNameNS(DavClient.NS_DAV, 'write');
+			if (writeNode.length > 0) {
+				canWrite = true;
+			}
+		});
+
+		return canWrite;
+	};
+
+	context.color = function (props) {
+		var colorProp = props['{' + DavClient.NS_APPLE + '}calendar-color'];
+		var fallbackColor = angular.element('#fullcalendar').attr('data-defaultColor');
+
+		if (angular.isString(colorProp) && colorProp.length > 0) {
+			// some stupid clients store an alpha value in the rgb hash (like #rrggbbaa) *cough cough* Apple Calendar *cough cough*
+			// but some browsers can't parse that *cough cough* Safari 9 *cough cough*
+			// Safari 10 seems to support this though
+			if (colorProp.length === 9) {
+				return colorProp.substr(0, 7);
+			}
+			return colorProp;
+		} else {
+			return fallbackColor;
+		}
+	};
+
+	context.components = function (props) {
+		var components = props['{' + DavClient.NS_IETF + '}supported-calendar-component-set'] || [];
+		var simpleComponents = {
+			vevent: false,
+			vjournal: false,
+			vtodo: false
+		};
+
+		components.forEach(function (component) {
+			var name = component.attributes.getNamedItem('name').textContent.toLowerCase();
+
+			if (simpleComponents.hasOwnProperty(name)) {
+				simpleComponents[name] = true;
+			}
+		});
+
+		return simpleComponents;
+	};
+
+	context.displayname = function (props) {
+		return props['{' + DavClient.NS_DAV + '}displayname'];
+	};
+
+	context.enabled = function (props, owner, currentUser) {
+		if (!angular.isDefined(props['{' + DavClient.NS_OWNCLOUD + '}calendar-enabled'])) {
+			if (owner) {
+				return owner === currentUser;
+			} else {
+				return false;
+			}
+		} else {
+			return props['{' + DavClient.NS_OWNCLOUD + '}calendar-enabled'] === '1';
+		}
+	};
+
+	context.order = function (props) {
+		var prop = props['{' + DavClient.NS_APPLE + '}calendar-order'];
+		return prop ? parseInt(prop) : undefined;
+	};
+
+	context.owner = function (props) {
+		var ownerProperty = props['{' + DavClient.NS_DAV + '}owner'];
+		if (Array.isArray(ownerProperty) && ownerProperty.length !== 0) {
+			var owner = ownerProperty[0].textContent.slice(0, -1);
+			var index = owner.indexOf('/remote.php/dav/principals/users/');
+			if (index !== -1) {
+				// '/remote.php/dav/principals/users/'.length === 33
+				return owner.substr(index + 33);
+			}
+		}
+
+		return null;
+	};
+
+	context.shares = function (props, owner) {
+		var shareProp = props['{' + DavClient.NS_OWNCLOUD + '}invite'];
+		var shares = {
+			users: [],
+			groups: []
+		};
+
+		if (!Array.isArray(shareProp)) {
+			return shares;
+		}
+
+		shareProp.forEach(function (share) {
+			var href = share.getElementsByTagNameNS(DavClient.NS_DAV, 'href');
+			if (href.length === 0) {
+				return;
+			}
+			href = href[0].textContent;
+
+			var displayName = share.getElementsByTagNameNS(DavClient.NS_OWNCLOUD, 'common-name');
+			if (displayName.length === 0) {
+				if (href.startsWith(SHARE_USER_PREFIX)) {
+					displayName = href.substr(SHARE_USER_PREFIX.length);
+				} else {
+					displayName = href.substr(SHARE_GROUP_PREFIX.length);
+				}
+			} else {
+				displayName = displayName[0].textContent;
+			}
+
+			var access = share.getElementsByTagNameNS(DavClient.NS_OWNCLOUD, 'access');
+			if (access.length === 0) {
+				return;
+			}
+			access = access[0];
+
+			var writable = access.getElementsByTagNameNS(DavClient.NS_OWNCLOUD, 'read-write');
+			writable = writable.length !== 0;
+
+			if (href.startsWith(SHARE_USER_PREFIX) && href.substr(SHARE_USER_PREFIX.length) !== owner) {
+				shares.users.push({
+					id: href.substr(SHARE_USER_PREFIX.length),
+					displayname: displayName,
+					writable: writable
+				});
+			} else if (href.startsWith(SHARE_GROUP_PREFIX)) {
+				shares.groups.push({
+					id: href.substr(SHARE_GROUP_PREFIX.length),
+					displayname: displayName,
+					writable: writable
+				});
+			}
+		});
+
+		return shares;
+	};
+
+	context.shareableAndPublishable = function (props, writable, publicMode) {
+		var shareable = false;
+		var publishable = false;
+
+		if (publicMode || !writable) {
+			return [shareable, publishable];
+		}
+
+		var sharingModesProp = props['{' + DavClient.NS_CALENDARSERVER + '}allowed-sharing-modes'];
+		if (!Array.isArray(sharingModesProp) || sharingModesProp.length === 0) {
+			// Fallback if allowed-sharing-modes is not provided
+			return [writable, publishable];
+		}
+
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+
+		try {
+			for (var _iterator = sharingModesProp[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var shareMode = _step.value;
+
+				shareable = shareable || shareMode.localName === 'can-be-shared';
+				publishable = publishable || shareMode.localName === 'can-be-published';
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator.return) {
+					_iterator.return();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+
+		return [shareable, publishable];
+	};
+
+	context.publishedAndPublishURL = function (props, publicMode) {
+		var published = false;
+		var publishurl = null;
+		var publicurl = null;
+
+		if (angular.isDefined(props['{' + DavClient.NS_CALENDARSERVER + '}publish-url'])) {
+			published = true;
+			publishurl = props['{' + DavClient.NS_CALENDARSERVER + '}publish-url'][0].textContent;
+
+			// Take care of urls ending with #
+			publicurl = $window.location.toString().endsWith('#') ? $window.location.toString().slice(0, -1) : $window.location.toString();
+
+			// Take care of urls ending with /
+			var publicPath = !publicurl.endsWith('/') ? '/public/' : 'public/';
+
+			if (!publicMode) {
+				publicurl += publicPath + publishurl.substr(publishurl.lastIndexOf('/') + 1);
+			}
+		}
+
+		return [published, publishurl, publicurl];
+	};
+
+	context.webcal = function (props) {
+		var sourceProp = props['{' + DavClient.NS_CALENDARSERVER + '}source'];
+
+		if (Array.isArray(sourceProp)) {
+			var source = sourceProp.find(function (source) {
+				return DavClient.getNodesFullName(source) === '{' + DavClient.NS_DAV + '}href';
+			});
+
+			return source ? source.textContent : null;
+		} else {
+			return null;
+		}
+	};
+
+	context.calendarSkeleton = function (props, userPrincipal, publicMode) {
+		var simple = {};
+		var currentUser = context.getUserFromUserPrincipal(userPrincipal);
+
+		simple.color = context.color(props);
+		simple.displayname = context.displayname(props);
+		simple.components = context.components(props);
+		simple.order = context.order(props);
+
+		simple.writable = context.acl(props, userPrincipal);
+		simple.owner = context.owner(props);
+		simple.enabled = context.enabled(props, simple.owner, currentUser);
+
+		simple.shares = context.shares(props, simple.owner);
+
+		var _context$shareableAnd = context.shareableAndPublishable(props, simple.writable, publicMode),
+		    _context$shareableAnd2 = _slicedToArray(_context$shareableAnd, 2),
+		    shareable = _context$shareableAnd2[0],
+		    publishable = _context$shareableAnd2[1];
+
+		simple.shareable = shareable;
+		simple.publishable = publishable;
+
+		var _context$publishedAnd = context.publishedAndPublishURL(props, publicMode),
+		    _context$publishedAnd2 = _slicedToArray(_context$publishedAnd, 3),
+		    published = _context$publishedAnd2[0],
+		    publishurl = _context$publishedAnd2[1],
+		    publicurl = _context$publishedAnd2[2];
+
+		simple.published = published;
+		simple.publishurl = publishurl;
+		simple.publicurl = publicurl;
+
+		// always enabled calendars in public mode
+		if (publicMode) {
+			simple.enabled = true;
+			simple.writable = false;
+		}
+
+		simple.writableProperties = currentUser === simple.owner && simple.writable;
+
+		return simple;
+	};
+
+	context.getUserFromUserPrincipal = function (userPrincipal) {
+		if (userPrincipal.endsWith('/')) {
+			userPrincipal = userPrincipal.slice(0, -1);
+		}
+
+		var slashIndex = userPrincipal.lastIndexOf('/');
+		return userPrincipal.substr(slashIndex + 1);
+	};
+
+	/**
+  * get a calendar object from raw xml data
+  * @param body
+  * @param {string} userPrincipal
+  * @param {boolean} publicMode
+  * @returns {Calendar}
+  */
+	this.calendar = function (body, userPrincipal) {
+		var publicMode = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+		var href = body.href;
+		var props = body.propStat[0].properties;
+
+		var simple = context.calendarSkeleton(props, userPrincipal, publicMode);
+		return Calendar(href, simple);
+	};
+
+	/**
+  * get a webcal object from raw xml data
+  * @param body
+  * @param {string} userPrincipal
+  * @param {boolean} publicMode
+  * @returns {WebCal}
+  */
+	this.webcal = function (body, userPrincipal) {
+		var publicMode = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+		var href = body.href;
+		var props = body.propStat[0].properties;
+		var currentUser = context.getUserFromUserPrincipal(userPrincipal);
+
+		var simple = context.calendarSkeleton(props, userPrincipal, publicMode);
+		simple.href = context.webcal(props);
+
+		// WebCal is obviously not writable
+		simple.writable = false;
+		simple.writableProperties = currentUser === simple.owner;
+
+		// WebCal subscriptions are neither publishable nor shareable
+		simple.publishable = false;
+		simple.shareable = false;
+
+		return WebCal(href, simple);
+	};
+}]);
+
+app.service('ICalFactory', function () {
+	'use strict';
+
+	var self = this;
+
+	/**
+  * create a new ICAL calendar object
+  * @returns {ICAL.Component}
+  */
+	this.new = function () {
+		var root = new ICAL.Component(['vcalendar', [], []]);
+
+		var version = angular.element('#fullcalendar').attr('data-appVersion');
+		root.updatePropertyWithValue('prodid', '-//Nextcloud calendar v' + version);
+
+		root.updatePropertyWithValue('version', '2.0');
+		root.updatePropertyWithValue('calscale', 'GREGORIAN');
+
+		return root;
+	};
+
+	/**
+  * create a new ICAL calendar object that contains a calendar
+  * @param uid
+  * @returns ICAL.Component
+  */
+	this.newEvent = function (uid) {
+		var comp = self.new();
+
+		var event = new ICAL.Component('vevent');
+		comp.addSubcomponent(event);
+
+		event.updatePropertyWithValue('created', ICAL.Time.now());
+		event.updatePropertyWithValue('dtstamp', ICAL.Time.now());
+		event.updatePropertyWithValue('last-modified', ICAL.Time.now());
+		event.updatePropertyWithValue('uid', uid);
+
+		//add a dummy dtstart, so it's a valid ics
+		event.updatePropertyWithValue('dtstart', ICAL.Time.now());
+
+		return comp;
 	};
 });
 
@@ -1981,7 +2500,8 @@ app.factory('CalendarListItem', ["Calendar", "WebCal", function (Calendar, WebCa
 			isEditingShares: false,
 			isEditingProperties: false,
 			isDisplayingCalDAVUrl: false,
-			isDisplayingWebCalUrl: false
+			isDisplayingWebCalUrl: false,
+			isSendingMail: false
 		};
 		var iface = {
 			_isACalendarListItemObject: true
@@ -2027,8 +2547,16 @@ app.factory('CalendarListItem', ["Calendar", "WebCal", function (Calendar, WebCa
 			return context.isEditingShares;
 		};
 
+		iface.isSendingMail = function () {
+			return context.isSendingMail;
+		};
+
 		iface.toggleEditingShares = function () {
 			context.isEditingShares = !context.isEditingShares;
+		};
+
+		iface.toggleSendingMail = function () {
+			context.isSendingMail = !context.isSendingMail;
 		};
 
 		iface.isEditing = function () {
@@ -2107,13 +2635,17 @@ app.factory('Calendar', ["$window", "Hook", "VEventService", "TimezoneService", 
 				color: props.color,
 				displayname: props.displayname,
 				enabled: props.enabled,
-				order: props.order
+				order: props.order,
+				published: props.published
 			},
 			updatedProperties: [],
 			tmpId: RandomStringService.generate(),
 			url: url,
 			owner: props.owner,
 			shares: props.shares,
+			publishurl: props.publishurl,
+			publicurl: props.publicurl,
+			publishable: props.publishable,
 			warnings: [],
 			shareable: props.shareable,
 			writable: props.writable,
@@ -2128,13 +2660,15 @@ app.factory('Calendar', ["$window", "Hook", "VEventService", "TimezoneService", 
 			context.fcEventSource.isRendering = true;
 			iface.emit(Calendar.hookFinishedRendering);
 
+			start = moment(start.stripZone().format());
+			end = moment(end.stripZone().format());
+
 			var TimezoneServicePromise = TimezoneService.get(timezone);
 			var VEventServicePromise = VEventService.getAll(iface, start, end);
 			Promise.all([TimezoneServicePromise, VEventServicePromise]).then(function (results) {
-				var _results = _slicedToArray(results, 2);
-
-				var tz = _results[0];
-				var events = _results[1];
+				var _results = _slicedToArray(results, 2),
+				    tz = _results[0],
+				    events = _results[1];
 
 				var vevents = [];
 
@@ -2262,6 +2796,35 @@ app.factory('Calendar', ["$window", "Hook", "VEventService", "TimezoneService", 
 					return $window.location.origin + context.url;
 				}
 			},
+			publishurl: {
+				get: function get() {
+					return context.publishurl;
+				},
+				set: function set(publishurl) {
+					context.publishurl = publishurl;
+				}
+			},
+			published: {
+				get: function get() {
+					return context.mutableProperties.published;
+				},
+				set: function set(published) {
+					context.mutableProperties.published = published;
+				}
+			},
+			publishable: {
+				get: function get() {
+					return context.publishable;
+				}
+			},
+			publicurl: {
+				get: function get() {
+					return context.publicurl;
+				},
+				set: function set(publicurl) {
+					context.publicurl = publicurl;
+				}
+			},
 			fcEventSource: {
 				get: function get() {
 					return context.fcEventSource;
@@ -2324,15 +2887,15 @@ app.factory('Calendar', ["$window", "Hook", "VEventService", "TimezoneService", 
 		};
 
 		iface.isPublished = function () {
-			return false;
+			return context.mutableProperties.published;
+		};
+
+		iface.isPublishable = function () {
+			return context.publishable;
 		};
 
 		iface.isShareable = function () {
 			return context.shareable;
-		};
-
-		iface.isPublishable = function () {
-			return false;
 		};
 
 		iface.isRendering = function () {
@@ -2373,143 +2936,193 @@ app.factory('FcEvent', ["SimpleEvent", function (SimpleEvent) {
 	'use strict';
 
 	/**
-  * check if dtstart and dtend are both of type date
-  * @param dtstart
-  * @param dtend
-  * @returns {boolean}
-  */
-
-	function isEventAllDay(dtstart, dtend) {
-		return dtstart.icaltype === 'date' && dtend.icaltype === 'date';
-	}
-
-	/**
-  * get recurrence id from event
-  * @param {Component} event
-  * @returns {string}
-  */
-	function getRecurrenceIdFromEvent(event) {
-		return event.hasProperty('recurrence-id') ? event.getFirstPropertyValue('recurrence-id').toICALString() : null;
-	}
-
-	/**
-  * get calendar related information about event
-  * @param vevent
-  * @returns {{calendar: *, editable: *, backgroundColor: *, borderColor: *, textColor: *, className: *[]}}
-  */
-	function getCalendarRelatedProps(vevent) {
-		return {
-			calendar: vevent.calendar,
-			editable: vevent.calendar.isWritable(),
-			className: ['fcCalendar-id-' + vevent.calendar.tmpId]
-		};
-	}
-
-	/**
-  * get event related information about event
-  * @param {Component} event
-  * @returns {{title: string}}
-  */
-	function getEventRelatedProps(event) {
-		return {
-			title: event.getFirstPropertyValue('summary')
-		};
-	}
-
-	/**
-  * get unique id for fullcalendar
   * @param {VEvent} vevent
-  * @param {Component} event
-  * @returns {string}
+  * @param {ICAL.Component} event
+  * @param {ICAL.Time} start
+  * @param {ICAL.Time} end
   */
-	function getFcEventId(vevent, event) {
-		var id = vevent.uri;
-		var recurrenceId = getRecurrenceIdFromEvent(event);
-		if (recurrenceId) {
-			id += recurrenceId;
+
+	function FcEvent(vevent, event, start, end) {
+		var context = { vevent: vevent, event: event };
+		context.iCalEvent = new ICAL.Event(event);
+
+		var id = context.vevent.uri;
+		if (event.hasProperty('recurrence-id')) {
+			id += context.event.getFirstPropertyValue('recurrence-id').toICALString();
 		}
 
-		return id;
-	}
+		var allDay = start.icaltype === 'date' && end.icaltype === 'date';
+		context.allDay = allDay;
 
-	/**
-  * @constructor
-  * @param {VEvent} vevent
-  * @param {Component} event
-  * @param {icaltime} start
-  * @param {icaltime} end
-  */
-	function FcEvent(vevent, event, start, end) {
-		var iCalEvent = new ICAL.Event(event);
-
-		angular.extend(this, {
-			vevent: vevent,
-			event: event,
-			id: getFcEventId(vevent, event),
-			allDay: isEventAllDay(start, end),
+		var iface = {
+			_isAFcEventObject: true,
+			id: id,
+			allDay: allDay,
 			start: start.toJSDate(),
 			end: end.toJSDate(),
-			repeating: iCalEvent.isRecurring()
-		}, getCalendarRelatedProps(vevent), getEventRelatedProps(event));
-	}
+			repeating: context.iCalEvent.isRecurring(),
+			className: ['fcCalendar-id-' + vevent.calendar.tmpId],
+			editable: vevent.calendar.isWritable(),
+			backgroundColor: vevent.calendar.color,
+			borderColor: vevent.calendar.color,
+			textColor: vevent.calendar.textColor,
+			title: event.getFirstPropertyValue('summary')
+		};
 
-	FcEvent.prototype = {
-		get backgroundColor() {
-			return this.vevent.calendar.color;
-		},
-		get borderColor() {
-			return this.vevent.calendar.color;
-		},
-		get textColor() {
-			return this.vevent.calendar.textColor;
-		},
+		Object.defineProperties(iface, {
+			vevent: {
+				get: function get() {
+					return context.vevent;
+				},
+				enumerable: true
+			},
+			event: {
+				get: function get() {
+					return context.event;
+				},
+				enumerable: true
+			},
+			calendar: {
+				get: function get() {
+					return context.vevent.calendar;
+				},
+				enumerable: true
+			}
+		});
+
 		/**
    * get SimpleEvent for current fcEvent
    * @returns {SimpleEvent}
    */
-		getSimpleEvent: function getSimpleEvent() {
-			return new SimpleEvent(this.event);
-		},
+		iface.getSimpleEvent = function () {
+			return SimpleEvent(context.event);
+		};
+
 		/**
    * moves the event to a different position
-   * @param {Duration} delta
+   * @param {moment.duration} delta
+   * @param {boolean} isAllDay
+   * @param {string} timezone
+   * @param {moment.duration} defaultTimedEventMomentDuration
+   * @param {moment.duration} defaultAllDayEventMomentDuration
    */
-		drop: function drop(delta) {
+		iface.drop = function (delta, isAllDay, timezone, defaultTimedEventMomentDuration, defaultAllDayEventMomentDuration) {
 			delta = new ICAL.Duration().fromSeconds(delta.asSeconds());
 
-			if (this.event.hasProperty('dtstart')) {
-				var dtstart = this.event.getFirstPropertyValue('dtstart');
-				dtstart.addDuration(delta);
-				this.event.updatePropertyWithValue('dtstart', dtstart);
+			var timedDuration = new ICAL.Duration().fromSeconds(defaultTimedEventMomentDuration.asSeconds());
+			var allDayDuration = new ICAL.Duration().fromSeconds(defaultAllDayEventMomentDuration.asSeconds());
+
+			var dtstartProp = context.event.getFirstProperty('dtstart');
+			var dtstart = dtstartProp.getFirstValue();
+			dtstart.isDate = isAllDay;
+			dtstart.addDuration(delta);
+			dtstart.zone = isAllDay ? 'floating' : dtstart.zone;
+
+			// event was moved from allDay to grid
+			// we need to add a tzid to the dtstart
+			if (context.allDay && !isAllDay) {
+				var timezoneObject = ICAL.TimezoneService.get(timezone);
+
+				if (timezone === 'UTC') {
+					timezone = 'Z';
+				}
+
+				dtstart.zone = timezoneObject;
+				if (timezone !== 'Z') {
+					dtstartProp.setParameter('tzid', timezone);
+
+					if (context.event.parent) {
+						context.event.parent.addSubcomponent(timezoneObject.component);
+					}
+				}
+			}
+			// event was moved from grid to allDay
+			// remove tzid
+			if (!context.allDay && isAllDay) {
+				dtstartProp.removeParameter('tzid');
+			}
+			context.event.updatePropertyWithValue('dtstart', dtstart);
+
+			// event was moved from allday to grid or vice versa
+			if (context.allDay !== isAllDay) {
+				// No DURATION -> either DTEND or only DTSTART
+				if (!context.event.hasProperty('duration')) {
+					var dtend = dtstart.clone();
+					dtend.addDuration(isAllDay ? allDayDuration : timedDuration);
+					var dtendProp = context.event.updatePropertyWithValue('dtend', dtend);
+
+					var tzid = dtstartProp.getParameter('tzid');
+					if (tzid) {
+						dtendProp.setParameter('tzid', tzid);
+					} else {
+						dtendProp.removeParameter('tzid');
+					}
+				} else {
+					context.event.updatePropertyWithValue('duration', isAllDay ? allDayDuration : timedDuration);
+				}
+			} else {
+				// No DURATION -> either DTEND or only DTSTART
+				if (context.event.hasProperty('dtend')) {
+					var _dtend = context.event.getFirstPropertyValue('dtend');
+					_dtend.addDuration(delta);
+					context.event.updatePropertyWithValue('dtend', _dtend);
+				}
 			}
 
-			if (this.event.hasProperty('dtend')) {
-				var dtend = this.event.getFirstPropertyValue('dtend');
-				dtend.addDuration(delta);
-				this.event.updatePropertyWithValue('dtend', dtend);
-			}
-		},
+			context.allDay = isAllDay;
+			context.vevent.touch();
+		};
+
 		/**
    * resizes the event
    * @param {moment.duration} delta
    */
-		resize: function resize(delta) {
+		iface.resize = function (delta) {
 			delta = new ICAL.Duration().fromSeconds(delta.asSeconds());
 
-			if (this.event.hasProperty('duration')) {
-				var duration = this.event.getFirstPropertyValue('duration');
+			if (context.event.hasProperty('duration')) {
+				var duration = context.event.getFirstPropertyValue('duration');
 				duration.fromSeconds(delta.toSeconds() + duration.toSeconds());
-				this.event.updatePropertyWithValue('duration', duration);
-			} else if (this.event.hasProperty('dtend')) {
-				var dtend = this.event.getFirstPropertyValue('dtend');
+				context.event.updatePropertyWithValue('duration', duration);
+			} else if (context.event.hasProperty('dtend')) {
+				var dtend = context.event.getFirstPropertyValue('dtend');
 				dtend.addDuration(delta);
-				this.event.updatePropertyWithValue('dtend', dtend);
-			} else if (this.event.hasProperty('dtstart')) {
-				var dtstart = event.getFirstPropertyValue('dtstart').clone();
-				dtstart.addDuration(delta);
-				this.event.addPropertyWithValue('dtend', dtstart);
+				context.event.updatePropertyWithValue('dtend', dtend);
+			} else if (context.event.hasProperty('dtstart')) {
+				var dtstart = event.getFirstProperty('dtstart');
+				var _dtend2 = dtstart.getFirstValue().clone();
+				_dtend2.addDuration(delta);
+
+				var prop = context.event.addPropertyWithValue('dtend', _dtend2);
+
+				var tzid = dtstart.getParameter('tzid');
+				if (tzid) {
+					prop.setParameter('tzid', tzid);
+				}
 			}
-		}
+
+			context.vevent.touch();
+		};
+
+		/**
+   * lock fc event for editing
+   */
+		iface.lock = function () {
+			context.lock = true;
+		};
+
+		/**
+   * unlock fc event
+   */
+		iface.unlock = function () {
+			context.lock = false;
+		};
+
+		return iface;
+	}
+
+	FcEvent.isFcEvent = function (obj) {
+		return (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj !== null && obj._isAFcEventObject === true;
 	};
 
 	return FcEvent;
@@ -2692,15 +3305,9 @@ app.factory('ImportFileWrapper', ["Hook", "ICalSplitterUtility", function (Hook,
 app.factory('SimpleEvent', function () {
 	'use strict';
 
-	/**
-  * structure of simple data
-  */
-
 	var defaults = {
 		'summary': null,
 		'location': null,
-		//'created': null,
-		//'last-modified': null,
 		'organizer': null,
 		'class': null,
 		'description': null,
@@ -2729,7 +3336,8 @@ app.factory('SimpleEvent', function () {
 		date: function date(data, vevent, key, parameters) {
 			parameters = (parameters || []).concat(['tzid']);
 			simpleParser._parseSingle(data, vevent, key, parameters, function (p) {
-				return p.type === 'duration' ? p.getFirstValue().toSeconds() : moment(p.getFirstValue().toJSDate());
+				var first = p.getFirstValue();
+				return p.type === 'duration' ? first.toSeconds() : moment(first.toJSDate());
 			});
 		},
 		dates: function dates(data, vevent, key, parameters) {
@@ -2737,13 +3345,14 @@ app.factory('SimpleEvent', function () {
 			simpleParser._parseMultiple(data, vevent, key, parameters, function (p) {
 				var values = p.getValues(),
 				    usableValues = [];
-				for (var vKey in values) {
-					if (!values.hasOwnProperty(vKey)) {
-						continue;
-					}
 
-					usableValues.push(p.type === 'duration' ? values[vKey].toSeconds() : moment(values[vKey].toJSDate()));
-				}
+				values.forEach(function (value) {
+					if (p.type === 'duration') {
+						usableValues.push(value.toSeconds());
+					} else {
+						usableValues.push(moment(value.toJSDate()));
+					}
+				});
 
 				return usableValues;
 			});
@@ -2770,46 +3379,34 @@ app.factory('SimpleEvent', function () {
 			};
 
 			if (prop.isMultiValue) {
-				angular.extend(data[key], {
-					values: valueParser(prop)
-				});
+				data[key].values = valueParser(prop);
 			} else {
-				angular.extend(data[key], {
-					value: valueParser(prop)
-				});
+				data[key].value = valueParser(prop);
 			}
 		},
 		_parseMultiple: function _parseMultiple(data, vevent, key, parameters, valueParser) {
 			data[key] = data[key] || [];
 
-			var properties = vevent.getAllProperties(key),
-			    group = 0;
+			var properties = vevent.getAllProperties(key);
+			var group = 0;
 
-			for (var pKey in properties) {
-				if (!properties.hasOwnProperty(pKey)) {
-					continue;
-				}
-
+			properties.forEach(function (property) {
 				var currentElement = {
 					group: group,
-					parameters: simpleParser._parseParameters(properties[pKey], parameters),
-					type: properties[pKey].type
+					parameters: simpleParser._parseParameters(property, parameters),
+					type: property.type
 				};
 
-				if (properties[pKey].isMultiValue) {
-					angular.extend(currentElement, {
-						values: valueParser(properties[pKey])
-					});
+				if (property.isMultiValue) {
+					currentElement.values = valueParser(property);
 				} else {
-					angular.extend(currentElement, {
-						value: valueParser(properties[pKey])
-					});
+					currentElement.value = valueParser(property);
 				}
 
 				data[key].push(currentElement);
-				properties[pKey].setParameter('x-oc-group-id', group.toString());
+				property.setParameter('x-nc-group-id', group.toString());
 				group++;
-			}
+			});
 		},
 		_parseParameters: function _parseParameters(prop, para) {
 			var parameters = {};
@@ -2818,9 +3415,9 @@ app.factory('SimpleEvent', function () {
 				return parameters;
 			}
 
-			for (var i = 0, l = para.length; i < l; i++) {
-				parameters[para[i]] = prop.getParameter(para[i]);
-			}
+			para.forEach(function (p) {
+				parameters[p] = prop.getParameter(p);
+			});
 
 			return parameters;
 		}
@@ -2830,11 +3427,7 @@ app.factory('SimpleEvent', function () {
 		date: function date(vevent, oldSimpleData, newSimpleData, key, parameters) {
 			parameters = (parameters || []).concat(['tzid']);
 			simpleReader._readSingle(vevent, oldSimpleData, newSimpleData, key, parameters, function (v, isMultiValue) {
-				if (v.type === 'duration') {
-					return ICAL.Duration.fromSeconds(v.value);
-				} else {
-					return ICAL.Time.fromJSDate(v.value.toDate());
-				}
+				return v.type === 'duration' ? ICAL.Duration.fromSeconds(v.value) : ICAL.Time.fromJSDate(v.value.toDate());
 			});
 		},
 		dates: function dates(vevent, oldSimpleData, newSimpleData, key, parameters) {
@@ -2842,13 +3435,13 @@ app.factory('SimpleEvent', function () {
 			simpleReader._readMultiple(vevent, oldSimpleData, newSimpleData, key, parameters, function (v, isMultiValue) {
 				var values = [];
 
-				for (var i = 0, length = v.values.length; i < length; i++) {
+				v.values.forEach(function (value) {
 					if (v.type === 'duration') {
-						values.push(ICAL.Duration.fromSeconds(v.values[i]));
+						values.push(ICAL.Duration.fromSeconds(value));
 					} else {
-						values.push(ICAL.Time.fromJSDate(v.values[i].toDate()));
+						values.push(ICAL.Time.fromJSDate(value.toDate()));
 					}
-				}
+				});
 
 				return values;
 			});
@@ -2876,28 +3469,28 @@ app.factory('SimpleEvent', function () {
 			simpleReader._readParameters(prop, newSimpleData[key], parameters);
 		},
 		_readMultiple: function _readMultiple(vevent, oldSimpleData, newSimpleData, key, parameters, valueReader) {
-			var oldGroups = [],
-			    properties = null,
-			    pKey = null,
-			    groupId;
+			var oldGroups = [];
+			var properties = void 0,
+			    pKey = void 0,
+			    groupId = void 0;
 
 			oldSimpleData[key] = oldSimpleData[key] || [];
-			for (var i = 0, oldLength = oldSimpleData[key].length; i < oldLength; i++) {
-				oldGroups.push(oldSimpleData[key][i].group);
-			}
+			oldSimpleData[key].forEach(function (e) {
+				oldGroups.push(e.group);
+			});
 
 			newSimpleData[key] = newSimpleData[key] || [];
-			for (var j = 0, newLength = newSimpleData[key].length; j < newLength; j++) {
-				var isMultiValue = newSimpleData[key][j].hasOwnProperty('values');
-				var value = valueReader(newSimpleData[key][j], isMultiValue);
+			newSimpleData[key].forEach(function (e) {
+				var isMultiValue = e.hasOwnProperty('values');
+				var value = valueReader(e, isMultiValue);
 
-				if (oldGroups.indexOf(newSimpleData[key][j].group) === -1) {
+				if (oldGroups.indexOf(e.group) === -1) {
 					var property = new ICAL.Property(key);
 					simpleReader._setProperty(property, value, isMultiValue);
-					simpleReader._readParameters(property, newSimpleData[key][j], parameters);
+					simpleReader._readParameters(property, e, parameters);
 					vevent.addProperty(property);
 				} else {
-					oldGroups.splice(oldGroups.indexOf(newSimpleData[key][j].group), 1);
+					oldGroups.splice(oldGroups.indexOf(e.group), 1);
 
 					properties = vevent.getAllProperties(key);
 					for (pKey in properties) {
@@ -2905,29 +3498,26 @@ app.factory('SimpleEvent', function () {
 							continue;
 						}
 
-						groupId = properties[pKey].getParameter('x-oc-group-id');
+						groupId = properties[pKey].getParameter('x-nc-group-id');
 						if (groupId === null) {
 							continue;
 						}
-						if (parseInt(groupId) === newSimpleData[key][j].group) {
+						if (parseInt(groupId) === e.group) {
 							simpleReader._setProperty(properties[pKey], value, isMultiValue);
-							simpleReader._readParameters(properties[pKey], newSimpleData[key][j], parameters);
+							simpleReader._readParameters(properties[pKey], e, parameters);
 						}
 					}
 				}
-			}
+			});
 
 			properties = vevent.getAllProperties(key);
-			for (pKey in properties) {
-				if (!properties.hasOwnProperty(pKey)) {
-					continue;
-				}
-
-				groupId = properties[pKey].getParameter('x-oc-group-id');
+			properties.forEach(function (property) {
+				groupId = property.getParameter('x-nc-group-id');
 				if (oldGroups.indexOf(parseInt(groupId)) !== -1) {
-					vevent.removeProperty(properties[pKey]);
+					vevent.removeProperty(property);
 				}
-			}
+				property.removeParameter('x-nc-group-id');
+			});
 		},
 		_readParameters: function _readParameters(prop, simple, para) {
 			if (!para) {
@@ -2937,13 +3527,13 @@ app.factory('SimpleEvent', function () {
 				return;
 			}
 
-			for (var i = 0, l = para.length; i < l; i++) {
-				if (simple.parameters[para[i]]) {
-					prop.setParameter(para[i], simple.parameters[para[i]]);
+			para.forEach(function (p) {
+				if (simple.parameters[p]) {
+					prop.setParameter(p, simple.parameters[p]);
 				} else {
-					prop.removeParameter(simple.parameters[para[i]]);
+					prop.removeParameter(simple.parameters[p]);
 				}
-			}
+			});
 		},
 		_setProperty: function _setProperty(prop, value, isMultiValue) {
 			if (isMultiValue) {
@@ -2961,16 +3551,25 @@ app.factory('SimpleEvent', function () {
 		//General
 		'summary': { parser: simpleParser.string, reader: simpleReader.string },
 		'location': { parser: simpleParser.string, reader: simpleReader.string },
-		//'created': {parser: simpleParser.date, reader: simpleReader.date},
-		//'last-modified': {parser: simpleParser.date, reader: simpleReader.date},
 		//'categories': {parser: simpleParser.strings, reader: simpleReader.strings},
 		//attendees
-		'attendee': { parser: simpleParser.strings, reader: simpleReader.strings, parameters: attendeeParameters },
-		'organizer': { parser: simpleParser.string, reader: simpleReader.string, parameters: organizerParameters },
+		'attendee': {
+			parser: simpleParser.strings,
+			reader: simpleReader.strings,
+			parameters: attendeeParameters
+		},
+		'organizer': {
+			parser: simpleParser.string,
+			reader: simpleReader.string,
+			parameters: organizerParameters
+		},
 		//sharing
 		'class': { parser: simpleParser.string, reader: simpleReader.string },
 		//other
-		'description': { parser: simpleParser.string, reader: simpleReader.string },
+		'description': {
+			parser: simpleParser.string,
+			reader: simpleReader.string
+		},
 		//'url': {parser: simpleParser.string, reader: simpleReader.string},
 		'status': { parser: simpleParser.string, reader: simpleReader.string }
 		//'resources': {parser: simpleParser.strings, reader: simpleReader.strings}
@@ -2983,14 +3582,9 @@ app.factory('SimpleEvent', function () {
 		alarm: function alarm(data, vevent) {
 			data.alarm = data.alarm || [];
 
-			var alarms = vevent.getAllSubcomponents('valarm'),
-			    group = 0;
-			for (var key in alarms) {
-				if (!alarms.hasOwnProperty(key)) {
-					continue;
-				}
-
-				var alarm = alarms[key];
+			var alarms = vevent.getAllSubcomponents('valarm');
+			var group = 0;
+			alarms.forEach(function (alarm) {
 				var alarmData = {
 					group: group,
 					action: {},
@@ -3003,8 +3597,11 @@ app.factory('SimpleEvent', function () {
 				simpleParser.string(alarmData, alarm, 'action');
 				simpleParser.date(alarmData, alarm, 'trigger');
 				simpleParser.string(alarmData, alarm, 'repeat');
-				simpleParser.string(alarmData, alarm, 'duration');
-				//simpleParser.strings(alarmData, alarm, 'attendee', attendeeParameters);
+				simpleParser.date(alarmData, alarm, 'duration');
+				simpleParser.strings(alarmData, alarm, 'attendee', attendeeParameters);
+
+				//alarmData.attendeeCopy = [];
+				//angular.copy(alarmData.attendee, alarmData.attendeeCopy);
 
 				if (alarmData.trigger.type === 'duration' && alarm.hasProperty('trigger')) {
 					var trigger = alarm.getFirstProperty('trigger');
@@ -3018,13 +3615,14 @@ app.factory('SimpleEvent', function () {
 
 				data.alarm.push(alarmData);
 
-				alarm.getFirstProperty('action').setParameter('x-oc-group-id', group.toString());
+				alarm.getFirstProperty('action').setParameter('x-nc-group-id', group.toString());
 				group++;
-			}
+			});
 		},
 		date: function date(data, vevent) {
-			var dtstart = vevent.getFirstPropertyValue('dtstart'),
-			    dtend;
+			var dtstart = vevent.getFirstPropertyValue('dtstart');
+			var dtend = void 0;
+
 			if (vevent.hasProperty('dtend')) {
 				dtend = vevent.getFirstPropertyValue('dtend');
 			} else if (vevent.hasProperty('duration')) {
@@ -3039,16 +3637,28 @@ app.factory('SimpleEvent', function () {
 					zone: dtstart.zone.toString()
 				},
 				type: dtstart.icaltype,
-				value: moment({ years: dtstart.year, months: dtstart.month - 1, date: dtstart.day,
-					hours: dtstart.hour, minutes: dtstart.minute, seconds: dtstart.seconds })
+				value: moment({
+					years: dtstart.year,
+					months: dtstart.month - 1,
+					date: dtstart.day,
+					hours: dtstart.hour,
+					minutes: dtstart.minute,
+					seconds: dtstart.seconds
+				})
 			};
 			data.dtend = {
 				parameters: {
 					zone: dtend.zone.toString()
 				},
 				type: dtend.icaltype,
-				value: moment({ years: dtend.year, months: dtend.month - 1, date: dtend.day,
-					hours: dtend.hour, minutes: dtend.minute, seconds: dtend.seconds })
+				value: moment({
+					years: dtend.year,
+					months: dtend.month - 1,
+					date: dtend.day,
+					hours: dtend.hour,
+					minutes: dtend.minute,
+					seconds: dtend.seconds
+				})
 			};
 			data.allDay = dtstart.icaltype === 'date' && dtend.icaltype === 'date';
 		},
@@ -3080,11 +3690,7 @@ app.factory('SimpleEvent', function () {
 
 	var specificReader = {
 		alarm: function alarm(vevent, oldSimpleData, newSimpleData) {
-			var oldGroups,
-			    newGroups,
-			    valarm,
-			    removedAlarms,
-			    components = {},
+			var components = {},
 			    key = 'alarm';
 
 			function getAlarmGroup(alarmData) {
@@ -3092,25 +3698,25 @@ app.factory('SimpleEvent', function () {
 			}
 
 			oldSimpleData[key] = oldSimpleData[key] || [];
-			oldGroups = oldSimpleData[key].map(getAlarmGroup);
+			var oldGroups = oldSimpleData[key].map(getAlarmGroup);
 
 			newSimpleData[key] = newSimpleData[key] || [];
-			newGroups = newSimpleData[key].map(getAlarmGroup);
+			var newGroups = newSimpleData[key].map(getAlarmGroup);
 
 			//check for any alarms that are in the old data,
 			//but have been removed from the new data
-			removedAlarms = oldGroups.filter(function (group) {
+			var removedAlarms = oldGroups.filter(function (group) {
 				return newGroups.indexOf(group) === -1;
 			});
 
 			//get all of the valarms and save them in an object keyed by their groupId
-			angular.forEach(vevent.getAllSubcomponents('valarm'), function (component) {
-				var group = component.getFirstProperty('action').getParameter('x-oc-group-id');
-				components[group] = component;
+			vevent.getAllSubcomponents('valarm').forEach(function (alarm) {
+				var group = alarm.getFirstProperty('action').getParameter('x-nc-group-id');
+				components[group] = alarm;
 			});
 
 			//remove any valarm subcomponents have a groupId that matches one of the removedAlarms
-			angular.forEach(removedAlarms, function (group) {
+			removedAlarms.forEach(function (group) {
 				if (components[group]) {
 					vevent.removeSubcomponent(components[group]);
 					delete components[group];
@@ -3118,19 +3724,28 @@ app.factory('SimpleEvent', function () {
 			});
 
 			//update and create valarms using the new alarm data
-			angular.forEach(newSimpleData[key], function (alarmData) {
+			newSimpleData[key].forEach(function (alarmData) {
+				var valarm = void 0,
+				    oldSimpleAlarmData = void 0;
+
 				if (oldGroups.indexOf(alarmData.group) === -1) {
 					valarm = new ICAL.Component('VALARM');
 					vevent.addSubcomponent(valarm);
+					oldSimpleAlarmData = {};
 				} else {
 					valarm = components[alarmData.group];
+					oldSimpleAlarmData = oldSimpleData.alarm.find(function (alarm) {
+						return alarm.group === alarmData.group;
+					});
 				}
 
-				simpleReader.string(valarm, {}, alarmData, 'action', []);
-				simpleReader.date(valarm, {}, alarmData, 'trigger', []);
-				simpleReader.string(valarm, {}, alarmData, 'repeat', []);
-				simpleReader.string(valarm, {}, alarmData, 'duration', []);
-				simpleReader.strings(valarm, {}, alarmData, 'attendee', attendeeParameters);
+				simpleReader.string(valarm, oldSimpleAlarmData, alarmData, 'action', []);
+				simpleReader.date(valarm, oldSimpleAlarmData, alarmData, 'trigger', []);
+				simpleReader.string(valarm, oldSimpleAlarmData, alarmData, 'repeat', []);
+				simpleReader.date(valarm, oldSimpleAlarmData, alarmData, 'duration', []);
+				simpleReader.strings(valarm, oldSimpleAlarmData, alarmData, 'attendee', attendeeParameters);
+
+				valarm.getFirstProperty('action').removeParameter('x-nc-group-id');
 			});
 		},
 		date: function date(vevent, oldSimpleData, newSimpleData) {
@@ -3138,58 +3753,65 @@ app.factory('SimpleEvent', function () {
 			vevent.removeAllProperties('dtend');
 			vevent.removeAllProperties('duration');
 
+			var isNewSimpleDataAllDay = newSimpleData.dtstart.type === 'date' && newSimpleData.dtend.type === 'date';
+			// remove tzid property from allday events
+			if (isNewSimpleDataAllDay) {
+				newSimpleData.dtstart.parameters.zone = 'floating';
+				newSimpleData.dtend.parameters.zone = 'floating';
+			}
+
 			newSimpleData.dtstart.parameters.zone = newSimpleData.dtstart.parameters.zone || 'floating';
 			newSimpleData.dtend.parameters.zone = newSimpleData.dtend.parameters.zone || 'floating';
 
 			if (newSimpleData.dtstart.parameters.zone !== 'floating' && !ICAL.TimezoneService.has(newSimpleData.dtstart.parameters.zone)) {
-				throw {
-					kind: 'timezone_missing',
-					missing_timezone: newSimpleData.dtstart.parameters.zone
-				};
+				throw new Error('Requested timezone not found (' + newSimpleData.dtstart.parameters.zone + ')');
 			}
 			if (newSimpleData.dtend.parameters.zone !== 'floating' && !ICAL.TimezoneService.has(newSimpleData.dtend.parameters.zone)) {
-				throw {
-					kind: 'timezone_missing',
-					missing_timezone: newSimpleData.dtend.parameters.zone
-				};
+				throw new Error('Requested timezone not found (' + newSimpleData.dtend.parameters.zone + ')');
 			}
 
 			var start = ICAL.Time.fromJSDate(newSimpleData.dtstart.value.toDate(), false);
-			start.isDate = newSimpleData.allDay;
+			start.isDate = isNewSimpleDataAllDay;
 			var end = ICAL.Time.fromJSDate(newSimpleData.dtend.value.toDate(), false);
-			end.isDate = newSimpleData.allDay;
+			end.isDate = isNewSimpleDataAllDay;
 
-			var availableTimezones = [];
+			var alreadyStoredTimezones = ['UTC'];
 			var vtimezones = vevent.parent.getAllSubcomponents('vtimezone');
-			angular.forEach(vtimezones, function (vtimezone) {
-				availableTimezones.push(vtimezone.getFirstPropertyValue('tzid'));
+			vtimezones.forEach(function (vtimezone) {
+				alreadyStoredTimezones.push(vtimezone.getFirstPropertyValue('tzid'));
 			});
 
-			var dtstart = new ICAL.Property('dtstart', vevent);
-			dtstart.setValue(start);
+			var startProp = new ICAL.Property('dtstart', vevent);
 			if (newSimpleData.dtstart.parameters.zone !== 'floating') {
-				dtstart.setParameter('tzid', newSimpleData.dtstart.parameters.zone);
+				if (newSimpleData.dtstart.parameters.zone !== 'UTC') {
+					startProp.setParameter('tzid', newSimpleData.dtstart.parameters.zone);
+				}
+
 				var startTz = ICAL.TimezoneService.get(newSimpleData.dtstart.parameters.zone);
 				start.zone = startTz;
-				if (availableTimezones.indexOf(newSimpleData.dtstart.parameters.zone) === -1) {
+				if (alreadyStoredTimezones.indexOf(newSimpleData.dtstart.parameters.zone) === -1) {
 					vevent.parent.addSubcomponent(startTz.component);
-					availableTimezones.push(newSimpleData.dtstart.parameters.zone);
+					alreadyStoredTimezones.push(newSimpleData.dtstart.parameters.zone);
 				}
 			}
+			startProp.setValue(start);
 
-			var dtend = new ICAL.Property('dtend', vevent);
-			dtend.setValue(end);
+			var endProp = new ICAL.Property('dtend', vevent);
 			if (newSimpleData.dtend.parameters.zone !== 'floating') {
-				dtend.setParameter('tzid', newSimpleData.dtend.parameters.zone);
+				if (newSimpleData.dtend.parameters.zone !== 'UTC') {
+					endProp.setParameter('tzid', newSimpleData.dtend.parameters.zone);
+				}
+
 				var endTz = ICAL.TimezoneService.get(newSimpleData.dtend.parameters.zone);
 				end.zone = endTz;
-				if (availableTimezones.indexOf(newSimpleData.dtend.parameters.zone) === -1) {
+				if (alreadyStoredTimezones.indexOf(newSimpleData.dtend.parameters.zone) === -1) {
 					vevent.parent.addSubcomponent(endTz.component);
 				}
 			}
+			endProp.setValue(end);
 
-			vevent.addProperty(dtstart);
-			vevent.addProperty(dtend);
+			vevent.addProperty(startProp);
+			vevent.addProperty(endProp);
 		},
 		repeating: function repeating(vevent, oldSimpleData, newSimpleData) {
 			// We won't support exrule, because it's deprecated and barely used in the wild
@@ -3220,75 +3842,74 @@ app.factory('SimpleEvent', function () {
 	};
 
 	function SimpleEvent(event) {
-		this._event = event;
-		angular.extend(this, defaults);
+		var context = {
+			event: event,
+			patched: false,
+			oldProperties: {}
+		};
 
-		var parser, parameters;
-		for (var key in simpleProperties) {
-			if (!simpleProperties.hasOwnProperty(key)) {
-				continue;
+		var iface = {
+			_isASimpleEventObject: true
+		};
+		angular.extend(iface, defaults);
+
+		context.generateOldProperties = function () {
+			context.oldProperties = {};
+
+			for (var key in defaults) {
+				context.oldProperties[key] = angular.copy(iface[key]);
+			}
+		};
+
+		iface.patch = function () {
+			if (context.patched) {
+				throw new Error('SimpleEvent was already patched, patching not possible');
 			}
 
-			parser = simpleProperties[key].parser;
-			parameters = simpleProperties[key].parameters;
-			if (this._event.hasProperty(key)) {
-				parser(this, this._event, key, parameters);
-			}
-		}
+			for (var simpleKey in simpleProperties) {
+				var simpleProperty = simpleProperties[simpleKey];
 
-		for (parser in specificParser) {
-			if (!specificParser.hasOwnProperty(parser)) {
-				continue;
-			}
-
-			specificParser[parser](this, this._event);
-		}
-
-		this._generateOldProperties();
-	}
-
-	SimpleEvent.prototype = {
-		_generateOldProperties: function _generateOldProperties() {
-			this._oldProperties = {};
-
-			for (var def in defaults) {
-				if (!defaults.hasOwnProperty(def)) {
-					continue;
-				}
-
-				this._oldProperties[def] = angular.copy(this[def]);
-			}
-		},
-		patch: function patch() {
-			var key, reader, parameters;
-
-			for (key in simpleProperties) {
-				if (!simpleProperties.hasOwnProperty(key)) {
-					continue;
-				}
-
-				reader = simpleProperties[key].reader;
-				parameters = simpleProperties[key].parameters;
-				if (this._oldProperties[key] !== this[key]) {
-					if (this[key] === null) {
-						this._event.removeAllProperties(key);
+				var reader = simpleProperty.reader;
+				var parameters = simpleProperty.parameters;
+				if (context.oldProperties[simpleKey] !== iface[simpleKey]) {
+					if (iface[simpleKey] === null) {
+						context.event.removeAllProperties(simpleKey);
 					} else {
-						reader(this._event, this._oldProperties, this, key, parameters);
+						reader(context.event, context.oldProperties, iface, simpleKey, parameters);
 					}
 				}
 			}
 
-			for (key in specificReader) {
-				if (!specificReader.hasOwnProperty(key)) {
-					continue;
-				}
-
-				reader = specificReader[key];
-				reader(this._event, this._oldProperties, this);
+			for (var specificKey in specificReader) {
+				var _reader = specificReader[specificKey];
+				_reader(context.event, context.oldProperties, iface);
 			}
 
-			this._generateOldProperties();
+			context.patched = true;
+		};
+
+		for (var simpleKey in simpleProperties) {
+			var simpleProperty = simpleProperties[simpleKey];
+
+			var parser = simpleProperty.parser;
+			var parameters = simpleProperty.parameters;
+			if (context.event.hasProperty(simpleKey)) {
+				parser(iface, context.event, simpleKey, parameters);
+			}
 		}
+
+		for (var specificKey in specificParser) {
+			var _parser = specificParser[specificKey];
+			_parser(iface, context.event);
+		}
+
+		context.generateOldProperties();
+
+		return iface;
+	}
+
+	SimpleEvent.isSimpleEvent = function (obj) {
+		return (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj !== null && obj._isASimpleEventObject === true;
 	};
 
 	return SimpleEvent;
@@ -3409,265 +4030,304 @@ app.factory('Timezone', function () {
 	return timezone;
 });
 
-app.factory('VEvent', ["FcEvent", "SimpleEvent", "ICalFactory", "RandomStringService", function (FcEvent, SimpleEvent, ICalFactory, RandomStringService) {
+app.factory('VEvent', ["FcEvent", "SimpleEvent", "ICalFactory", "StringUtility", function (FcEvent, SimpleEvent, ICalFactory, StringUtility) {
 	'use strict';
 
 	/**
-  * get DTEND from vevent
-  * @param {ICAL.Component} vevent
-  * @returns {ICAL.Time}
+  * get a VEvent object
+  * @param {Calendar} calendar
+  * @param {ICAL.Component} comp
+  * @param {string} uri
+  * @param {string} etag
   */
 
-	function calculateDTEnd(vevent) {
-		if (vevent.hasProperty('dtend')) {
-			return vevent.getFirstPropertyValue('dtend');
-		} else if (vevent.hasProperty('duration')) {
-			var dtstart = vevent.getFirstPropertyValue('dtstart').clone();
-			dtstart.addDuration(vevent.getFirstPropertyValue('duration'));
-			return dtstart;
-		} else {
-			return vevent.getFirstPropertyValue('dtstart').clone();
-		}
-	}
+	function VEvent(calendar, comp, uri) {
+		var etag = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 
-	/**
-  * check if we need to convert the timezone of either dtstart or dtend
-  * @param {ICAL.Time} dt
-  * @returns {boolean}
-  */
-	function isTimezoneConversionNecessary(dt) {
-		return dt.icaltype !== 'date' && dt.zone !== ICAL.Timezone.utcTimezone && dt.zone !== ICAL.Timezone.localTimezone;
-	}
+		var context = { calendar: calendar, comp: comp, uri: uri, etag: etag };
+		var iface = {
+			_isAVEventObject: true
+		};
 
-	/**
-  * convert a dt's timezone if necessary
-  * @param {ICAL.Time} dt
-  * @param {ICAL.Component} timezone
-  * @returns {ICAL.Time}
-  */
-	function convertTimezoneIfNecessary(dt, timezone) {
-		if (isTimezoneConversionNecessary(dt) && timezone) {
-			dt = dt.convertToZone(timezone);
+		if (!context.comp || !context.comp.jCal || context.comp.jCal.length === 0) {
+			throw new TypeError('Given comp is not a valid calendar');
 		}
 
-		return dt;
-	}
-
-	/**
-  * parse an recurring event
-  * @param vevent
-  * @param event
-  * @param start
-  * @param end
-  * @param timezone
-  * @return []
-  */
-	function getTimeForRecurring(vevent, event, start, end, timezone) {
-		var dtstart = event.getFirstPropertyValue('dtstart');
-		var dtend = calculateDTEnd(event);
-		var duration = dtend.subtractDate(dtstart);
-		var fcEvents = [];
-
-		var iterator = new ICAL.RecurExpansion({
-			component: event,
-			dtstart: dtstart
-		});
-
-		var next;
-		while (next = iterator.next()) {
-			if (next.compare(start) < 0) {
-				continue;
-			}
-			if (next.compare(end) > 0) {
-				break;
-			}
-
-			var singleDtStart = next.clone();
-			var singleDtEnd = next.clone();
-			singleDtEnd.addDuration(duration);
-
-			fcEvents.push(new FcEvent(vevent, event, convertTimezoneIfNecessary(singleDtStart, timezone), convertTimezoneIfNecessary(singleDtEnd, timezone)));
-		}
-
-		return fcEvents;
-	}
-
-	/**
-  * parse a single event
-  * @param vevent
-  * @param event
-  * @param timezone
-  * @returns {FcEvent}
-  */
-	function getTime(vevent, event, timezone) {
-		var dtstart = event.getFirstPropertyValue('dtstart');
-		var dtend = calculateDTEnd(event);
-
-		return new FcEvent(vevent, event, convertTimezoneIfNecessary(dtstart, timezone), convertTimezoneIfNecessary(dtend, timezone));
-	}
-
-	/**
-  * register timezones from ical response
-  * @param {ICAL.Component} components
-  */
-	function registerTimezones(components) {
-		var vtimezones = components.getAllSubcomponents('vtimezone');
-		angular.forEach(vtimezones, function (vtimezone) {
+		// read all timezones in the comp and register them
+		var vtimezones = comp.getAllSubcomponents('vtimezone');
+		vtimezones.forEach(function (vtimezone) {
 			var timezone = new ICAL.Timezone(vtimezone);
 			ICAL.TimezoneService.register(timezone.tzid, timezone);
 		});
-	}
 
-	/**
-  * @constructor
-  * @param {Calendar} calendar
-  * @param {string|ICAL.Component} ical
-  * @param {string|null} etag
-  * @param {string|null} uri
-  * @constructor
-  */
-	function VEvent(calendar, ical, etag, uri) {
-		if (typeof ical === 'string') {
-			try {
-				var jcal = ICAL.parse(ical);
-				this.comp = new ICAL.Component(jcal);
-			} catch (e) {
-				console.log(e);
-				throw VEvent.INVALID;
-			}
-		} else if (Object.getPrototypeOf(ical) === ICAL.Component.prototype) {
-			this.comp = ical;
+		if (!uri) {
+			var vevent = context.comp.getFirstSubcomponent('vevent');
+			context.uri = vevent.getFirstPropertyValue('uid');
 		}
 
-		if (!this.comp || this.comp.jCal.length === 0) {
-			throw VEvent.INVALID;
-		}
-
-		registerTimezones(this.comp);
-
-		etag = etag || '';
-		if (typeof uri === 'undefined') {
-			var vevent = this.comp.getFirstSubcomponent('vevent');
-			uri = vevent.getFirstPropertyValue('uid');
-		}
-
-		angular.extend(this, {
-			calendar: calendar,
-			etag: etag,
-			uri: uri
-		});
-	}
-
-	VEvent.prototype = {
 		/**
-   * serialize jsical object to actual ical data
-   * @returns {String}
+   * get DTEND from vevent
+   * @param {ICAL.Component} vevent
+   * @returns {ICAL.Time}
    */
-		get data() {
-			return this.comp.toString();
-		},
+		context.calculateDTEnd = function (vevent) {
+			if (vevent.hasProperty('dtend')) {
+				return vevent.getFirstPropertyValue('dtend');
+			} else if (vevent.hasProperty('duration')) {
+				var dtstart = vevent.getFirstPropertyValue('dtstart').clone();
+				dtstart.addDuration(vevent.getFirstPropertyValue('duration'));
+
+				return dtstart;
+			} else {
+				return vevent.getFirstPropertyValue('dtstart').clone();
+			}
+		};
+
 		/**
-   *
-   * @param start
-   * @param end
-   * @param timezone
+   * convert a dt's timezone if necessary
+   * @param {ICAL.Time} dt
+   * @param {ICAL.Component} timezone
+   * @returns {ICAL.Time}
+   */
+		context.convertTz = function (dt, timezone) {
+			if (context.needsTzConversion(dt) && timezone) {
+				dt = dt.convertToZone(timezone);
+			}
+
+			return dt;
+		};
+
+		/**
+   * check if we need to convert the timezone of either dtstart or dtend
+   * @param {ICAL.Time} dt
+   * @returns {boolean}
+   */
+		context.needsTzConversion = function (dt) {
+			return dt.icaltype !== 'date' && dt.zone !== ICAL.Timezone.utcTimezone && dt.zone !== ICAL.Timezone.localTimezone;
+		};
+
+		Object.defineProperties(iface, {
+			calendar: {
+				get: function get() {
+					return context.calendar;
+				},
+				set: function set(calendar) {
+					context.calendar = calendar;
+				}
+			},
+			comp: {
+				get: function get() {
+					return context.comp;
+				}
+			},
+			data: {
+				get: function get() {
+					return context.comp.toString();
+				}
+			},
+			etag: {
+				get: function get() {
+					return context.etag;
+				},
+				set: function set(etag) {
+					context.etag = etag;
+				}
+			},
+			uri: {
+				get: function get() {
+					return context.uri;
+				}
+			}
+		});
+
+		/**
+   * get fullcalendar event in a defined time-range
+   * @param {moment} start
+   * @param {moment} end
+   * @param {Timezone} timezone
    * @returns {Array}
    */
-		getFcEvent: function getFcEvent(start, end, timezone) {
+		iface.getFcEvent = function (start, end, timezone) {
 			var iCalStart = ICAL.Time.fromJSDate(start.toDate());
 			var iCalEnd = ICAL.Time.fromJSDate(end.toDate());
-			var renderedEvents = [],
-			    self = this;
+			var fcEvents = [];
 
-			var vevents = this.comp.getAllSubcomponents('vevent');
-			angular.forEach(vevents, function (event) {
-				var iCalEvent = new ICAL.Event(event);
+			var vevents = context.comp.getAllSubcomponents('vevent');
+			vevents.forEach(function (vevent) {
+				var iCalEvent = new ICAL.Event(vevent);
 
-				if (!event.hasProperty('dtstart')) {
+				if (!vevent.hasProperty('dtstart')) {
 					return;
 				}
 
+				var rawDtstart = vevent.getFirstPropertyValue('dtstart');
+				var rawDtend = context.calculateDTEnd(vevent);
+
 				if (iCalEvent.isRecurring()) {
-					angular.extend(renderedEvents, getTimeForRecurring(self, event, iCalStart, iCalEnd, timezone.jCal));
+					var duration = rawDtend.subtractDate(rawDtstart);
+					var iterator = new ICAL.RecurExpansion({
+						component: vevent,
+						dtstart: rawDtstart
+					});
+
+					var next = void 0;
+					while (next = iterator.next()) {
+						var singleDtStart = next.clone();
+						var singleDtEnd = next.clone();
+						singleDtEnd.addDuration(duration);
+
+						if (singleDtEnd.compare(iCalStart) < 0) {
+							continue;
+						}
+						if (next.compare(iCalEnd) > 0) {
+							break;
+						}
+
+						var dtstart = context.convertTz(singleDtStart, timezone.jCal);
+						var dtend = context.convertTz(singleDtEnd, timezone.jCal);
+						var fcEvent = FcEvent(iface, vevent, dtstart, dtend);
+
+						fcEvents.push(fcEvent);
+					}
 				} else {
-					renderedEvents.push(getTime(self, event, timezone.jCal));
+					var _dtstart = context.convertTz(rawDtstart, timezone.jCal);
+					var _dtend3 = context.convertTz(rawDtend, timezone.jCal);
+					var _fcEvent = FcEvent(iface, vevent, _dtstart, _dtend3);
+
+					fcEvents.push(_fcEvent);
 				}
 			});
 
-			return renderedEvents;
-		},
+			return fcEvents;
+		};
+
 		/**
    *
-   * @param recurrenceId
+   * @param searchedRecurrenceId
    * @returns {SimpleEvent}
    */
-		getSimpleEvent: function getSimpleEvent(recurrenceId) {
-			var vevents = this.comp.getAllSubcomponents('vevent'),
-			    simpleEvent = null;
+		iface.getSimpleEvent = function (searchedRecurrenceId) {
+			var vevents = context.comp.getAllSubcomponents('vevent');
 
-			angular.forEach(vevents, function (event) {
-				var hasRecurrenceId = event.hasProperty('recurrence-id');
-				if (!hasRecurrenceId && recurrenceId === null || hasRecurrenceId && recurrenceId === event.getFirstPropertyValue('recurrence-id')) {
-					simpleEvent = new SimpleEvent(event);
+			var veventsLength = vevents.length;
+			for (var i = 0; i < veventsLength; i++) {
+				var _vevent = vevents[i];
+				var hasRecurrenceId = _vevent.hasProperty('recurrence-id');
+				var recurrenceId = null;
+				if (hasRecurrenceId) {
+					recurrenceId = _vevent.getFirstPropertyValue('recurrence-id').toICALString();
 				}
-			});
 
-			return simpleEvent;
-		}
+				if (!hasRecurrenceId && !searchedRecurrenceId || hasRecurrenceId && searchedRecurrenceId === recurrenceId) {
+					return SimpleEvent(_vevent);
+				}
+			}
+
+			throw new Error('Event not found');
+		};
+
+		/**
+   * update events last-modified property to now
+   */
+		iface.touch = function () {
+			var vevent = context.comp.getFirstSubcomponent('vevent');
+			vevent.updatePropertyWithValue('last-modified', ICAL.Time.now());
+		};
+
+		return iface;
+	}
+
+	VEvent.isVEvent = function (obj) {
+		return (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj !== null && obj._isAVEventObject === true;
 	};
 
 	/**
-  *
+ * create all-day event from malformed input
+ * @param {string} ics
+ * @returns {string}
+ */
+	VEvent.sanDate = function (ics) {
+
+		// console.log( ICAL.Time.now() );
+
+		ics.split("\n").forEach(function (el, i) {
+
+			var findTypes = ['DTSTART', 'DTEND'];
+			var dateType = /[^:]*/.exec(el)[0];
+			var icsDate = null;
+
+			if (findTypes.indexOf(dateType) >= 0 && el.trim().substr(-3) === "T::") {
+				// is date without time
+				icsDate = el.replace(/[^0-9]/g, '');
+				ics = ics.replace(el, dateType + ";VALUE=DATE:" + icsDate);
+			}
+		});
+
+		return ics;
+	};
+
+	/**
+  * create a VEvent object from raw ics data
+  * @param {Calendar} calendar
+  * @param {string} ics
+  * @param {string} uri
+  * @param {string} etag
+  * @returns {VEvent}
+  */
+	VEvent.fromRawICS = function (calendar, ics, uri) {
+		var etag = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
+
+		var comp = void 0;
+
+		if (ics.search("T::") > 0) {
+			// no time
+			ics = VEvent.sanDate(ics);
+		}
+
+		try {
+			var jCal = ICAL.parse(ics);
+			comp = new ICAL.Component(jCal);
+		} catch (e) {
+			console.log(e);
+			throw new TypeError('given ics data was not valid');
+		}
+
+		return VEvent(calendar, comp, uri, etag);
+	};
+
+	/**
+  * generates a new VEvent based on start and end
   * @param start
   * @param end
   * @param timezone
   * @returns {VEvent}
   */
 	VEvent.fromStartEnd = function (start, end, timezone) {
-		var comp = ICalFactory.new();
+		var uid = StringUtility.uid();
+		var comp = ICalFactory.newEvent(uid);
+		var uri = StringUtility.uid('Nextcloud', 'ics');
+		var vevent = VEvent(null, comp, uri);
+		var simple = vevent.getSimpleEvent();
 
-		var iCalEvent = new ICAL.Component('vevent');
-		comp.addSubcomponent(iCalEvent);
-		iCalEvent.updatePropertyWithValue('created', ICAL.Time.now());
-		iCalEvent.updatePropertyWithValue('dtstamp', ICAL.Time.now());
-		iCalEvent.updatePropertyWithValue('last-modified', ICAL.Time.now());
-		iCalEvent.updatePropertyWithValue('uid', RandomStringService.generate());
-		// add a dummy dtstart to make the ical valid before we create SimpleEvent
-		iCalEvent.updatePropertyWithValue('dtstart', ICAL.Time.now());
-
-		var uri = RandomStringService.generate();
-		uri += RandomStringService.generate();
-		uri += '.ics';
-
-		var vevent = new VEvent(null, comp, null, uri);
-		var simple = new SimpleEvent(iCalEvent);
-		angular.extend(simple, {
-			allDay: !start.hasTime() && !end.hasTime(),
-			dtstart: {
-				type: start.hasTime() ? 'datetime' : 'date',
-				value: start,
-				parameters: {
-					zone: timezone
-				}
-			},
-			dtend: {
-				type: end.hasTime() ? 'datetime' : 'date',
-				value: end,
-				parameters: {
-					zone: timezone
-				}
+		simple.allDay = !start.hasTime() && !end.hasTime();
+		simple.dtstart = {
+			type: start.hasTime() ? 'datetime' : 'date',
+			value: start,
+			parameters: {
+				zone: timezone
 			}
-		});
+		};
+		simple.dtend = {
+			type: end.hasTime() ? 'datetime' : 'date',
+			value: end,
+			parameters: {
+				zone: timezone
+			}
+		};
 		simple.patch();
 
 		return vevent;
 	};
-
-	/**
-  *
-  * @type {string}
-  */
-	VEvent.INVALID = 'INVALID_EVENT';
 
 	return VEvent;
 }]);
@@ -3707,16 +4367,15 @@ app.factory('WebCal', ["$http", "Calendar", "VEvent", "TimezoneService", "WebCal
 			var TimezoneServicePromise = TimezoneService.get(timezone);
 			var WebCalServicePromise = WebCalService.get(context.url, allowDowngradeToHttp);
 			Promise.all([TimezoneServicePromise, WebCalServicePromise]).then(function (results) {
-				var _results2 = _slicedToArray(results, 2);
-
-				var tz = _results2[0];
-				var response = _results2[1];
+				var _results2 = _slicedToArray(results, 2),
+				    tz = _results2[0],
+				    response = _results2[1];
 
 				var vevents = [];
 
 				response.vevents.forEach(function (ical) {
 					try {
-						var vevent = new VEvent(iface, ical);
+						var vevent = VEvent.fromRawICS(iface, ical);
 						var events = vevent.getFcEvent(start, end, tz);
 						vevents = vevents.concat(events);
 					} catch (err) {
@@ -3777,602 +4436,637 @@ app.service('AutoCompletionService', ['$rootScope', '$http', function ($rootScop
 	};
 }]);
 
-app.service('CalendarService', ["DavClient", "StringUtility", "XMLUtility", "Calendar", "WebCal", function (DavClient, StringUtility, XMLUtility, Calendar, WebCal) {
+app.service('CalendarService', ["DavClient", "StringUtility", "XMLUtility", "CalendarFactory", "WebCal", "isPublic", function (DavClient, StringUtility, XMLUtility, CalendarFactory, WebCal, isPublic) {
 	'use strict';
 
-	var self = this;
-
-	this._CALENDAR_HOME = null;
-
-	this._currentUserPrincipal = null;
-
-	this._takenUrls = [];
-
-	this._PROPERTIES = ['{' + DavClient.NS_DAV + '}displayname', '{' + DavClient.NS_DAV + '}resourcetype', '{' + DavClient.NS_IETF + '}calendar-description', '{' + DavClient.NS_IETF + '}calendar-timezone', '{' + DavClient.NS_APPLE + '}calendar-order', '{' + DavClient.NS_APPLE + '}calendar-color', '{' + DavClient.NS_IETF + '}supported-calendar-component-set', '{' + DavClient.NS_OWNCLOUD + '}calendar-enabled', '{' + DavClient.NS_DAV + '}acl', '{' + DavClient.NS_DAV + '}owner', '{' + DavClient.NS_OWNCLOUD + '}invite', '{' + DavClient.NS_CALENDARSERVER + '}source'];
-
-	this._xmls = new XMLSerializer();
-
-	function discoverHome(callback) {
-		return DavClient.propFind(DavClient.buildUrl(OC.linkToRemoteBase('dav')), ['{' + DavClient.NS_DAV + '}current-user-principal'], 0, { 'requesttoken': OC.requestToken }).then(function (response) {
-			if (!DavClient.wasRequestSuccessful(response.status)) {
-				throw "CalDAV client could not be initialized - Querying current-user-principal failed";
-			}
-
-			if (response.body.propStat.length < 1) {
-				return;
-			}
-			var props = response.body.propStat[0].properties;
-			self._currentUserPrincipal = props['{' + DavClient.NS_DAV + '}current-user-principal'][0].textContent;
-
-			return DavClient.propFind(DavClient.buildUrl(self._currentUserPrincipal), ['{' + DavClient.NS_IETF + '}calendar-home-set'], 0, { 'requesttoken': OC.requestToken }).then(function (response) {
-				if (!DavClient.wasRequestSuccessful(response.status)) {
-					throw "CalDAV client could not be initialized - Querying calendar-home-set failed";
-				}
-
-				if (response.body.propStat.length < 1) {
-					return;
-				}
-				var props = response.body.propStat[0].properties;
-				self._CALENDAR_HOME = props['{' + DavClient.NS_IETF + '}calendar-home-set'][0].textContent;
-
-				return callback();
-			});
-		});
-	}
-
-	function getResponseCodeFromHTTPResponse(t) {
-		return parseInt(t.split(' ')[1]);
-	}
-
-	this.getAll = function () {
-		if (this._CALENDAR_HOME === null) {
-			return discoverHome(function () {
-				return self.getAll();
-			});
-		}
-
-		return DavClient.propFind(DavClient.buildUrl(this._CALENDAR_HOME), this._PROPERTIES, 1, { 'requesttoken': OC.requestToken }).then(function (response) {
-			var calendars = [];
-
-			if (!DavClient.wasRequestSuccessful(response.status)) {
-				throw "CalDAV client could not be initialized - Querying calendars failed";
-			}
-
-			for (var i = 0; i < response.body.length; i++) {
-				var body = response.body[i];
-				if (body.propStat.length < 1) {
-					continue;
-				}
-
-				self._takenUrls.push(body.href);
-
-				var responseCode = getResponseCodeFromHTTPResponse(body.propStat[0].status);
-				if (!DavClient.wasRequestSuccessful(responseCode)) {
-					continue;
-				}
-
-				var props = self._getSimplePropertiesFromRequest(body.propStat[0].properties);
-				if (!props || !props.components.vevent) {
-					continue;
-				}
-
-				var resourceTypes = body.propStat[0].properties['{' + DavClient.NS_DAV + '}resourcetype'];
-				if (!resourceTypes) {
-					continue;
-				}
-
-				for (var j = 0; j < resourceTypes.length; j++) {
-					var name = DavClient.getNodesFullName(resourceTypes[j]);
-
-					if (name === '{' + DavClient.NS_IETF + '}calendar') {
-						var calendar = Calendar(body.href, props);
-						calendars.push(calendar);
-					}
-					if (name === '{' + DavClient.NS_CALENDARSERVER + '}subscribed') {
-						var webcal = WebCal(body.href, props);
-						calendars.push(webcal);
-					}
-				}
-			}
-
-			return calendars;
-		});
+	var context = {
+		self: this,
+		calendarHome: null,
+		userPrincipal: null,
+		usedURLs: []
 	};
 
-	this.get = function (url) {
-		if (this._CALENDAR_HOME === null) {
-			return discoverHome(function () {
-				return self.get(url);
-			});
-		}
+	var PROPERTIES = ['{' + DavClient.NS_DAV + '}displayname', '{' + DavClient.NS_DAV + '}resourcetype', '{' + DavClient.NS_IETF + '}calendar-description', '{' + DavClient.NS_IETF + '}calendar-timezone', '{' + DavClient.NS_APPLE + '}calendar-order', '{' + DavClient.NS_APPLE + '}calendar-color', '{' + DavClient.NS_IETF + '}supported-calendar-component-set', '{' + DavClient.NS_CALENDARSERVER + '}publish-url', '{' + DavClient.NS_CALENDARSERVER + '}allowed-sharing-modes', '{' + DavClient.NS_OWNCLOUD + '}calendar-enabled', '{' + DavClient.NS_DAV + '}acl', '{' + DavClient.NS_DAV + '}owner', '{' + DavClient.NS_OWNCLOUD + '}invite', '{' + DavClient.NS_CALENDARSERVER + '}source'];
 
-		return DavClient.propFind(DavClient.buildUrl(url), this._PROPERTIES, 0, { 'requesttoken': OC.requestToken }).then(function (response) {
-			var body = response.body;
-			if (body.propStat.length < 1) {
-				//TODO - something went wrong
-				return;
-			}
+	var CALENDAR_IDENTIFIER = '{' + DavClient.NS_IETF + '}calendar';
+	var WEBCAL_IDENTIFIER = '{' + DavClient.NS_CALENDARSERVER + '}subscribed';
 
-			var responseCode = getResponseCodeFromHTTPResponse(body.propStat[0].status);
-			if (!DavClient.wasRequestSuccessful(responseCode)) {
-				//TODO - something went wrong
-				return;
-			}
+	var UPDATABLE_PROPERTIES = ['color', 'displayname', 'enabled', 'order'];
 
-			var props = self._getSimplePropertiesFromRequest(body.propStat[0].properties);
-			if (!props || !props.components.vevent) {
-				return;
-			}
-
-			var resourceTypes = body.propStat[0].properties['{' + DavClient.NS_DAV + '}resourcetype'];
-			if (!resourceTypes) {
-				return;
-			}
-
-			for (var j = 0; j < resourceTypes.length; j++) {
-				var name = DavClient.getNodesFullName(resourceTypes[j]);
-
-				if (name === '{' + DavClient.NS_IETF + '}calendar') {
-					return Calendar(body.href, props);
-				}
-				if (name === '{' + DavClient.NS_CALENDARSERVER + '}subscribed') {
-					return WebCal(body.href, props);
-				}
-			}
-		});
+	var UPDATABLE_PROPERTIES_MAP = {
+		color: 'a:calendar-color',
+		displayname: 'd:displayname',
+		enabled: 'o:calendar-enabled',
+		order: 'a:calendar-order'
 	};
 
-	this.create = function (name, color, components) {
-		if (this._CALENDAR_HOME === null) {
-			return discoverHome(function () {
-				return self.create(name, color);
-			});
+	var SHARE_USER = OC.Share.SHARE_TYPE_USER;
+	var SHARE_GROUP = OC.Share.SHARE_TYPE_GROUP;
+
+	context.bootPromise = function () {
+		if (isPublic) {
+			return Promise.resolve(true);
 		}
 
-		if (typeof components === 'undefined') {
-			components = ['vevent', 'vtodo'];
-		}
-
-		var xmlDoc = document.implementation.createDocument('', '', null);
-		var cMkcalendar = xmlDoc.createElement('d:mkcol');
-		cMkcalendar.setAttribute('xmlns:c', 'urn:ietf:params:xml:ns:caldav');
-		cMkcalendar.setAttribute('xmlns:d', 'DAV:');
-		cMkcalendar.setAttribute('xmlns:a', 'http://apple.com/ns/ical/');
-		cMkcalendar.setAttribute('xmlns:o', 'http://owncloud.org/ns');
-		xmlDoc.appendChild(cMkcalendar);
-
-		var dSet = xmlDoc.createElement('d:set');
-		cMkcalendar.appendChild(dSet);
-
-		var dProp = xmlDoc.createElement('d:prop');
-		dSet.appendChild(dProp);
-
-		var dResourceType = xmlDoc.createElement('d:resourcetype');
-		dProp.appendChild(dResourceType);
-
-		var dCollection = xmlDoc.createElement('d:collection');
-		dResourceType.appendChild(dCollection);
-
-		var cCalendar = xmlDoc.createElement('c:calendar');
-		dResourceType.appendChild(cCalendar);
-
-		dProp.appendChild(this._createXMLForProperty(xmlDoc, 'displayname', name));
-		dProp.appendChild(this._createXMLForProperty(xmlDoc, 'enabled', true));
-		dProp.appendChild(this._createXMLForProperty(xmlDoc, 'color', color));
-		dProp.appendChild(this._createXMLForProperty(xmlDoc, 'components', components));
-
-		var body = this._xmls.serializeToString(cMkcalendar);
-
-		var uri = StringUtility.uri(name, function (suggestedUri) {
-			return self._takenUrls.indexOf(self._CALENDAR_HOME + suggestedUri + '/') === -1;
-		});
-		var url = this._CALENDAR_HOME + uri + '/';
+		var url = DavClient.buildUrl(OC.linkToRemoteBase('dav'));
+		var properties = ['{' + DavClient.NS_DAV + '}current-user-principal'];
+		var depth = 0;
 		var headers = {
-			'Content-Type': 'application/xml; charset=utf-8',
 			'requesttoken': OC.requestToken
 		};
 
-		return DavClient.request('MKCOL', url, headers, body).then(function (response) {
-			if (response.status === 201) {
-				self._takenUrls.push(url);
-				return self.get(url).then(function (calendar) {
-					calendar.enabled = true;
-					return self.update(calendar);
-				});
+		return DavClient.propFind(url, properties, depth, headers).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status) || response.body.propStat.length < 1) {
+				throw new Error('current-user-principal could not be determined');
 			}
+
+			var props = response.body.propStat[0].properties;
+			context.userPrincipal = props['{' + DavClient.NS_DAV + '}current-user-principal'][0].textContent;
+
+			var url = context.userPrincipal;
+			var properties = ['{' + DavClient.NS_IETF + '}calendar-home-set'];
+			var depth = 0;
+			var headers = {
+				'requesttoken': OC.requestToken
+			};
+
+			return DavClient.propFind(url, properties, depth, headers).then(function (response) {
+				if (!DavClient.wasRequestSuccessful(response.status) || response.body.propStat.length < 1) {
+					throw new Error('calendar-home-set could not be determind');
+				}
+
+				var props = response.body.propStat[0].properties;
+				context.calendarHome = props['{' + DavClient.NS_IETF + '}calendar-home-set'][0].textContent;
+			});
+		});
+	}();
+
+	context.getResourceType = function (body) {
+		var resourceTypes = body.propStat[0].properties['{' + DavClient.NS_DAV + '}resourcetype'];
+		if (!resourceTypes) {
+			return false;
+		}
+
+		var resourceType = resourceTypes.find(function (resourceType) {
+			var name = DavClient.getNodesFullName(resourceType);
+			return [CALENDAR_IDENTIFIER, WEBCAL_IDENTIFIER].indexOf(name) !== -1;
+		});
+
+		if (!resourceType) {
+			return false;
+		}
+
+		return DavClient.getNodesFullName(resourceType);
+	};
+
+	context.getShareValue = function (shareType, shareWith) {
+		if (shareType !== SHARE_USER && shareType !== SHARE_GROUP) {
+			throw new Error('Unknown shareType given');
+		}
+
+		var hrefValue = void 0;
+		if (shareType === SHARE_USER) {
+			hrefValue = 'principal:principals/users/';
+		} else {
+			hrefValue = 'principal:principals/groups/';
+		}
+		hrefValue += shareWith;
+
+		return hrefValue;
+	};
+
+	context.isURIAvailable = function (suggestedUri) {
+		var uriToCheck = context.calendarHome + suggestedUri + '/';
+		return context.usedURLs.indexOf(uriToCheck) === -1;
+	};
+
+	/**
+  * get all calendars a user has access to
+  * @returns {Promise}
+  */
+	this.getAll = function () {
+		return context.bootPromise.then(function () {
+			var url = DavClient.buildUrl(context.calendarHome);
+			var depth = 1;
+			var headers = {
+				'requesttoken': OC.requestToken
+			};
+
+			return DavClient.propFind(url, PROPERTIES, depth, headers).then(function (response) {
+				if (!DavClient.wasRequestSuccessful(response.status)) {
+					throw new Error('Loading calendars failed');
+				}
+				var calendars = [];
+
+				response.body.forEach(function (body) {
+					if (body.propStat.length < 1) {
+						return;
+					}
+
+					// remember that url is already used
+					context.usedURLs.push(body.href);
+
+					var responseCode = DavClient.getResponseCodeFromHTTPResponse(body.propStat[0].status);
+					if (!DavClient.wasRequestSuccessful(responseCode)) {
+						return;
+					}
+
+					var resourceType = context.getResourceType(body);
+					if (resourceType === CALENDAR_IDENTIFIER) {
+						var calendar = CalendarFactory.calendar(body, context.userPrincipal);
+						calendars.push(calendar);
+					} else if (resourceType === WEBCAL_IDENTIFIER) {
+						var webcal = CalendarFactory.webcal(body, context.userPrincipal);
+						calendars.push(webcal);
+					}
+				});
+
+				return calendars.filter(function (calendar) {
+					return calendar.components.vevent === true;
+				});
+			});
 		});
 	};
 
-	this.createWebCal = function (name, color, source) {
-		if (this._CALENDAR_HOME === null) {
-			return discoverHome(function () {
-				return self.createWebCal(name, color, source);
+	/**
+  * get a certain calendar by its url
+  * @param {string} calendarUrl
+  * @returns {Promise}
+  */
+	this.get = function (calendarUrl) {
+		return context.bootPromise.then(function () {
+			var url = DavClient.buildUrl(calendarUrl);
+			var depth = 0;
+			var headers = {
+				'requesttoken': OC.requestToken
+			};
+
+			return DavClient.propFind(url, PROPERTIES, depth, headers).then(function (response) {
+				var body = response.body;
+				if (body.propStat.length < 1) {
+					throw new Error('Loading requested calendar failed');
+				}
+
+				var responseCode = DavClient.getResponseCodeFromHTTPResponse(body.propStat[0].status);
+				if (!DavClient.wasRequestSuccessful(responseCode)) {
+					throw new Error('Loading requested calendar failed');
+				}
+
+				var resourceType = context.getResourceType(body);
+				if (resourceType === CALENDAR_IDENTIFIER) {
+					return CalendarFactory.calendar(body, context.userPrincipal);
+				} else if (resourceType === WEBCAL_IDENTIFIER) {
+					return CalendarFactory.webcal(body, context.userPrincipal);
+				}
+			}).then(function (calendar) {
+				if (calendar.components.vevent === false) {
+					throw new Error('Requested calendar exists, but does not qualify for storing events');
+				}
+
+				return calendar;
 			});
+		});
+	};
+
+	/**
+  * get a public calendar by its public sharing token
+  * @param {string} token
+  * @returns {Promise}
+  */
+	this.getPublicCalendar = function (token) {
+		var urlPart = OC.linkToRemoteBase('dav') + '/public-calendars/' + token;
+
+		var url = DavClient.buildUrl(urlPart);
+		var depth = 0;
+		var headers = {
+			'requesttoken': OC.requestToken
+		};
+
+		return DavClient.propFind(url, PROPERTIES, depth, headers).then(function (response) {
+			var body = response.body;
+			if (body.propStat.length < 1) {
+				throw new Error('Loading requested calendar failed');
+			}
+
+			var responseCode = DavClient.getResponseCodeFromHTTPResponse(body.propStat[0].status);
+			if (!DavClient.wasRequestSuccessful(responseCode)) {
+				throw new Error('Loading requested calendar failed');
+			}
+
+			return CalendarFactory.calendar(body, '', true);
+		}).then(function (calendar) {
+			if (calendar.components.vevent === false) {
+				throw new Error('Requested calendar exists, but does not qualify for storing events');
+			}
+
+			return calendar;
+		});
+	};
+
+	/**
+  * creates a new calendar
+  * @param {string} name
+  * @param {string} color
+  * @param {string[]} components
+  * @returns {Promise}
+  */
+	this.create = function (name, color) {
+		var components = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ['vevent', 'vtodo'];
+
+		return context.bootPromise.then(function () {
+			var _XMLUtility$getRootSk = XMLUtility.getRootSkeleton('d:mkcol', 'd:set', 'd:prop'),
+			    _XMLUtility$getRootSk2 = _slicedToArray(_XMLUtility$getRootSk, 2),
+			    skeleton = _XMLUtility$getRootSk2[0],
+			    dPropChildren = _XMLUtility$getRootSk2[1];
+
+			dPropChildren.push({
+				name: 'd:resourcetype',
+				children: [{
+					name: 'd:collection'
+				}, {
+					name: 'c:calendar'
+				}]
+			});
+			dPropChildren.push({
+				name: 'd:displayname',
+				value: name
+			});
+			dPropChildren.push({
+				name: 'a:calendar-color',
+				value: color
+			});
+			dPropChildren.push({
+				name: 'o:calendar-enabled',
+				value: '1'
+			});
+			dPropChildren.push({
+				name: 'c:supported-calendar-component-set',
+				children: components.map(function (component) {
+					return {
+						name: 'c:comp',
+						attributes: {
+							name: component.toUpperCase()
+						}
+					};
+				})
+			});
+
+			var method = 'MKCOL';
+			var uri = StringUtility.uri(name, context.isURIAvailable);
+			var url = context.calendarHome + uri + '/';
+			var headers = {
+				'Content-Type': 'application/xml; charset=utf-8',
+				'requesttoken': OC.requestToken
+			};
+			var xml = XMLUtility.serialize(skeleton);
+
+			return DavClient.request(method, url, headers, xml).then(function (response) {
+				if (response.status !== 201) {
+					throw new Error('Creating a calendar failed');
+				}
+
+				// remember that url is now used
+				context.usedURLs.push(url);
+
+				// previously we set enabled to true,
+				// because the Nextcloud server doesn't allow
+				// storing custom properties on creation,
+				// but this calendar will be owned by the user
+				// and thereby automatically be visible
+				// no need to send a request
+				return context.self.get(url);
+			});
+		});
+	};
+
+	/**
+  * creates a new subscription
+  * @param {string} name
+  * @param {string} color
+  * @param {string} source
+  * @returns {Promise}
+  */
+	this.createWebCal = function (name, color, source) {
+		return context.bootPromise.then(function () {
+			var _XMLUtility$getRootSk3 = XMLUtility.getRootSkeleton('d:mkcol', 'd:set', 'd:prop'),
+			    _XMLUtility$getRootSk4 = _slicedToArray(_XMLUtility$getRootSk3, 2),
+			    skeleton = _XMLUtility$getRootSk4[0],
+			    dPropChildren = _XMLUtility$getRootSk4[1];
+
+			dPropChildren.push({
+				name: 'd:resourcetype',
+				children: [{
+					name: 'd:collection'
+				}, {
+					name: 'cs:subscribed'
+				}]
+			});
+			dPropChildren.push({
+				name: 'd:displayname',
+				value: name
+			});
+			dPropChildren.push({
+				name: 'a:calendar-color',
+				value: color
+			});
+			dPropChildren.push({
+				name: 'o:calendar-enabled',
+				value: '1'
+			});
+			dPropChildren.push({
+				name: 'cs:source',
+				children: [{
+					name: 'd:href',
+					value: source
+				}]
+			});
+
+			var method = 'MKCOL';
+			var uri = StringUtility.uri(name, context.isURIAvailable);
+			var url = context.calendarHome + uri + '/';
+			var headers = {
+				'Content-Type': 'application/xml; charset=utf-8',
+				'requesttoken': OC.requestToken
+			};
+			var xml = XMLUtility.serialize(skeleton);
+
+			return DavClient.request(method, url, headers, xml).then(function (response) {
+				if (response.status !== 201) {
+					throw new Error('Creating a webcal subscription failed');
+				}
+
+				// remember that url is now used
+				context.usedURLs.push(url);
+
+				return context.self.get(url).then(function (webcal) {
+					var needsWorkaround = angular.element('#fullcalendar').attr('data-webCalWorkaround') === 'yes';
+					if (needsWorkaround) {
+						webcal.enabled = true;
+						webcal.displayname = name;
+						webcal.color = color;
+
+						return context.self.update(webcal);
+					} else {
+						return webcal;
+					}
+				});
+			});
+		});
+	};
+
+	/**
+  * updates a calendar or a webcal subscription
+  * @param {Calendar|WebCal} calendar
+  * @returns {Promise}
+  */
+	this.update = function (calendar) {
+		var updatedProperties = calendar.getUpdated();
+		// nothing changed, so why bother to send a http request?
+		if (updatedProperties.length === 0) {
+			return Promise.resolve(calendar);
 		}
 
-		var needsWorkaround = angular.element('#fullcalendar').attr('data-webCalWorkaround') === 'yes';
+		var _XMLUtility$getRootSk5 = XMLUtility.getRootSkeleton('d:propertyupdate', 'd:set', 'd:prop'),
+		    _XMLUtility$getRootSk6 = _slicedToArray(_XMLUtility$getRootSk5, 2),
+		    skeleton = _XMLUtility$getRootSk6[0],
+		    dPropChildren = _XMLUtility$getRootSk6[1];
 
-		var _XMLUtility$getRootSk = XMLUtility.getRootSkeleton('d:mkcol', 'd:set', 'd:prop');
+		updatedProperties.forEach(function (name) {
+			if (UPDATABLE_PROPERTIES.indexOf(name) === -1) {
+				return;
+			}
 
-		var _XMLUtility$getRootSk2 = _slicedToArray(_XMLUtility$getRootSk, 2);
+			var value = calendar[name];
+			if (name === 'enabled') {
+				value = value ? '1' : '0';
+			}
 
-		var skeleton = _XMLUtility$getRootSk2[0];
-		var dPropChildren = _XMLUtility$getRootSk2[1];
+			dPropChildren.push({
+				name: UPDATABLE_PROPERTIES_MAP[name],
+				value: value
+			});
+		});
+		calendar.resetUpdated();
 
-		dPropChildren.push({
-			name: 'd:resourcetype',
-			children: [{
-				name: 'd:collection'
-			}, {
-				name: 'cs:subscribed'
-			}]
-		});
-		dPropChildren.push({
-			name: 'd:displayname',
-			value: name
-		});
-		dPropChildren.push({
-			name: 'a:calendar-color',
-			value: color
-		});
-		dPropChildren.push({
-			name: 'o:calendar-enabled',
-			value: '1'
-		});
-		dPropChildren.push({
-			name: 'cs:source',
-			children: [{
-				name: 'd:href',
-				value: source
-			}]
-		});
-
-		var uri = StringUtility.uri(name, function (suggestedUri) {
-			return self._takenUrls.indexOf(self._CALENDAR_HOME + suggestedUri + '/') === -1;
-		});
-		var url = this._CALENDAR_HOME + uri + '/';
+		var method = 'PROPPATCH';
+		var url = calendar.url;
 		var headers = {
 			'Content-Type': 'application/xml; charset=utf-8',
 			'requesttoken': OC.requestToken
 		};
 		var xml = XMLUtility.serialize(skeleton);
 
-		return DavClient.request('MKCOL', url, headers, xml).then(function (response) {
-			if (response.status === 201) {
-				self._takenUrls.push(url);
+		return DavClient.request(method, url, headers, xml).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				throw new Error('Updating calendar failed');
+			}
 
-				return self.get(url).then(function (webcal) {
-					if (needsWorkaround) {
-						webcal.enabled = true;
-						webcal.displayname = name;
-						webcal.color = color;
+			return calendar;
+		});
+	};
 
-						return self.update(webcal);
-					} else {
-						return webcal;
-					}
+	/**
+  * delete a calendar or a webcal subscription
+  * @param {Calendar|WebCal} calendar
+  * @returns {Promise}
+  */
+	this.delete = function (calendar) {
+		// :see-no-evil:
+		// TODO - send hook when calendar was deleted, this doesn't belong in here
+		if (WebCal.isWebCal(calendar)) {
+			localStorage.removeItem(calendar.storedUrl);
+		}
+
+		var method = 'DELETE';
+		var url = calendar.url;
+		var headers = {
+			'requesttoken': OC.requestToken
+		};
+
+		return DavClient.request(method, url, headers).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				throw new Error('Deleting calendar failed');
+			}
+
+			// remove deleted calendar's url from usedURLs
+			var index = context.usedURLs.indexOf(url);
+			context.usedURLs.splice(index, 1);
+		});
+	};
+
+	/**
+  * share a calendar or update a calendar share
+  * @param {Calendar|WebCal} calendar
+  * @param {number} shareType
+  * @param {string} shareWith
+  * @param {boolean} writable
+  * @param {boolean} existingShare
+  * @returns {Promise}
+  */
+	this.share = function (calendar, shareType, shareWith, writable, existingShare) {
+		var _XMLUtility$getRootSk7 = XMLUtility.getRootSkeleton('o:share', 'o:set'),
+		    _XMLUtility$getRootSk8 = _slicedToArray(_XMLUtility$getRootSk7, 2),
+		    skeleton = _XMLUtility$getRootSk8[0],
+		    oSetChildren = _XMLUtility$getRootSk8[1];
+
+		var hrefValue = context.getShareValue(shareType, shareWith);
+		oSetChildren.push({
+			name: 'd:href',
+			value: hrefValue
+		});
+		oSetChildren.push({
+			name: 'o:summary',
+			value: t('calendar', '{calendar} shared by {owner}', {
+				calendar: calendar.displayname,
+				owner: calendar.owner
+			})
+		});
+		if (writable) {
+			oSetChildren.push({
+				name: 'o:read-write'
+			});
+		}
+
+		var method = 'POST';
+		var url = calendar.url;
+		var headers = {
+			'Content-Type': 'application/xml; charset=utf-8',
+			'requesttoken': OC.requestToken
+		};
+		var xml = XMLUtility.serialize(skeleton);
+
+		return DavClient.request(method, url, headers, xml).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				throw new Error('Sharing calendar failed');
+			}
+
+			if (existingShare) {
+				return;
+			}
+
+			//TODO - fix displayname
+			if (shareType === SHARE_USER) {
+				calendar.shares.users.push({
+					id: shareWith,
+					displayname: shareWith,
+					writable: writable
+				});
+			} else {
+				calendar.shares.groups.push({
+					id: shareWith,
+					displayname: shareWith,
+					writable: writable
 				});
 			}
 		});
 	};
 
-	this.update = function (calendar) {
-		var xmlDoc = document.implementation.createDocument('', '', null);
-		var dPropUpdate = xmlDoc.createElement('d:propertyupdate');
-		dPropUpdate.setAttribute('xmlns:c', 'urn:ietf:params:xml:ns:caldav');
-		dPropUpdate.setAttribute('xmlns:d', 'DAV:');
-		dPropUpdate.setAttribute('xmlns:a', 'http://apple.com/ns/ical/');
-		dPropUpdate.setAttribute('xmlns:o', 'http://owncloud.org/ns');
-		xmlDoc.appendChild(dPropUpdate);
+	/**
+  * unshare a calendar
+  * @param {Calendar|WebCal} calendar
+  * @param {number} shareType
+  * @param {string} shareWith
+  * @returns {Promise}
+  */
+	this.unshare = function (calendar, shareType, shareWith) {
+		var _XMLUtility$getRootSk9 = XMLUtility.getRootSkeleton('o:share', 'o:remove'),
+		    _XMLUtility$getRootSk10 = _slicedToArray(_XMLUtility$getRootSk9, 2),
+		    skeleton = _XMLUtility$getRootSk10[0],
+		    oRemoveChildren = _XMLUtility$getRootSk10[1];
 
-		var dSet = xmlDoc.createElement('d:set');
-		dPropUpdate.appendChild(dSet);
+		var hrefValue = context.getShareValue(shareType, shareWith);
+		oRemoveChildren.push({
+			name: 'd:href',
+			value: hrefValue
+		});
 
-		var dProp = xmlDoc.createElement('d:prop');
-		dSet.appendChild(dProp);
-
-		var updatedProperties = calendar.getUpdated();
-		if (updatedProperties.length === 0) {
-			//nothing to do here
-			return calendar;
-		}
-		for (var i = 0; i < updatedProperties.length; i++) {
-			dProp.appendChild(this._createXMLForProperty(xmlDoc, updatedProperties[i], calendar[updatedProperties[i]]));
-		}
-
-		calendar.resetUpdated();
-
+		var method = 'POST';
 		var url = calendar.url;
-		var body = this._xmls.serializeToString(dPropUpdate);
 		var headers = {
 			'Content-Type': 'application/xml; charset=utf-8',
 			'requesttoken': OC.requestToken
 		};
+		var xml = XMLUtility.serialize(skeleton);
 
-		return DavClient.request('PROPPATCH', url, headers, body).then(function (response) {
-			return calendar;
-		});
-	};
+		return DavClient.request(method, url, headers, xml).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				throw new Error('Sharing calendar failed');
+			}
 
-	this.delete = function (calendar) {
-		if (WebCal.isWebCal(calendar)) {
-			localStorage.removeItem(calendar.storedUrl);
-		}
-		return DavClient.request('DELETE', calendar.url, { 'requesttoken': OC.requestToken }, '').then(function (response) {
-			if (response.status === 204) {
-				return true;
+			if (shareType === SHARE_USER) {
+				var index = calendar.shares.users.findIndex(function (user) {
+					return user.id === shareWith;
+				});
+				calendar.shares.user.splice(index, 1);
 			} else {
-				// TODO - handle error case
-				return false;
+				var _index = calendar.shares.groups.findIndex(function (group) {
+					return group.id === shareWith;
+				});
+				calendar.shares.groups.splice(_index, 1);
 			}
 		});
 	};
 
-	this.share = function (calendar, shareType, shareWith, writable, existingShare) {
-		var xmlDoc = document.implementation.createDocument('', '', null);
-		var oShare = xmlDoc.createElement('o:share');
-		oShare.setAttribute('xmlns:d', 'DAV:');
-		oShare.setAttribute('xmlns:o', 'http://owncloud.org/ns');
-		xmlDoc.appendChild(oShare);
+	/**
+  * publish a calendar
+  * @param {Calendar} calendar
+  * @returns {Promise}
+  */
+	this.publish = function (calendar) {
+		var _XMLUtility$getRootSk11 = XMLUtility.getRootSkeleton('cs:publish-calendar'),
+		    _XMLUtility$getRootSk12 = _slicedToArray(_XMLUtility$getRootSk11, 1),
+		    skeleton = _XMLUtility$getRootSk12[0];
 
-		var oSet = xmlDoc.createElement('o:set');
-		oShare.appendChild(oSet);
-
-		var dHref = xmlDoc.createElement('d:href');
-		if (shareType === OC.Share.SHARE_TYPE_USER) {
-			dHref.textContent = 'principal:principals/users/';
-		} else if (shareType === OC.Share.SHARE_TYPE_GROUP) {
-			dHref.textContent = 'principal:principals/groups/';
-		}
-		dHref.textContent += shareWith;
-		oSet.appendChild(dHref);
-
-		var oSummary = xmlDoc.createElement('o:summary');
-		oSummary.textContent = t('calendar', '{calendar} shared by {owner}', {
-			calendar: calendar.displayname,
-			owner: calendar.owner
-		});
-		oSet.appendChild(oSummary);
-
-		if (writable) {
-			var oRW = xmlDoc.createElement('o:read-write');
-			oSet.appendChild(oRW);
-		}
-
+		var method = 'POST';
+		var url = calendar.url;
 		var headers = {
 			'Content-Type': 'application/xml; charset=utf-8',
 			requesttoken: oc_requesttoken
 		};
-		var body = this._xmls.serializeToString(oShare);
-		return DavClient.request('POST', calendar.url, headers, body).then(function (response) {
-			if (response.status === 200) {
-				if (!existingShare) {
-					if (shareType === OC.Share.SHARE_TYPE_USER) {
-						calendar.shares.users.push({
-							id: shareWith,
-							displayname: shareWith,
-							writable: writable
-						});
-					} else if (shareType === OC.Share.SHARE_TYPE_GROUP) {
-						calendar.shares.groups.push({
-							id: shareWith,
-							displayname: shareWith,
-							writable: writable
-						});
-					}
-				}
+		var xml = XMLUtility.serialize(skeleton);
+
+		return DavClient.request(method, url, headers, xml).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				//throw new Error('Publishing calendar failed');
+				return false;
 			}
+
+			// eventually remove this return true
+			return true;
 		});
 	};
 
-	this.unshare = function (calendar, shareType, shareWith) {
-		var xmlDoc = document.implementation.createDocument('', '', null);
-		var oShare = xmlDoc.createElement('o:share');
-		oShare.setAttribute('xmlns:d', 'DAV:');
-		oShare.setAttribute('xmlns:o', 'http://owncloud.org/ns');
-		xmlDoc.appendChild(oShare);
+	/**
+  * unpublish a calendar
+  * @param {Calendar} calendar
+  * @returns {Promise}
+  */
+	this.unpublish = function (calendar) {
+		var _XMLUtility$getRootSk13 = XMLUtility.getRootSkeleton('cs:unpublish-calendar'),
+		    _XMLUtility$getRootSk14 = _slicedToArray(_XMLUtility$getRootSk13, 1),
+		    skeleton = _XMLUtility$getRootSk14[0];
 
-		var oRemove = xmlDoc.createElement('o:remove');
-		oShare.appendChild(oRemove);
-
-		var dHref = xmlDoc.createElement('d:href');
-		if (shareType === OC.Share.SHARE_TYPE_USER) {
-			dHref.textContent = 'principal:principals/users/';
-		} else if (shareType === OC.Share.SHARE_TYPE_GROUP) {
-			dHref.textContent = 'principal:principals/groups/';
-		}
-		dHref.textContent += shareWith;
-		oRemove.appendChild(dHref);
-
+		var method = 'POST';
+		var url = calendar.url;
 		var headers = {
 			'Content-Type': 'application/xml; charset=utf-8',
 			requesttoken: oc_requesttoken
 		};
-		var body = this._xmls.serializeToString(oShare);
-		return DavClient.request('POST', calendar.url, headers, body).then(function (response) {
-			if (response.status === 200) {
-				if (shareType === OC.Share.SHARE_TYPE_USER) {
-					calendar.shares.users = calendar.shares.users.filter(function (user) {
-						return user.id !== shareWith;
-					});
-				} else if (shareType === OC.Share.SHARE_TYPE_GROUP) {
-					calendar.shares.groups = calendar.shares.groups.filter(function (groups) {
-						return groups.id !== shareWith;
-					});
-				}
-				//todo - remove entry from calendar object
-				return true;
-			} else {
+		var xml = XMLUtility.serialize(skeleton);
+
+		return DavClient.request(method, url, headers, xml).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				//throw new Error('Unpublishing calendar failed');
 				return false;
 			}
+
+			// eventually remove this return true
+			return true;
 		});
-	};
-
-	this._createXMLForProperty = function (xmlDoc, propName, value) {
-		switch (propName) {
-			case 'enabled':
-				var oEnabled = xmlDoc.createElement('o:calendar-enabled');
-				oEnabled.textContent = value ? '1' : '0';
-				return oEnabled;
-
-			case 'displayname':
-				var dDisplayname = xmlDoc.createElement('d:displayname');
-				dDisplayname.textContent = value;
-				return dDisplayname;
-
-			case 'order':
-				var aOrder = xmlDoc.createElement('a:calendar-order');
-				aOrder.textContent = value;
-				return aOrder;
-
-			case 'color':
-				var aColor = xmlDoc.createElement('a:calendar-color');
-				aColor.textContent = value;
-				return aColor;
-
-			case 'components':
-				var cComponents = xmlDoc.createElement('c:supported-calendar-component-set');
-				for (var i = 0; i < value.length; i++) {
-					var cComp = xmlDoc.createElement('c:comp');
-					cComp.setAttribute('name', value[i].toUpperCase());
-					cComponents.appendChild(cComp);
-				}
-				return cComponents;
-		}
-	};
-
-	this._getSimplePropertiesFromRequest = function (props) {
-		if (!props['{' + DavClient.NS_IETF + '}supported-calendar-component-set']) {
-			return;
-		}
-
-		this._getACLFromResponse(props);
-
-		var simple = {
-			displayname: props['{' + DavClient.NS_DAV + '}displayname'],
-			color: props['{' + DavClient.NS_APPLE + '}calendar-color'],
-			order: props['{' + DavClient.NS_APPLE + '}calendar-order'],
-			components: {
-				vevent: false,
-				vjournal: false,
-				vtodo: false
-			},
-			owner: null,
-			shareable: props.canWrite,
-			shares: {
-				users: [],
-				groups: []
-			},
-			writable: props.canWrite
-		};
-
-		var components = props['{' + DavClient.NS_IETF + '}supported-calendar-component-set'];
-		for (var i = 0; i < components.length; i++) {
-			var name = components[i].attributes.getNamedItem('name').textContent.toLowerCase();
-			if (simple.components.hasOwnProperty(name)) {
-				simple.components[name] = true;
-			}
-		}
-
-		var owner = props['{' + DavClient.NS_DAV + '}owner'];
-		if (typeof owner !== 'undefined' && owner.length !== 0) {
-			owner = owner[0].textContent.slice(0, -1);
-			if (owner.indexOf('/remote.php/dav/principals/users/') !== -1) {
-				simple.owner = owner.substr(33 + owner.indexOf('/remote.php/dav/principals/users/'));
-			}
-		}
-
-		var shares = props['{' + DavClient.NS_OWNCLOUD + '}invite'];
-		if (typeof shares !== 'undefined') {
-			for (var j = 0; j < shares.length; j++) {
-				var href = shares[j].getElementsByTagNameNS('DAV:', 'href');
-				if (href.length === 0) {
-					continue;
-				}
-				href = href[0].textContent;
-
-				var access = shares[j].getElementsByTagNameNS(DavClient.NS_OWNCLOUD, 'access');
-				if (access.length === 0) {
-					continue;
-				}
-				access = access[0];
-
-				var readWrite = access.getElementsByTagNameNS(DavClient.NS_OWNCLOUD, 'read-write');
-				readWrite = readWrite.length !== 0;
-
-				if (href.startsWith('principal:principals/users/')) {
-					simple.shares.users.push({
-						id: href.substr(27),
-						displayname: href.substr(27),
-						writable: readWrite
-					});
-				} else if (href.startsWith('principal:principals/groups/')) {
-					simple.shares.groups.push({
-						id: href.substr(28),
-						displayname: href.substr(28),
-						writable: readWrite
-					});
-				}
-			}
-		}
-
-		if (typeof props['{' + DavClient.NS_OWNCLOUD + '}calendar-enabled'] === 'undefined') {
-			if (typeof simple.owner !== 'undefined') {
-				simple.enabled = simple.owner === oc_current_user;
-			} else {
-				simple.enabled = false;
-			}
-		} else {
-			simple.enabled = props['{' + DavClient.NS_OWNCLOUD + '}calendar-enabled'] === '1';
-		}
-
-		if (typeof simple.color !== 'undefined' && simple.color.length !== 0) {
-			if (simple.color.length === 9) {
-				simple.color = simple.color.substr(0, 7);
-			}
-		} else {
-			simple.color = angular.element('#fullcalendar').attr('data-defaultColor');
-		}
-
-		simple.writableProperties = oc_current_user === simple.owner && simple.writable;
-
-		var source = props['{' + DavClient.NS_CALENDARSERVER + '}source'];
-		if (source) {
-			for (var k = 0; k < source.length; k++) {
-				if (DavClient.getNodesFullName(source[k]) === '{' + DavClient.NS_DAV + '}href') {
-					simple.href = source[k].textContent;
-					simple.writable = false; //this is a webcal calendar
-					simple.writableProperties = oc_current_user === simple.owner;
-				}
-			}
-		}
-
-		return simple;
-	};
-
-	this._getACLFromResponse = function (props) {
-		var canWrite = false;
-		var acl = props['{' + DavClient.NS_DAV + '}acl'];
-		if (acl) {
-			for (var k = 0; k < acl.length; k++) {
-				var href = acl[k].getElementsByTagNameNS(DavClient.NS_DAV, 'href');
-				if (href.length === 0) {
-					continue;
-				}
-				href = href[0].textContent;
-				if (href !== self._currentUserPrincipal) {
-					continue;
-				}
-				var writeNode = acl[k].getElementsByTagNameNS(DavClient.NS_DAV, 'write');
-				if (writeNode.length > 0) {
-					canWrite = true;
-				}
-			}
-		}
-		props.canWrite = canWrite;
 	};
 }]);
-app.service('DavClient', function () {
+
+app.service('DavClient', ["$window", function ($window) {
 	'use strict';
 
 	var client = new dav.Client({
@@ -4382,33 +5076,60 @@ app.service('DavClient', function () {
 			'urn:ietf:params:xml:ns:caldav': 'c',
 			'http://apple.com/ns/ical/': 'aapl',
 			'http://owncloud.org/ns': 'oc',
+			'http://nextcloud.com/ns': 'nc',
 			'http://calendarserver.org/ns/': 'cs'
 		}
 	});
 
-	angular.extend(client, {
-		NS_DAV: 'DAV:',
-		NS_IETF: 'urn:ietf:params:xml:ns:caldav',
-		NS_APPLE: 'http://apple.com/ns/ical/',
-		NS_OWNCLOUD: 'http://owncloud.org/ns',
-		NS_CALENDARSERVER: 'http://calendarserver.org/ns/',
+	client.NS_DAV = 'DAV:';
+	client.NS_IETF = 'urn:ietf:params:xml:ns:caldav';
+	client.NS_APPLE = 'http://apple.com/ns/ical/';
+	client.NS_OWNCLOUD = 'http://owncloud.org/ns';
+	client.NS_NEXTCLOUD = 'http://nextcloud.com/ns';
+	client.NS_CALENDARSERVER = 'http://calendarserver.org/ns/';
 
-		buildUrl: function buildUrl(path) {
-			return window.location.protocol + '//' + window.location.host + path;
-		},
-		wasRequestSuccessful: function wasRequestSuccessful(status) {
-			return status >= 200 && status <= 299;
-		},
-		getResponseCodeFromHTTPResponse: function getResponseCodeFromHTTPResponse(t) {
-			return parseInt(t.split(' ')[1]);
-		},
-		getNodesFullName: function getNodesFullName(node) {
-			return '{' + node.namespaceURI + '}' + node.localName;
+	/**
+  * get absolute url for path
+  * @param {string} path
+  * @returns {string}
+  */
+	client.buildUrl = function (path) {
+		if (path.substr(0, 1) !== '/') {
+			path = '/' + path;
 		}
-	});
+
+		return $window.location.origin + path;
+	};
+
+	/**
+  * get a nodes full name including its namespace
+  * @param {Node} node
+  * @returns {string}
+  */
+	client.getNodesFullName = function (node) {
+		return '{' + node.namespaceURI + '}' + node.localName;
+	};
+
+	/**
+  * get response code from http response
+  * @param {string} t
+  * @returns {Number}
+  */
+	client.getResponseCodeFromHTTPResponse = function (t) {
+		return parseInt(t.split(' ')[1]);
+	};
+
+	/**
+  * check if request was successful
+  * @param {Number} status
+  * @returns {boolean}
+  */
+	client.wasRequestSuccessful = function (status) {
+		return status >= 200 && status <= 299;
+	};
 
 	return client;
-});
+}]);
 
 app.service('EventsEditorDialogService', ["$uibModal", function ($uibModal) {
 	'use strict';
@@ -4453,7 +5174,7 @@ app.service('EventsEditorDialogService', ["$uibModal", function ($uibModal) {
 					return self.calendar;
 				},
 				isNew: function isNew() {
-					return self.fcEvent.vevent.etag === null;
+					return self.fcEvent.vevent.etag === null || self.fcEvent.vevent.etag === '';
 				},
 				emailAddress: function emailAddress() {
 					return angular.element('#fullcalendar').attr('data-emailAddress');
@@ -4554,22 +5275,6 @@ app.service('EventsEditorDialogService', ["$uibModal", function ($uibModal) {
 	return this;
 }]);
 
-app.service('ICalFactory', function () {
-	'use strict';
-
-	this.new = function () {
-		var root = new ICAL.Component(['vcalendar', [], []]);
-
-		var version = angular.element('#fullcalendar').attr('data-appVersion');
-		root.updatePropertyWithValue('prodid', '-//ownCloud calendar v' + version);
-
-		root.updatePropertyWithValue('version', '2.0');
-		root.updatePropertyWithValue('calscale', 'GREGORIAN');
-
-		return root;
-	};
-});
-
 app.factory('is', function () {
 	'use strict';
 
@@ -4577,6 +5282,23 @@ app.factory('is', function () {
 		loading: false
 	};
 });
+
+app.service('MailerService', ['$rootScope', 'DavClient', function ($rootScope, DavClient) {
+	'use strict';
+
+	this.sendMail = function (dest, url, name) {
+		var headers = {
+			'Content-Type': 'application/json; charset=utf-8',
+			requesttoken: oc_requesttoken
+		};
+		var mailBody = {
+			'to': dest,
+			'url': url,
+			'name': name
+		};
+		return DavClient.request('POST', $rootScope.baseUrl + 'public/sendmail', headers, JSON.stringify(mailBody));
+	};
+}]);
 
 app.factory('RandomStringService', function () {
 	'use strict';
@@ -4659,116 +5381,155 @@ app.service('SettingsService', ['$rootScope', '$http', function ($rootScope, $ht
 			return true;
 		});
 	};
+
+	this.passedFirstRun = function () {
+		return $http({
+			method: 'POST',
+			url: $rootScope.baseUrl + 'config',
+			data: {
+				key: 'firstRun'
+			}
+		}).then(function () {
+			return true;
+		});
+	};
 }]);
 
-app.service('TimezoneListProvider', function () {
+app.service('TimezoneService', ["$rootScope", "$http", "Timezone", function ($rootScope, $http, Timezone) {
 	'use strict';
 
-	return new Promise(function (resolve) {
-		resolve(['Africa\/Abidjan', 'Africa\/Accra', 'Africa\/Addis_Ababa', 'Africa\/Algiers', 'Africa\/Asmara', 'Africa\/Asmera', 'Africa\/Bamako', 'Africa\/Bangui', 'Africa\/Banjul', 'Africa\/Bissau', 'Africa\/Blantyre', 'Africa\/Brazzaville', 'Africa\/Bujumbura', 'Africa\/Cairo', 'Africa\/Casablanca', 'Africa\/Ceuta', 'Africa\/Conakry', 'Africa\/Dakar', 'Africa\/Dar_es_Salaam', 'Africa\/Djibouti', 'Africa\/Douala', 'Africa\/El_Aaiun', 'Africa\/Freetown', 'Africa\/Gaborone', 'Africa\/Harare', 'Africa\/Johannesburg', 'Africa\/Juba', 'Africa\/Kampala', 'Africa\/Khartoum', 'Africa\/Kigali', 'Africa\/Kinshasa', 'Africa\/Lagos', 'Africa\/Libreville', 'Africa\/Lome', 'Africa\/Luanda', 'Africa\/Lubumbashi', 'Africa\/Lusaka', 'Africa\/Malabo', 'Africa\/Maputo', 'Africa\/Maseru', 'Africa\/Mbabane', 'Africa\/Mogadishu', 'Africa\/Monrovia', 'Africa\/Nairobi', 'Africa\/Ndjamena', 'Africa\/Niamey', 'Africa\/Nouakchott', 'Africa\/Ouagadougou', 'Africa\/Porto-Novo', 'Africa\/Sao_Tome', 'Africa\/Timbuktu', 'Africa\/Tripoli', 'Africa\/Tunis', 'Africa\/Windhoek', 'America\/Adak', 'America\/Anchorage', 'America\/Anguilla', 'America\/Antigua', 'America\/Araguaina', 'America\/Argentina\/Buenos_Aires', 'America\/Argentina\/Catamarca', 'America\/Argentina\/ComodRivadavia', 'America\/Argentina\/Cordoba', 'America\/Argentina\/Jujuy', 'America\/Argentina\/La_Rioja', 'America\/Argentina\/Mendoza', 'America\/Argentina\/Rio_Gallegos', 'America\/Argentina\/Salta', 'America\/Argentina\/San_Juan', 'America\/Argentina\/San_Luis', 'America\/Argentina\/Tucuman', 'America\/Argentina\/Ushuaia', 'America\/Aruba', 'America\/Asuncion', 'America\/Atikokan', 'America\/Bahia', 'America\/Bahia_Banderas', 'America\/Barbados', 'America\/Belem', 'America\/Belize', 'America\/Blanc-Sablon', 'America\/Boa_Vista', 'America\/Bogota', 'America\/Boise', 'America\/Cambridge_Bay', 'America\/Campo_Grande', 'America\/Cancun', 'America\/Caracas', 'America\/Cayenne', 'America\/Cayman', 'America\/Chicago', 'America\/Chihuahua', 'America\/Costa_Rica', 'America\/Creston', 'America\/Cuiaba', 'America\/Curacao', 'America\/Danmarkshavn', 'America\/Dawson', 'America\/Dawson_Creek', 'America\/Denver', 'America\/Detroit', 'America\/Dominica', 'America\/Edmonton', 'America\/Eirunepe', 'America\/El_Salvador', 'America\/Fortaleza', 'America\/Glace_Bay', 'America\/Godthab', 'America\/Goose_Bay', 'America\/Grand_Turk', 'America\/Grenada', 'America\/Guadeloupe', 'America\/Guatemala', 'America\/Guayaquil', 'America\/Guyana', 'America\/Halifax', 'America\/Havana', 'America\/Hermosillo', 'America\/Indiana\/Indianapolis', 'America\/Indiana\/Knox', 'America\/Indiana\/Marengo', 'America\/Indiana\/Petersburg', 'America\/Indiana\/Tell_City', 'America\/Indiana\/Vevay', 'America\/Indiana\/Vincennes', 'America\/Indiana\/Winamac', 'America\/Inuvik', 'America\/Iqaluit', 'America\/Jamaica', 'America\/Juneau', 'America\/Kentucky\/Louisville', 'America\/Kentucky\/Monticello', 'America\/Kralendijk', 'America\/La_Paz', 'America\/Lima', 'America\/Los_Angeles', 'America\/Louisville', 'America\/Lower_Princes', 'America\/Maceio', 'America\/Managua', 'America\/Manaus', 'America\/Marigot', 'America\/Martinique', 'America\/Matamoros', 'America\/Mazatlan', 'America\/Menominee', 'America\/Merida', 'America\/Metlakatla', 'America\/Mexico_City', 'America\/Miquelon', 'America\/Moncton', 'America\/Monterrey', 'America\/Montevideo', 'America\/Montreal', 'America\/Montserrat', 'America\/Nassau', 'America\/New_York', 'America\/Nipigon', 'America\/Nome', 'America\/Noronha', 'America\/North_Dakota\/Beulah', 'America\/North_Dakota\/Center', 'America\/North_Dakota\/New_Salem', 'America\/Ojinaga', 'America\/Panama', 'America\/Pangnirtung', 'America\/Paramaribo', 'America\/Phoenix', 'America\/Port-au-Prince', 'America\/Port_of_Spain', 'America\/Porto_Velho', 'America\/Puerto_Rico', 'America\/Rainy_River', 'America\/Rankin_Inlet', 'America\/Recife', 'America\/Regina', 'America\/Resolute', 'America\/Rio_Branco', 'America\/Santa_Isabel', 'America\/Santarem', 'America\/Santiago', 'America\/Santo_Domingo', 'America\/Sao_Paulo', 'America\/Scoresbysund', 'America\/Shiprock', 'America\/Sitka', 'America\/St_Barthelemy', 'America\/St_Johns', 'America\/St_Kitts', 'America\/St_Lucia', 'America\/St_Thomas', 'America\/St_Vincent', 'America\/Swift_Current', 'America\/Tegucigalpa', 'America\/Thule', 'America\/Thunder_Bay', 'America\/Tijuana', 'America\/Toronto', 'America\/Tortola', 'America\/Vancouver', 'America\/Whitehorse', 'America\/Winnipeg', 'America\/Yakutat', 'America\/Yellowknife', 'Antarctica\/Casey', 'Antarctica\/Davis', 'Antarctica\/DumontDUrville', 'Antarctica\/Macquarie', 'Antarctica\/Mawson', 'Antarctica\/McMurdo', 'Antarctica\/Palmer', 'Antarctica\/Rothera', 'Antarctica\/South_Pole', 'Antarctica\/Syowa', 'Antarctica\/Vostok', 'Arctic\/Longyearbyen', 'Asia\/Aden', 'Asia\/Almaty', 'Asia\/Amman', 'Asia\/Anadyr', 'Asia\/Aqtau', 'Asia\/Aqtobe', 'Asia\/Ashgabat', 'Asia\/Baghdad', 'Asia\/Bahrain', 'Asia\/Baku', 'Asia\/Bangkok', 'Asia\/Beirut', 'Asia\/Bishkek', 'Asia\/Brunei', 'Asia\/Calcutta', 'Asia\/Choibalsan', 'Asia\/Chongqing', 'Asia\/Colombo', 'Asia\/Damascus', 'Asia\/Dhaka', 'Asia\/Dili', 'Asia\/Dubai', 'Asia\/Dushanbe', 'Asia\/Gaza', 'Asia\/Harbin', 'Asia\/Hebron', 'Asia\/Ho_Chi_Minh', 'Asia\/Hong_Kong', 'Asia\/Hovd', 'Asia\/Irkutsk', 'Asia\/Istanbul', 'Asia\/Jakarta', 'Asia\/Jayapura', 'Asia\/Jerusalem', 'Asia\/Kabul', 'Asia\/Kamchatka', 'Asia\/Karachi', 'Asia\/Kashgar', 'Asia\/Kathmandu', 'Asia\/Katmandu', 'Asia\/Khandyga', 'Asia\/Kolkata', 'Asia\/Krasnoyarsk', 'Asia\/Kuala_Lumpur', 'Asia\/Kuching', 'Asia\/Kuwait', 'Asia\/Macau', 'Asia\/Magadan', 'Asia\/Makassar', 'Asia\/Manila', 'Asia\/Muscat', 'Asia\/Nicosia', 'Asia\/Novokuznetsk', 'Asia\/Novosibirsk', 'Asia\/Omsk', 'Asia\/Oral', 'Asia\/Phnom_Penh', 'Asia\/Pontianak', 'Asia\/Pyongyang', 'Asia\/Qatar', 'Asia\/Qyzylorda', 'Asia\/Rangoon', 'Asia\/Riyadh', 'Asia\/Saigon', 'Asia\/Sakhalin', 'Asia\/Samarkand', 'Asia\/Seoul', 'Asia\/Shanghai', 'Asia\/Singapore', 'Asia\/Taipei', 'Asia\/Tashkent', 'Asia\/Tbilisi', 'Asia\/Tehran', 'Asia\/Thimphu', 'Asia\/Tokyo', 'Asia\/Ulaanbaatar', 'Asia\/Urumqi', 'Asia\/Ust-Nera', 'Asia\/Vientiane', 'Asia\/Vladivostok', 'Asia\/Yakutsk', 'Asia\/Yekaterinburg', 'Asia\/Yerevan', 'Atlantic\/Azores', 'Atlantic\/Bermuda', 'Atlantic\/Canary', 'Atlantic\/Cape_Verde', 'Atlantic\/Faeroe', 'Atlantic\/Faroe', 'Atlantic\/Jan_Mayen', 'Atlantic\/Madeira', 'Atlantic\/Reykjavik', 'Atlantic\/South_Georgia', 'Atlantic\/St_Helena', 'Atlantic\/Stanley', 'Australia\/Adelaide', 'Australia\/Brisbane', 'Australia\/Broken_Hill', 'Australia\/Currie', 'Australia\/Darwin', 'Australia\/Eucla', 'Australia\/Hobart', 'Australia\/Lindeman', 'Australia\/Lord_Howe', 'Australia\/Melbourne', 'Australia\/Perth', 'Australia\/Sydney', 'Europe\/Amsterdam', 'Europe\/Andorra', 'Europe\/Athens', 'Europe\/Belfast', 'Europe\/Belgrade', 'Europe\/Berlin', 'Europe\/Bratislava', 'Europe\/Brussels', 'Europe\/Bucharest', 'Europe\/Budapest', 'Europe\/Busingen', 'Europe\/Chisinau', 'Europe\/Copenhagen', 'Europe\/Dublin', 'Europe\/Gibraltar', 'Europe\/Guernsey', 'Europe\/Helsinki', 'Europe\/Isle_of_Man', 'Europe\/Istanbul', 'Europe\/Jersey', 'Europe\/Kaliningrad', 'Europe\/Kiev', 'Europe\/Lisbon', 'Europe\/Ljubljana', 'Europe\/London', 'Europe\/Luxembourg', 'Europe\/Madrid', 'Europe\/Malta', 'Europe\/Mariehamn', 'Europe\/Minsk', 'Europe\/Monaco', 'Europe\/Moscow', 'Europe\/Nicosia', 'Europe\/Oslo', 'Europe\/Paris', 'Europe\/Podgorica', 'Europe\/Prague', 'Europe\/Riga', 'Europe\/Rome', 'Europe\/Samara', 'Europe\/San_Marino', 'Europe\/Sarajevo', 'Europe\/Simferopol', 'Europe\/Skopje', 'Europe\/Sofia', 'Europe\/Stockholm', 'Europe\/Tallinn', 'Europe\/Tirane', 'Europe\/Uzhgorod', 'Europe\/Vaduz', 'Europe\/Vatican', 'Europe\/Vienna', 'Europe\/Vilnius', 'Europe\/Volgograd', 'Europe\/Warsaw', 'Europe\/Zagreb', 'Europe\/Zaporozhye', 'Europe\/Zurich', 'Indian\/Antananarivo', 'Indian\/Chagos', 'Indian\/Christmas', 'Indian\/Cocos', 'Indian\/Comoro', 'Indian\/Kerguelen', 'Indian\/Mahe', 'Indian\/Maldives', 'Indian\/Mauritius', 'Indian\/Mayotte', 'Indian\/Reunion', 'Pacific\/Apia', 'Pacific\/Auckland', 'Pacific\/Chatham', 'Pacific\/Chuuk', 'Pacific\/Easter', 'Pacific\/Efate', 'Pacific\/Enderbury', 'Pacific\/Fakaofo', 'Pacific\/Fiji', 'Pacific\/Funafuti', 'Pacific\/Galapagos', 'Pacific\/Gambier', 'Pacific\/Guadalcanal', 'Pacific\/Guam', 'Pacific\/Honolulu', 'Pacific\/Johnston', 'Pacific\/Kiritimati', 'Pacific\/Kosrae', 'Pacific\/Kwajalein', 'Pacific\/Majuro', 'Pacific\/Marquesas', 'Pacific\/Midway', 'Pacific\/Nauru', 'Pacific\/Niue', 'Pacific\/Norfolk', 'Pacific\/Noumea', 'Pacific\/Pago_Pago', 'Pacific\/Palau', 'Pacific\/Pitcairn', 'Pacific\/Pohnpei', 'Pacific\/Ponape', 'Pacific\/Port_Moresby', 'Pacific\/Rarotonga', 'Pacific\/Saipan', 'Pacific\/Tahiti', 'Pacific\/Tarawa', 'Pacific\/Tongatapu', 'Pacific\/Truk', 'Pacific\/Wake', 'Pacific\/Wallis', 'Pacific\/Yap', 'UTC', 'GMT', 'Z']);
-	});
-});
-
-app.service('TimezoneService', ['$rootScope', '$http', 'Timezone', 'TimezoneListProvider', function ($rootScope, $http, Timezone, TimezoneListProvider) {
-	'use strict';
-
-	var _this = this;
-	this._timezones = {};
-
-	this._timezones.UTC = new Timezone(ICAL.TimezoneService.get('UTC'));
-	this._timezones.GMT = this._timezones.UTC;
-	this._timezones.Z = this._timezones.UTC;
-	this._timezones.FLOATING = new Timezone(ICAL.Timezone.localTimezone);
-
-	this.listAll = function () {
-		return TimezoneListProvider;
+	var context = {
+		map: {},
+		self: this,
+		timezones: {}
 	};
 
-	this.get = function (tzid) {
-		tzid = tzid.toUpperCase();
+	context.map['Etc/UTC'] = 'UTC';
 
-		if (_this._timezones[tzid]) {
-			return new Promise(function (resolve) {
-				resolve(_this._timezones[tzid]);
-			});
-		}
+	context.timezones.UTC = new Timezone(ICAL.TimezoneService.get('UTC'));
+	context.timezones.GMT = context.timezones.UTC;
+	context.timezones.Z = context.timezones.UTC;
+	context.timezones.FLOATING = new Timezone(ICAL.Timezone.localTimezone);
 
-		_this._timezones[tzid] = $http({
-			method: 'GET',
-			url: $rootScope.baseUrl + 'timezones/' + tzid + '.ics'
-		}).then(function (response) {
-			if (response.status >= 200 && response.status <= 299) {
-				var timezone = new Timezone(response.data);
-				_this._timezones[tzid] = timezone;
-
-				return timezone;
-			}
-		});
-
-		return _this._timezones[tzid];
-	};
-
-	this.getCurrent = function () {
-		return this.get(this.current());
-	};
-
+	/**
+  * get the browser's timezone id
+  * @returns {string}
+  */
 	this.current = function () {
 		var tz = jstz.determine();
 		var tzname = tz ? tz.name() : 'UTC';
 
-		switch (tzname) {
-			case 'Etc/UTC':
-				tzname = 'UTC';
-				break;
-
-			default:
-				break;
+		if (context.map[tzname]) {
+			tzname = context.map[tzname];
 		}
 
 		return tzname;
 	};
+
+	/**
+  * get a timezone object by it's id
+  * @param tzid
+  * @returns {Promise}
+  */
+	this.get = function (tzid) {
+		tzid = tzid.toUpperCase();
+
+		if (context.timezones[tzid]) {
+			return Promise.resolve(context.timezones[tzid]);
+		}
+
+		var url = $rootScope.baseUrl + 'timezones/' + tzid + '.ics';
+		return $http({
+			method: 'GET',
+			url: url
+		}).then(function (response) {
+			var timezone = new Timezone(response.data);
+			context.timezones[tzid] = timezone;
+
+			return timezone;
+		});
+	};
+
+	/**
+  * list all timezone ids
+  * @returns {Promise}
+  */
+	this.listAll = function () {
+		return Promise.resolve(['Africa\/Abidjan', 'Africa\/Accra', 'Africa\/Addis_Ababa', 'Africa\/Algiers', 'Africa\/Asmara', 'Africa\/Asmera', 'Africa\/Bamako', 'Africa\/Bangui', 'Africa\/Banjul', 'Africa\/Bissau', 'Africa\/Blantyre', 'Africa\/Brazzaville', 'Africa\/Bujumbura', 'Africa\/Cairo', 'Africa\/Casablanca', 'Africa\/Ceuta', 'Africa\/Conakry', 'Africa\/Dakar', 'Africa\/Dar_es_Salaam', 'Africa\/Djibouti', 'Africa\/Douala', 'Africa\/El_Aaiun', 'Africa\/Freetown', 'Africa\/Gaborone', 'Africa\/Harare', 'Africa\/Johannesburg', 'Africa\/Juba', 'Africa\/Kampala', 'Africa\/Khartoum', 'Africa\/Kigali', 'Africa\/Kinshasa', 'Africa\/Lagos', 'Africa\/Libreville', 'Africa\/Lome', 'Africa\/Luanda', 'Africa\/Lubumbashi', 'Africa\/Lusaka', 'Africa\/Malabo', 'Africa\/Maputo', 'Africa\/Maseru', 'Africa\/Mbabane', 'Africa\/Mogadishu', 'Africa\/Monrovia', 'Africa\/Nairobi', 'Africa\/Ndjamena', 'Africa\/Niamey', 'Africa\/Nouakchott', 'Africa\/Ouagadougou', 'Africa\/Porto-Novo', 'Africa\/Sao_Tome', 'Africa\/Timbuktu', 'Africa\/Tripoli', 'Africa\/Tunis', 'Africa\/Windhoek', 'America\/Adak', 'America\/Anchorage', 'America\/Anguilla', 'America\/Antigua', 'America\/Araguaina', 'America\/Argentina\/Buenos_Aires', 'America\/Argentina\/Catamarca', 'America\/Argentina\/ComodRivadavia', 'America\/Argentina\/Cordoba', 'America\/Argentina\/Jujuy', 'America\/Argentina\/La_Rioja', 'America\/Argentina\/Mendoza', 'America\/Argentina\/Rio_Gallegos', 'America\/Argentina\/Salta', 'America\/Argentina\/San_Juan', 'America\/Argentina\/San_Luis', 'America\/Argentina\/Tucuman', 'America\/Argentina\/Ushuaia', 'America\/Aruba', 'America\/Asuncion', 'America\/Atikokan', 'America\/Bahia', 'America\/Bahia_Banderas', 'America\/Barbados', 'America\/Belem', 'America\/Belize', 'America\/Blanc-Sablon', 'America\/Boa_Vista', 'America\/Bogota', 'America\/Boise', 'America\/Cambridge_Bay', 'America\/Campo_Grande', 'America\/Cancun', 'America\/Caracas', 'America\/Cayenne', 'America\/Cayman', 'America\/Chicago', 'America\/Chihuahua', 'America\/Costa_Rica', 'America\/Creston', 'America\/Cuiaba', 'America\/Curacao', 'America\/Danmarkshavn', 'America\/Dawson', 'America\/Dawson_Creek', 'America\/Denver', 'America\/Detroit', 'America\/Dominica', 'America\/Edmonton', 'America\/Eirunepe', 'America\/El_Salvador', 'America\/Fortaleza', 'America\/Glace_Bay', 'America\/Godthab', 'America\/Goose_Bay', 'America\/Grand_Turk', 'America\/Grenada', 'America\/Guadeloupe', 'America\/Guatemala', 'America\/Guayaquil', 'America\/Guyana', 'America\/Halifax', 'America\/Havana', 'America\/Hermosillo', 'America\/Indiana\/Indianapolis', 'America\/Indiana\/Knox', 'America\/Indiana\/Marengo', 'America\/Indiana\/Petersburg', 'America\/Indiana\/Tell_City', 'America\/Indiana\/Vevay', 'America\/Indiana\/Vincennes', 'America\/Indiana\/Winamac', 'America\/Inuvik', 'America\/Iqaluit', 'America\/Jamaica', 'America\/Juneau', 'America\/Kentucky\/Louisville', 'America\/Kentucky\/Monticello', 'America\/Kralendijk', 'America\/La_Paz', 'America\/Lima', 'America\/Los_Angeles', 'America\/Louisville', 'America\/Lower_Princes', 'America\/Maceio', 'America\/Managua', 'America\/Manaus', 'America\/Marigot', 'America\/Martinique', 'America\/Matamoros', 'America\/Mazatlan', 'America\/Menominee', 'America\/Merida', 'America\/Metlakatla', 'America\/Mexico_City', 'America\/Miquelon', 'America\/Moncton', 'America\/Monterrey', 'America\/Montevideo', 'America\/Montreal', 'America\/Montserrat', 'America\/Nassau', 'America\/New_York', 'America\/Nipigon', 'America\/Nome', 'America\/Noronha', 'America\/North_Dakota\/Beulah', 'America\/North_Dakota\/Center', 'America\/North_Dakota\/New_Salem', 'America\/Ojinaga', 'America\/Panama', 'America\/Pangnirtung', 'America\/Paramaribo', 'America\/Phoenix', 'America\/Port-au-Prince', 'America\/Port_of_Spain', 'America\/Porto_Velho', 'America\/Puerto_Rico', 'America\/Rainy_River', 'America\/Rankin_Inlet', 'America\/Recife', 'America\/Regina', 'America\/Resolute', 'America\/Rio_Branco', 'America\/Santa_Isabel', 'America\/Santarem', 'America\/Santiago', 'America\/Santo_Domingo', 'America\/Sao_Paulo', 'America\/Scoresbysund', 'America\/Shiprock', 'America\/Sitka', 'America\/St_Barthelemy', 'America\/St_Johns', 'America\/St_Kitts', 'America\/St_Lucia', 'America\/St_Thomas', 'America\/St_Vincent', 'America\/Swift_Current', 'America\/Tegucigalpa', 'America\/Thule', 'America\/Thunder_Bay', 'America\/Tijuana', 'America\/Toronto', 'America\/Tortola', 'America\/Vancouver', 'America\/Whitehorse', 'America\/Winnipeg', 'America\/Yakutat', 'America\/Yellowknife', 'Antarctica\/Casey', 'Antarctica\/Davis', 'Antarctica\/DumontDUrville', 'Antarctica\/Macquarie', 'Antarctica\/Mawson', 'Antarctica\/McMurdo', 'Antarctica\/Palmer', 'Antarctica\/Rothera', 'Antarctica\/South_Pole', 'Antarctica\/Syowa', 'Antarctica\/Vostok', 'Arctic\/Longyearbyen', 'Asia\/Aden', 'Asia\/Almaty', 'Asia\/Amman', 'Asia\/Anadyr', 'Asia\/Aqtau', 'Asia\/Aqtobe', 'Asia\/Ashgabat', 'Asia\/Baghdad', 'Asia\/Bahrain', 'Asia\/Baku', 'Asia\/Bangkok', 'Asia\/Beirut', 'Asia\/Bishkek', 'Asia\/Brunei', 'Asia\/Calcutta', 'Asia\/Choibalsan', 'Asia\/Chongqing', 'Asia\/Colombo', 'Asia\/Damascus', 'Asia\/Dhaka', 'Asia\/Dili', 'Asia\/Dubai', 'Asia\/Dushanbe', 'Asia\/Gaza', 'Asia\/Harbin', 'Asia\/Hebron', 'Asia\/Ho_Chi_Minh', 'Asia\/Hong_Kong', 'Asia\/Hovd', 'Asia\/Irkutsk', 'Asia\/Istanbul', 'Asia\/Jakarta', 'Asia\/Jayapura', 'Asia\/Jerusalem', 'Asia\/Kabul', 'Asia\/Kamchatka', 'Asia\/Karachi', 'Asia\/Kashgar', 'Asia\/Kathmandu', 'Asia\/Katmandu', 'Asia\/Khandyga', 'Asia\/Kolkata', 'Asia\/Krasnoyarsk', 'Asia\/Kuala_Lumpur', 'Asia\/Kuching', 'Asia\/Kuwait', 'Asia\/Macau', 'Asia\/Magadan', 'Asia\/Makassar', 'Asia\/Manila', 'Asia\/Muscat', 'Asia\/Nicosia', 'Asia\/Novokuznetsk', 'Asia\/Novosibirsk', 'Asia\/Omsk', 'Asia\/Oral', 'Asia\/Phnom_Penh', 'Asia\/Pontianak', 'Asia\/Pyongyang', 'Asia\/Qatar', 'Asia\/Qyzylorda', 'Asia\/Rangoon', 'Asia\/Riyadh', 'Asia\/Saigon', 'Asia\/Sakhalin', 'Asia\/Samarkand', 'Asia\/Seoul', 'Asia\/Shanghai', 'Asia\/Singapore', 'Asia\/Taipei', 'Asia\/Tashkent', 'Asia\/Tbilisi', 'Asia\/Tehran', 'Asia\/Thimphu', 'Asia\/Tokyo', 'Asia\/Ulaanbaatar', 'Asia\/Urumqi', 'Asia\/Ust-Nera', 'Asia\/Vientiane', 'Asia\/Vladivostok', 'Asia\/Yakutsk', 'Asia\/Yekaterinburg', 'Asia\/Yerevan', 'Atlantic\/Azores', 'Atlantic\/Bermuda', 'Atlantic\/Canary', 'Atlantic\/Cape_Verde', 'Atlantic\/Faeroe', 'Atlantic\/Faroe', 'Atlantic\/Jan_Mayen', 'Atlantic\/Madeira', 'Atlantic\/Reykjavik', 'Atlantic\/South_Georgia', 'Atlantic\/St_Helena', 'Atlantic\/Stanley', 'Australia\/Adelaide', 'Australia\/Brisbane', 'Australia\/Broken_Hill', 'Australia\/Currie', 'Australia\/Darwin', 'Australia\/Eucla', 'Australia\/Hobart', 'Australia\/Lindeman', 'Australia\/Lord_Howe', 'Australia\/Melbourne', 'Australia\/Perth', 'Australia\/Sydney', 'Europe\/Amsterdam', 'Europe\/Andorra', 'Europe\/Athens', 'Europe\/Belfast', 'Europe\/Belgrade', 'Europe\/Berlin', 'Europe\/Bratislava', 'Europe\/Brussels', 'Europe\/Bucharest', 'Europe\/Budapest', 'Europe\/Busingen', 'Europe\/Chisinau', 'Europe\/Copenhagen', 'Europe\/Dublin', 'Europe\/Gibraltar', 'Europe\/Guernsey', 'Europe\/Helsinki', 'Europe\/Isle_of_Man', 'Europe\/Istanbul', 'Europe\/Jersey', 'Europe\/Kaliningrad', 'Europe\/Kiev', 'Europe\/Lisbon', 'Europe\/Ljubljana', 'Europe\/London', 'Europe\/Luxembourg', 'Europe\/Madrid', 'Europe\/Malta', 'Europe\/Mariehamn', 'Europe\/Minsk', 'Europe\/Monaco', 'Europe\/Moscow', 'Europe\/Nicosia', 'Europe\/Oslo', 'Europe\/Paris', 'Europe\/Podgorica', 'Europe\/Prague', 'Europe\/Riga', 'Europe\/Rome', 'Europe\/Samara', 'Europe\/San_Marino', 'Europe\/Sarajevo', 'Europe\/Simferopol', 'Europe\/Skopje', 'Europe\/Sofia', 'Europe\/Stockholm', 'Europe\/Tallinn', 'Europe\/Tirane', 'Europe\/Uzhgorod', 'Europe\/Vaduz', 'Europe\/Vatican', 'Europe\/Vienna', 'Europe\/Vilnius', 'Europe\/Volgograd', 'Europe\/Warsaw', 'Europe\/Zagreb', 'Europe\/Zaporozhye', 'Europe\/Zurich', 'Indian\/Antananarivo', 'Indian\/Chagos', 'Indian\/Christmas', 'Indian\/Cocos', 'Indian\/Comoro', 'Indian\/Kerguelen', 'Indian\/Mahe', 'Indian\/Maldives', 'Indian\/Mauritius', 'Indian\/Mayotte', 'Indian\/Reunion', 'Pacific\/Apia', 'Pacific\/Auckland', 'Pacific\/Chatham', 'Pacific\/Chuuk', 'Pacific\/Easter', 'Pacific\/Efate', 'Pacific\/Enderbury', 'Pacific\/Fakaofo', 'Pacific\/Fiji', 'Pacific\/Funafuti', 'Pacific\/Galapagos', 'Pacific\/Gambier', 'Pacific\/Guadalcanal', 'Pacific\/Guam', 'Pacific\/Honolulu', 'Pacific\/Johnston', 'Pacific\/Kiritimati', 'Pacific\/Kosrae', 'Pacific\/Kwajalein', 'Pacific\/Majuro', 'Pacific\/Marquesas', 'Pacific\/Midway', 'Pacific\/Nauru', 'Pacific\/Niue', 'Pacific\/Norfolk', 'Pacific\/Noumea', 'Pacific\/Pago_Pago', 'Pacific\/Palau', 'Pacific\/Pitcairn', 'Pacific\/Pohnpei', 'Pacific\/Ponape', 'Pacific\/Port_Moresby', 'Pacific\/Rarotonga', 'Pacific\/Saipan', 'Pacific\/Tahiti', 'Pacific\/Tarawa', 'Pacific\/Tongatapu', 'Pacific\/Truk', 'Pacific\/Wake', 'Pacific\/Wallis', 'Pacific\/Yap', 'UTC', 'GMT', 'Z']);
+	};
 }]);
 
-app.service('VEventService', ['DavClient', 'VEvent', 'RandomStringService', function (DavClient, VEvent, RandomStringService) {
+app.service('VEventService', ["DavClient", "StringUtility", "XMLUtility", "VEvent", function (DavClient, StringUtility, XMLUtility, VEvent) {
 	'use strict';
 
-	var _this = this;
+	var context = {
+		calendarDataPropName: '{' + DavClient.NS_IETF + '}calendar-data',
+		eTagPropName: '{' + DavClient.NS_DAV + '}getetag',
+		self: this
+	};
 
-	this._xmls = new XMLSerializer();
+	/**
+  * get url for event
+  * @param {VEvent} event
+  * @returns {string}
+  */
+	context.getEventUrl = function (event) {
+		return event.calendar.url + event.uri;
+	};
 
+	/**
+  * get a time-range string from moment object
+  * @param {moment} momentObject
+  * @returns {string}
+  */
+	context.getTimeRangeString = function (momentObject) {
+		var utc = momentObject.utc();
+		return utc.format('YYYYMMDD') + 'T' + utc.format('HHmmss') + 'Z';
+	};
+
+	/**
+  * get all events from a calendar within a time-range
+  * @param {Calendar} calendar
+  * @param {moment} start
+  * @param {moment} end
+  * @returns {Promise}
+  */
 	this.getAll = function (calendar, start, end) {
-		var xmlDoc = document.implementation.createDocument('', '', null);
-		var cCalQuery = xmlDoc.createElement('c:calendar-query');
-		cCalQuery.setAttribute('xmlns:c', 'urn:ietf:params:xml:ns:caldav');
-		cCalQuery.setAttribute('xmlns:d', 'DAV:');
-		cCalQuery.setAttribute('xmlns:a', 'http://apple.com/ns/ical/');
-		cCalQuery.setAttribute('xmlns:o', 'http://owncloud.org/ns');
-		xmlDoc.appendChild(cCalQuery);
+		var _XMLUtility$getRootSk15 = XMLUtility.getRootSkeleton('c:calendar-query'),
+		    _XMLUtility$getRootSk16 = _slicedToArray(_XMLUtility$getRootSk15, 2),
+		    skeleton = _XMLUtility$getRootSk16[0],
+		    dPropChildren = _XMLUtility$getRootSk16[1];
 
-		var dProp = xmlDoc.createElement('d:prop');
-		cCalQuery.appendChild(dProp);
-
-		var dGetEtag = xmlDoc.createElement('d:getetag');
-		dProp.appendChild(dGetEtag);
-
-		var cCalendarData = xmlDoc.createElement('c:calendar-data');
-		dProp.appendChild(cCalendarData);
-
-		var cFilter = xmlDoc.createElement('c:filter');
-		cCalQuery.appendChild(cFilter);
-
-		var cCompFilterVCal = xmlDoc.createElement('c:comp-filter');
-		cCompFilterVCal.setAttribute('name', 'VCALENDAR');
-		cFilter.appendChild(cCompFilterVCal);
-
-		var cCompFilterVEvent = xmlDoc.createElement('c:comp-filter');
-		cCompFilterVEvent.setAttribute('name', 'VEVENT');
-		cCompFilterVCal.appendChild(cCompFilterVEvent);
-
-		var cTimeRange = xmlDoc.createElement('c:time-range');
-		cTimeRange.setAttribute('start', this._getTimeRangeStamp(start));
-		cTimeRange.setAttribute('end', this._getTimeRangeStamp(end));
-		cCompFilterVEvent.appendChild(cTimeRange);
+		dPropChildren.push({
+			name: 'd:prop',
+			children: [{
+				name: 'd:getetag'
+			}, {
+				name: 'c:calendar-data'
+			}]
+		});
+		dPropChildren.push({
+			name: 'c:filter',
+			children: [{
+				name: 'c:comp-filter',
+				attributes: {
+					name: 'VCALENDAR'
+				},
+				children: [{
+					name: 'c:comp-filter',
+					attributes: {
+						name: 'VEVENT'
+					},
+					children: [{
+						name: 'c:time-range',
+						attributes: {
+							start: context.getTimeRangeString(start),
+							end: context.getTimeRangeString(end)
+						}
+					}]
+				}]
+			}]
+		});
 
 		var url = calendar.url;
 		var headers = {
@@ -4776,104 +5537,141 @@ app.service('VEventService', ['DavClient', 'VEvent', 'RandomStringService', func
 			'Depth': 1,
 			'requesttoken': OC.requestToken
 		};
-		var body = this._xmls.serializeToString(cCalQuery);
+		var xml = XMLUtility.serialize(skeleton);
 
-		return DavClient.request('REPORT', url, headers, body).then(function (response) {
+		return DavClient.request('REPORT', url, headers, xml).then(function (response) {
 			if (!DavClient.wasRequestSuccessful(response.status)) {
-				//TODO - something went wrong
-				return;
+				return Promise.reject(response.status);
 			}
 
 			var vevents = [];
+			for (var key in response.body) {
+				if (!response.body.hasOwnProperty(key)) {
+					continue;
+				}
 
-			for (var i in response.body) {
-				var object = response.body[i];
-				var properties = object.propStat[0].properties;
+				var obj = response.body[key];
+				var props = obj.propStat[0].properties;
+				var calendarData = props[context.calendarDataPropName];
+				var etag = props[context.eTagPropName];
+				var uri = obj.href.substr(obj.href.lastIndexOf('/') + 1);
 
-				var data = properties['{urn:ietf:params:xml:ns:caldav}calendar-data'];
-				var etag = properties['{DAV:}getetag'];
-				var uri = object.href.substr(object.href.lastIndexOf('/') + 1);
-
-				var vevent;
-				//try {
-				vevent = new VEvent(calendar, data, etag, uri);
-				//} catch(e) {
-				//	console.log(e);
-				//	continue;
-				//}
-				vevents.push(vevent);
+				try {
+					var vevent = VEvent.fromRawICS(calendar, calendarData, uri, etag);
+					vevents.push(vevent);
+				} catch (e) {
+					console.log(e);
+				}
 			}
 
 			return vevents;
 		});
 	};
 
+	/**
+  * get an event by uri from a calendar
+  * @param {Calendar} calendar
+  * @param {string} uri
+  * @returns {Promise}
+  */
 	this.get = function (calendar, uri) {
 		var url = calendar.url + uri;
-		return DavClient.request('GET', url, { 'requesttoken': OC.requestToken }, '').then(function (response) {
-			return new VEvent(calendar, response.body, response.xhr.getResponseHeader('ETag'), uri);
+		var headers = {
+			'requesttoken': OC.requestToken
+		};
+
+		return DavClient.request('GET', url, headers, '').then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				return Promise.reject(response.status);
+			}
+
+			var calendarData = response.body;
+			var etag = response.xhr.getResponseHeader('ETag');
+
+			try {
+				return VEvent.fromRawICS(calendar, calendarData, uri, etag);
+			} catch (e) {
+				console.log(e);
+				return Promise.reject(e);
+			}
 		});
 	};
 
-	this.create = function (calendar, data, returnEvent) {
-		if (typeof returnEvent === 'undefined') {
-			returnEvent = true;
-		}
+	/**
+  * create a new event
+  * @param {Calendar} calendar
+  * @param {data} data
+  * @param {boolean} returnEvent
+  * @returns {Promise}
+  */
+	this.create = function (calendar, data) {
+		var returnEvent = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
 		var headers = {
 			'Content-Type': 'text/calendar; charset=utf-8',
 			'requesttoken': OC.requestToken
 		};
-		var uri = this._generateRandomUri();
+		var uri = StringUtility.uid('Nextcloud', 'ics');
 		var url = calendar.url + uri;
 
 		return DavClient.request('PUT', url, headers, data).then(function (response) {
 			if (!DavClient.wasRequestSuccessful(response.status)) {
-				return false;
-				// TODO - something went wrong, do smth about it
+				return Promise.reject(response.status);
 			}
 
-			return returnEvent ? _this.get(calendar, uri) : true;
+			if (returnEvent) {
+				return context.self.get(calendar, uri);
+			} else {
+				return true;
+			}
 		});
 	};
 
+	/**
+  * update an event
+  * @param {VEvent} event
+  * @returns {Promise}
+  */
 	this.update = function (event) {
-		var url = event.calendar.url + event.uri;
+		var url = context.getEventUrl(event);
 		var headers = {
 			'Content-Type': 'text/calendar; charset=utf-8',
 			'If-Match': event.etag,
 			'requesttoken': OC.requestToken
 		};
+		var payload = event.data;
 
-		return DavClient.request('PUT', url, headers, event.data).then(function (response) {
+		return DavClient.request('PUT', url, headers, payload).then(function (response) {
+			if (!DavClient.wasRequestSuccessful(response.status)) {
+				return Promise.reject(response.status);
+			}
+
+			// update etag of existing event
 			event.etag = response.xhr.getResponseHeader('ETag');
-			return DavClient.wasRequestSuccessful(response.status);
+
+			return true;
 		});
 	};
 
+	/**
+  * delete an event
+  * @param {VEvent} event
+  * @returns {Promise}
+  */
 	this.delete = function (event) {
-		var url = event.calendar.url + event.uri;
+		var url = context.getEventUrl(event);
 		var headers = {
 			'If-Match': event.etag,
 			'requesttoken': OC.requestToken
 		};
 
 		return DavClient.request('DELETE', url, headers, '').then(function (response) {
-			return DavClient.wasRequestSuccessful(response.status);
+			if (DavClient.wasRequestSuccessful(response.status)) {
+				return true;
+			} else {
+				return Promise.reject(response.status);
+			}
 		});
-	};
-
-	this._generateRandomUri = function () {
-		var uri = 'ownCloud-';
-		uri += RandomStringService.generate();
-		uri += RandomStringService.generate();
-		uri += '.ics';
-
-		return uri;
-	};
-
-	this._getTimeRangeStamp = function (momentObject) {
-		return momentObject.format('YYYYMMDD') + 'T' + momentObject.format('HHmmss') + 'Z';
 	};
 }]);
 
@@ -4888,6 +5686,10 @@ app.service('WebCalService', ["$http", "ICalSplitterUtility", "WebCalUtility", "
 	this.get = function (webcalUrl, allowDowngradeToHttp) {
 		if (context.cachedSplittedICals.hasOwnProperty(webcalUrl)) {
 			return Promise.resolve(context.cachedSplittedICals[webcalUrl]);
+		}
+
+		if (allowDowngradeToHttp === undefined) {
+			allowDowngradeToHttp = WebCalUtility.allowDowngrade(webcalUrl);
 		}
 
 		webcalUrl = WebCalUtility.fixURL(webcalUrl);
@@ -4918,11 +5720,12 @@ app.service('WebCalService', ["$http", "ICalSplitterUtility", "WebCalUtility", "
 					return splitted;
 				});
 			}
-			if (e.status < 200 || e.status > 299) {
-				return Promise.reject(t('calendar', 'The remote server did not give us access to the calendar (HTTP {code} error)', { code: e.status }));
-			}
 
-			return Promise.reject(t('calendar', 'Please enter a valid WebCal-URL'));
+			if (e.status === 422) {
+				return Promise.reject(e.data.message);
+			} else {
+				return Promise.reject(t('calendar', 'Severe error in webcal proxy. Please contact administrator for more information.'));
+			}
 		});
 	};
 }]);
@@ -5324,20 +6127,51 @@ app.service('StringUtility', function () {
 app.service('WebCalUtility', ["$rootScope", function ($rootScope) {
 	'use strict';
 
+	/**
+  * check if downgrading is allowed
+  * @param {string} url
+  * @returns {boolean}
+  */
+
+	this.allowDowngrade = function (url) {
+		return !url.startsWith('https://');
+	};
+
+	/**
+  * construct proxy url
+  * @param url
+  * @returns {string}
+  */
+	this.buildProxyURL = function (url) {
+		return $rootScope.baseUrl + 'proxy?url=' + encodeURIComponent(url);
+	};
+
+	/**
+  * check if a downgrade is possible
+  * @param {string} url
+  * @param {boolean} allowDowngradeToHttp
+  * @returns {boolean}
+  */
+	this.downgradePossible = function (url, allowDowngradeToHttp) {
+		return url.startsWith('https://') && allowDowngradeToHttp;
+	};
+
+	/**
+  * downgrade a url from https to insecure http
+  * @param {string} url
+  * @returns {string}
+  */
 	this.downgradeURL = function (url) {
 		if (url.startsWith('https://')) {
 			return 'http://' + url.substr(8);
 		}
 	};
 
-	this.downgradePossible = function (url, allowDowngradeToHttp) {
-		return url.startsWith('https://') && allowDowngradeToHttp;
-	};
-
-	this.buildProxyURL = function (url) {
-		return $rootScope.baseUrl + 'proxy?url=' + encodeURIComponent(url);
-	};
-
+	/**
+  * replace webcal:// in a url
+  * @param {string} url
+  * @returns {string}
+  */
 	this.fixURL = function (url) {
 		if (url.startsWith('http://') || url.startsWith('https://')) {
 			return url;
@@ -5389,6 +6223,7 @@ app.service('XMLUtility', function () {
 				'xmlns:d': 'DAV:',
 				'xmlns:a': 'http://apple.com/ns/ical/',
 				'xmlns:o': 'http://owncloud.org/ns',
+				'xmlns:n': 'http://nextcloud.com/ns',
 				'xmlns:cs': 'http://calendarserver.org/ns/'
 			},
 			children: []

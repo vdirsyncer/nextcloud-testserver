@@ -32,77 +32,137 @@
 	</div>
 </div>
 
+<div id="personal-settings">
 <?php if ($_['enableAvatars']): ?>
-<form id="avatar" class="section" method="post" action="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.postAvatar')); ?>">
-	<h2><?php p($l->t('Profile picture')); ?></h2>
-	<div id="displayavatar">
-		<div class="avatardiv"></div>
-		<div class="warning hidden"></div>
-		<?php if ($_['avatarChangeSupported']): ?>
-		<label for="uploadavatar" class="inlineblock button icon-upload" id="uploadavatarbutton" title="<?php p($l->t('Upload new')); ?>"></label>
-		<div class="inlineblock button icon-folder" id="selectavatar" title="<?php p($l->t('Select from Files')); ?>"></div>
-		<div class="hidden button icon-delete" id="removeavatar" title="<?php p($l->t('Remove image')); ?>"></div>
-		<input type="file" name="files[]" id="uploadavatar" class="hiddenuploadfield">
-		<p><em><?php p($l->t('png or jpg, max. 20 MB')); ?></em></p>
-		<?php else: ?>
-		<?php p($l->t('Picture provided by original account')); ?>
-		<?php endif; ?>
-	</div>
+<div id="personal-settings-avatar-container">
+	<form id="avatarform" class="section" method="post" action="<?php p(\OC::$server->getURLGenerator()->linkToRoute('core.avatar.postAvatar')); ?>">
+		<h2>
+			<label><?php p($l->t('Profile picture')); ?></label>
+			<span class="icon-password"/>
+		</h2>
+		<div id="displayavatar">
+			<div class="avatardiv"></div>
+			<div class="warning hidden"></div>
+			<?php if ($_['avatarChangeSupported']): ?>
+				<label for="uploadavatar" class="inlineblock button icon-upload svg" id="uploadavatarbutton" title="<?php p($l->t('Upload new')); ?>"></label>
+				<div class="inlineblock button icon-folder svg" id="selectavatar" title="<?php p($l->t('Select from Files')); ?>"></div>
+				<div class="hidden button icon-delete svg" id="removeavatar" title="<?php p($l->t('Remove image')); ?>"></div>
+				<input type="file" name="files[]" id="uploadavatar" class="hiddenuploadfield">
+				<p><em><?php p($l->t('png or jpg, max. 20 MB')); ?></em></p>
+			<?php else: ?>
+				<?php p($l->t('Picture provided by original account')); ?>
+			<?php endif; ?>
+		</div>
 
-	<div id="cropper" class="hidden">
-		<div class="inlineblock button" id="abortcropperbutton"><?php p($l->t('Cancel')); ?></div>
-		<div class="inlineblock button primary" id="sendcropperbutton"><?php p($l->t('Choose as profile picture')); ?></div>
-	</div>
-</form>
+		<div id="cropper" class="hidden">
+			<div class="inner-container">
+				<div class="inlineblock button" id="abortcropperbutton"><?php p($l->t('Cancel')); ?></div>
+				<div class="inlineblock button primary" id="sendcropperbutton"><?php p($l->t('Choose as profile picture')); ?></div>
+			</div>
+		</div>
+		<span class="icon-checkmark hidden"/>
+		<input type="hidden" id="avatarscope" value="<?php p($_['avatarScope']) ?>">
+	</form>
+</div>
 <?php endif; ?>
 
-<?php
-if($_['displayNameChangeSupported']) {
-?>
-<form id="displaynameform" class="section">
-	<h2>
-		<label for="displayName"><?php echo $l->t('Full name');?></label>
-	</h2>
-	<input type="text" id="displayName" name="displayName"
-		value="<?php p($_['displayName'])?>"
-		autocomplete="on" autocapitalize="off" autocorrect="off" />
-    <span class="msg"></span>
-	<input type="hidden" id="oldDisplayName" name="oldDisplayName" value="<?php p($_['displayName'])?>" />
-</form>
-<?php
-} else {
-?>
-<div id="displaynameform" class="section">
-	<h2><?php echo $l->t('Full name');?></h2>
-	<span><?php if(isset($_['displayName'][0])) { p($_['displayName']); } else { p($l->t('No display name set')); } ?></span>
-</div>
-<?php
-}
-?>
+<div id="personal-settings-container">
+	<div class="personal-settings-setting-box">
+		<form id="displaynameform" class="section">
+			<h2>
+				<label for="displayname"><?php p($l->t('Full name')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="text" id="displayname" name="displayname"
+				<?php if(!$_['displayNameChangeSupported']) { print_unescaped('class="hidden"'); } ?>
+				value="<?php p($_['displayName']) ?>"
+				autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<?php if(!$_['displayNameChangeSupported']) { ?>
+				<span><?php if(isset($_['displayName']) && !empty($_['displayName'])) { p($_['displayName']); } else { p($l->t('No display name set')); } ?></span>
+			<?php } ?>
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="displaynamescope" value="<?php p($_['displayNameScope']) ?>">
+		</form>
+	</div>
+	<div class="personal-settings-setting-box">
+		<form id="emailform" class="section">
+			<h2>
+				<label for="email"><?php p($l->t('Email')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="email" name="email" id="email" value="<?php p($_['email']); ?>"
+				<?php if(!$_['displayNameChangeSupported']) { print_unescaped('class="hidden"'); } ?>
+				placeholder="<?php p($l->t('Your email address')); ?>"
+				autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<?php if(!$_['displayNameChangeSupported']) { ?>
+				<span><?php if(isset($_['email']) && !empty($_['email'])) { p($_['email']); } else { p($l->t('No email address set')); }?></span>
+			<?php } ?>
+			<?php if($_['displayNameChangeSupported']) { ?>
+				<br />
+				<em><?php p($l->t('For password recovery and notifications')); ?></em>
+			<?php } ?>
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="emailscope" value="<?php p($_['emailScope']) ?>">
+		</form>
+	</div>
+	<div class="personal-settings-setting-box">
+		<form id="phoneform" class="section">
+			<h2>
+				<label for="phone"><?php p($l->t('Phone number')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="tel" id="phone" name="phone"
+			       value="<?php p($_['phone']) ?>"
+				   placeholder="<?php p($l->t('Your phone number')); ?>"
+			       autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="phonescope" value="<?php p($_['phoneScope']) ?>">
+		</form>
+	</div>
+	<div class="personal-settings-setting-box">
+		<form id="addressform" class="section">
+			<h2>
+				<label for="address"><?php p($l->t('Address')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="text" id="address" name="address"
+				   placeholder="<?php p($l->t('Your postal address')); ?>"
+				   value="<?php p($_['address']) ?>"
+				   autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="addressscope" value="<?php p($_['addressScope']) ?>">
+		</form>
+	</div>
+	<div class="personal-settings-setting-box">
+		<form id="websiteform" class="section">
+			<h2>
+				<label for="website"><?php p($l->t('Website')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="text" name="website" id="website" value="<?php p($_['website']); ?>"
+			       placeholder="<?php p($l->t('Your website')); ?>"
+			       autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="websitescope" value="<?php p($_['websiteScope']) ?>">
+		</form>
+	</div>
+	<div class="personal-settings-setting-box">
+		<form id="twitterform" class="section">
+			<h2>
+				<label for="twitter"><?php p($l->t('Twitter')); ?></label>
+				<span class="icon-password"/>
+			</h2>
+			<input type="text" name="twitter" id="twitter" value="<?php p($_['twitter']); ?>"
+				   placeholder="<?php p($l->t('Your Twitter handle')); ?>"
+				   autocomplete="on" autocapitalize="off" autocorrect="off" />
+			<span class="icon-checkmark hidden"/>
+			<input type="hidden" id="twitterscope" value="<?php p($_['twitterScope']) ?>">
+		</form>
+	</div>
 
-<?php
-if($_['displayNameChangeSupported']) {
-?>
-<form id="lostpassword" class="section">
-	<h2>
-		<label for="email"><?php p($l->t('Email'));?></label>
-	</h2>
-	<input type="email" name="email" id="email" value="<?php p($_['email']); ?>"
-		placeholder="<?php p($l->t('Your email address'));?>"
-		autocomplete="on" autocapitalize="off" autocorrect="off" />
-	<span class="msg"></span><br />
-	<em><?php p($l->t('For password recovery and notifications'));?></em>
-</form>
-<?php
-} else {
-?>
-<div id="lostpassword" class="section">
-	<h2><?php echo $l->t('Email'); ?></h2>
-	<span><?php if(isset($_['email'][0])) { p($_['email']); } else { p($l->t('No email address set')); }?></span>
+	<span class="msg"></span>
 </div>
-<?php
-}
-?>
+</div>
 
 <div id="groups" class="section">
 	<h2><?php p($l->t('Groups')); ?></h2>
@@ -120,17 +180,17 @@ if($_['passwordChangeSupported']) {
 	<h2 class="inlineblock"><?php p($l->t('Password'));?></h2>
 	<div id="password-error-msg" class="msg success inlineblock" style="display: none;">Saved</div>
 	<br>
-	<label for="pass1" class="hidden-visually"><?php echo $l->t('Current password');?>: </label>
+	<label for="pass1" class="hidden-visually"><?php p($l->t('Current password')); ?>: </label>
 	<input type="password" id="pass1" name="oldpassword"
-		placeholder="<?php echo $l->t('Current password');?>"
+		placeholder="<?php p($l->t('Current password'));?>"
 		autocomplete="off" autocapitalize="off" autocorrect="off" />
-	<label for="pass2" class="hidden-visually"><?php echo $l->t('New password');?>: </label>
-	<input type="password" id="pass2" name="personal-password"
-		placeholder="<?php echo $l->t('New password');?>"
+	<label for="pass2" class="hidden-visually"><?php p($l->t('New password'));?>: </label>
+	<input type="password" id="pass2" name="newpassword"
+		placeholder="<?php p($l->t('New password')); ?>"
 		data-typetoggle="#personal-show"
 		autocomplete="off" autocapitalize="off" autocorrect="off" />
-	<input type="checkbox" id="personal-show" name="show" /><label for="personal-show"></label>
-	<input id="passwordbutton" type="submit" value="<?php echo $l->t('Change password');?>" />
+	<input type="checkbox" id="personal-show" name="show" /><label for="personal-show" class="personal-show-label"></label>
+	<input id="passwordbutton" type="submit" value="<?php p($l->t('Change password')); ?>" />
 	<br/>
 </form>
 <?php
@@ -157,12 +217,10 @@ if($_['passwordChangeSupported']) {
 			</option>
 		<?php endforeach;?>
 	</select>
-	<?php if (OC_Util::getEditionString() === ''): ?>
 	<a href="https://www.transifex.com/nextcloud/nextcloud/"
 		target="_blank" rel="noreferrer">
 		<em><?php p($l->t('Help translate'));?></em>
 	</a>
-	<?php endif; ?>
 </form>
 
 
@@ -181,16 +239,18 @@ if($_['passwordChangeSupported']) {
 			 alt="<?php p($l->t('iOS app'));?>" />
 	</a>
 
-	<?php if (OC_Util::getEditionString() === ''): ?>
 		<p>
-			<?php print_unescaped($l->t('If you want to support the project
-		<a href="https://nextcloud.com/contribute"
-			target="_blank" rel="noreferrer">join development</a>
-		<or></or>
-		<a href="https://nextcloud.com/contribute"
-			target="_blank" rel="noreferrer">spread the word</a>!'));?>
+			<?php print_unescaped(str_replace(
+				[
+					'{contributeopen}',
+					'{linkclose}',
+				],
+				[
+					'<a href="https://nextcloud.com/contribute" target="_blank" rel="noreferrer">',
+					'</a>',
+				],
+				$l->t('If you want to support the project {contributeopen}join development{linkclose} or {contributeopen}spread the word{linkclose}!'))); ?>
 		</p>
-	<?php endif; ?>
 
 	<?php if(OC_APP::isEnabled('firstrunwizard')) {?>
 		<p><a class="button" href="#" id="showWizard"><?php p($l->t('Show First Run Wizard again'));?></a></p>
@@ -200,7 +260,7 @@ if($_['passwordChangeSupported']) {
 <div id="sessions" class="section">
 	<h2><?php p($l->t('Sessions'));?></h2>
 	<span class="hidden-when-empty"><?php p($l->t('Web, desktop and mobile clients currently logged in to your account.'));?></span>
-	<table>
+	<table class="icon-loading">
 		<thead class="token-list-header">
 			<tr>
 				<th><?php p($l->t('Device'));?></th>
@@ -208,7 +268,7 @@ if($_['passwordChangeSupported']) {
 				<th></th>
 			</tr>
 		</thead>
-		<tbody class="token-list icon-loading">
+		<tbody class="token-list">
 		</tbody>
 	</table>
 </div>
@@ -216,7 +276,7 @@ if($_['passwordChangeSupported']) {
 <div id="apppasswords" class="section">
 	<h2><?php p($l->t('App passwords'));?></h2>
 	<p><?php p($l->t('Passcodes that give an app or device permissions to access your account.'));?></p>
-	<table>
+	<table class="icon-loading">
 		<thead class="hidden-when-empty">
 			<tr>
 				<th><?php p($l->t('Name'));?></th>
@@ -224,7 +284,7 @@ if($_['passwordChangeSupported']) {
 				<th></th>
 			</tr>
 		</thead>
-		<tbody class="token-list icon-loading">
+		<tbody class="token-list">
 		</tbody>
 	</table>
 	<div id="app-password-form">

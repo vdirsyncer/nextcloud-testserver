@@ -4,7 +4,7 @@
  *
  * @author Raghu Nayyar
  * @author Georg Ehrke
- * @copyright 2016 Raghu Nayyar <beingminimal@gmail.com>
+ * @copyright 2016 Raghu Nayyar <hey@raghunayyar.com>
  * @copyright 2016 Georg Ehrke <oc.list@georgehrke.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -28,9 +28,11 @@
 	data-defaultColor="<?php p($_['defaultColor']); ?>"
 	data-defaultView="<?php p($_['defaultView']); ?>"
 	data-emailAddress="<?php p($_['emailAddress']); ?>"
+	data-firstRun="<?php p($_['firstRun']); ?>"
 	data-skipPopover="<?php p($_['skipPopover']); ?>"
 	data-weekNumbers="<?php p($_['weekNumbers']); ?>"
 	data-webCalWorkaround="<?php p($_['webCalWorkaround']); ?>"
+	data-isPublic="<?php p($_['isPublic'] ? '1' : '0'); ?>"
 	fc
 	id="fullcalendar">
 </div>

@@ -29,12 +29,13 @@ namespace OC\Setup;
 use OC\AllConfig;
 use OC\DB\ConnectionFactory;
 use OCP\IConfig;
+use OCP\IL10N;
 use OCP\ILogger;
 use OCP\Security\ISecureRandom;
 
 abstract class AbstractDatabase {
 
-	/** @var \OC_L10N */
+	/** @var IL10N */
 	protected $trans;
 	/** @var string */
 	protected $dbDefinitionFile;
@@ -57,7 +58,7 @@ abstract class AbstractDatabase {
 	/** @var ISecureRandom */
 	protected $random;
 
-	public function __construct($trans, $dbDefinitionFile, IConfig $config, ILogger $logger, ISecureRandom $random) {
+	public function __construct(IL10N $trans, $dbDefinitionFile, IConfig $config, ILogger $logger, ISecureRandom $random) {
 		$this->trans = $trans;
 		$this->dbDefinitionFile = $dbDefinitionFile;
 		$this->config = $config;
@@ -113,6 +114,7 @@ abstract class AbstractDatabase {
 			'user' => $this->dbUser,
 			'password' => $this->dbPassword,
 			'tablePrefix' => $this->tablePrefix,
+			'dbname' => $this->dbName
 		);
 
 		// adding port support through installer
@@ -134,7 +136,7 @@ abstract class AbstractDatabase {
 		}
 
 		$connectionParams = array_merge($connectionParams, $configOverwrite);
-		$cf = new ConnectionFactory();
+		$cf = new ConnectionFactory($this->config);
 		return $cf->getConnection($this->config->getSystemValue('dbtype', 'sqlite'), $connectionParams);
 	}
 

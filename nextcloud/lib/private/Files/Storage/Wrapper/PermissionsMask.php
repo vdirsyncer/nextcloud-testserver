@@ -78,6 +78,14 @@ class PermissionsMask extends Wrapper {
 	}
 
 	public function rename($path1, $path2) {
+		$p = strpos($path1, $path2);
+		if ($p === 0) {
+			$part = substr($path1, strlen($path2));
+			//This is a rename of the transfer file to the original file
+			if (strpos($part, '.ocTransferId') === 0) {
+				return $this->checkMask(Constants::PERMISSION_CREATE) and parent::rename($path1, $path2);
+			}
+		}
 		return $this->checkMask(Constants::PERMISSION_UPDATE) and parent::rename($path1, $path2);
 	}
 
@@ -104,7 +112,7 @@ class PermissionsMask extends Wrapper {
 
 	public function file_put_contents($path, $data) {
 		$permissions = $this->file_exists($path) ? Constants::PERMISSION_UPDATE : Constants::PERMISSION_CREATE;
-		return $this->checkMask($permissions) and parent::file_put_contents($path, $data);
+		return $this->checkMask($permissions) ? parent::file_put_contents($path, $data) : false;
 	}
 
 	public function fopen($path, $mode) {

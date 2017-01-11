@@ -26,10 +26,7 @@ if (typeof oc_webroot === "undefined") {
 		oc_webroot = oc_webroot.substr(0, oc_webroot.lastIndexOf('/'));
 	}
 }
-if (
-	oc_debug !== true || typeof console === "undefined" ||
-	typeof console.log === "undefined"
-) {
+if (typeof console === "undefined" || typeof console.log === "undefined") {
 	if (!window.console) {
 		window.console = {};
 	}
@@ -61,7 +58,8 @@ function fileDownloadPath(dir, file) {
 }
 
 /** @namespace */
-var OC={
+var OCP = {},
+	OC = {
 	PERMISSION_CREATE:4,
 	PERMISSION_READ:1,
 	PERMISSION_UPDATE:2,
@@ -71,8 +69,8 @@ var OC={
 	TAG_FAVORITE: '_$!<Favorite>!$_',
 	/* jshint camelcase: false */
 	/**
-	 * Relative path to ownCloud root.
-	 * For example: "/owncloud"
+	 * Relative path to Nextcloud root.
+	 * For example: "/nextcloud"
 	 *
 	 * @type string
 	 *
@@ -242,7 +240,7 @@ var OC={
 	},
 
 	/**
-	 * Protocol that is used to access this ownCloud instance
+	 * Protocol that is used to access this Nextcloud instance
 	 * @return {string} Used protocol
 	 */
 	getProtocol: function() {
@@ -250,7 +248,7 @@ var OC={
 	},
 
 	/**
-	 * Returns the host used to access this ownCloud instance
+	 * Returns the host used to access this Nextcloud instance
 	 * Host is sometimes the same as the hostname but now always.
 	 *
 	 * Examples:
@@ -267,7 +265,7 @@ var OC={
 	},
 
 	/**
-	 * Returns the hostname used to access this ownCloud instance
+	 * Returns the hostname used to access this Nextcloud instance
 	 * The hostname is always stripped of the port
 	 *
 	 * @return {string} hostname
@@ -278,7 +276,7 @@ var OC={
 	},
 
 	/**
-	 * Returns the port number used to access this ownCloud instance
+	 * Returns the port number used to access this Nextcloud instance
 	 *
 	 * @return {int} port number
 	 *
@@ -289,9 +287,9 @@ var OC={
 	},
 
 	/**
-	 * Returns the web root path where this ownCloud instance
+	 * Returns the web root path where this Nextcloud instance
 	 * is accessible, with a leading slash.
-	 * For example "/owncloud".
+	 * For example "/nextcloud".
 	 *
 	 * @return {string} web root path
 	 *
@@ -423,6 +421,28 @@ var OC={
 	 */
 	dirname: function(path) {
 		return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');
+	},
+
+	/**
+	 * Returns whether the given paths are the same, without
+	 * leading, trailing or doubled slashes and also removing
+	 * the dot sections.
+	 *
+	 * @param {String} path1 first path
+	 * @param {String} path2 second path
+	 * @return {bool} true if the paths are the same
+	 *
+	 * @since 9.0
+	 */
+	isSamePath: function(path1, path2) {
+		var filterDot = function(p) {
+			return p !== '.';
+		};
+		var pathSections1 = _.filter((path1 || '').split('/'), filterDot);
+		var pathSections2 = _.filter((path2 || '').split('/'), filterDot);
+		path1 = OC.joinPaths.apply(OC, pathSections1);
+		path2 = OC.joinPaths.apply(OC, pathSections2);
+		return path1 === path2;
 	},
 
 	/**
@@ -733,6 +753,17 @@ var OC={
 	},
 
 	/**
+	 * Warn users that the connection to the server was lost temporarily
+	 *
+	 * This function is throttled to prevent stacked notfications.
+	 * After 7sec the first notification is gone, then we can show another one
+	 * if necessary.
+	 */
+	_ajaxConnectionLostHandler: _.throttle(function() {
+		OC.Notification.showTemporary(t('core', 'Connection to server lost'));
+	}, 7 * 1000, {trailing: false}),
+
+	/**
 	 * Process ajax error, redirects to main page
 	 * if an error/auth error status was returned.
 	 */
@@ -745,7 +776,7 @@ var OC={
 			return;
 		}
 
-		if (_.contains([0, 302, 303, 307, 401], xhr.status)) {
+		if (_.contains([302, 303, 307, 401], xhr.status) && OC.currentUser) {
 			// sometimes "beforeunload" happens later, so need to defer the reload a bit
 			setTimeout(function() {
 				if (!self._userIsNavigatingAway && !self._reloadCalled) {
@@ -753,6 +784,13 @@ var OC={
 					setTimeout(OC.reload, 5000);
 					// only call reload once
 					self._reloadCalled = true;
+				}
+			}, 100);
+		} else if(xhr.status === 0) {
+			// Connection lost (e.g. WiFi disconnected or server is down)
+			setTimeout(function() {
+				if (!self._userIsNavigatingAway && !self._reloadCalled) {
+					self._ajaxConnectionLostHandler();
 				}
 			}, 100);
 		}
@@ -1174,199 +1212,6 @@ OC.Notification={
 };
 
 /**
- * Breadcrumb class
- *
- * @namespace
- *
- * @deprecated will be replaced by the breadcrumb implementation
- * of the files app in the future
- */
-OC.Breadcrumb={
-	container:null,
-	/**
-	 * @todo Write documentation
-	 * @param dir
-	 * @param leafName
-	 * @param leafLink
-	 */
-	show:function(dir, leafName, leafLink){
-		if(!this.container){//default
-			this.container=$('#controls');
-		}
-		this._show(this.container, dir, leafName, leafLink);
-	},
-	_show:function(container, dir, leafname, leaflink){
-		var self = this;
-
-		this._clear(container);
-
-		// show home + path in subdirectories
-		if (dir) {
-			//add home
-			var link = OC.linkTo('files','index.php');
-
-			var crumb=$('<div/>');
-			crumb.addClass('crumb');
-
-			var crumbLink=$('<a/>');
-			crumbLink.attr('href',link);
-
-			var crumbImg=$('<img/>');
-			crumbImg.attr('src',OC.imagePath('core','places/home'));
-			crumbLink.append(crumbImg);
-			crumb.append(crumbLink);
-			container.prepend(crumb);
-
-			//add path parts
-			var segments = dir.split('/');
-			var pathurl = '';
-			jQuery.each(segments, function(i,name) {
-				if (name !== '') {
-					pathurl = pathurl+'/'+name;
-					var link = OC.linkTo('files','index.php')+'?dir='+encodeURIComponent(pathurl);
-					self._push(container, name, link);
-				}
-			});
-		}
-
-		//add leafname
-		if (leafname && leaflink) {
-			this._push(container, leafname, leaflink);
-		}
-	},
-
-	/**
-	 * @todo Write documentation
-	 * @param {string} name
-	 * @param {string} link
-	 */
-	push:function(name, link){
-		if(!this.container){//default
-			this.container=$('#controls');
-		}
-		return this._push(OC.Breadcrumb.container, name, link);
-	},
-	_push:function(container, name, link){
-		var crumb=$('<div/>');
-		crumb.addClass('crumb').addClass('last');
-
-		var crumbLink=$('<a/>');
-		crumbLink.attr('href',link);
-		crumbLink.text(name);
-		crumb.append(crumbLink);
-
-		var existing=container.find('div.crumb');
-		if(existing.length){
-			existing.removeClass('last');
-			existing.last().after(crumb);
-		}else{
-			container.prepend(crumb);
-		}
-		return crumb;
-	},
-
-	/**
-	 * @todo Write documentation
-	 */
-	pop:function(){
-		if(!this.container){//default
-			this.container=$('#controls');
-		}
-		this.container.find('div.crumb').last().remove();
-		this.container.find('div.crumb').last().addClass('last');
-	},
-
-	/**
-	 * @todo Write documentation
-	 */
-	clear:function(){
-		if(!this.container){//default
-			this.container=$('#controls');
-		}
-		this._clear(this.container);
-	},
-	_clear:function(container) {
-		container.find('div.crumb').remove();
-	}
-};
-
-if(typeof localStorage !=='undefined' && localStorage !== null){
-	/**
-	 * User and instance aware localstorage
-	 * @namespace
-	 */
-	OC.localStorage={
-		namespace:'oc_'+OC.currentUser+'_'+OC.webroot+'_',
-
-		/**
-		 * Whether the storage contains items
-		 * @param {string} name
-		 * @return {boolean}
-		 */
-		hasItem:function(name){
-			return OC.localStorage.getItem(name)!==null;
-		},
-
-		/**
-		 * Add an item to the storage
-		 * @param {string} name
-		 * @param {string} item
-		 */
-		setItem:function(name,item){
-			return localStorage.setItem(OC.localStorage.namespace+name,JSON.stringify(item));
-		},
-
-		/**
-		 * Removes an item from the storage
-		 * @param {string} name
-		 * @param {string} item
-		 */
-		removeItem:function(name,item){
-			return localStorage.removeItem(OC.localStorage.namespace+name);
-		},
-
-		/**
-		 * Get an item from the storage
-		 * @param {string} name
-		 * @return {null|string}
-		 */
-		getItem:function(name){
-			var item = localStorage.getItem(OC.localStorage.namespace+name);
-			if(item === null) {
-				return null;
-			} else {
-				return JSON.parse(item);
-			}
-		}
-	};
-}else{
-	//dummy localstorage
-	OC.localStorage={
-		hasItem:function(){
-			return false;
-		},
-		setItem:function(){
-			return false;
-		},
-		getItem:function(){
-			return null;
-		}
-	};
-}
-
-/**
- * prototypical inheritance functions
- * @todo Write documentation
- * usage:
- * MySubObject=object(MyObject)
- */
-function object(o) {
-	function F() {}
-	F.prototype = o;
-	return new F();
-}
-
-/**
  * Initializes core
  */
 function initCore() {
@@ -1506,12 +1351,20 @@ function initCore() {
 			if(!$app.is('a')) {
 				$app = $app.closest('a');
 			}
-			if(!event.ctrlKey) {
+			if(event.which === 1 && !event.ctrlKey && !event.metaKey) {
 				$app.addClass('app-loading');
 			} else {
 				// Close navigation when opening app in
 				// a new tab
-				OC.hideMenus();
+				OC.hideMenus(function(){return false});
+			}
+		});
+
+		$navigation.delegate('a', 'mouseup', function(event) {
+			if(event.which === 2) {
+				// Close navigation when opening app in
+				// a new tab via middle click
+				OC.hideMenus(function(){return false});
 			}
 		});
 	}
@@ -1519,14 +1372,29 @@ function initCore() {
 	function setupUserMenu() {
 		var $menu = $('#header #settings');
 
+		// show loading feedback
 		$menu.delegate('a', 'click', function(event) {
 			var $page = $(event.target);
 			if (!$page.is('a')) {
 				$page = $page.closest('a');
 			}
-			$page.find('img').remove();
-			$page.find('div').remove(); // prevent odd double-clicks
-			$page.prepend($('<div/>').addClass('icon-loading-small-dark'));
+			if(event.which === 1 && !event.ctrlKey && !event.metaKey) {
+				$page.find('img').remove();
+				$page.find('div').remove(); // prevent odd double-clicks
+				$page.prepend($('<div/>').addClass('icon-loading-small-dark'));
+			} else {
+				// Close navigation when opening menu entry in
+				// a new tab
+				OC.hideMenus(function(){return false});
+			}
+		});
+
+		$menu.delegate('a', 'mouseup', function(event) {
+			if(event.which === 2) {
+				// Close navigation when opening app in
+				// a new tab via middle click
+				OC.hideMenus(function(){return false});
+			}
 		});
 	}
 
@@ -1536,7 +1404,7 @@ function initCore() {
 	// move triangle of apps dropdown to align with app name triangle
 	// 2 is the additional offset between the triangles
 	if($('#navigation').length) {
-		$('#header #owncloud + .menutoggle').one('click', function(){
+		$('#header #nextcloud + .menutoggle').one('click', function(){
 			var caretPosition = $('.header-appname + .icon-caret').offset().left - 2;
 			if(caretPosition > 255) {
 				// if the app name is longer than the menu, just put the triangle in the middle
@@ -1572,6 +1440,10 @@ function initCore() {
 			// don't hide navigation when changing settings or adding things
 			if($target.is('.app-navigation-noclose') ||
 				$target.closest('.app-navigation-noclose').length) {
+				return;
+			}
+			if($target.is('.app-navigation-entry-utils-menu-button') ||
+				$target.closest('.app-navigation-entry-utils-menu-button').length) {
 				return;
 			}
 			if($target.is('.add-new') ||
@@ -1630,10 +1502,89 @@ function initCore() {
 
 		$(window).resize(_.debounce(adjustControlsWidth, 250));
 
-		$('body').delegate('#app-content', 'apprendered appresized', adjustControlsWidth);
+		$('body').delegate('#app-content', 'apprendered appresized', _.debounce(adjustControlsWidth, 100));
 
 	}
+
+	// Update live timestamps every 30 seconds
+	setInterval(function() {
+		$('.live-relative-timestamp').each(function() {
+			$(this).text(OC.Util.relativeModifiedDate(parseInt($(this).attr('data-timestamp'), 10)));
+		});
+	}, 30 * 1000);
+
+	OC.PasswordConfirmation.init();
 }
+
+OC.PasswordConfirmation = {
+	callback: null,
+
+	init: function() {
+		$('.password-confirm-required').on('click', _.bind(this.requirePasswordConfirmation, this));
+	},
+
+	requiresPasswordConfirmation: function() {
+		var timeSinceLogin = moment.now() - (nc_lastLogin * 1000);
+		return timeSinceLogin > 30 * 60 * 1000; // 30 minutes
+	},
+
+	/**
+	 * @param {function} callback
+	 */
+	requirePasswordConfirmation: function(callback) {
+		var self = this;
+
+		if (this.requiresPasswordConfirmation()) {
+			OC.dialogs.prompt(
+				t(
+					'core',
+					'This action requires you to confirm your password'
+				),
+				t('core','Authentication required'),
+				function (result, password) {
+					if (result && password !== '') {
+						self._confirmPassword(password);
+					}
+				},
+				true,
+				t('core','Password'),
+				true
+			).then(function() {
+				var $dialog = $('.oc-dialog:visible');
+				$dialog.find('.ui-icon').remove();
+
+				var $buttons = $dialog.find('button');
+				$buttons.eq(0).text(t('core', 'Cancel'));
+				$buttons.eq(1).text(t('core', 'Confirm'));
+			});
+		}
+
+		this.callback = callback;
+	},
+
+	_confirmPassword: function(password) {
+		var self = this;
+
+		$.ajax({
+			url: OC.generateUrl('/login/confirm'),
+			data: {
+				password: password
+			},
+			type: 'POST',
+			success: function(response) {
+				nc_lastLogin = response.lastLogin;
+
+				if (_.isFunction(self.callback)) {
+					self.callback();
+				}
+			},
+			error: function() {
+				OC.PasswordConfirmation.requirePasswordConfirmation(self.callback);
+				OC.Notification.showTemporary(t('core', 'Failed to authenticate, try again'));
+			}
+		});
+	}
+};
 
 $(document).ready(initCore);
 
@@ -1691,9 +1642,10 @@ function formatDate(timestamp){
  * @return {string}
  */
 function getURLParameter(name) {
-	return decodeURI(
-			(RegExp(name + '=' + '(.+?)(&|$)').exec(location.search) || [, null])[1]
-			);
+	return decodeURIComponent(
+		(new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(
+			location.search)||[,''])[1].replace(/\+/g, '%20')
+		)||'';
 }
 
 /**
@@ -1957,6 +1909,19 @@ OC.Util.History = {
 		}
 		if (window.history.pushState) {
 			var url = location.pathname + '?' + strParams;
+			// Workaround for bug with SVG and window.history.pushState on Firefox < 51
+			// https://bugzilla.mozilla.org/show_bug.cgi?id=652991
+			var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+			if (isFirefox && parseInt(navigator.userAgent.split('/').pop()) < 51) {
+				var patterns = document.querySelectorAll('[fill^="url(#"], [stroke^="url(#"], [filter^="url(#invert"]');
+				for (var i = 0, ii = patterns.length, pattern; i < ii; i++) {
+					pattern = patterns[i];
+					pattern.style.fill = pattern.style.fill;
+					pattern.style.stroke = pattern.style.stroke;
+					pattern.removeAttribute("filter");
+					pattern.setAttribute("filter", "url(#invert)");
+				}
+			}
 			if (replace) {
 				window.history.replaceState(params, '', url);
 			} else {

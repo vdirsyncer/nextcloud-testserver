@@ -8,6 +8,8 @@
  *
  */
 
+/* globals Handlebars */
+
 (function() {
 	if(!OC.Share) {
 		OC.Share = {};
@@ -26,7 +28,6 @@
 		'<div class="shareeListView subView"></div>' +
 		'<div class="linkShareView subView"></div>' +
 		'<div class="expirationView subView"></div>' +
-		'<div class="mailView subView"></div>' +
 		'<div class="loading hidden" style="height: 50px"></div>';
 
 	var TEMPLATE_REMOTE_SHARE_INFO =
@@ -68,9 +69,6 @@
 		/** @type {object} **/
 		shareeListView: undefined,
 
-		/** @type {object} **/
-		mailView: undefined,
-
 		events: {
 			'input .shareWithField': 'onShareWithFieldChanged'
 		},
@@ -107,8 +105,7 @@
 				resharerInfoView: 'ShareDialogResharerInfoView',
 				linkShareView: 'ShareDialogLinkShareView',
 				expirationView: 'ShareDialogExpirationView',
-				shareeListView: 'ShareDialogShareeListView',
-				mailView: 'ShareDialogMailView'
+				shareeListView: 'ShareDialogShareeListView'
 			};
 
 			for(var name in subViews) {
@@ -137,6 +134,8 @@
 			var $loading = this.$el.find('.shareWithLoading');
 			$loading.removeClass('hidden');
 			$loading.addClass('inlineblock');
+			var $remoteShareInfo = this.$el.find('.shareWithRemoteInfo');
+			$remoteShareInfo.addClass('hidden');
 			$.get(
 				OC.linkToOCS('apps/files_sharing/api/v1') + 'sharees',
 				{
@@ -148,14 +147,23 @@
 				function (result) {
 					$loading.addClass('hidden');
 					$loading.removeClass('inlineblock');
-					if (result.ocs.meta.statuscode == 100) {
+					$remoteShareInfo.removeClass('hidden');
+					if (result.ocs.meta.statuscode === 100) {
 						var users   = result.ocs.data.exact.users.concat(result.ocs.data.users);
 						var groups  = result.ocs.data.exact.groups.concat(result.ocs.data.groups);
 						var remotes = result.ocs.data.exact.remotes.concat(result.ocs.data.remotes);
+						var lookup = result.ocs.data.lookup;
+						if (typeof(result.ocs.data.emails) !== 'undefined') {
+							var emails = result.ocs.data.exact.emails.concat(result.ocs.data.emails);
+						} else {
+							var emails = [];
+						}
 
 						var usersLength;
 						var groupsLength;
 						var remotesLength;
+						var emailsLength;
+						var lookupLength;
 
 						var i, j;
 
@@ -210,10 +218,18 @@
 										break;
 									}
 								}
+							} else if (share.share_type === OC.Share.SHARE_TYPE_EMAIL) {
+								emailsLength = emails.length;
+								for (j = 0; j < emailsLength; j++) {
+									if (emails[j].value.shareWith === share.share_with) {
+										emails.splice(j, 1);
+										break;
+									}
+								}
 							}
 						}
 
-						var suggestions = users.concat(groups).concat(remotes);
+						var suggestions = users.concat(groups).concat(remotes).concat(emails).concat(lookup);
 
 						if (suggestions.length > 0) {
 							$('.shareWithField').removeClass('error')
@@ -243,39 +259,36 @@
 			).fail(function() {
 				$loading.addClass('hidden');
 				$loading.removeClass('inlineblock');
+				$remoteShareInfo.removeClass('hidden');
 				OC.Notification.show(t('core', 'An error occurred. Please try again'));
 				window.setTimeout(OC.Notification.hide, 5000);
 			});
 		},
 
 		autocompleteRenderItem: function(ul, item) {
-			var insert = $("<a>");
+
 			var text = item.label;
 			if (item.value.shareType === OC.Share.SHARE_TYPE_GROUP) {
-				text = t('core', '{sharee} (group)', {
-					sharee: text
-				});
+				text = t('core', '{sharee} (group)', { sharee: text }, undefined, { escape: false });
 			} else if (item.value.shareType === OC.Share.SHARE_TYPE_REMOTE) {
-				if (item.value.server) {
-					text = t('core', '{sharee} (at {server})', {
-						sharee: text,
-						server: item.value.server
-					});
-				} else {
-					text = t('core', '{sharee} (remote)', {
-						sharee: text
-					});
-				}
+				text = t('core', '{sharee} (remote)', { sharee: text }, undefined, { escape: false });
+			} else if (item.value.shareType === OC.Share.SHARE_TYPE_EMAIL) {
+				text = t('core', '{sharee} (email)', { sharee: text }, undefined, { escape: false });
 			}
-			insert.text(text);
+			var insert = $("<div class='share-autocomplete-item'/>");
+			var avatar = $("<div class='avatardiv'></div>").appendTo(insert);
+			if (item.value.shareType === OC.Share.SHARE_TYPE_USER) {
+				avatar.avatar(item.value.shareWith, 32, undefined, undefined, undefined, item.label);
+			} else {
+				avatar.imageplaceholder(text, undefined, 32);
+			}
+
+			$("<div class='autocomplete-item-text'></div>")
+				.text(text)
+				.appendTo(insert);
 			insert.attr('title', item.value.shareWith);
-			if(item.value.shareType === OC.Share.SHARE_TYPE_GROUP) {
-				insert = insert.wrapInner('<strong></strong>');
-			}
-			insert.tooltip({
-				placement: 'bottom',
-				container: 'body'
-			});
+			insert = $("<a>")
+				.append(insert);
 			return $("<li>")
 				.addClass((item.value.shareType === OC.Share.SHARE_TYPE_GROUP) ? 'group' : 'user')
 				.append(insert)
@@ -289,18 +302,22 @@
 			var $loading = this.$el.find('.shareWithLoading');
 			$loading.removeClass('hidden')
 				.addClass('inlineblock');
+			var $remoteShareInfo = this.$el.find('.shareWithRemoteInfo');
+			$remoteShareInfo.addClass('hidden');
 
 			this.model.addShare(s.item.value, {success: function() {
 				$(e.target).val('')
 					.attr('disabled', false);
 				$loading.addClass('hidden')
 					.removeClass('inlineblock');
+				$remoteShareInfo.removeClass('hidden');
 			}, error: function(obj, msg) {
 				OC.Notification.showTemporary(msg);
 				$(e.target).attr('disabled', false)
 					.autocomplete('search', $(e.target).val());
 				$loading.addClass('hidden')
 					.removeClass('inlineblock');
+				$remoteShareInfo.removeClass('hidden');
 			}});
 		},
 
@@ -365,9 +382,6 @@
 			this.shareeListView.$el = this.$el.find('.shareeListView');
 			this.shareeListView.render();
 
-			this.mailView.$el = this.$el.find('.mailView');
-			this.mailView.render();
-
 			this.$el.find('.hasTooltip').tooltip();
 
 			return this;
@@ -390,7 +404,7 @@
 				var infoTemplate = this._getRemoteShareInfoTemplate();
 				remoteShareInfo = infoTemplate({
 					docLink: this.configModel.getFederatedShareDocLink(),
-					tooltip: t('core', 'Share with people on other ownClouds using the syntax username@example.com/owncloud')
+					tooltip: t('core', 'Share with people on other servers using their Federated Cloud ID username@example.com/nextcloud')
 				});
 			}
 
@@ -398,19 +412,33 @@
 		},
 
 		_renderSharePlaceholderPart: function () {
-			var sharePlaceholder = t('core', 'Share with users…');
+			var allowGroupSharing = this.configModel.get('allowGroupSharing');
+			var allowRemoteSharing = this.configModel.get('isRemoteShareAllowed');
+			var allowMailSharing = this.configModel.get('isMailShareAllowed');
 
-			if (this.configModel.get('allowGroupSharing')) {
-				if (this.configModel.get('isRemoteShareAllowed')) {
-					sharePlaceholder = t('core', 'Share with users, groups or remote users…');
-				} else {
-					sharePlaceholder = t('core', 'Share with users or groups…')
-				}
-			} else if (this.configModel.get('isRemoteShareAllowed')) {
-					sharePlaceholder = t('core', 'Share with users or remote users…');
+			if (!allowGroupSharing && !allowRemoteSharing && allowMailSharing) {
+				return t('core', 'Share with users or by mail...');
+			}
+			if (!allowGroupSharing && allowRemoteSharing && !allowMailSharing) {
+				return t('core', 'Share with users or remote users...');
+			}
+			if (!allowGroupSharing && allowRemoteSharing && allowMailSharing) {
+				return t('core', 'Share with users, remote users or by mail...');
+			}
+			if (allowGroupSharing && !allowRemoteSharing && !allowMailSharing) {
+				return t('core', 'Share with users or groups...');
+			}
+			if (allowGroupSharing && !allowRemoteSharing && allowMailSharing) {
+				return t('core', 'Share with users, groups or by mail...');
+			}
+			if (allowGroupSharing && allowRemoteSharing && !allowMailSharing) {
+				return t('core', 'Share with users, groups or remote users...');
+			}
+			if (allowGroupSharing && allowRemoteSharing && allowMailSharing) {
+				return t('core', 'Share with users, groups, remote users or by mail...');
 			}
 
-			return sharePlaceholder;
+			return 	t('core', 'Share with users...');
 		},
 
 		/**

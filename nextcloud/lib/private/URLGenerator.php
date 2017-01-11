@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bart Visscher <bartv@thisnet.nl>
+ * @author Felix Anand Epp <work@felixepp.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -93,7 +94,7 @@ class URLGenerator implements IURLGenerator {
 	 * Returns a url to the given app and file.
 	 */
 	public function linkTo( $app, $file, $args = array() ) {
-		$frontControllerActive = (getenv('front_controller_active') === 'true');
+		$frontControllerActive = ($this->config->getSystemValue('htaccess.IgnoreFrontController', false) === true || getenv('front_controller_active') === 'true');
 
 		if( $app != '' ) {
 			$app_path = \OC_App::getAppPath($app);
@@ -157,7 +158,16 @@ class URLGenerator implements IURLGenerator {
 
 		// Check if the app is in the app folder
 		$path = '';
-		if (file_exists(\OC::$SERVERROOT . "/themes/$theme/apps/$app/img/$image")) {
+		$themingEnabled = $this->config->getSystemValue('installed', false) && \OCP\App::isEnabled('theming') && \OC_App::isAppLoaded('theming');
+		if($themingEnabled && $image === "favicon.ico" && \OC::$server->getThemingDefaults()->shouldReplaceIcons()) {
+			$cacheBusterValue = $this->config->getAppValue('theming', 'cachebuster', '0');
+			if($app==="") { $app = "core"; }
+			$path = $this->linkToRoute('theming.Icon.getFavicon', [ 'app' => $app ]) . '?v='. $cacheBusterValue;
+		} elseif($themingEnabled && $image === "favicon-touch.png" && \OC::$server->getThemingDefaults()->shouldReplaceIcons()) {
+			$cacheBusterValue = $this->config->getAppValue('theming', 'cachebuster', '0');
+			if($app==="") { $app = "core"; }
+			$path = $this->linkToRoute('theming.Icon.getTouchIcon', [ 'app' => $app ]) . '?v='. $cacheBusterValue;
+		} elseif (file_exists(\OC::$SERVERROOT . "/themes/$theme/apps/$app/img/$image")) {
 			$path = \OC::$WEBROOT . "/themes/$theme/apps/$app/img/$image";
 		} elseif (!file_exists(\OC::$SERVERROOT . "/themes/$theme/apps/$app/img/$basename.svg")
 			&& file_exists(\OC::$SERVERROOT . "/themes/$theme/apps/$app/img/$basename.png")) {

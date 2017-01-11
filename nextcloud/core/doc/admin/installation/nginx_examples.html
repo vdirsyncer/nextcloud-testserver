@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Nginx Example Configurations &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Nginx Example Configurations &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Nginx Configuration for the Nextcloud 9.x Branches" href="nginx_nextcloud_9x.html" />
+    <link rel="next" title="Nginx Configuration" href="nginx_nextcloud_9x.html" />
     <link rel="prev" title="SELinux Configuration" href="selinux_configuration.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,17 +66,16 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
 <li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
 <li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
@@ -84,7 +83,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#example-configurations">Example Configurations</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration for the Nextcloud 9.x Branches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
@@ -112,7 +111,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
+    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -142,7 +141,7 @@ with sync clients.</li>
 <div class="section" id="example-configurations">
 <h2>Example Configurations<a class="headerlink" href="#example-configurations" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a class="reference internal" href="nginx_nextcloud_9x.html"><em>Nginx Configuration for the Nextcloud 9.x Branches</em></a></li>
+<li><a class="reference internal" href="nginx_nextcloud_9x.html"><em>Nginx Configuration</em></a></li>
 </ul>
 <p>You can use Nextcloud over plain http, but we strongly encourage you to use
 SSL/TLS to encrypt all of your server traffic, and to protect user&#8217;s logins and
@@ -158,11 +157,11 @@ data in transit.</p>
 <p>If you&#8217;re seeing meaningless messages in your logfile, for example <a class="reference external" href="https://forum.owncloud.org/viewtopic.php?f=17&amp;t=20217">client
 denied by server configuration: /var/www/data/htaccesstest.txt</a>, add this section to
 your nginx configuration to suppress them:</p>
-<div class="highlight-python"><div class="highlight"><pre>location = /data/htaccesstest.txt {
-  allow all;
-  log_not_found off;
-  access_log off;
-}
+<div class="highlight-nginx"><div class="highlight"><pre><span class="k">location</span> <span class="p">=</span> <span class="s">/data/htaccesstest.txt</span> <span class="p">{</span>
+  <span class="kn">allow</span> <span class="s">all</span><span class="p">;</span>
+  <span class="kn">log_not_found</span> <span class="no">off</span><span class="p">;</span>
+  <span class="kn">access_log</span> <span class="no">off</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -172,11 +171,11 @@ your nginx configuration to suppress them:</p>
 or CSS (.css) files are not served properly leading to a 404 (File not found)
 error on those files and a broken webinterface.</p>
 <p>This could be caused by the:</p>
-<div class="highlight-python"><div class="highlight"><pre>location ~* \.(?:css|js)$ {
+<div class="highlight-nginx"><div class="highlight"><pre><span class="k">location</span> <span class="p">~</span><span class="sr">*</span> <span class="s">\.(?:css|js)</span>$ <span class="p">{</span>
 </pre></div>
 </div>
 <p>block shown above not located <strong>below</strong> the:</p>
-<div class="highlight-python"><div class="highlight"><pre>location ~ \.php(?:$|/) {
+<div class="highlight-nginx"><div class="highlight"><pre><span class="k">location</span> <span class="p">~</span> <span class="sr">\.php(?:$|/)</span> <span class="p">{</span>
 </pre></div>
 </div>
 <p>block. Other custom configurations like caching JavaScript (.js)
@@ -184,11 +183,12 @@ or CSS (.css) files via gzip could also cause such issues.</p>
 </div>
 <div class="section" id="performance-tuning">
 <h3>Performance Tuning<a class="headerlink" href="#performance-tuning" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_spdy_module.html">nginx (&lt;1.9.5) &lt;ngx_http_spdy_module</a>
-<a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">nginx (+1.9.5) &lt;ngx_http_http2_module</a></p>
+<ul class="simple">
+<li><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_spdy_module.html">nginx (&lt;1.9.5) &lt;ngx_http_spdy_module</a></li>
+<li><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_v2_module.html">nginx (+1.9.5) &lt;ngx_http_http2_module</a></li>
+</ul>
 <p>To use http_v2 for nginx you have to check two things:</p>
-<blockquote>
-<div><p>1.) be aware that this module is not built in by default due to a dependency
+<p>1.) be aware that this module is not built in by default due to a dependency
 to the openssl version used on your system. It will be enabled with the
 <code class="docutils literal"><span class="pre">--with-http_v2_module</span></code> configuration parameter during compilation. The
 dependency should be checked automatically. You can check the presence of
@@ -197,7 +197,6 @@ compile nginx can be found in section &#8220;Configure nginx with the
 <code class="docutils literal"><span class="pre">nginx-cache-purge</span></code> module&#8221; below.</p>
 <p>2.) When you have used SPDY before, the nginx config has to be changed from
 <code class="docutils literal"><span class="pre">listen</span> <span class="pre">443</span> <span class="pre">ssl</span> <span class="pre">spdy;</span></code> to <code class="docutils literal"><span class="pre">listen</span> <span class="pre">443</span> <span class="pre">ssl</span> <span class="pre">http2;</span></code></p>
-</div></blockquote>
 </div>
 <div class="section" id="nginx-caching-nextcloud-gallery-thumbnails">
 <h3>nginx: caching Nextcloud gallery thumbnails<a class="headerlink" href="#nginx-caching-nextcloud-gallery-thumbnails" title="Permalink to this headline">¶</a></h3>
@@ -350,14 +349,14 @@ your path created:</li>
 </pre></div>
 </div>
 <p>Add at the <em>beginning</em>, but <em>outside</em> the <code class="docutils literal"><span class="pre">server{}</span></code> block:</p>
-<div class="highlight-python"><div class="highlight"><pre># cache_purge
-fastcgi_cache_path {path} levels=1:2 keys_zone=NEXTCLOUD:100m inactive=60m;
-map $request_uri $skip_cache {
-     default 1;
-     ~*/thumbnail.php 0;
-     ~*/apps/galleryplus/ 0;
-     ~*/apps/gallery/ 0;
-}
+<div class="highlight-nginx"><div class="highlight"><pre><span class="c1"># cache_purge</span>
+<span class="k">fastcgi_cache_path</span> <span class="p">{</span><span class="kn">path}</span> <span class="s">levels=1:2</span> <span class="s">keys_zone=NEXTCLOUD:100m</span> <span class="s">inactive=60m</span><span class="p">;</span>
+<span class="kn">map</span> <span class="nv">$request_uri</span> <span class="nv">$skip_cache</span> <span class="p">{</span>
+     <span class="kn">default</span> <span class="mi">1</span><span class="p">;</span>
+     <span class="kn">~*/thumbnail.php</span> <span class="mi">0</span><span class="p">;</span>
+     <span class="kn">~*/apps/galleryplus/</span> <span class="mi">0</span><span class="p">;</span>
+     <span class="kn">~*/apps/gallery/</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -366,35 +365,35 @@ map $request_uri $skip_cache {
 your needs and the Nextcloud version used.
 As an alternative to mapping, you can use as many <code class="docutils literal"><span class="pre">if</span></code> statements in
 your server block as necessary:</p>
-<div class="last highlight-python"><div class="highlight"><pre>set $skip_cache 1;
-if ($request_uri ~* &quot;thumbnail.php&quot;)      { set $skip_cache 0; }
-if ($request_uri ~* &quot;/apps/galleryplus/&quot;) { set $skip_cache 0; }
-if ($request_uri ~* &quot;/apps/gallery/&quot;)     { set $skip_cache 0; }
+<div class="last highlight-nginx"><div class="highlight"><pre><span class="k">set</span> <span class="nv">$skip_cache</span> <span class="mi">1</span><span class="p">;</span>
+<span class="k">if</span> <span class="s">(</span><span class="nv">$request_uri</span> <span class="p">~</span><span class="sr">*</span> <span class="s">&quot;thumbnail.php&quot;)</span>      <span class="p">{</span> <span class="kn">set</span> <span class="nv">$skip_cache</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">if</span> <span class="s">(</span><span class="nv">$request_uri</span> <span class="p">~</span><span class="sr">*</span> <span class="s">&quot;/apps/galleryplus/&quot;)</span> <span class="p">{</span> <span class="kn">set</span> <span class="nv">$skip_cache</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">if</span> <span class="s">(</span><span class="nv">$request_uri</span> <span class="p">~</span><span class="sr">*</span> <span class="s">&quot;/apps/gallery/&quot;)</span>     <span class="p">{</span> <span class="kn">set</span> <span class="nv">$skip_cache</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
 </pre></div>
 </div>
 </div>
 <p>Add <em>inside</em> the <code class="docutils literal"><span class="pre">server{}</span></code> block, as an example of a configuration:</p>
-<div class="highlight-python"><div class="highlight"><pre># cache_purge (with $http_cookies we have unique keys for the user)
-fastcgi_cache_key $http_cookie$request_method$host$request_uri;
-fastcgi_cache_use_stale error timeout invalid_header http_500;
-fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
+<div class="highlight-nginx"><div class="highlight"><pre><span class="c1"># cache_purge (with $http_cookies we have unique keys for the user)</span>
+<span class="k">fastcgi_cache_key</span> <span class="nv">$http_cookie$request_method$host$request_uri</span><span class="p">;</span>
+<span class="k">fastcgi_cache_use_stale</span> <span class="s">error</span> <span class="s">timeout</span> <span class="s">invalid_header</span> <span class="s">http_500</span><span class="p">;</span>
+<span class="k">fastcgi_ignore_headers</span> <span class="s">Cache-Control</span> <span class="s">Expires</span> <span class="s">Set-Cookie</span><span class="p">;</span>
 
-location ~ \.php(?:$/) {
-      fastcgi_split_path_info ^(.+\.php)(/.+)$;
+<span class="k">location</span> <span class="p">~</span> <span class="sr">\.php(?:$/)</span> <span class="p">{</span>
+      <span class="kn">fastcgi_split_path_info</span> <span class="s">^(.+\.php)(/.*)</span>$<span class="p">;</span>
 
-      include fastcgi_params;
-      fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-      fastcgi_param PATH_INFO $fastcgi_path_info;
-      fastcgi_param HTTPS on;
-      fastcgi_pass php-handler;
+      <span class="kn">include</span> <span class="s">fastcgi_params</span><span class="p">;</span>
+      <span class="kn">fastcgi_param</span> <span class="s">SCRIPT_FILENAME</span> <span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+      <span class="kn">fastcgi_param</span> <span class="s">PATH_INFO</span> <span class="nv">$fastcgi_path_info</span><span class="p">;</span>
+      <span class="kn">fastcgi_param</span> <span class="s">HTTPS</span> <span class="no">on</span><span class="p">;</span>
+      <span class="kn">fastcgi_pass</span> <span class="s">php-handler</span><span class="p">;</span>
 
-      # cache_purge
-      fastcgi_cache_bypass $skip_cache;
-      fastcgi_no_cache $skip_cache;
-      fastcgi_cache NEXTCLOUD;
-      fastcgi_cache_valid  60m;
-      fastcgi_cache_methods GET HEAD;
-      }
+      <span class="c1"># cache_purge</span>
+      <span class="kn">fastcgi_cache_bypass</span> <span class="nv">$skip_cache</span><span class="p">;</span>
+      <span class="kn">fastcgi_no_cache</span> <span class="nv">$skip_cache</span><span class="p">;</span>
+      <span class="kn">fastcgi_cache</span> <span class="s">NEXTCLOUD</span><span class="p">;</span>
+      <span class="kn">fastcgi_cache_valid</span>  <span class="mi">60m</span><span class="p">;</span>
+      <span class="kn">fastcgi_cache_methods</span> <span class="s">GET</span> <span class="s">HEAD</span><span class="p">;</span>
+      <span class="p">}</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -403,11 +402,11 @@ location ~ \.php(?:$/) {
 Use whatever fits your configuration. In the example above, an <code class="docutils literal"><span class="pre">upstream</span></code>
 was defined in an nginx global configuration file.
 This may look like:</p>
-<div class="last highlight-python"><div class="highlight"><pre>upstream php-handler {
-    server unix:/var/run/php5-fpm.sock;
-    # or
-    # server 127.0.0.1:9000;
-  }
+<div class="last highlight-nginx"><div class="highlight"><pre><span class="k">upstream</span> <span class="s">php-handler</span> <span class="p">{</span>
+    <span class="kn">server</span> <span class="s">unix:/var/run/php5-fpm.sock</span><span class="p">;</span>
+    <span class="c1"># or</span>
+    <span class="c1"># server 127.0.0.1:9000;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -441,7 +440,7 @@ the high load before.</li>
     </a>
   </li>
   <li class="next">
-    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration for the Nextcloud 9.x Branches"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
+    <a href="nginx_nextcloud_9x.html" title="Next Chapter: Nginx Configuration"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Nginx Configu... &raquo;</span>
     </a>
   </li>
 </ul>

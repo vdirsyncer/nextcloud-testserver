@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using the occ Command &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Using the occ Command &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Configuring the Activity App" href="activity_configuration.html" />
     <link rel="prev" title="Warnings on Admin Page" href="security_setup_warnings.html" />
@@ -66,15 +66,15 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Using the occ Command</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#occ-command-directory">occ Command Directory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#run-occ-as-your-http-user">Run occ As Your HTTP User</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enabling-autocompletion">Enabling autocompletion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#apps-commands">Apps Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#background-jobs-selector">Background Jobs Selector</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#config-commands">Config Commands</a></li>
@@ -101,7 +101,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
-<li class="toctree-l2"><a class="reference internal" href="antivirus_configuration.html">Configuring the ClamAV Antivirus Scanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sso_configuration.html">Configuring Single-Sign-On</a></li>
 <li class="toctree-l2"><a class="reference internal" href="caching_configuration.html">Configuring Memory Caching</a></li>
 <li class="toctree-l2"><a class="reference internal" href="background_jobs_configuration.html">Defining Background Jobs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_sample_php_parameters.html">Config.php Parameters</a></li>
@@ -114,9 +114,8 @@
 <li class="toctree-l2"><a class="reference internal" href="harden_server.html">Hardening and Security Guidance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
@@ -296,6 +295,31 @@ The default is plain text, but it can also be <code class="docutils literal"><sp
 <p>This output option is available on all list and list-like commands:
 <code class="docutils literal"><span class="pre">status</span></code>, <code class="docutils literal"><span class="pre">check</span></code>, <code class="docutils literal"><span class="pre">app:list</span></code>, <code class="docutils literal"><span class="pre">config:list</span></code>, <code class="docutils literal"><span class="pre">encryption:status</span></code>
 and <code class="docutils literal"><span class="pre">encryption:list-modules</span></code></p>
+</div>
+<div class="section" id="enabling-autocompletion">
+<h2>Enabling autocompletion<a class="headerlink" href="#enabling-autocompletion" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This currently only works, if the user you use to execute the occ commands has a profile.
+<code class="docutils literal"><span class="pre">www-data</span></code> in most cases is <code class="docutils literal"><span class="pre">nologon</span></code> and therefor can <strong>not</strong> use this.</p>
+</div>
+<p>Since Nextcloud 11 autocompletion is available for bash (and bash based consoles).
+To enable it, you have to run <strong>one</strong> of the following commands:</p>
+<div class="highlight-python"><div class="highlight"><pre># BASH ~4.x, ZSH
+source &lt;(/var/www/html/nextcloud/occ _completion --generate-hook)
+
+# BASH ~3.x, ZSH
+/var/www/html/nextcloud/occ _completion --generate-hook | source /dev/stdin
+
+# BASH (any version)
+eval $(/var/www/html/nextcloud/occ _completion --generate-hook)
+</pre></div>
+</div>
+<p>This will allow you to use autocompletion with the full path <code class="docutils literal"><span class="pre">/var/www/html/nextcloud/occ</span> <span class="pre">&lt;tab&gt;</span></code>.</p>
+<p>If you also want to use autocompletion on occ from within the directory without using the full path,
+you need to specify <code class="docutils literal"><span class="pre">--programm</span> <span class="pre">occ</span></code> after the <code class="docutils literal"><span class="pre">--generate-hook</span></code>.</p>
+<p>If you want the completion to apply automatically for all new shell sessions, add the command to your
+shell&#8217;s profile (eg. <code class="docutils literal"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal"><span class="pre">~/.zshrc</span></code>).</p>
 </div>
 <div class="section" id="apps-commands">
 <span id="apps-commands-label"></span><h2>Apps Commands<a class="headerlink" href="#apps-commands" title="Permalink to this headline">¶</a></h2>
@@ -759,6 +783,7 @@ before removing a user:</p>
  files_external:list        List configured mounts
  files_external:option      Manage mount options for a mount
  files_external:verify      Verify mount configuration
+ files_external:notify      Listen for active update notifications for a configured external mount
 </pre></div>
 </div>
 <p>These commands replicate the functionality in the Nextcloud Web GUI, plus two new
@@ -787,7 +812,7 @@ and to copy external mount configurations to another Nextcloud server.</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ integrity:check-app --path=/pathto/app appname
 </pre></div>
 </div>
-<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/10/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.
+<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/11/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.
 .. TODO ON RELEASE: Update version number above on release</p>
 <p><code class="docutils literal"><span class="pre">integrity:sign-core</span></code> is for Nextcloud core developers only.</p>
 <p>See <a class="reference internal" href="../issues/code_signing.html"><em>Code Signing</em></a> to learn more.</p>

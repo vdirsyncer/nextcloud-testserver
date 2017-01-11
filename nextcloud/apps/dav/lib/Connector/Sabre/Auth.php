@@ -159,6 +159,7 @@ class Auth extends AbstractBasic {
 		} catch (Exception $e) {
 			$class = get_class($e);
 			$msg = $e->getMessage();
+			\OC::$server->getLogger()->logException($e);
 			throw new ServiceUnavailable("$class: $msg");
 		}
 	}
@@ -224,7 +225,7 @@ class Auth extends AbstractBasic {
 		if($forcedLogout) {
 			$this->userSession->logout();
 		} else {
-			if ($this->twoFactorManager->needsSecondFactor()) {
+			if($this->twoFactorManager->needsSecondFactor($this->userSession->getUser())) {
 				throw new \Sabre\DAV\Exception\NotAuthenticated('2FA challenge not passed.');
 			}
 			if (\OC_User::handleApacheAuth() ||

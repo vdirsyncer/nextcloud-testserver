@@ -53,9 +53,12 @@ use OC\Files\Storage\Storage;
 use OC\User\User;
 use OCP\Constants;
 use OCP\Files\Cache\ICacheEntry;
+use OCP\Files\EmptyFileNameException;
 use OCP\Files\FileNameTooLongException;
 use OCP\Files\InvalidCharacterInPathException;
+use OCP\Files\InvalidDirectoryException;
 use OCP\Files\InvalidPathException;
+use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
 use OCP\Files\ReservedWordException;
 use OCP\Files\UnseekableException;
@@ -430,6 +433,7 @@ class View {
 				echo fread($handle, $chunkSize);
 				flush();
 			}
+			fclose($handle);
 			$size = $this->filesize($path);
 			return $size;
 		}
@@ -1128,13 +1132,13 @@ class View {
 					throw $e;
 				}
 
-				if (in_array('delete', $hooks) and $result) {
+				if ($result && in_array('delete', $hooks) and $result) {
 					$this->removeUpdate($storage, $internalPath);
 				}
-				if (in_array('write', $hooks) and $operation !== 'fopen') {
+				if ($result && in_array('write', $hooks) and $operation !== 'fopen') {
 					$this->writeUpdate($storage, $internalPath);
 				}
-				if (in_array('touch', $hooks)) {
+				if ($result && in_array('touch', $hooks)) {
 					$this->writeUpdate($storage, $internalPath, $extraParam);
 				}
 
@@ -1353,18 +1357,10 @@ class View {
 					//add the sizes of other mount points to the folder
 					$extOnly = ($includeMountPoints === 'ext');
 					$mounts = Filesystem::getMountManager()->findIn($path);
-					foreach ($mounts as $mount) {
+					$info->setSubMounts(array_filter($mounts, function(IMountPoint $mount) use ($extOnly) {
 						$subStorage = $mount->getStorage();
-						if ($subStorage) {
-							// exclude shared storage ?
-							if ($extOnly && $subStorage instanceof \OC\Files\Storage\Shared) {
-								continue;
-							}
-							$subCache = $subStorage->getCache('');
-							$rootEntry = $subCache->get('');
-							$info->addSubEntry($rootEntry, $mount->getMountPoint());
-						}
-					}
+						return !($extOnly && $subStorage instanceof \OCA\Files_Sharing\SharedStorage);
+					}));
 				}
 			}
 
@@ -1794,37 +1790,25 @@ class View {
 	 * @throws InvalidPathException
 	 */
 	public function verifyPath($path, $fileName) {
-
-		$l10n = \OC::$server->getL10N('lib');
-
-		// verify empty and dot files
-		$trimmed = trim($fileName);
-		if ($trimmed === '') {
-			throw new InvalidPathException($l10n->t('Empty filename is not allowed'));
-		}
-		if (\OC\Files\Filesystem::isIgnoredDir($trimmed)) {
-			throw new InvalidPathException($l10n->t('Dot files are not allowed'));
-		}
-
-		// verify database - e.g. mysql only 3-byte chars
-		if (preg_match('%(?:
-      \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
-    | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
-    | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
-)%xs', $fileName)) {
-			throw new InvalidPathException($l10n->t('4-byte characters are not supported in file names'));
-		}
-
 		try {
 			/** @type \OCP\Files\Storage $storage */
 			list($storage, $internalPath) = $this->resolvePath($path);
 			$storage->verifyPath($internalPath, $fileName);
 		} catch (ReservedWordException $ex) {
-			throw new InvalidPathException($l10n->t('File name is a reserved word'));
+			$l = \OC::$server->getL10N('lib');
+			throw new InvalidPathException($l->t('File name is a reserved word'));
 		} catch (InvalidCharacterInPathException $ex) {
-			throw new InvalidPathException($l10n->t('File name contains at least one invalid character'));
+			$l = \OC::$server->getL10N('lib');
+			throw new InvalidPathException($l->t('File name contains at least one invalid character'));
 		} catch (FileNameTooLongException $ex) {
-			throw new InvalidPathException($l10n->t('File name is too long'));
+			$l = \OC::$server->getL10N('lib');
+			throw new InvalidPathException($l->t('File name is too long'));
+		} catch (InvalidDirectoryException $ex) {
+			$l = \OC::$server->getL10N('lib');
+			throw new InvalidPathException($l->t('Dot files are not allowed'));
+		} catch (EmptyFileNameException $ex) {
+			$l = \OC::$server->getL10N('lib');
+			throw new InvalidPathException($l->t('Empty filename is not allowed'));
 		}
 	}
 
@@ -2120,14 +2104,19 @@ class View {
 	 * @return bool
 	 */
 	private function createParentDirectories($filePath) {
-		$parentDirectory = dirname($filePath);
-		while(!$this->file_exists($parentDirectory)) {
-			$result = $this->createParentDirectories($parentDirectory);
-			if($result === false) {
+		$directoryParts = explode('/', $filePath);
+		$directoryParts = array_filter($directoryParts);
+		foreach($directoryParts as $key => $part) {
+			$currentPathElements = array_slice($directoryParts, 0, $key);
+			$currentPath = '/' . implode('/', $currentPathElements);
+			if($this->is_file($currentPath)) {
 				return false;
 			}
+			if(!$this->file_exists($currentPath)) {
+				$this->mkdir($currentPath);
+			}
 		}
-		$this->mkdir($filePath);
+
 		return true;
 	}
 }

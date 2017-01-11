@@ -45,6 +45,8 @@ namespace OC\Share;
 use OC\Files\Filesystem;
 use OCA\FederatedFileSharing\DiscoveryManager;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\ILogger;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\IDBConnection;
 use OCP\IConfig;
@@ -94,7 +96,6 @@ class Share extends Constants {
 					\OC_Util::addScript('core', 'shareitemmodel');
 					\OC_Util::addScript('core', 'sharedialogresharerinfoview');
 					\OC_Util::addScript('core', 'sharedialoglinkshareview');
-					\OC_Util::addScript('core', 'sharedialogmailview');
 					\OC_Util::addScript('core', 'sharedialogexpirationview');
 					\OC_Util::addScript('core', 'sharedialogshareelistview');
 					\OC_Util::addScript('core', 'sharedialogview');
@@ -128,14 +129,39 @@ class Share extends Constants {
 	 * Find which users can access a shared item
 	 * @param string $path to the file
 	 * @param string $ownerUser owner of the file
+	 * @param IUserManager $userManager
+	 * @param ILogger $logger
 	 * @param boolean $includeOwner include owner to the list of users with access to the file
 	 * @param boolean $returnUserPaths Return an array with the user => path map
 	 * @param boolean $recursive take all parent folders into account (default true)
 	 * @return array
 	 * @note $path needs to be relative to user data dir, e.g. 'file.txt'
 	 *       not '/admin/data/file.txt'
+	 * @throws \OC\User\NoUserException
 	 */
-	public static function getUsersSharingFile($path, $ownerUser, $includeOwner = false, $returnUserPaths = false, $recursive = true) {
+	public static function getUsersSharingFile($path,
+											   $ownerUser,
+											   IUserManager $userManager,
+											   ILogger $logger,
+											   $includeOwner = false,
+											   $returnUserPaths = false,
+											   $recursive = true) {
+		$userObject = $userManager->get($ownerUser);
+
+		if (is_null($userObject)) {
+			$logger->error(
+				sprintf(
+					'Backends provided no user object for %s',
+					$ownerUser
+				),
+				[
+					'app' => 'files',
+				]
+			);
+			throw new \OC\User\NoUserException('Backends provided no user object');
+		}
+
+		$ownerUser = $userObject->getUID();
 
 		Filesystem::initMountPoints($ownerUser);
 		$shares = $sharePaths = $fileTargets = array();
@@ -1059,7 +1085,7 @@ class Share extends Constants {
 			if (isset($groupShare['file_target'])) {
 				$shareTmp['fileTarget'] = $groupShare['file_target'];
 			}
-			$listOfUnsharedItems = array_merge($listOfUnsharedItems, array($groupShare));
+			$listOfUnsharedItems = array_merge($listOfUnsharedItems, [$shareTmp]);
 			$itemUnshared = true;
 		} elseif (!$itemUnshared && isset($uniqueGroupShare)) {
 			$query = \OC_DB::prepare('UPDATE `*PREFIX*share` SET `permissions` = ? WHERE `id` = ?');
@@ -1074,7 +1100,7 @@ class Share extends Constants {
 			if (isset($uniqueGroupShare['file_target'])) {
 				$shareTmp['fileTarget'] = $uniqueGroupShare['file_target'];
 			}
-			$listOfUnsharedItems = array_merge($listOfUnsharedItems, array($uniqueGroupShare));
+			$listOfUnsharedItems = array_merge($listOfUnsharedItems, [$shareTmp]);
 			$itemUnshared = true;
 		}
 
@@ -2533,7 +2559,7 @@ class Share extends Constants {
 				}
 			} else {
 				if ($fileDependent) {
-					if ($format == \OC_Share_Backend_File::FORMAT_GET_FOLDER_CONTENTS || $format == \OC_Share_Backend_File::FORMAT_FILE_APP_ROOT) {
+					if ($format == \OCA\Files_Sharing\ShareBackend\File::FORMAT_GET_FOLDER_CONTENTS || $format == \OCA\Files_Sharing\ShareBackend\File::FORMAT_FILE_APP_ROOT) {
 						$select = '`*PREFIX*share`.`id`, `item_type`, `item_source`, `*PREFIX*share`.`parent`, `uid_owner`, '
 							. '`share_type`, `share_with`, `file_source`, `path`, `file_target`, `stime`, '
 							. '`*PREFIX*share`.`permissions`, `expiration`, `storage`, `*PREFIX*filecache`.`parent` as `file_parent`, '

@@ -3,7 +3,7 @@
  * @var $_ array
  */
 /**
- * @var $l OC_L10N
+ * @var $l \OCP\IL10N
  */
 style(
 	$_['appName'],
@@ -30,7 +30,7 @@ style(
 		<?php endif; ?>
 		</br>
 		<p><?php p(
-				$l->t('For more information, please contact your friendly ownCloud administrator.')
+				$l->t('For more information, please contact your friendly Nextcloud administrator.')
 			); ?></p>
 	</li>
 </ul>

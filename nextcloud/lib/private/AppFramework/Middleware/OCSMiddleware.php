@@ -23,7 +23,14 @@
 namespace OC\AppFramework\Middleware;
 
 use OC\AppFramework\Http;
-use OCP\AppFramework\Http\OCSResponse;
+use OC\AppFramework\OCS\BaseResponse;
+use OC\AppFramework\OCS\V1Response;
+use OC\AppFramework\OCS\V2Response;
+use OCP\API;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\OCS\OCSException;
 use OCP\AppFramework\OCSController;
 use OCP\IRequest;
@@ -33,6 +40,9 @@ class OCSMiddleware extends Middleware {
 
 	/** @var IRequest */
 	private $request;
+
+	/** @var int */
+	private $ocsVersion;
 
 	/**
 	 * @param IRequest $request
@@ -44,28 +54,84 @@ class OCSMiddleware extends Middleware {
 	/**
 	 * @param \OCP\AppFramework\Controller $controller
 	 * @param string $methodName
+	 */
+	public function beforeController($controller, $methodName) {
+		if ($controller instanceof OCSController) {
+			if (substr_compare($this->request->getScriptName(), '/ocs/v2.php', -strlen('/ocs/v2.php')) === 0) {
+				$this->ocsVersion = 2;
+			} else {
+				$this->ocsVersion = 1;
+			}
+			$controller->setOCSVersion($this->ocsVersion);
+		}
+	}
+
+	/**
+	 * @param \OCP\AppFramework\Controller $controller
+	 * @param string $methodName
 	 * @param \Exception $exception
 	 * @throws \Exception
-	 * @return OCSResponse
+	 * @return BaseResponse
 	 */
 	public function afterException($controller, $methodName, \Exception $exception) {
 		if ($controller instanceof OCSController && $exception instanceof OCSException) {
-			$format = $this->getFormat($controller);
-
 			$code = $exception->getCode();
 			if ($code === 0) {
-				$code = Http::STATUS_INTERNAL_SERVER_ERROR;
+				$code = API::RESPOND_UNKNOWN_ERROR;
 			}
 
-			$response = new OCSResponse($format, $code, $exception->getMessage());
-
-			if (substr_compare($this->request->getScriptName(), '/ocs/v2.php', -strlen('/ocs/v2.php')) === 0) {
-				$response->setStatus($code);
-			}
-			return $response;
+			return $this->buildNewResponse($controller, $code, $exception->getMessage());
 		}
 
 		throw $exception;
+	}
+
+	/**
+	 * @param \OCP\AppFramework\Controller $controller
+	 * @param string $methodName
+	 * @param Response $response
+	 * @return \OCP\AppFramework\Http\Response
+	 */
+	public function afterController($controller, $methodName, Response $response) {
+		/*
+		 * If a different middleware has detected that a request unauthorized or forbidden
+		 * we need to catch the response and convert it to a proper OCS response.
+		 */
+		if ($controller instanceof OCSController && !($response instanceof BaseResponse)) {
+			if ($response->getStatus() === Http::STATUS_UNAUTHORIZED ||
+			    $response->getStatus() === Http::STATUS_FORBIDDEN) {
+
+				$message = '';
+				if ($response instanceof JSONResponse) {
+					/** @var DataResponse $response */
+					$message = $response->getData()['message'];
+				}
+
+				return $this->buildNewResponse($controller, API::RESPOND_UNAUTHORISED, $message);
+			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * @param Controller $controller
+	 * @param int $code
+	 * @param string $message
+	 * @return V1Response|V2Response
+	 */
+	private function buildNewResponse($controller, $code, $message) {
+		$format = $this->getFormat($controller);
+
+		$data = new DataResponse();
+		$data->setStatus($code);
+		if ($this->ocsVersion === 1) {
+			$response = new V1Response($data, $format, $message);
+		} else {
+			$response = new V2Response($data, $format, $message);
+		}
+
+		return $response;
 	}
 
 	/**

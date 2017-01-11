@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Config.php Parameters &mdash; Nextcloud 10 Server Administration Manual 10 documentation</title>
+    <title>Config.php Parameters &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '10',
+        VERSION:     '11 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 10 Server Administration Manual 10 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
     <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
     <link rel="next" title="Email Configuration" href="email_configuration.html" />
     <link rel="prev" title="Defining Background Jobs" href="background_jobs_configuration.html" />
@@ -66,15 +66,14 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 10 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 10 Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new_admin.html">What&#8217;s New for Admins in Nextcloud 10</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
-<li class="toctree-l2"><a class="reference internal" href="antivirus_configuration.html">Configuring the ClamAV Antivirus Scanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sso_configuration.html">Configuring Single-Sign-On</a></li>
 <li class="toctree-l2"><a class="reference internal" href="caching_configuration.html">Configuring Memory Caching</a></li>
 <li class="toctree-l2"><a class="reference internal" href="background_jobs_configuration.html">Defining Background Jobs</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Config.php Parameters</a><ul>
@@ -110,9 +109,8 @@
 <li class="toctree-l2"><a class="reference internal" href="harden_server.html">Hardening and Security Guidance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="js_css_asset_management_configuration.html">JavaScript and CSS Asset Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="oc_server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
@@ -367,6 +365,11 @@ expressed in seconds.</p>
 <p>Enforce token authentication for clients, which blocks requests using the user
 password for enhanced security. Users need to generate tokens in personal settings
 which can be used as passwords on their clients.</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;auth.bruteforce.protection.enabled&#39; =&gt; true,
+</pre></div>
+</div>
+<p>Whether the bruteforce protection shipped with Nextcloud should be enabled or not.</p>
+<p>Disabling this is discouraged for security reasons.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;skeletondirectory&#39; =&gt; &#39;/path/to/nextcloud/core/skeleton&#39;,
 </pre></div>
 </div>
@@ -527,6 +530,15 @@ conditions are met Nextcloud uses URLs without index.php in it:</p>
 <li><cite>mod_rewrite</cite> is installed</li>
 <li><cite>mod_env</cite> is installed</li>
 </ul>
+<div class="highlight-python"><div class="highlight"><pre>&#39;htaccess.IgnoreFrontController&#39; =&gt; false,
+</pre></div>
+</div>
+<p>For server setups, that don&#8217;t have <cite>mod_env</cite> enabled or restricted (e.g. suEXEC)
+this parameter has to be set to true and will assume mod_rewrite.</p>
+<p>Please check, if <cite>mod_rewrite</cite> is active and functional before setting this
+parameter and you updated your .htaccess with <cite>occ maintenance:update:htaccess</cite>.
+Otherwise your nextcloud installation might not be reachable anymore.
+For example, try accessing resources by leaving out <cite>index.php</cite> in the URL.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;proxy&#39; =&gt; &#39;&#39;,
 </pre></div>
 </div>
@@ -553,7 +565,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 file and folder deletion. For migration purposes, this setting is installed
 initially set to &#8220;auto&#8221;, which is equivalent to the default setting in
-Nextcloud 8.1 and before.</p>
+Nextcloud.</p>
 <p>Available values:</p>
 <ul>
 <li><dl class="first docutils">
@@ -609,7 +621,7 @@ to be deleted.
 Both minimum and maximum times can be set together to explicitly define
 version deletion. For migration purposes, this setting is installed
 initially set to &#8220;auto&#8221;, which is equivalent to the default setting in
-Nextcloud 8.1 and before.</p>
+Nextcloud.</p>
 <p>Available values:</p>
 <ul>
 <li><dl class="first docutils">
@@ -663,10 +675,24 @@ enable apps that pass this check.</p>
 </div>
 <p>Check if Nextcloud is up-to-date and shows a notification if a new version is
 available.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;updater.server.url&#39; =&gt; &#39;https://updates.nextcloud.org/server/&#39;,
+<div class="highlight-python"><div class="highlight"><pre>&#39;updater.server.url&#39; =&gt; &#39;https://updates.nextcloud.com/updater_server/&#39;,
 </pre></div>
 </div>
 <p>URL that Nextcloud should use to look for updates</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;updater.release.channel&#39; =&gt; &#39;stable&#39;,
+</pre></div>
+</div>
+<p>The channel that Nextcloud should use to look for updates</p>
+<dl class="docutils">
+<dt>Supported values:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">daily</span></code></li>
+<li><a href="#id1"><span class="problematic" id="id2">``</span></a>beta`</li>
+<li><code class="docutils literal"><span class="pre">stable</span></code></li>
+<li><code class="docutils literal"><span class="pre">production</span></code></li>
+</ul>
+</dd>
+</dl>
 <div class="highlight-python"><div class="highlight"><pre>&#39;has_internet_connection&#39; =&gt; true,
 </pre></div>
 </div>
@@ -702,7 +728,7 @@ process.</p>
 </div>
 <div class="section" id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre>&#39;log_type&#39; =&gt; &#39;owncloud&#39;,
+<div class="highlight-python"><div class="highlight"><pre>&#39;log_type&#39; =&gt; &#39;file&#39;,
 </pre></div>
 </div>
 <p>By default the Nextcloud logs are sent to the <code class="docutils literal"><span class="pre">nextcloud.log</span></code> file in the
@@ -793,7 +819,7 @@ will be overwritten.</p>
 <h2>Alternate Code Locations<a class="headerlink" href="#alternate-code-locations" title="Permalink to this headline">¶</a></h2>
 <p>Some of the Nextcloud code may be stored in alternate locations.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;customclient_desktop&#39; =&gt;
-        &#39;https://nextcloud.com/install/&#39;,
+        &#39;https://nextcloud.com/install/#install-clients&#39;,
 &#39;customclient_android&#39; =&gt;
         &#39;https://play.google.com/store/apps/details?id=com.nextcloud.client&#39;,
 &#39;customclient_ios&#39; =&gt;
@@ -810,17 +836,6 @@ seen in the first-run wizard and on Personal pages.</p>
 </pre></div>
 </div>
 <p>When enabled, admins may install apps from the Nextcloud app store.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;appstoreurl&#39; =&gt; &#39;https://api.nextcloud.com/v1&#39;,
-</pre></div>
-</div>
-<p>The URL of the appstore to use.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;appstore.experimental.enabled&#39; =&gt; false,
-</pre></div>
-</div>
-<p>Whether to show experimental apps in the appstore interface</p>
-<p>Experimental apps are not checked for security issues and are new or known
-to be unstable and under heavy development. Installing these can cause data
-loss or security breaches.</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;apps_paths&#39; =&gt; array(
         array(
                 &#39;path&#39;=&gt; &#39;/var/www/nextcloud/apps&#39;,
@@ -943,7 +958,7 @@ concerns:</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Troubleshooting steps for the MS Word previews are available
-at the <a class="reference internal" href="../configuration_files/collaborative_documents_configuration.html"><em>Configuring the Collaborative Documents App</em></a>
+at the <code class="xref doc docutils literal"><span class="pre">../configuration_files/collaborative_documents_configuration</span></code>
 section of the Administrators Manual.</p>
 </div>
 <p>The following providers are not available in Microsoft Windows:</p>
@@ -1112,9 +1127,9 @@ completed within one day.</p>
 </div>
 <div class="section" id="using-object-store-with-nextcloud">
 <h2>Using Object Store with Nextcloud<a class="headerlink" href="#using-object-store-with-nextcloud" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre>&#39;objectstore&#39; =&gt; array(
+<div class="highlight-python"><div class="highlight"><pre>&#39;objectstore&#39; =&gt; [
         &#39;class&#39; =&gt; &#39;OC\\Files\\ObjectStore\\Swift&#39;,
-        &#39;arguments&#39; =&gt; array(
+        &#39;arguments&#39; =&gt; [
                 // trystack will user your facebook id as the user name
                 &#39;username&#39; =&gt; &#39;facebook100000123456789&#39;,
                 // in the trystack dashboard go to user -&gt; settings -&gt; API Password to
@@ -1122,6 +1137,8 @@ completed within one day.</p>
                 &#39;password&#39; =&gt; &#39;Secr3tPaSSWoRdt7&#39;,
                 // must already exist in the objectstore, name can be different
                 &#39;container&#39; =&gt; &#39;nextcloud&#39;,
+                // prefix to prepend to the fileid, default is &#39;oid:urn:&#39;
+                &#39;objectPrefix&#39; =&gt; &#39;oid:urn:&#39;,
                 // create the container if it does not exist. default is false
                 &#39;autocreate&#39; =&gt; true,
                 // required, dev-/trystack defaults to &#39;RegionOne&#39;
@@ -1135,8 +1152,8 @@ completed within one day.</p>
                 &#39;serviceName&#39; =&gt; &#39;swift&#39;,
                 // The Interface / url Type, optional
                 &#39;urlType&#39; =&gt; &#39;internal&#39;
-        ),
-),
+        ],
+],
 </pre></div>
 </div>
 <p>This example shows how to configure Nextcloud to store all files in a
@@ -1177,6 +1194,33 @@ encryption in MySQL or specify a custom wait timeout on a cheap hoster.</p>
 </div>
 <p>sqlite3 journal mode can be specified using this configuration parameter -
 can be &#8216;WAL&#8217; or &#8216;DELETE&#8217; see for more details <a class="reference external" href="https://www.sqlite.org/wal.html">https://www.sqlite.org/wal.html</a></p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;mysql.utf8mb4&#39; =&gt; false,
+</pre></div>
+</div>
+<p>If this setting is set to true MySQL can handle 4 byte characters instead of
+3 byte characters</p>
+<p>MySQL requires a special setup for longer indexes (&gt; 767 bytes) which are
+needed:</p>
+<p>[mysqld]
+innodb_large_prefix=true
+innodb_file_format=barracuda
+innodb_file_per_table=true</p>
+<dl class="docutils">
+<dt>Tables will be created with</dt>
+<dd><ul class="first last simple">
+<li>character set: utf8mb4</li>
+<li>collation:     utf8mb4_bin</li>
+<li>row_format:    compressed</li>
+</ul>
+</dd>
+</dl>
+<p>See:
+<a class="reference external" href="https://dev.mysql.com/doc/refman/5.7/en/charset-unicode-utf8mb4.html">https://dev.mysql.com/doc/refman/5.7/en/charset-unicode-utf8mb4.html</a>
+<a class="reference external" href="https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_large_prefix">https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_large_prefix</a>
+<a class="reference external" href="https://mariadb.com/kb/en/mariadb/xtradbinnodb-server-system-variables/#innodb_large_prefix">https://mariadb.com/kb/en/mariadb/xtradbinnodb-server-system-variables/#innodb_large_prefix</a>
+<a class="reference external" href="http://www.tocker.ca/2013/10/31/benchmarking-innodb-page-compression-performance.html">http://www.tocker.ca/2013/10/31/benchmarking-innodb-page-compression-performance.html</a>
+<a class="reference external" href="http://mechanics.flite.com/blog/2014/07/29/using-innodb-large-prefix-to-avoid-error-1071/">http://mechanics.flite.com/blog/2014/07/29/using-innodb-large-prefix-to-avoid-error-1071/</a></p>
+<p>WARNING: EXPERIMENTAL</p>
 <div class="highlight-python"><div class="highlight"><pre>&#39;supportedDatabases&#39; =&gt; array(
         &#39;sqlite&#39;,
         &#39;mysql&#39;,
@@ -1229,7 +1273,7 @@ with this name. <code class="docutils literal"><span class="pre">.htaccess</span
 </div>
 <p>The default cipher for encrypting files. Currently AES-128-CFB and
 AES-256-CFB are supported.</p>
-<div class="highlight-python"><div class="highlight"><pre>&#39;minimum.supported.desktop.version&#39; =&gt; &#39;1.7.0&#39;,
+<div class="highlight-python"><div class="highlight"><pre>&#39;minimum.supported.desktop.version&#39; =&gt; &#39;2.0.0&#39;,
 </pre></div>
 </div>
 <p>The minimum Nextcloud desktop client version that will be allowed to sync with

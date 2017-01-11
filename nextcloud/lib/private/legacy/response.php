@@ -33,6 +33,7 @@ class OC_Response {
 	const STATUS_NOT_MODIFIED = 304;
 	const STATUS_TEMPORARY_REDIRECT = 307;
 	const STATUS_BAD_REQUEST = 400;
+	const STATUS_FORBIDDEN = 403;
 	const STATUS_NOT_FOUND = 404;
 	const STATUS_INTERNAL_SERVER_ERROR = 500;
 	const STATUS_SERVICE_UNAVAILABLE = 503;
@@ -246,7 +247,7 @@ class OC_Response {
 		 * @see \OCP\AppFramework\Http\Response::getHeaders
 		 */
 		$policy = 'default-src \'self\'; '
-			. 'script-src \'self\' \'unsafe-eval\'; '
+			. 'script-src \'self\' \'unsafe-eval\' \'nonce-'.\OC::$server->getContentSecurityPolicyNonceManager()->getNonce().'\'; '
 			. 'style-src \'self\' \'unsafe-inline\'; '
 			. 'frame-src *; '
 			. 'img-src * data: blob:; '

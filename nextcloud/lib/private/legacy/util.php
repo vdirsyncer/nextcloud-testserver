@@ -14,6 +14,7 @@
  * @author Christoph Wurst <christoph@owncloud.com>
  * @author Clark Tomlinson <fallen013@gmail.com>
  * @author cmeh <cmeh@users.noreply.github.com>
+ * @author Felix Anand Epp <work@felixepp.de>
  * @author Florin Peter <github@florin-peter.de>
  * @author Frank Karlitschek <frank@karlitschek.de>
  * @author Georg Ehrke <georg@owncloud.com>
@@ -66,6 +67,9 @@ class OC_Util {
 	private static $rootMounted = false;
 	private static $fsSetup = false;
 
+	/** @var array Local cache of version.php */
+	private static $versionCache = null;
+
 	protected static function getAppManager() {
 		return \OC::$server->getAppManager();
 	}
@@ -98,6 +102,11 @@ class OC_Util {
 		}
 
 		// instantiate object store implementation
+		$name = $config['class'];
+		if (strpos($name, 'OCA\\') === 0 && substr_count($name, '\\') >= 2) {
+			$segments = explode('\\', $name);
+			OC_App::loadApp(strtolower($segments[1]));
+		}
 		$config['arguments']['objectstore'] = new $config['class']($config['arguments']);
 		// mount with plain / root object store implementation
 		$config['class'] = '\OC\Files\ObjectStore\ObjectStoreStorage';
@@ -165,15 +174,14 @@ class OC_Util {
 
 		// install storage availability wrapper, before most other wrappers
 		\OC\Files\Filesystem::addStorageWrapper('oc_availability', function ($mountPoint, $storage) {
-			/** @var \OCP\Files\Storage $storage */
-			if (!$storage->instanceOfStorage('\OC\Files\Storage\Shared') && !$storage->isLocal()) {
+			if (!$storage->instanceOfStorage('\OCA\Files_Sharing\SharedStorage') && !$storage->isLocal()) {
 				return new \OC\Files\Storage\Wrapper\Availability(['storage' => $storage]);
 			}
 			return $storage;
 		});
 
 		\OC\Files\Filesystem::addStorageWrapper('oc_encoding', function ($mountPoint, \OCP\Files\Storage $storage, \OCP\Files\Mount\IMountPoint $mount) {
-			if ($mount->getOption('encoding_compatibility', false) && !$storage->instanceOfStorage('\OC\Files\Storage\Shared') && !$storage->isLocal()) {
+			if ($mount->getOption('encoding_compatibility', false) && !$storage->instanceOfStorage('\OCA\Files_Sharing\SharedStorage') && !$storage->isLocal()) {
 				return new \OC\Files\Storage\Wrapper\Encoding(['storage' => $storage]);
 			}
 			return $storage;
@@ -311,10 +319,20 @@ class OC_Util {
 	 *
 	 * @param String $userId
 	 * @param \OCP\Files\Folder $userDirectory
+	 * @throws \RuntimeException
 	 */
 	public static function copySkeleton($userId, \OCP\Files\Folder $userDirectory) {
 
-		$skeletonDirectory = \OCP\Config::getSystemValue('skeletondirectory', \OC::$SERVERROOT . '/core/skeleton');
+		$skeletonDirectory = \OC::$server->getConfig()->getSystemValue('skeletondirectory', \OC::$SERVERROOT . '/core/skeleton');
+		$instanceId = \OC::$server->getConfig()->getSystemValue('instanceid', '');
+
+		if ($instanceId === null) {
+			throw new \RuntimeException('no instance id!');
+		}
+		$appdata = 'appdata_' . $instanceId;
+		if ($userId === $appdata) {
+			throw new \RuntimeException('username is reserved name: ' . $appdata);
+		}
 
 		if (!empty($skeletonDirectory)) {
 			\OCP\Util::writeLog(
@@ -336,7 +354,16 @@ class OC_Util {
 	 * @return void
 	 */
 	public static function copyr($source, \OCP\Files\Folder $target) {
+		$logger = \OC::$server->getLogger();
+
+		// Verify if folder exists
 		$dir = opendir($source);
+		if($dir === false) {
+			$logger->error(sprintf('Could not opendir "%s"', $source), ['app' => 'core']);
+			return;
+		}
+
+		// Copy the files
 		while (false !== ($file = readdir($dir))) {
 			if (!\OC\Files\Filesystem::isIgnoredDir($file)) {
 				if (is_dir($source . '/' . $file)) {
@@ -344,7 +371,13 @@ class OC_Util {
 					self::copyr($source . '/' . $file, $child);
 				} else {
 					$child = $target->newFile($file);
-					stream_copy_to_stream(fopen($source . '/' . $file,'r'), $child->fopen('w'));
+					$sourceStream = fopen($source . '/' . $file, 'r');
+					if($sourceStream === false) {
+						$logger->error(sprintf('Could not fopen "%s"', $source . '/' . $file), ['app' => 'core']);
+						closedir($dir);
+						return;
+					}
+					stream_copy_to_stream($sourceStream, $child->fopen('w'));
 				}
 			}
 		}
@@ -356,6 +389,7 @@ class OC_Util {
 	 */
 	public static function tearDownFS() {
 		\OC\Files\Filesystem::tearDown();
+		\OC::$server->getRootFolder()->clearCache();
 		self::$fsSetup = false;
 		self::$rootMounted = false;
 	}
@@ -367,7 +401,7 @@ class OC_Util {
 	 */
 	public static function getVersion() {
 		OC_Util::loadVersion();
-		return \OC::$server->getSession()->get('OC_Version');
+		return self::$versionCache['OC_Version'];
 	}
 
 	/**
@@ -377,22 +411,15 @@ class OC_Util {
 	 */
 	public static function getVersionString() {
 		OC_Util::loadVersion();
-		return \OC::$server->getSession()->get('OC_VersionString');
+		return self::$versionCache['OC_VersionString'];
 	}
 
 	/**
-	 * @description get the current installed edition of ownCloud. There is the community
-	 * edition that just returns an empty string and the enterprise edition
-	 * that returns "Enterprise".
+	 * @deprecated the value is of no use anymore
 	 * @return string
 	 */
 	public static function getEditionString() {
-		if (OC_App::isEnabled('enterprise_key')) {
-			return "Enterprise";
-		} else {
-			return "";
-		}
-
+		return '';
 	}
 
 	/**
@@ -401,7 +428,7 @@ class OC_Util {
 	 */
 	public static function getChannel() {
 		OC_Util::loadVersion();
-		return \OC::$server->getSession()->get('OC_Channel');
+		return \OC::$server->getConfig()->getSystemValue('updater.release.channel', self::$versionCache['OC_Channel']);
 	}
 
 	/**
@@ -410,42 +437,30 @@ class OC_Util {
 	 */
 	public static function getBuild() {
 		OC_Util::loadVersion();
-		return \OC::$server->getSession()->get('OC_Build');
+		return self::$versionCache['OC_Build'];
 	}
 
 	/**
 	 * @description load the version.php into the session as cache
 	 */
 	private static function loadVersion() {
-		$timestamp = filemtime(OC::$SERVERROOT . '/version.php');
-		if (!\OC::$server->getSession()->exists('OC_Version') or OC::$server->getSession()->get('OC_Version_Timestamp') != $timestamp) {
-			require OC::$SERVERROOT . '/version.php';
-			$session = \OC::$server->getSession();
-			/** @var $timestamp int */
-			$session->set('OC_Version_Timestamp', $timestamp);
-			/** @var $OC_Version string */
-			$session->set('OC_Version', $OC_Version);
-			/** @var $OC_VersionString string */
-			$session->set('OC_VersionString', $OC_VersionString);
-			/** @var $OC_Build string */
-			$session->set('OC_Build', $OC_Build);
-			
-			// Allow overriding update channel
-			
-			if (\OC::$server->getSystemConfig()->getValue('installed', false)) {
-				$channel = \OC::$server->getAppConfig()->getValue('core', 'OC_Channel');
-			} else {
-				/** @var $OC_Channel string */
-				$channel = $OC_Channel;
-			}
-			
-			if (!is_null($channel)) {
-				$session->set('OC_Channel', $channel);
-			} else {
-				/** @var $OC_Channel string */
-				$session->set('OC_Channel', $OC_Channel);
-			}
+		if (self::$versionCache !== null) {
+			return;
 		}
+
+		$timestamp = filemtime(OC::$SERVERROOT . '/version.php');
+		require OC::$SERVERROOT . '/version.php';
+		/** @var $timestamp int */
+		self::$versionCache['OC_Version_Timestamp'] = $timestamp;
+		/** @var $OC_Version string */
+		self::$versionCache['OC_Version'] = $OC_Version;
+		/** @var $OC_VersionString string */
+		self::$versionCache['OC_VersionString'] = $OC_VersionString;
+		/** @var $OC_Build string */
+		self::$versionCache['OC_Build'] = $OC_Build;
+
+		/** @var $OC_Channel string */
+		self::$versionCache['OC_Channel'] = $OC_Channel;
 	}
 
 	/**
@@ -504,11 +519,11 @@ class OC_Util {
 	 *
 	 * @param string $application application id
 	 * @param string $languageCode language code, defaults to the current language
-	 * @param bool $prepend prepend the Script to the beginning of the list 
+	 * @param bool $prepend prepend the Script to the beginning of the list
 	 */
 	public static function addTranslations($application, $languageCode = null, $prepend = false) {
 		if (is_null($languageCode)) {
-			$languageCode = \OC_L10N::findLanguage($application);
+			$languageCode = \OC::$server->getL10NFactory()->findLanguage($application);
 		}
 		if (!empty($application)) {
 			$path = "$application/l10n/$languageCode";
@@ -549,7 +564,7 @@ class OC_Util {
 	 *
 	 * @param string $application application id
 	 * @param bool $prepend prepend the file to the beginning of the list
-	 * @param string $path 
+	 * @param string $path
 	 * @param string $type (script or style)
 	 * @return void
 	 */
@@ -649,15 +664,6 @@ class OC_Util {
 			$webServerRestart = true;
 		}
 
-		// Check if server running on Windows platform
-		if(OC_Util::runningOnWindows()) {
-			$errors[] = [
-				'error' => $l->t('Microsoft Windows Platform is not supported'),
-				'hint' => $l->t('Running Nextcloud Server on the Microsoft Windows platform is not supported. We suggest you ' .
-					'use a Linux server in a virtual machine if you have no option for migrating the server itself.')
-			];
-		}
-
 		// Check if config folder is writable.
 		if(!OC_Helper::isReadOnlyConfigEnabled()) {
 			if (!is_writable(OC::$configDir) or !is_readable(OC::$configDir)) {
@@ -748,6 +754,7 @@ class OC_Util {
 				'simplexml_load_string' => 'SimpleXML',
 				'hash' => 'HASH Message Digest Framework',
 				'curl_init' => 'cURL',
+				'openssl_verify' => 'OpenSSL',
 			],
 			'defined' => array(
 				'PDO::ATTR_DRIVER_NAME' => 'PDO'
@@ -968,14 +975,14 @@ class OC_Util {
 			header('Location: ' . \OC::$server->getURLGenerator()->linkToRoute(
 						'core.login.showLoginForm',
 						[
-							'redirect_url' => urlencode(\OC::$server->getRequest()->getRequestUri()),
+							'redirect_url' => \OC::$server->getRequest()->getRequestUri(),
 						]
 					)
 			);
 			exit();
 		}
 		// Redirect to index page if 2FA challenge was not solved yet
-		if (\OC::$server->getTwoFactorAuthManager()->needsSecondFactor()) {
+		if (\OC::$server->getTwoFactorAuthManager()->needsSecondFactor(\OC::$server->getUserSession()->getUser())) {
 			header('Location: ' . \OCP\Util::linkToAbsolute('', 'index.php'));
 			exit();
 		}
@@ -1064,7 +1071,7 @@ class OC_Util {
 					}
 				}
 
-				if(getenv('front_controller_active') === 'true') {
+				if(\OC::$server->getConfig()->getSystemValue('htaccess.IgnoreFrontController', false) === true || getenv('front_controller_active') === 'true') {
 					$location = $urlGenerator->getAbsoluteURL('/apps/' . $appId . '/');
 				} else {
 					$location = $urlGenerator->getAbsoluteURL('/index.php/apps/' . $appId . '/');
@@ -1162,6 +1169,8 @@ class OC_Util {
 		}
 		fwrite($fp, $testContent);
 		fclose($fp);
+
+		return $testContent;
 	}
 
 	/**
@@ -1247,15 +1256,6 @@ class OC_Util {
 		while (ob_get_level()) {
 			ob_end_clean();
 		}
-	}
-
-	/**
-	 * Checks whether the server is running on Windows
-	 *
-	 * @return bool true if running on Windows, false otherwise
-	 */
-	public static function runningOnWindows() {
-		return (substr(PHP_OS, 0, 3) === "WIN");
 	}
 
 	/**

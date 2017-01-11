@@ -27,7 +27,7 @@ use OC\Files\Cache\Propagator;
 
 class SharedPropagator extends Propagator {
 	/**
-	 * @var \OC\Files\Storage\Shared
+	 * @var \OCA\Files_Sharing\SharedStorage
 	 */
 	protected $storage;
 
@@ -39,6 +39,6 @@ class SharedPropagator extends Propagator {
 	public function propagateChange($internalPath, $time, $sizeDifference = 0) {
 		/** @var \OC\Files\Storage\Storage $storage */
 		list($storage, $sourceInternalPath) = $this->storage->resolvePath($internalPath);
-		return $storage->getPropagator()->propagateChange($sourceInternalPath, $time, $sizeDifference);
+		$storage->getPropagator()->propagateChange($sourceInternalPath, $time, $sizeDifference);
 	}
 }

@@ -4,8 +4,10 @@ OC.L10N.register(
     "Could not revert: %s" : "Грешка при връщане: %s",
     "Versions" : "Версии",
     "Failed to revert {file} to revision {timestamp}." : "Грешка при връщане на {file} към версия {timestamp}.",
-    "Restore" : "Възтановяви",
-    "No other versions available" : "Няма други налични версии",
-    "More versions..." : "Още версии..."
+    "_%n byte_::_%n bytes_" : ["%n байт","%n байта"],
+    "Restore" : "Възтановяване",
+    "No versions available" : "Няма налични версии",
+    "More versions..." : "Още версии...",
+    "No other versions available" : "Няма други налични версии"
 },
 "nplurals=2; plural=(n != 1);");

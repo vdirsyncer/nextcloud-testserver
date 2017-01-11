@@ -33,6 +33,7 @@ use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\Common\EventManager;
+use Doctrine\DBAL\Platforms\MySqlPlatform;
 use OC\DB\QueryBuilder\QueryBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -66,7 +67,11 @@ class Connection extends \Doctrine\DBAL\Connection implements IDBConnection {
 	 * @return \OCP\DB\QueryBuilder\IQueryBuilder
 	 */
 	public function getQueryBuilder() {
-		return new QueryBuilder($this);
+		return new QueryBuilder(
+			$this,
+			\OC::$server->getSystemConfig(),
+			\OC::$server->getLogger()
+		);
 	}
 
 	/**
@@ -401,5 +406,15 @@ class Connection extends \Doctrine\DBAL\Connection implements IDBConnection {
 	 */
 	public function escapeLikeParameter($param) {
 		return addcslashes($param, '\\_%');
+	}
+
+	/**
+	 * Check whether or not the current database support 4byte wide unicode
+	 *
+	 * @return bool
+	 * @since 11.0.0
+	 */
+	public function supports4ByteText() {
+		return ! ($this->getDatabasePlatform() instanceof MySqlPlatform && $this->getParams()['charset'] !== 'utf8mb4');
 	}
 }

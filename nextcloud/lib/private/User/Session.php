@@ -48,8 +48,10 @@ use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\Util;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * Class Session
@@ -89,23 +91,29 @@ class Session implements IUserSession, Emitter {
 	/** @var User $activeUser */
 	protected $activeUser;
 
+	/** @var ISecureRandom */
+	private $random;
+
 	/**
 	 * @param IUserManager $manager
 	 * @param ISession $session
 	 * @param ITimeFactory $timeFacory
 	 * @param IProvider $tokenProvider
 	 * @param IConfig $config
+	 * @param ISecureRandom $random
 	 */
 	public function __construct(IUserManager $manager,
 								ISession $session,
 								ITimeFactory $timeFacory,
 								$tokenProvider,
-								IConfig $config) {
+								IConfig $config,
+								ISecureRandom $random) {
 		$this->manager = $manager;
 		$this->session = $session;
 		$this->timeFacory = $timeFacory;
 		$this->tokenProvider = $tokenProvider;
 		$this->config = $config;
+		$this->random = $random;
 	}
 
 	/**
@@ -167,7 +175,7 @@ class Session implements IUserSession, Emitter {
 	/**
 	 * set the currently active user
 	 *
-	 * @param User|null $user
+	 * @param IUser|null $user
 	 */
 	public function setUser($user) {
 		if (is_null($user)) {
@@ -287,10 +295,8 @@ class Session implements IUserSession, Emitter {
 		$this->session->regenerateId();
 		if ($this->validateToken($password, $uid)) {
 			return $this->loginWithToken($password);
-		} else {
-			return $this->loginWithPassword($uid, $password);
 		}
-		return false;
+		return $this->loginWithPassword($uid, $password);
 	}
 
 	/**
@@ -311,8 +317,7 @@ class Session implements IUserSession, Emitter {
 								$password,
 								IRequest $request,
 								OC\Security\Bruteforce\Throttler $throttler) {
-		$currentDelay = $throttler->getDelay($request->getRemoteAddress());
-		$throttler->sleepDelay($request->getRemoteAddress());
+		$currentDelay = $throttler->sleepDelay($request->getRemoteAddress());
 
 		$isTokenPassword = $this->isTokenPassword($password);
 		if (!$isTokenPassword && $this->isTokenAuthEnforced()) {
@@ -365,6 +370,9 @@ class Session implements IUserSession, Emitter {
 		$user = $this->manager->get($username);
 		if (is_null($user)) {
 			$users = $this->manager->getByEmail($username);
+			if (empty($users)) {
+				return false;
+			}
 			if (count($users) !== 1) {
 				return true;
 			}
@@ -389,15 +397,25 @@ class Session implements IUserSession, Emitter {
 		}
 	}
 
-	protected function prepareUserLogin() {
+	protected function prepareUserLogin($firstTimeLogin) {
 		// TODO: mock/inject/use non-static
 		// Refresh the token
 		\OC::$server->getCsrfTokenManager()->refreshToken();
 		//we need to pass the user name, which may differ from login name
 		$user = $this->getUser()->getUID();
 		OC_Util::setupFS($user);
-		//trigger creation of user home and /files folder
-		\OC::$server->getUserFolder($user);
+
+		if ($firstTimeLogin) {
+			// TODO: lock necessary?
+			//trigger creation of user home and /files folder
+			$userFolder = \OC::$server->getUserFolder($user);
+
+			// copy skeleton
+			\OC_Util::copySkeleton($user, $userFolder);
+
+			// trigger any other initialization
+			\OC::$server->getEventDispatcher()->dispatch(IUser::class . '::firstLogin', new GenericEvent($this->getUser()));
+		}
 	}
 
 	/**
@@ -405,6 +423,7 @@ class Session implements IUserSession, Emitter {
 	 *
 	 * @todo do not allow basic auth if the user is 2FA enforced
 	 * @param IRequest $request
+	 * @param OC\Security\Bruteforce\Throttler $throttler
 	 * @return boolean if the login was successful
 	 */
 	public function tryBasicAuthLogin(IRequest $request,
@@ -422,6 +441,10 @@ class Session implements IUserSession, Emitter {
 					$this->session->set(
 						Auth::DAV_AUTHENTICATED, $this->getUser()->getUID()
 					);
+
+					// Set the last-password-confirm session to make the sudo mode work
+					 $this->session->set('last-password-confirm', $this->timeFacory->getTime());
+
 					return true;
 				}
 			} catch (PasswordLoginForbiddenException $ex) {
@@ -450,9 +473,10 @@ class Session implements IUserSession, Emitter {
 		if ($user->isEnabled()) {
 			$this->setUser($user);
 			$this->setLoginName($uid);
-			$this->manager->emit('\OC\User', 'postLogin', array($user, $password));
+			$firstTimeLogin = $user->updateLastLoginTimestamp();
+			$this->manager->emit('\OC\User', 'postLogin', [$user, $password]);
 			if ($this->isLoggedIn()) {
-				$this->prepareUserLogin();
+				$this->prepareUserLogin($firstTimeLogin);
 				return true;
 			} else {
 				// injecting l10n does not work - there is a circular dependency between session and \OCP\L10N\IFactory
@@ -464,7 +488,6 @@ class Session implements IUserSession, Emitter {
 			$message = \OC::$server->getL10N('lib')->t('User disabled');
 			throw new LoginException($message);
 		}
-		return false;
 	}
 
 	/**
@@ -507,10 +530,11 @@ class Session implements IUserSession, Emitter {
 		//login
 		$this->setUser($user);
 		$this->setLoginName($dbToken->getLoginName());
+		\OC::$server->getLockdownManager()->setToken($dbToken);
 		$this->manager->emit('\OC\User', 'postLogin', array($user, $password));
 
 		if ($this->isLoggedIn()) {
-			$this->prepareUserLogin();
+			$this->prepareUserLogin(false); // token login cant be the first
 		} else {
 			// injecting l10n does not work - there is a circular dependency between session and \OCP\L10N\IFactory
 			$message = \OC::$server->getL10N('lib')->t('Login canceled by app');
@@ -527,9 +551,10 @@ class Session implements IUserSession, Emitter {
 	 * @param string $uid user UID
 	 * @param string $loginName login name
 	 * @param string $password
+	 * @param int $remember
 	 * @return boolean
 	 */
-	public function createSessionToken(IRequest $request, $uid, $loginName, $password = null) {
+	public function createSessionToken(IRequest $request, $uid, $loginName, $password = null, $remember = IToken::DO_NOT_REMEMBER) {
 		if (is_null($this->manager->get($uid))) {
 			// User does not exist
 			return false;
@@ -538,7 +563,7 @@ class Session implements IUserSession, Emitter {
 		try {
 			$sessionId = $this->session->getId();
 			$pwd = $this->getPassword($password);
-			$this->tokenProvider->generateToken($sessionId, $uid, $loginName, $pwd, $name);
+			$this->tokenProvider->generateToken($sessionId, $uid, $loginName, $pwd, $name, IToken::TEMPORARY_TOKEN, $remember);
 			return true;
 		} catch (SessionNotAvailableException $ex) {
 			// This can happen with OCC, where a memory session is used
@@ -601,7 +626,6 @@ class Session implements IUserSession, Emitter {
 			}
 
 			$dbToken->setLastCheck($now);
-			$this->tokenProvider->updateToken($dbToken);
 			return true;
 		}
 
@@ -612,7 +636,6 @@ class Session implements IUserSession, Emitter {
 			return false;
 		}
 		$dbToken->setLastCheck($now);
-		$this->tokenProvider->updateToken($dbToken);
 		return true;
 	}
 
@@ -652,6 +675,7 @@ class Session implements IUserSession, Emitter {
 	/**
 	 * Tries to login the user with auth token header
 	 *
+	 * @param IRequest $request
 	 * @todo check remember me cookie
 	 * @return boolean
 	 */
@@ -682,9 +706,10 @@ class Session implements IUserSession, Emitter {
 	 *
 	 * @param string $uid the username
 	 * @param string $currentToken
+	 * @param string $oldSessionId
 	 * @return bool
 	 */
-	public function loginWithCookie($uid, $currentToken) {
+	public function loginWithCookie($uid, $currentToken, $oldSessionId) {
 		$this->session->regenerateId();
 		$this->manager->emit('\OC\User', 'preRememberedLogin', array($uid));
 		$user = $this->manager->get($uid);
@@ -694,21 +719,42 @@ class Session implements IUserSession, Emitter {
 		}
 
 		// get stored tokens
-		$tokens = OC::$server->getConfig()->getUserKeys($uid, 'login_token');
+		$tokens = $this->config->getUserKeys($uid, 'login_token');
 		// test cookies token against stored tokens
 		if (!in_array($currentToken, $tokens, true)) {
 			return false;
 		}
 		// replace successfully used token with a new one
-		OC::$server->getConfig()->deleteUserValue($uid, 'login_token', $currentToken);
-		$newToken = OC::$server->getSecureRandom()->generate(32);
-		OC::$server->getConfig()->setUserValue($uid, 'login_token', $newToken, time());
+		$this->config->deleteUserValue($uid, 'login_token', $currentToken);
+		$newToken = $this->random->generate(32);
+		$this->config->setUserValue($uid, 'login_token', $newToken, $this->timeFacory->getTime());
+
+		try {
+			$sessionId = $this->session->getId();
+			$this->tokenProvider->renewSessionToken($oldSessionId, $sessionId);
+		} catch (SessionNotAvailableException $ex) {
+			return false;
+		} catch (InvalidTokenException $ex) {
+			\OC::$server->getLogger()->warning('Renewing session token failed', ['app' => 'core']);
+			return false;
+		}
+
 		$this->setMagicInCookie($user->getUID(), $newToken);
 
 		//login
 		$this->setUser($user);
-		$this->manager->emit('\OC\User', 'postRememberedLogin', array($user));
+		$user->updateLastLoginTimestamp();
+		$this->manager->emit('\OC\User', 'postRememberedLogin', [$user]);
 		return true;
+	}
+
+	/**
+	 * @param IUser $user
+	 */
+	public function createRememberMeToken(IUser $user) {
+		$token = $this->random->generate(32);
+		$this->config->setUserValue($user->getUID(), 'login_token', $token, $this->timeFacory->getTime());
+		$this->setMagicInCookie($user->getUID(), $token);
 	}
 
 	/**
@@ -738,10 +784,19 @@ class Session implements IUserSession, Emitter {
 	 */
 	public function setMagicInCookie($username, $token) {
 		$secureCookie = OC::$server->getRequest()->getServerProtocol() === 'https';
-		$expires = time() + OC::$server->getConfig()->getSystemValue('remember_login_cookie_lifetime', 60 * 60 * 24 * 15);
-		setcookie('oc_username', $username, $expires, OC::$WEBROOT, '', $secureCookie, true);
-		setcookie('oc_token', $token, $expires, OC::$WEBROOT, '', $secureCookie, true);
-		setcookie('oc_remember_login', '1', $expires, OC::$WEBROOT, '', $secureCookie, true);
+		$webRoot = \OC::$WEBROOT;
+		if ($webRoot === '') {
+			$webRoot = '/';
+		}
+
+		$expires = $this->timeFacory->getTime() + $this->config->getSystemValue('remember_login_cookie_lifetime', 60 * 60 * 24 * 15);
+		setcookie('nc_username', $username, $expires, $webRoot, '', $secureCookie, true);
+		setcookie('nc_token', $token, $expires, $webRoot, '', $secureCookie, true);
+		try {
+			setcookie('nc_session_id', $this->session->getId(), $expires, $webRoot, '', $secureCookie, true);
+		} catch (SessionNotAvailableException $ex) {
+			// ignore
+		}
 	}
 
 	/**
@@ -751,17 +806,17 @@ class Session implements IUserSession, Emitter {
 		//TODO: DI for cookies and IRequest
 		$secureCookie = OC::$server->getRequest()->getServerProtocol() === 'https';
 
-		unset($_COOKIE['oc_username']); //TODO: DI
-		unset($_COOKIE['oc_token']);
-		unset($_COOKIE['oc_remember_login']);
-		setcookie('oc_username', '', time() - 3600, OC::$WEBROOT, '', $secureCookie, true);
-		setcookie('oc_token', '', time() - 3600, OC::$WEBROOT, '', $secureCookie, true);
-		setcookie('oc_remember_login', '', time() - 3600, OC::$WEBROOT, '', $secureCookie, true);
+		unset($_COOKIE['nc_username']); //TODO: DI
+		unset($_COOKIE['nc_token']);
+		unset($_COOKIE['nc_session_id']);
+		setcookie('nc_username', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT, '', $secureCookie, true);
+		setcookie('nc_token', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT, '', $secureCookie, true);
+		setcookie('nc_session_id', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT, '', $secureCookie, true);
 		// old cookies might be stored under /webroot/ instead of /webroot
 		// and Firefox doesn't like it!
-		setcookie('oc_username', '', time() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
-		setcookie('oc_token', '', time() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
-		setcookie('oc_remember_login', '', time() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
+		setcookie('nc_username', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
+		setcookie('nc_token', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
+		setcookie('nc_session_id', '', $this->timeFacory->getTime() - 3600, OC::$WEBROOT . '/', '', $secureCookie, true);
 	}
 
 	/**
@@ -780,5 +835,6 @@ class Session implements IUserSession, Emitter {
 			// Nothing to do
 		}
 	}
+
 
 }

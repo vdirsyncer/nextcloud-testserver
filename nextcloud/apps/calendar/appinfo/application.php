@@ -52,14 +52,20 @@ class Application extends App {
 			$request = $c->query('Request');
 			$userSession = $c->getServer()->getUserSession();
 			$config = $c->getServer()->getConfig();
+			$mailer = $c->getServer()->getMailer();
+			$l10n = $c->getServer()->getL10N($c->query('AppName'));
+			$defaults = new \OCP\Defaults();
+			$urlGenerator = $c->getServer()->getURLGenerator();
 
-			return new Controller\ViewController($c->getAppName(), $request, $userSession, $config);
+			return new Controller\ViewController($c->getAppName(), $request, $userSession, $config, $mailer, $l10n, $defaults, $urlGenerator);
 		});
 		$container->registerService('ProxyController', function(IAppContainer $c) {
 			$request = $c->query('Request');
 			$client = $c->getServer()->getHTTPClientService();
+			$l10n = $c->getServer()->getL10N($c->query('AppName'));
+			$logger = $c->getServer()->getLogger();
 
-			return new Controller\ProxyController($c->getAppName(), $request, $client);
+			return new Controller\ProxyController($c->getAppName(), $request, $client, $l10n, $logger);
 		});
 	}
 

@@ -1,5 +1,6 @@
 <?php
 /**
+ * @copyright Copyright (c) 2016 Joas Schilling <coding@schilljs.com>
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Christoph Wurst <christoph@owncloud.com>
@@ -25,21 +26,24 @@
 
 namespace OC\Core\Controller;
 
-use OC\AppFramework\Utility\TimeFactory;
 use OC\Authentication\TwoFactorAuth\Manager;
 use OC\Security\Bruteforce\Throttler;
 use OC\User\Session;
 use OC_App;
 use OC_Util;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\Authentication\TwoFactorAuth\IProvider;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\IUserSession;
 
 class LoginController extends Controller {
 	/** @var IUserManager */
@@ -48,7 +52,7 @@ class LoginController extends Controller {
 	private $config;
 	/** @var ISession */
 	private $session;
-	/** @var Session */
+	/** @var IUserSession|Session */
 	private $userSession;
 	/** @var IURLGenerator */
 	private $urlGenerator;
@@ -63,7 +67,7 @@ class LoginController extends Controller {
 	 * @param IUserManager $userManager
 	 * @param IConfig $config
 	 * @param ISession $session
-	 * @param Session $userSession
+	 * @param IUserSession $userSession
 	 * @param IURLGenerator $urlGenerator
 	 * @param Manager $twoFactorManager
 	 * @param Throttler $throttler
@@ -73,7 +77,7 @@ class LoginController extends Controller {
 						 IUserManager $userManager,
 						 IConfig $config,
 						 ISession $session,
-						 Session $userSession,
+						 IUserSession $userSession,
 						 IURLGenerator $urlGenerator,
 						 Manager $twoFactorManager,
 						 Throttler $throttler) {
@@ -195,9 +199,12 @@ class LoginController extends Controller {
 	 * @param string $user
 	 * @param string $password
 	 * @param string $redirect_url
+	 * @param boolean $remember_login
+	 * @param string $timezone
+	 * @param string $timezone_offset
 	 * @return RedirectResponse
 	 */
-	public function tryLogin($user, $password, $redirect_url) {
+	public function tryLogin($user, $password, $redirect_url, $remember_login = false, $timezone = '', $timezone_offset = '') {
 		$currentDelay = $this->throttler->getDelay($this->request->getRemoteAddress());
 		$this->throttler->sleepDelay($this->request->getRemoteAddress());
 
@@ -235,19 +242,79 @@ class LoginController extends Controller {
 		// TODO: remove password checks from above and let the user session handle failures
 		// requires https://github.com/owncloud/core/pull/24616
 		$this->userSession->login($user, $password);
-		$this->userSession->createSessionToken($this->request, $loginResult->getUID(), $user, $password);
+		$this->userSession->createSessionToken($this->request, $loginResult->getUID(), $user, $password, (int)$remember_login);
+
+		// User has successfully logged in, now remove the password reset link, when it is available
+		$this->config->deleteUserValue($loginResult->getUID(), 'core', 'lostpassword');
+
+		$this->session->set('last-password-confirm', $loginResult->getLastLogin());
+
+		if ($timezone_offset !== '') {
+			$this->config->setUserValue($loginResult->getUID(), 'core', 'timezone', $timezone);
+			$this->session->set('timezone', $timezone_offset);
+		}
 
 		if ($this->twoFactorManager->isTwoFactorAuthenticated($loginResult)) {
-			$this->twoFactorManager->prepareTwoFactorLogin($loginResult);
-			if (!is_null($redirect_url)) {
-				return new RedirectResponse($this->urlGenerator->linkToRoute('core.TwoFactorChallenge.selectChallenge', [
-					'redirect_url' => $redirect_url
-				]));
+			$this->twoFactorManager->prepareTwoFactorLogin($loginResult, $remember_login);
+
+			$providers = $this->twoFactorManager->getProviders($loginResult);
+			if (count($providers) === 1) {
+				// Single provider, hence we can redirect to that provider's challenge page directly
+				/* @var $provider IProvider */
+				$provider = array_pop($providers);
+				$url = 'core.TwoFactorChallenge.showChallenge';
+				$urlParams = [
+					'challengeProviderId' => $provider->getId(),
+				];
+			} else {
+				$url = 'core.TwoFactorChallenge.selectChallenge';
+				$urlParams = [];
 			}
-			return new RedirectResponse($this->urlGenerator->linkToRoute('core.TwoFactorChallenge.selectChallenge'));
+
+			if (!is_null($redirect_url)) {
+				$urlParams['redirect_url'] = $redirect_url;
+			}
+
+			return new RedirectResponse($this->urlGenerator->linkToRoute($url, $urlParams));
+		}
+
+		if ($remember_login) {
+			$this->userSession->createRememberMeToken($loginResult);
 		}
 
 		return $this->generateRedirect($redirect_url);
 	}
 
+	/**
+	 * @NoAdminRequired
+	 * @UseSession
+	 *
+	 * @license GNU AGPL version 3 or any later version
+	 *
+	 * @param string $password
+	 * @return DataResponse
+	 */
+	public function confirmPassword($password) {
+		$currentDelay = $this->throttler->getDelay($this->request->getRemoteAddress());
+		$this->throttler->sleepDelay($this->request->getRemoteAddress());
+
+		$user = $this->userSession->getUser();
+		if (!$user instanceof IUser) {
+			return new DataResponse([], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$loginResult = $this->userManager->checkPassword($user->getUID(), $password);
+		if ($loginResult === false) {
+			$this->throttler->registerAttempt('sudo', $this->request->getRemoteAddress(), ['user' => $user->getUID()]);
+			if ($currentDelay === 0) {
+				$this->throttler->sleepDelay($this->request->getRemoteAddress());
+			}
+
+			return new DataResponse([], Http::STATUS_FORBIDDEN);
+		}
+
+		$confirmTimestamp = time();
+		$this->session->set('last-password-confirm', $confirmTimestamp);
+		return new DataResponse(['lastLogin' => $confirmTimestamp], Http::STATUS_OK);
+	}
 }

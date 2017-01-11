@@ -47,5 +47,9 @@ $linkToJs = \OC::$server->getURLGenerator()->linkToRoute(
 	'script',
 	[
 		'src' => $linkToJs,
+		'nonce' => \OC::$server->getContentSecurityPolicyNonceManager()->getNonce()
 	], ''
 );
+
+$app = new \OCP\AppFramework\App('theming');
+$app->getContainer()->registerCapability(\OCA\Theming\Capabilities::class);

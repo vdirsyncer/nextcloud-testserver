@@ -26,8 +26,14 @@ namespace OC\Notification;
 
 use OCP\Notification\IAction;
 use OCP\Notification\INotification;
+use OCP\RichObjectStrings\InvalidObjectExeption;
+use OCP\RichObjectStrings\IValidator;
 
 class Notification implements INotification {
+
+	/** @var IValidator */
+	protected $richValidator;
+
 	/** @var string */
 	protected $app;
 
@@ -53,6 +59,12 @@ class Notification implements INotification {
 	protected $subjectParsed;
 
 	/** @var string */
+	protected $subjectRich;
+
+	/** @var array */
+	protected $subjectRichParameters;
+
+	/** @var string */
 	protected $message;
 
 	/** @var array */
@@ -60,6 +72,12 @@ class Notification implements INotification {
 
 	/** @var string */
 	protected $messageParsed;
+
+	/** @var string */
+	protected $messageRich;
+
+	/** @var array */
+	protected $messageRichParameters;
 
 	/** @var string */
 	protected $link;
@@ -81,8 +99,11 @@ class Notification implements INotification {
 
 	/**
 	 * Constructor
+	 *
+	 * @param IValidator $richValidator
 	 */
-	public function __construct() {
+	public function __construct(IValidator $richValidator) {
+		$this->richValidator = $richValidator;
 		$this->app = '';
 		$this->user = '';
 		$this->dateTime = new \DateTime();
@@ -92,9 +113,13 @@ class Notification implements INotification {
 		$this->subject = '';
 		$this->subjectParameters = [];
 		$this->subjectParsed = '';
+		$this->subjectRich = '';
+		$this->subjectRichParameters = [];
 		$this->message = '';
 		$this->messageParameters = [];
 		$this->messageParsed = '';
+		$this->messageRich = '';
+		$this->messageRichParameters = [];
 		$this->link = '';
 		$this->icon = '';
 		$this->actions = [];
@@ -214,12 +239,10 @@ class Notification implements INotification {
 		if (!is_string($subject) || $subject === '' || isset($subject[64])) {
 			throw new \InvalidArgumentException('The given subject is invalid');
 		}
-		$this->subject = $subject;
 
-		if (!is_array($parameters)) {
-			throw new \InvalidArgumentException('The given subject parameters are invalid');
-		}
+		$this->subject = $subject;
 		$this->subjectParameters = $parameters;
+
 		return $this;
 	}
 
@@ -242,7 +265,7 @@ class Notification implements INotification {
 	/**
 	 * @param string $subject
 	 * @return $this
-	 * @throws \InvalidArgumentException if the subject are invalid
+	 * @throws \InvalidArgumentException if the subject is invalid
 	 * @since 8.2.0
 	 */
 	public function setParsedSubject($subject) {
@@ -262,6 +285,40 @@ class Notification implements INotification {
 	}
 
 	/**
+	 * @param string $subject
+	 * @param array $parameters
+	 * @return $this
+	 * @throws \InvalidArgumentException if the subject or parameters are invalid
+	 * @since 11.0.0
+	 */
+	public function setRichSubject($subject, array $parameters = []) {
+		if (!is_string($subject) || $subject === '') {
+			throw new \InvalidArgumentException('The given parsed subject is invalid');
+		}
+
+		$this->subjectRich = $subject;
+		$this->subjectRichParameters = $parameters;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getRichSubject() {
+		return $this->subjectRich;
+	}
+
+	/**
+	 * @return array[]
+	 * @since 11.0.0
+	 */
+	public function getRichSubjectParameters() {
+		return $this->subjectRichParameters;
+	}
+
+	/**
 	 * @param string $message
 	 * @param array $parameters
 	 * @return $this
@@ -272,12 +329,10 @@ class Notification implements INotification {
 		if (!is_string($message) || $message === '' || isset($message[64])) {
 			throw new \InvalidArgumentException('The given message is invalid');
 		}
-		$this->message = $message;
 
-		if (!is_array($parameters)) {
-			throw new \InvalidArgumentException('The given message parameters are invalid');
-		}
+		$this->message = $message;
 		$this->messageParameters = $parameters;
+
 		return $this;
 	}
 
@@ -300,7 +355,7 @@ class Notification implements INotification {
 	/**
 	 * @param string $message
 	 * @return $this
-	 * @throws \InvalidArgumentException if the message are invalid
+	 * @throws \InvalidArgumentException if the message is invalid
 	 * @since 8.2.0
 	 */
 	public function setParsedMessage($message) {
@@ -320,9 +375,43 @@ class Notification implements INotification {
 	}
 
 	/**
+	 * @param string $message
+	 * @param array $parameters
+	 * @return $this
+	 * @throws \InvalidArgumentException if the message or parameters are invalid
+	 * @since 11.0.0
+	 */
+	public function setRichMessage($message, array $parameters = []) {
+		if (!is_string($message) || $message === '') {
+			throw new \InvalidArgumentException('The given parsed message is invalid');
+		}
+
+		$this->messageRich = $message;
+		$this->messageRichParameters = $parameters;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getRichMessage() {
+		return $this->messageRich;
+	}
+
+	/**
+	 * @return array[]
+	 * @since 11.0.0
+	 */
+	public function getRichMessageParameters() {
+		return $this->messageRichParameters;
+	}
+
+	/**
 	 * @param string $link
 	 * @return $this
-	 * @throws \InvalidArgumentException if the link are invalid
+	 * @throws \InvalidArgumentException if the link is invalid
 	 * @since 8.2.0
 	 */
 	public function setLink($link) {
@@ -342,6 +431,28 @@ class Notification implements INotification {
 	}
 
 	/**
+	 * @param string $icon
+	 * @return $this
+	 * @throws \InvalidArgumentException if the icon is invalid
+	 * @since 11.0.0
+	 */
+	public function setIcon($icon) {
+		if (!is_string($icon) || $icon === '' || isset($icon[4000])) {
+			throw new \InvalidArgumentException('The given icon is invalid');
+		}
+		$this->icon = $icon;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 * @since 11.0.0
+	 */
+	public function getIcon() {
+		return $this->icon;
+	}
+
+	/**
 	 * @return IAction
 	 * @since 8.2.0
 	 */
@@ -352,7 +463,7 @@ class Notification implements INotification {
 	/**
 	 * @param IAction $action
 	 * @return $this
-	 * @throws \InvalidArgumentException if the action are invalid
+	 * @throws \InvalidArgumentException if the action is invalid
 	 * @since 8.2.0
 	 */
 	public function addAction(IAction $action) {
@@ -383,7 +494,7 @@ class Notification implements INotification {
 	/**
 	 * @param IAction $action
 	 * @return $this
-	 * @throws \InvalidArgumentException if the action are invalid
+	 * @throws \InvalidArgumentException if the action is invalid
 	 * @since 8.2.0
 	 */
 	public function addParsedAction(IAction $action) {
@@ -432,6 +543,22 @@ class Notification implements INotification {
 	 * @since 8.2.0
 	 */
 	public function isValidParsed() {
+		if ($this->getRichSubject() !== '' || !empty($this->getRichSubjectParameters())) {
+			try {
+				$this->richValidator->validate($this->getRichSubject(), $this->getRichSubjectParameters());
+			} catch (InvalidObjectExeption $e) {
+				return false;
+			}
+		}
+
+		if ($this->getRichMessage() !== '' || !empty($this->getRichMessageParameters())) {
+			try {
+				$this->richValidator->validate($this->getRichMessage(), $this->getRichMessageParameters());
+			} catch (InvalidObjectExeption $e) {
+				return false;
+			}
+		}
+
 		return
 			$this->isValidCommon()
 			&&

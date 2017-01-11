@@ -35,10 +35,13 @@
 
 namespace OCA\User_LDAP;
 
+use OC\User\Backend;
 use OC\User\NoUserException;
+use OCA\User_LDAP\Exceptions\NotOnLDAP;
 use OCA\User_LDAP\User\OfflineUser;
 use OCA\User_LDAP\User\User;
 use OCP\IConfig;
+use OCP\Util;
 
 class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserInterface, IUserLDAP {
 	/** @var string[] $homesToKill */
@@ -80,14 +83,26 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	 * @return string|false
 	 */
 	public function loginName2UserName($loginName) {
+		$cacheKey = 'loginName2UserName-'.$loginName;
+		$username = $this->access->connection->getFromCache($cacheKey);
+		if(!is_null($username)) {
+			return $username;
+		}
+
 		try {
 			$ldapRecord = $this->getLDAPUserByLoginName($loginName);
 			$user = $this->access->userManager->get($ldapRecord['dn'][0]);
 			if($user instanceof OfflineUser) {
+				// this path is not really possible, however get() is documented
+				// to return User or OfflineUser so we are very defensive here.
+				$this->access->connection->writeToCache($cacheKey, false);
 				return false;
 			}
-			return $user->getUsername();
-		} catch (\Exception $e) {
+			$username = $user->getUsername();
+			$this->access->connection->writeToCache($cacheKey, $username);
+			return $username;
+		} catch (NotOnLDAP $e) {
+			$this->access->connection->writeToCache($cacheKey, false);
 			return false;
 		}
 	}
@@ -107,14 +122,14 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	 *
 	 * @param string $loginName
 	 * @return array
-	 * @throws \Exception
+	 * @throws NotOnLDAP
 	 */
 	public function getLDAPUserByLoginName($loginName) {
 		//find out dn of the user name
 		$attrs = $this->access->userManager->getAttributes();
 		$users = $this->access->fetchUsersByLoginName($loginName, $attrs);
 		if(count($users) < 1) {
-			throw new \Exception('No user available for the given login name on ' .
+			throw new NotOnLDAP('No user available for the given login name on ' .
 				$this->access->connection->ldapHost . ':' . $this->access->connection->ldapPort);
 		}
 		return $users[0];
@@ -132,17 +147,19 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		try {
 			$ldapRecord = $this->getLDAPUserByLoginName($uid);
 		} catch(\Exception $e) {
-			\OC::$server->getLogger()->logException($e, ['app' => 'user_ldap']);
+			if($this->ocConfig->getSystemValue('loglevel', Util::WARN) === Util::DEBUG) {
+				\OC::$server->getLogger()->logException($e, ['app' => 'user_ldap']);
+			}
 			return false;
 		}
 		$dn = $ldapRecord['dn'][0];
 		$user = $this->access->userManager->get($dn);
 
 		if(!$user instanceof User) {
-			\OCP\Util::writeLog('user_ldap',
+			Util::writeLog('user_ldap',
 				'LDAP Login: Could not get user object for DN ' . $dn .
 				'. Maybe the LDAP entry has no set display name attribute?',
-				\OCP\Util::WARN);
+				Util::WARN);
 			return false;
 		}
 		if($user->getUsername() !== false) {
@@ -156,6 +173,26 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 			$user->markLogin();
 
 			return $user->getUsername();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Set password
+	 * @param string $uid The username
+	 * @param string $password The new password
+	 * @return bool
+	 */
+	public function setPassword($uid, $password) {
+		$user = $this->access->userManager->get($uid);
+
+		if(!$user instanceof User) {
+			throw new \Exception('LDAP setPassword: Could not get user object for uid ' . $uid .
+				'. Maybe the LDAP entry has no set display name attribute?');
+		}
+		if($user->getUsername() !== false) {
+			return $this->access->setPassword($user->getDN(), $password);
 		}
 
 		return false;
@@ -189,22 +226,17 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 			$this->access->connection->ldapUserDisplayName . '=*',
 			$this->access->getFilterPartForUserSearch($search)
 		));
-		$attrs = array($this->access->connection->ldapUserDisplayName, 'dn');
-		$additionalAttribute = $this->access->connection->ldapUserDisplayName2;
-		if(!empty($additionalAttribute)) {
-			$attrs[] = $additionalAttribute;
-		}
 
-		\OCP\Util::writeLog('user_ldap',
+		Util::writeLog('user_ldap',
 			'getUsers: Options: search '.$search.' limit '.$limit.' offset '.$offset.' Filter: '.$filter,
-			\OCP\Util::DEBUG);
+			Util::DEBUG);
 		//do the search and translate results to owncloud names
 		$ldap_users = $this->access->fetchListOfUsers(
 			$filter,
 			$this->access->userManager->getAttributes(true),
 			$limit, $offset);
 		$ldap_users = $this->access->ownCloudUserNames($ldap_users);
-		\OCP\Util::writeLog('user_ldap', 'getUsers: '.count($ldap_users). ' Users found', \OCP\Util::DEBUG);
+		Util::writeLog('user_ldap', 'getUsers: '.count($ldap_users). ' Users found', Util::DEBUG);
 
 		$this->access->connection->writeToCache($cachekey, $ldap_users);
 		return $ldap_users;
@@ -274,8 +306,8 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		$user = $this->access->userManager->get($uid);
 
 		if(is_null($user)) {
-			\OCP\Util::writeLog('user_ldap', 'No DN found for '.$uid.' on '.
-				$this->access->connection->ldapHost, \OCP\Util::DEBUG);
+			Util::writeLog('user_ldap', 'No DN found for '.$uid.' on '.
+				$this->access->connection->ldapHost, Util::DEBUG);
 			$this->access->connection->writeToCache('userExists'.$uid, false);
 			return false;
 		} else if($user instanceof OfflineUser) {
@@ -377,7 +409,7 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		//Check whether the display name is configured to have a 2nd feature
 		$additionalAttribute = $this->access->connection->ldapUserDisplayName2;
 		$displayName2 = '';
-		if(!empty($additionalAttribute)) {
+		if ($additionalAttribute !== '') {
 			$displayName2 = $this->access->readAttribute(
 				$this->access->username2dn($uid),
 				$additionalAttribute);
@@ -390,8 +422,8 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 		if($displayName && (count($displayName) > 0)) {
 			$displayName = $displayName[0];
 
-			if(is_array($displayName2) && (count($displayName2) > 0)) {
-				$displayName2 = $displayName2[0];
+			if (is_array($displayName2)){
+				$displayName2 = count($displayName2) > 0 ? $displayName2[0] : '';
 			}
 
 			$user = $this->access->userManager->get($uid);
@@ -441,11 +473,12 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	* compared with OC_USER_BACKEND_CREATE_USER etc.
 	*/
 	public function implementsActions($actions) {
-		return (bool)((\OC\User\Backend::CHECK_PASSWORD
-			| \OC\User\Backend::GET_HOME
-			| \OC\User\Backend::GET_DISPLAYNAME
-			| \OC\User\Backend::PROVIDE_AVATAR
-			| \OC\User\Backend::COUNT_USERS)
+		return (bool)((Backend::CHECK_PASSWORD
+			| Backend::GET_HOME
+			| Backend::GET_DISPLAYNAME
+			| Backend::PROVIDE_AVATAR
+			| Backend::COUNT_USERS
+			| ((intval($this->access->connection->turnOnPasswordChange) === 1)?(Backend::SET_PASSWORD):0))
 			& $actions);
 	}
 

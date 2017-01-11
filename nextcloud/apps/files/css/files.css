@@ -148,10 +148,10 @@ table tr.mouseOver td {
 }
 tbody a { color:#000; }
 
-span.extension, span.uploading, td.date {
+span.conflict-path, span.extension, span.uploading, td.date {
 	color: #999;
 }
-span.extension {
+span.conflict-path, span.extension {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
 	filter: alpha(opacity=70);
 	opacity: .7;
@@ -161,6 +161,8 @@ span.extension {
 	transition: opacity 300ms;
 	vertical-align: top;
 }
+tr:hover span.conflict-path,
+tr:focus span.conflict-path,
 tr:hover span.extension,
 tr:focus span.extension {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
@@ -545,14 +547,7 @@ html.ie8 #fileList tr.selected td.filename>.selectCheckBox {
 .bubble,
 #app-navigation .app-navigation-entry-menu {
 	border-top-right-radius: 3px;
-}
-.bubble:after,
-#app-navigation .app-navigation-entry-menu:after {
-	right: 6px;
-}
-.bubble:before,
-#app-navigation .app-navigation-entry-menu:before {
-	right: 6px;
+	min-width: 100px;
 }
 
 /* force show the loading icon, not only on hover */
@@ -623,20 +618,6 @@ html.ie8 .column-mtime .selectedActions {
 	padding-right: 14px;
 }
 
-#fileList .filesize {
-	padding-top: 0;
-	padding-bottom: 0;
-	padding-left: 60px;
-	padding-right: 15px;
-}
-
-#fileList .popovermenu {
-	margin-right: 6px;
-}
-.ie8 #fileList .popovermenu {
-	margin-top: -10px;
-}
-
 .ie8 #fileList a.action img,
 #fileList tr:hover a.action,
 #fileList a.action.permanent,
@@ -654,7 +635,6 @@ html.ie8 .column-mtime .selectedActions {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
 	filter: alpha(opacity=30);
 	opacity: .3;
-	display:inline;
 }
 .ie8 #fileList a.action:hover img,
 #fileList tr a.action.disabled.action-download,
@@ -665,7 +645,7 @@ html.ie8 .column-mtime .selectedActions {
 #fileList .name:focus a.action:focus {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
 	filter: alpha(opacity=70);
-	opacity: 7;
+	opacity: .7;
 	display:inline;
 }
 #fileList tr a.action.disabled {
@@ -673,14 +653,17 @@ html.ie8 .column-mtime .selectedActions {
 }
 
 /* show share action of shared items darker to distinguish from non-shared */
-#fileList a.action.permanent.shared-style,
-#fileList a.action.action-favorite.permanent {
+#fileList a.action.action-share.permanent.shared-style,
+/* show hovered permanent entries darker */
+#fileList tr a.action.action.permanent:hover,
+#fileList tr a.action.action.permanent:focus {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)" !important;
 	filter: alpha(opacity=70) !important;
 	opacity: .7 !important;
+	display:inline;
 }
 /* always show actions on mobile, not only on hover */
-#fileList a.action.action-menu.permanent {
+#fileList a.action.permanent {
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)" !important;
 	filter: alpha(opacity=30) !important;
 	opacity: .3 !important;
@@ -780,17 +763,12 @@ table.dragshadow td.size {
 	padding: initial;
 }
 
-#fileList .popovermenu a.action {
-	padding: 10px;
-	margin: -10px;
-}
-
 html.ie8 #controls .button.new {
 	padding-right: 0;
 }
 
 .newFileMenu {
-	width: 140px;
+	width: 200px;
 	margin-left: -56px;
 	margin-top: 25px;
 	z-index: 1001;
@@ -827,15 +805,13 @@ html.ie8 #controls .button.new {
 }
 
 .newFileMenu .filenameform input {
-	width: 100px;
+	width: 100%;
+	box-sizing: border-box;
+	margin: -2px 0;
 }
 
 #fileList .popovermenu .action {
-	display: block;
-	line-height: 30px;
-	padding-left: 5px;
 	color: #000;
-	padding: 0;
 }
 
 #filestable .filename .action .icon,

@@ -22,6 +22,8 @@ OC.L10N.register(
     "The current log-in password was not correct, please try again." : "Το τρέχον συνθηματικό δεν είναι σωστό, παρακαλώ δοκιμάστε ξανά.",
     "Private key password successfully updated." : "Το Προσωπικό κλειδί πρόσβασης ενημερώθηκε επιτυχώς",
     "You need to migrate your encryption keys from the old encryption (ownCloud <= 8.0) to the new one. Please run 'occ encryption:migrate' or contact your administrator" : "Πρέπει να μεταφέρετε τα κλειδιά κρυπτογράφησής σας από την παλιά κρυπτογράφηση (ownCloud <= 8.0) στην καινούρια. Παρακαλούμε εκτελέστε την εντολή 'occ encryption:migrate' ή επικοινωνήστε με το διαχειριστή σας.",
+    "Encryption app is enabled and ready" : "Η εφαρμογή κρυπτογράφησης είναι ενεργοποιημένη και έτοιμη",
+    "Bad Signature" : "Κακή υπογραφή",
     "one-time password for server-side-encryption" : "κωδικός μιας χρήσης για κρυπτογράφηση στο διακομιστή",
     "Can not decrypt this file, probably this is a shared file. Please ask the file owner to reshare the file with you." : "Δεν ήταν δυνατό να αποκρυπτογραφηθεί αυτό το αρχείο, πιθανόν πρόκειται για κοινόχρηστο αρχείο. Παρακαλώ ζητήστε από τον ιδιοκτήτη του αρχείου να το ξαναμοιραστεί μαζί σας.",
     "Can not read this file, probably this is a shared file. Please ask the file owner to reshare the file with you." : "Αδυναμία ανάγνωσης αυτού του αρχείου, πιθανό να είναι διαμοιραζόμενο αρχείο. Παρακαλώ ρωτήστε τον κάτοχο του αρχείου να το διαμοιράσει ξανά μαζί σας.",
@@ -51,6 +53,7 @@ OC.L10N.register(
     "Enable password recovery:" : "Ενεργοποιήστε την ανάκτηση κωδικού πρόσβασης",
     "Enabling this option will allow you to reobtain access to your encrypted files in case of password loss" : "Η ενεργοποίηση αυτής της επιλογής θα σας επιτρέψει να επανακτήσετε πρόσβαση στα κρυπτογραφημένα σας αρχεία σε περίπτωση απώλειας του κωδικού σας",
     "Enabled" : "Ενεργοποιημένο",
-    "Disabled" : "Απενεργοποιημένο"
+    "Disabled" : "Απενεργοποιημένο",
+    "Nextcloud basic encryption module" : "Βασικό άρθρωμα κρυπτογράφησης Netcloud"
 },
 "nplurals=2; plural=(n != 1);");

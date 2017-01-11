@@ -46,7 +46,10 @@ $principalBackend = new Principal(
 	'principals/'
 );
 $db = \OC::$server->getDatabaseConnection();
-$calDavBackend = new CalDavBackend($db, $principalBackend);
+$userManager = \OC::$server->getUserManager();
+$random = \OC::$server->getSecureRandom();
+$dispatcher = \OC::$server->getEventDispatcher();
+$calDavBackend = new CalDavBackend($db, $principalBackend, $userManager, $random, $dispatcher);
 
 $debugging = \OC::$server->getConfig()->getSystemValue('debug', false);
 
@@ -78,6 +81,8 @@ if ($debugging) {
 }
 
 $server->addPlugin(new \Sabre\CalDAV\ICSExportPlugin());
+$server->addPlugin(new \Sabre\CalDAV\Schedule\Plugin());
+$server->addPlugin(new \OCA\DAV\CalDAV\Schedule\IMipPlugin( \OC::$server->getMailer(), \OC::$server->getLogger()));
 $server->addPlugin(new ExceptionLoggerPlugin('caldav', \OC::$server->getLogger()));
 
 // And off we go!

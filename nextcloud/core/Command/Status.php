@@ -42,7 +42,7 @@ class Status extends Base {
 			'installed' => (bool) \OC::$server->getConfig()->getSystemValue('installed', false),
 			'version' => implode('.', \OCP\Util::getVersion()),
 			'versionstring' => \OC_Util::getVersionString(),
-			'edition' => \OC_Util::getEditionString(),
+			'edition' => '',
 		);
 
 		$this->writeArrayInOutputFormat($input, $output, $values);

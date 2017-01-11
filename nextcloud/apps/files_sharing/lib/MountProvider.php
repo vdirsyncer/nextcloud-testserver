@@ -81,7 +81,7 @@ class MountProvider implements IMountProvider {
 		foreach ($superShares as $share) {
 			try {
 				$mounts[] = new SharedMount(
-					'\OC\Files\Storage\Shared',
+					'\OCA\Files_Sharing\SharedStorage',
 					$mounts,
 					[
 						'user' => $user->getUID(),
@@ -171,6 +171,9 @@ class MountProvider implements IMountProvider {
 					// adjust target, for database consistency
 					$share->setTarget($superShare->getTarget());
 					$this->shareManager->moveShare($share, $user->getUID());
+				}
+				if (!is_null($share->getNodeCacheEntry())) {
+					$superShare->setNodeCacheEntry($share->getNodeCacheEntry());
 				}
 			}
 

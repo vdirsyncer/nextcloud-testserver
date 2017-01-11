@@ -217,7 +217,8 @@
 					$status.addClass('emptycontent').removeClass('status');
 					$status.html('');
 					$status.append('<div class="icon-search"></div>');
-					$status.append('<h2>' + t('core', 'No search results in other folders') + '</h2>');
+					var error = t('core', "No search results in other folders for '{tag}{filter}{endtag}'", {filter:lastQuery});
+					$status.append('<h2>' + error.replace('{tag}', '<strong>').replace('{endtag}', '</strong>') + '</h2>');
 				} else {
 					$status.removeClass('emptycontent').addClass('status');
 					$status.text(n('core', '{count} search result in another folder', '{count} search results in other folders', count, {count:count}));
@@ -351,6 +352,7 @@
 					!$searchBox.is(':focus') // if searchbox is already focused do nothing (fallback to browser default)
 				) {
 					$searchBox.focus();
+					$searchBox.select();
 					event.preventDefault();
 				}
 			});
