@@ -418,9 +418,8 @@ class Server extends ServerContainer implements IServerContainer {
 			);
 		});
 		$this->registerService('Logger', function (Server $c) {
-			$logClass = $c->query('AllConfig')->getSystemValue('log_type', 'file');
-			// TODO: Drop backwards compatibility for config in the future
-			$logger = 'OC\\Log\\' . ucfirst($logClass=='owncloud' ? 'file' : $logClass);
+			$logType = $c->query('AllConfig')->getSystemValue('log_type', 'file');
+			$logger = Log::getLogClass($logType);
 			call_user_func(array($logger, 'init'));
 
 			return new Log($logger);
@@ -485,7 +484,7 @@ class Server extends ServerContainer implements IServerContainer {
 			$uid = $user ? $user : null;
 			return new ClientService(
 				$c->getConfig(),
-				new \OC\Security\CertificateManager($uid, new View(), $c->getConfig())
+				new \OC\Security\CertificateManager($uid, new View(), $c->getConfig(), $c->getLogger())
 			);
 		});
 		$this->registerService('EventLogger', function (Server $c) {
@@ -1233,7 +1232,7 @@ class Server extends ServerContainer implements IServerContainer {
 			}
 			$userId = $user->getUID();
 		}
-		return new CertificateManager($userId, new View(), $this->getConfig());
+		return new CertificateManager($userId, new View(), $this->getConfig(), $this->getLogger());
 	}
 
 	/**

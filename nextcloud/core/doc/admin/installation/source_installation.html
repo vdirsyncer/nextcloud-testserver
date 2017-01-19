@@ -73,7 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Manual Installation on Linux</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#example-installation-on-ubuntu-14-04-lts-server">Example Installation on Ubuntu 14.04 LTS Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-installation-on-ubuntu-16-04-lts-server">Example Installation on Ubuntu 16.04 LTS Server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#binlog-format-statement">BINLOG_FORMAT = STATEMENT</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#apache-web-server-configuration">Apache Web Server Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pretty-urls">Pretty URLs</a></li>
@@ -136,7 +136,7 @@ complete walk-through for installing Nextcloud on Ubuntu 14.04 LTS Server with
 Apache and MariaDB, using <a class="reference external" href="https://nextcloud.com/install/">the Nextcloud .tar archive</a>.</p>
 <ul class="simple">
 <li><a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a></li>
-<li><a class="reference internal" href="#ubuntu-installation-label"><span>Example Installation on Ubuntu 14.04 LTS Server</span></a></li>
+<li><a class="reference internal" href="#ubuntu-installation-label"><span>Example Installation on Ubuntu 16.04 LTS Server</span></a></li>
 <li><a class="reference internal" href="#binlog-format-label"><span>BINLOG_FORMAT = STATEMENT</span></a></li>
 <li><a class="reference internal" href="#apache-configuration-label"><span>Apache Web Server Configuration</span></a></li>
 <li><a class="reference internal" href="#pretty-urls-label"><span>Pretty URLs</span></a></li>
@@ -163,7 +163,7 @@ check the presence of a module by typing <code class="docutils literal"><span cl
 If you get a result, the module is present.</p>
 <p>Required:</p>
 <ul class="simple">
-<li>php5 (&gt;= 5.4)</li>
+<li>PHP (&gt;= 5.6, 7.0 or 7.1)</li>
 <li>PHP module ctype</li>
 <li>PHP module dom</li>
 <li>PHP module GD</li>
@@ -210,10 +210,9 @@ of non-ASCII characters)</li>
 <p>For enhanced server performance (<em>optional</em>) select one of the following
 memcaches:</p>
 <ul class="simple">
-<li>PHP module apc</li>
-<li>PHP module apcu</li>
+<li>PHP module apcu (&gt;= 4.0.6)</li>
 <li>PHP module memcached</li>
-<li>PHP module redis (&gt;= 2.2.5, required for Transactional File Locking)</li>
+<li>PHP module redis (&gt;= 2.2.6, required for Transactional File Locking)</li>
 </ul>
 <p>See <a class="reference internal" href="../configuration_server/caching_configuration.html"><em>Configuring Memory Caching</em></a> to learn how to select
 and configure a memcache.</p>
@@ -233,34 +232,28 @@ SabreDAV.
 If <code class="docutils literal"><span class="pre">mod_webdav</span></code> is enabled you must disable it for Nextcloud. (See
 <a class="reference internal" href="#apache-configuration-label"><span>Apache Web Server Configuration</span></a> for an example configuration.)</p>
 </div>
-<div class="section" id="example-installation-on-ubuntu-14-04-lts-server">
-<span id="ubuntu-installation-label"></span><h2>Example Installation on Ubuntu 14.04 LTS Server<a class="headerlink" href="#example-installation-on-ubuntu-14-04-lts-server" title="Permalink to this headline">¶</a></h2>
-<p>On a machine running a pristine Ubuntu 14.04 LTS server, install the
+<div class="section" id="example-installation-on-ubuntu-16-04-lts-server">
+<span id="ubuntu-installation-label"></span><h2>Example Installation on Ubuntu 16.04 LTS Server<a class="headerlink" href="#example-installation-on-ubuntu-16-04-lts-server" title="Permalink to this headline">¶</a></h2>
+<p>On a machine running a pristine Ubuntu 16.04 LTS server, install the
 required and recommended modules for a typical Nextcloud installation, using
 Apache and MariaDB, by issuing the following commands in a terminal:</p>
-<div class="highlight-python"><div class="highlight"><pre>apt-get install apache2 mariadb-server libapache2-mod-php5
-apt-get install php5-gd php5-json php5-mysql php5-curl
-apt-get install php5-intl php5-mcrypt php5-imagick
+<div class="highlight-python"><div class="highlight"><pre>apt-get install apache2 mariadb-server libapache2-mod-php7.0
+apt-get install php7.0-gd php7.0-json php7.0-mysql php7.0-curl php7.0-mbstring
+apt-get install php7.0-intl php7.0-mcrypt php-imagick php7.0-xml php7.0-zip
 </pre></div>
 </div>
-<ul>
-<li><p class="first">This installs the packages for the Nextcloud core system.
-<code class="docutils literal"><span class="pre">libapache2-mod-php5</span></code> provides the following PHP extensions: <code class="docutils literal"><span class="pre">bcmath</span> <span class="pre">bz2</span>
+<ul class="simple">
+<li>This installs the packages for the Nextcloud core system.
+<code class="docutils literal"><span class="pre">libapache2-mod-php7.0</span></code> provides the following PHP extensions: <code class="docutils literal"><span class="pre">bcmath</span> <span class="pre">bz2</span>
 <span class="pre">calendar</span> <span class="pre">Core</span> <span class="pre">ctype</span> <span class="pre">date</span> <span class="pre">dba</span> <span class="pre">dom</span> <span class="pre">ereg</span> <span class="pre">exif</span> <span class="pre">fileinfo</span> <span class="pre">filter</span> <span class="pre">ftp</span> <span class="pre">gettext</span> <span class="pre">hash</span>
-<span class="pre">iconv</span> <span class="pre">libxml</span> <span class="pre">mbstring</span> <span class="pre">mhash</span> <span class="pre">openssl</span> <span class="pre">pcre</span> <span class="pre">Phar</span> <span class="pre">posix</span> <span class="pre">Reflection</span> <span class="pre">session</span> <span class="pre">shmop</span>
+<span class="pre">iconv</span> <span class="pre">libxml</span> <span class="pre">mhash</span> <span class="pre">openssl</span> <span class="pre">pcre</span> <span class="pre">Phar</span> <span class="pre">posix</span> <span class="pre">Reflection</span> <span class="pre">session</span> <span class="pre">shmop</span>
 <span class="pre">SimpleXML</span> <span class="pre">soap</span> <span class="pre">sockets</span> <span class="pre">SPL</span> <span class="pre">standard</span> <span class="pre">sysvmsg</span> <span class="pre">sysvsem</span> <span class="pre">sysvshm</span> <span class="pre">tokenizer</span> <span class="pre">wddx</span>
-<span class="pre">xml</span> <span class="pre">xmlreader</span> <span class="pre">xmlwriter</span> <span class="pre">zip</span> <span class="pre">zlib</span></code>. If you are planning
+<span class="pre">xmlreader</span> <span class="pre">xmlwriter</span> <span class="pre">zlib</span></code>. If you are planning
 on running additional apps, keep in mind that they might require additional
-packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a> for details.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">When running php7, you need to manually install <code class="docutils literal"><span class="pre">php7.0-mbstring</span></code>, <code class="docutils literal"><span class="pre">php7.0-xml</span></code> and <code class="docutils literal"><span class="pre">php7.0-zip</span></code>.</p>
-</div>
-</li>
-<li><p class="first">At the installation of the MySQL/MariaDB server, you will be prompted to
+packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a> for details.</li>
+<li>At the installation of the MySQL/MariaDB server, you will be prompted to
 create a root password. Be sure to remember your password as you will need it
-during Nextcloud database setup.</p>
-</li>
+during Nextcloud database setup.</li>
 </ul>
 <p>Now download the archive of the latest Nextcloud version:</p>
 <ul>
@@ -480,10 +473,10 @@ or ...
 </div>
 <div class="section" id="php-fpm-configuration-notes">
 <span id="php-fpm-tips-label"></span><h2>php-fpm Configuration Notes<a class="headerlink" href="#php-fpm-configuration-notes" title="Permalink to this headline">¶</a></h2>
-<p><strong>Security: Use at least PHP =&gt; 5.5.22 or &gt;= 5.6.6</strong></p>
+<p><strong>Security: Use at least PHP &gt;= 5.6.6</strong></p>
 <p>Due to <a class="reference external" href="https://bugs.php.net/bug.php?id=64938">a bug with security implications</a>
 in older PHP releases with the handling of XML data you are highly encouraged to run
-at least PHP 5.5.22 or 5.6.6 when in a threaded environment.</p>
+at least PHP 5.6.6 when in a threaded environment.</p>
 <p><strong>System environment variables</strong></p>
 <p>When you are using <code class="docutils literal"><span class="pre">php-fpm</span></code>, system environment variables like
 PATH, TMP or others are not automatically populated in the same way as

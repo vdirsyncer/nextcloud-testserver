@@ -130,7 +130,7 @@ user.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The PHP LDAP module is required; this is supplied by <code class="docutils literal"><span class="pre">php5-ldap</span></code> on
-Debian/Ubuntu, and <code class="docutils literal"><span class="pre">php-ldap</span></code> on CentOS/Red Hat/Fedora. PHP 5.4+ is
+Debian/Ubuntu, and <code class="docutils literal"><span class="pre">php-ldap</span></code> on CentOS/Red Hat/Fedora. PHP 5.6+ is
 required in Nextcloud.</p>
 </div>
 <p>The LDAP application supports:</p>
@@ -762,8 +762,7 @@ job which keeps the <code class="docutils literal"><span class="pre">user-group-
 <p>Under normal circumstances, all users are never loaded at the same time.
 Typically the loading of users happens while page results are generated, in
 steps of 30 until the limit is reached or no results are left. For this to
-work on an oC-Server and LDAP-Server, <strong>Paged Results</strong> must be supported,
-which presumes PHP &gt;= 5.4.</p>
+work on an oC-Server and LDAP-Server, <strong>Paged Results</strong> must be supported.</p>
 <p>Nextcloud remembers which user belongs to which LDAP-configuration. That means
 each request will always be directed to the right server unless a user is
 defunct, for example due to a server migration or unreachable server. In this

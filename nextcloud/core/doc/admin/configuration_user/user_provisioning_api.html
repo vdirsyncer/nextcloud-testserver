@@ -127,6 +127,7 @@ requests can be used via a Basic Auth header to perform any of the functions
 listed above. The Provisioning API app is enabled by default.</p>
 <p>The base URL for all calls to the share API is <strong>nextcloud_base_url/ocs/v1.php/cloud</strong>.</p>
 <p>All calls to OCS endpoints require the <code class="docutils literal"><span class="pre">OCS-APIRequest</span></code> header to be set to <code class="docutils literal"><span class="pre">true</span></code>.</p>
+<p>All POST requests require the <code class="docutils literal"><span class="pre">Content-Type:</span> <span class="pre">application/x-www-form-urlencoded</span></code> header. (Note: Some libraries like Curl set this header automatically, other require to set the header explicitly)</p>
 <div class="section" id="instruction-set-for-users">
 <h2>Instruction Set For Users<a class="headerlink" href="#instruction-set-for-users" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="users-adduser">

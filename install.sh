@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-NEXTCLOUD_VERSION="11.0.0"
+NEXTCLOUD_VERSION="11.0.1"
 NC_DOWNLOAD_URL="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 

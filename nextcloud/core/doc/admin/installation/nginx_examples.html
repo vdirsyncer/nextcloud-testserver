@@ -386,6 +386,7 @@ your server block as necessary:</p>
       <span class="kn">fastcgi_param</span> <span class="s">PATH_INFO</span> <span class="nv">$fastcgi_path_info</span><span class="p">;</span>
       <span class="kn">fastcgi_param</span> <span class="s">HTTPS</span> <span class="no">on</span><span class="p">;</span>
       <span class="kn">fastcgi_pass</span> <span class="s">php-handler</span><span class="p">;</span>
+      <span class="kn">fastcgi_request_buffering</span> <span class="no">off</span><span class="p">;</span> <span class="c1">#Available since nginx 1.7.11</span>
 
       <span class="c1"># cache_purge</span>
       <span class="kn">fastcgi_cache_bypass</span> <span class="nv">$skip_cache</span><span class="p">;</span>

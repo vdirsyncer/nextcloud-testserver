@@ -142,7 +142,7 @@ as it is uploading files in smaller chunks.</p>
 <div class="section" id="system-configuration">
 <h2>System Configuration<a class="headerlink" href="#system-configuration" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Make sure that the latest version of PHP (at least 5.4.9) is installed</li>
+<li>Make sure that the latest version of PHP (at least 5.6.6) is installed</li>
 <li>Disable user quotas, which makes them unlimited</li>
 <li>Your temp file or partition has to be big enough to hold multiple
 parallel uploads from multiple users; e.g. if the max upload size is 10GB and
@@ -202,12 +202,17 @@ necessary, once bug #51747 is fixed.</p>
 </div>
 </div>
 <div class="section" id="nginx">
-<h3>NGINX<a class="headerlink" href="#nginx" title="Permalink to this headline">¶</a></h3>
+<h3>nginx<a class="headerlink" href="#nginx" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client_max_body_size</a></li>
 <li><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_read_timeout">fastcgi_read_timeout</a></li>
 <li><a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_temp_path">client_body_temp_path</a></li>
 </ul>
+<p>Since nginx 1.7.11 a new config option <a href="#id1"><span class="problematic" id="id2">`fastcgi_request_buffering
+&lt;https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_request_buffering`_</span></a>
+is availabe. Setting this option to <code class="docutils literal"><span class="pre">fastcgi_request_buffering</span> <span class="pre">off;</span></code> in your nginx config
+might help with timeouts during the upload. Furthermore it helps if you&#8217;re running out of
+disc space on the tmp partition of your system.</p>
 <p>For more info how to configure nginx to raise the upload limits see also <a class="reference external" href="https://github.com/owncloud/documentation/wiki/Uploading-files-up-to-16GB#configuring-nginx">this</a>
 wiki entry.</p>
 <div class="admonition note">
@@ -218,7 +223,7 @@ the <code class="docutils literal"><span class="pre">upload_tmp_dir</span></code
 performance, place these on a separate hard drive that is dedicated to
 swap and temp storage.</p>
 </div>
-<p>If your site is behind a Nginx frontend (for example a loadbalancer):</p>
+<p>If your site is behind a nginx frontend (for example a loadbalancer):</p>
 <p>By default, downloads will be limited to 1GB due to <code class="docutils literal"><span class="pre">proxy_buffering</span></code> and <code class="docutils literal"><span class="pre">proxy_max_temp_file_size</span></code> on the frontend.</p>
 <ul class="simple">
 <li>If you can access the frontend&#8217;s configuration, disable <a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering">proxy_buffering</a> or increase <a class="reference external" href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_max_temp_file_size">proxy_max_temp_file_size</a> from the default 1GB.</li>

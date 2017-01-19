@@ -119,7 +119,7 @@
 <p class="first admonition-title">Note</p>
 <p class="last">This feature is currently <strong>experimental</strong>.</p>
 </div>
-<p>In order to use Emojis on your Nextcloud server with a MySQL database, the
+<p>In order to use Emojis (textbased smilies) on your Nextcloud server with a MySQL database, the
 installation needs to be tweaked a bit.</p>
 <ol class="arabic">
 <li><p class="first">Update your Nextcloud server to Nextcloud 11 or later.</p>
@@ -128,7 +128,7 @@ installation needs to be tweaked a bit.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">mysqld</span><span class="p">]</span>
 <span class="n">innodb_large_prefix</span><span class="o">=</span><span class="n">true</span>
 <span class="n">innodb_file_format</span><span class="o">=</span><span class="n">barracuda</span>
-<span class="n">innodb_file_per_table</span><span class="o">=</span><span class="n">true</span>
+<span class="n">innodb_file_per_table</span><span class="o">=</span><span class="mi">1</span>
 </pre></div>
 </div>
 </li>
@@ -150,7 +150,7 @@ installation needs to be tweaked a bit.</p>
 </div>
 </li>
 </ol>
-<p>Now you should be able to use emojis like <code class="docutils literal"><span class="pre">🎉</span></code> in your file names, calendar events, comments and many more.</p>
+<p>Now you should be able to use Emojis in your file names, calendar events, comments and many more.</p>
 <div class="section" id="mariadb-support">
 <h2>MariaDB support<a class="headerlink" href="#mariadb-support" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
