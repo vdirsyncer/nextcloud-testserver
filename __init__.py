@@ -70,7 +70,6 @@ class ServerMixin(object):
     @pytest.fixture
     def get_storage_args(self):
         def inner(collection='test'):
-            fileext = self.storage_class.fileext
             dav_path = '/remote.php/dav/'
 
             rv = {'url': base + dav_path, 'collection': collection,
