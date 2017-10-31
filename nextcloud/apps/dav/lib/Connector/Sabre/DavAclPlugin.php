@@ -23,15 +23,10 @@
 
 namespace OCA\DAV\Connector\Sabre;
 
+use Sabre\CalDAV\Principal\User;
 use Sabre\DAV\Exception\NotFound;
-use Sabre\DAV\IFile;
 use Sabre\DAV\INode;
 use \Sabre\DAV\PropFind;
-use \Sabre\DAV\PropPatch;
-use Sabre\DAVACL\Exception\NeedPrivileges;
-use \Sabre\HTTP\RequestInterface;
-use \Sabre\HTTP\ResponseInterface;
-use Sabre\HTTP\URLUtil;
 
 /**
  * Class DavAclPlugin is a wrapper around \Sabre\DAVACL\Plugin that returns 404
@@ -71,5 +66,21 @@ class DavAclPlugin extends \Sabre\DAVACL\Plugin {
 		}
 
 		return $access;
+	}
+
+	public function propFind(PropFind $propFind, INode $node) {
+		// If the node is neither readable nor writable then fail unless its of
+		// the standard user-principal
+		if(!($node instanceof User)) {
+			$path = $propFind->getPath();
+			$readPermissions = $this->checkPrivileges($path, '{DAV:}read', self::R_PARENT, false);
+			$writePermissions = $this->checkPrivileges($path, '{DAV:}write', self::R_PARENT, false);
+			if ($readPermissions === false && $writePermissions === false) {
+				$this->checkPrivileges($path, '{DAV:}read', self::R_PARENT, true);
+				$this->checkPrivileges($path, '{DAV:}write', self::R_PARENT, true);
+			}
+		}
+
+		return parent::propFind($propFind, $node);
 	}
 }

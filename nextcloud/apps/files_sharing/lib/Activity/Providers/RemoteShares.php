@@ -24,23 +24,15 @@ namespace OCA\Files_Sharing\Activity\Providers;
 use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\Activity\IProvider;
+use OCP\Federation\ICloudIdManager;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\IUserManager;
 use OCP\L10N\IFactory;
 
-class RemoteShares implements IProvider {
+class RemoteShares extends Base {
 
-	/** @var IFactory */
-	protected $languageFactory;
-
-	/** @var IL10N */
-	protected $l;
-
-	/** @var IURLGenerator */
-	protected $url;
-
-	/** @var IManager */
-	protected $activityManager;
+	protected $cloudIdManager;
 
 	const SUBJECT_REMOTE_SHARE_ACCEPTED = 'remote_share_accepted';
 	const SUBJECT_REMOTE_SHARE_DECLINED = 'remote_share_declined';
@@ -51,37 +43,17 @@ class RemoteShares implements IProvider {
 	 * @param IFactory $languageFactory
 	 * @param IURLGenerator $url
 	 * @param IManager $activityManager
+	 * @param IUserManager $userManager
+	 * @param ICloudIdManager $cloudIdManager
 	 */
-	public function __construct(IFactory $languageFactory, IURLGenerator $url, IManager $activityManager) {
-		$this->languageFactory = $languageFactory;
-		$this->url = $url;
-		$this->activityManager = $activityManager;
-	}
-
-	/**
-	 * @param string $language
-	 * @param IEvent $event
-	 * @param IEvent|null $previousEvent
-	 * @return IEvent
-	 * @throws \InvalidArgumentException
-	 * @since 11.0.0
-	 */
-	public function parse($language, IEvent $event, IEvent $previousEvent = null) {
-		if ($event->getApp() !== 'files_sharing') {
-			throw new \InvalidArgumentException();
-		}
-
-		$this->l = $this->languageFactory->get('files_sharing', $language);
-
-		if ($this->activityManager->isFormattingFilteredObject()) {
-			try {
-				return $this->parseShortVersion($event);
-			} catch (\InvalidArgumentException $e) {
-				// Ignore and simply use the long version...
-			}
-		}
-
-		return $this->parseLongVersion($event);
+	public function __construct(IFactory $languageFactory,
+								IURLGenerator $url,
+								IManager $activityManager,
+								IUserManager $userManager,
+								ICloudIdManager $cloudIdManager
+	) {
+		parent::__construct($languageFactory, $url, $activityManager, $userManager);
+		$this->cloudIdManager = $cloudIdManager;
 	}
 
 	/**
@@ -94,24 +66,19 @@ class RemoteShares implements IProvider {
 		$parsedParameters = $this->getParsedParameters($event);
 
 		if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_ACCEPTED) {
-			$event->setParsedSubject($this->l->t('%1$s accepted the remote share', [
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('{user} accepted the remote share'), [
-					'user' => $parsedParameters['user']
-				])
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('{user} accepted the remote share');
 		} else if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_DECLINED) {
-			$event->setParsedSubject($this->l->t('%1$s declined the remote share', [
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('{user} declined the remote share'), [
-					'user' => $parsedParameters['user']
-				])
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('{user} declined the remote share');
 		} else {
 			throw new \InvalidArgumentException();
 		}
+
+		if ($this->activityManager->getRequirePNG()) {
+			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.png')));
+		} else {
+			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+		}
+		$this->setSubjects($event, $subject, $parsedParameters);
 
 		return $event;
 	}
@@ -126,36 +93,23 @@ class RemoteShares implements IProvider {
 		$parsedParameters = $this->getParsedParameters($event);
 
 		if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_RECEIVED) {
-				$event->setParsedSubject($this->l->t('You received a new remote share %1$s from %2$s', [
-					$parsedParameters['file']['name'],
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('You received a new remote share {file} from {user}'), $parsedParameters)
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('You received a new remote share {file} from {user}');
 		} else if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_ACCEPTED) {
-				$event->setParsedSubject($this->l->t('%2$s accepted the remote share of %1$s', [
-					$parsedParameters['file']['name'],
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('{user} accepted the remote share of {file}'), $parsedParameters)
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('{user} accepted the remote share of {file}');
 		} else if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_DECLINED) {
-				$event->setParsedSubject($this->l->t('%2$s declined the remote share of %1$s', [
-					$parsedParameters['file']['name'],
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('{user} declined the remote share of {file}'), $parsedParameters)
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('{user} declined the remote share of {file}');
 		} else if ($event->getSubject() === self::SUBJECT_REMOTE_SHARE_UNSHARED) {
-				$event->setParsedSubject($this->l->t('%2$s unshared %1$s from you', [
-					$parsedParameters['file']['name'],
-					$parsedParameters['user']['name'],
-				]))
-				->setRichSubject($this->l->t('{user} unshared {file} from you'), $parsedParameters)
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+			$subject = $this->l->t('{user} unshared {file} from you');
 		} else {
 			throw new \InvalidArgumentException();
 		}
+
+		if ($this->activityManager->getRequirePNG()) {
+			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.png')));
+		} else {
+			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/share.svg')));
+		}
+		$this->setSubjects($event, $subject, $parsedParameters);
 
 		return $event;
 	}
@@ -167,48 +121,39 @@ class RemoteShares implements IProvider {
 		switch ($subject) {
 			case self::SUBJECT_REMOTE_SHARE_RECEIVED:
 			case self::SUBJECT_REMOTE_SHARE_UNSHARED:
-				$remoteUser = explode('@', $parameters[0], 2);
 				return [
 					'file' => [
 						'type' => 'pending-federated-share',
 						'id' => $parameters[1],
 						'name' => $parameters[1],
 					],
-					'user' => [
-						'type' => 'user',
-						'id' => $remoteUser[0],
-						'name' => $parameters[0],// Todo display name from contacts
-						'server' => $remoteUser[1],
-					],
+					'user' => $this->getFederatedUser($parameters[0]),
 				];
 			case self::SUBJECT_REMOTE_SHARE_ACCEPTED:
 			case self::SUBJECT_REMOTE_SHARE_DECLINED:
-				$remoteUser = explode('@', $parameters[0], 2);
+				$fileParameter = $parameters[1];
+				if (!is_array($fileParameter)) {
+					$fileParameter = [$event->getObjectId() => $event->getObjectName()];
+				}
 				return [
-					'file' => $this->generateFileParameter($event->getObjectId(), $event->getObjectName()),
-					'user' => [
-						'type' => 'user',
-						'id' => $remoteUser[0],
-						'name' => $parameters[0],// Todo display name from contacts
-						'server' => $remoteUser[1],
-					],
+					'file' => $this->getFile($fileParameter),
+					'user' => $this->getFederatedUser($parameters[0]),
 				];
 		}
 		throw new \InvalidArgumentException();
 	}
 
 	/**
-	 * @param int $id
-	 * @param string $path
+	 * @param string $cloudId
 	 * @return array
 	 */
-	protected function generateFileParameter($id, $path) {
+	protected function getFederatedUser($cloudId) {
+		$remoteUser = $this->cloudIdManager->resolveCloudId($cloudId);
 		return [
-			'type' => 'file',
-			'id' => $id,
-			'name' => basename($path),
-			'path' => $path,
-			'link' => $this->url->linkToRouteAbsolute('files.viewcontroller.showFile', ['fileid' => $id]),
+			'type' => 'user',
+			'id' => $remoteUser->getUser(),
+			'name' => $cloudId,// Todo display name from contacts
+			'server' => $remoteUser->getRemote(),
 		];
 	}
 }

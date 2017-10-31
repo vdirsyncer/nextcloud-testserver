@@ -45,7 +45,7 @@ class OCI extends AbstractDatabase {
 		// allow empty hostname for oracle
 		$this->dbHost = $config['dbhost'];
 
-		$this->config->setSystemValues([
+		$this->config->setValues([
 			'dbhost'		=> $this->dbHost,
 			'dbtablespace'	=> $this->dbtablespace,
 		]);
@@ -124,7 +124,7 @@ class OCI extends AbstractDatabase {
 			}
 		}
 
-		$this->config->setSystemValues([
+		$this->config->setValues([
 			'dbuser'		=> $this->dbUser,
 			'dbname'		=> $this->dbName,
 			'dbpassword'	=> $this->dbPassword,
@@ -139,9 +139,9 @@ class OCI extends AbstractDatabase {
 		oci_close($connection);
 
 		// connect to the oracle database (schema=$this->dbuser) an check if the schema needs to be filled
-		$this->dbUser = $this->config->getSystemValue('dbuser');
+		$this->dbUser = $this->config->getValue('dbuser');
 		//$this->dbname = \OC_Config::getValue('dbname');
-		$this->dbPassword = $this->config->getSystemValue('dbpassword');
+		$this->dbPassword = $this->config->getValue('dbpassword');
 
 		$e_host = addslashes($this->dbHost);
 		$e_dbname = addslashes($this->dbName);
@@ -149,12 +149,12 @@ class OCI extends AbstractDatabase {
 		if ($e_host == '') {
 			$easy_connect_string = $e_dbname; // use dbname as easy connect name
 		} else {
-			$easy_connect_string = '//'.$e_host.'/'.$e_dbname;
+			$easy_connect_string = '//' . $e_host . (!empty($e_port) ? ":{$e_port}" : "") . '/' . $e_dbname;
 		}
 		$connection = @oci_connect($this->dbUser, $this->dbPassword, $easy_connect_string);
 		if(!$connection) {
 			throw new \OC\DatabaseSetupException($this->trans->t('Oracle username and/or password not valid'),
-					$this->trans->t('You need to enter either an existing account or the administrator.'));
+					$this->trans->t('You need to enter details of an existing account.'));
 		}
 		$query = "SELECT count(*) FROM user_tables WHERE table_name = :un";
 		$stmt = oci_parse($connection, $query);

@@ -32,7 +32,6 @@
 namespace OCA\DAV\Connector\Sabre;
 
 use Exception;
-use OC\AppFramework\Http\Request;
 use OC\Authentication\Exceptions\PasswordLoginForbiddenException;
 use OC\Authentication\TwoFactorAuth\Manager;
 use OC\Security\Bruteforce\Throttler;
@@ -175,11 +174,11 @@ class Auth extends AbstractBasic {
 			return false;
 		}
 
-		// Official ownCloud clients require no checks
+		// Official Nextcloud clients require no checks
 		if($this->request->isUserAgent([
-			Request::USER_AGENT_OWNCLOUD_DESKTOP,
-			Request::USER_AGENT_OWNCLOUD_ANDROID,
-			Request::USER_AGENT_OWNCLOUD_IOS,
+			IRequest::USER_AGENT_CLIENT_DESKTOP,
+			IRequest::USER_AGENT_CLIENT_ANDROID,
+			IRequest::USER_AGENT_CLIENT_IOS,
 		])) {
 			return false;
 		}
@@ -211,6 +210,7 @@ class Auth extends AbstractBasic {
 	 */
 	private function auth(RequestInterface $request, ResponseInterface $response) {
 		$forcedLogout = false;
+
 		if(!$this->request->passesCSRFCheck() &&
 			$this->requiresCSRFCheck()) {
 			// In case of a fail with POST we need to recheck the credentials

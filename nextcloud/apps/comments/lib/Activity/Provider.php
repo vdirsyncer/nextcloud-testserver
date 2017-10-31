@@ -87,7 +87,11 @@ class Provider implements IProvider {
 
 		if ($event->getSubject() === 'add_comment_subject') {
 			$this->parseMessage($event);
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/comment.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/comment.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/comment.svg')));
+			}
 
 			if ($this->activityManager->isFormattingFilteredObject()) {
 				try {
@@ -109,14 +113,14 @@ class Provider implements IProvider {
 	 * @throws \InvalidArgumentException
 	 */
 	protected function parseShortVersion(IEvent $event) {
-		$subjectParameters = $event->getSubjectParameters();
+		$subjectParameters = $this->getSubjectParameters($event);
 
 		if ($event->getSubject() === 'add_comment_subject') {
-			if ($subjectParameters[0] === $this->activityManager->getCurrentUserId()) {
+			if ($subjectParameters['actor'] === $this->activityManager->getCurrentUserId()) {
 				$event->setParsedSubject($this->l->t('You commented'))
 					->setRichSubject($this->l->t('You commented'), []);
 			} else {
-				$author = $this->generateUserParameter($subjectParameters[0]);
+				$author = $this->generateUserParameter($subjectParameters['actor']);
 				$event->setParsedSubject($this->l->t('%1$s commented', [$author['name']]))
 					->setRichSubject($this->l->t('{author} commented'), [
 						'author' => $author,
@@ -135,25 +139,25 @@ class Provider implements IProvider {
 	 * @throws \InvalidArgumentException
 	 */
 	protected function parseLongVersion(IEvent $event) {
-		$subjectParameters = $event->getSubjectParameters();
+		$subjectParameters = $this->getSubjectParameters($event);
 
 		if ($event->getSubject() === 'add_comment_subject') {
-			if ($subjectParameters[0] === $this->activityManager->getCurrentUserId()) {
+			if ($subjectParameters['actor'] === $this->activityManager->getCurrentUserId()) {
 				$event->setParsedSubject($this->l->t('You commented on %1$s', [
-						trim($subjectParameters[1], '/'),
+						$subjectParameters['filePath'],
 					]))
 					->setRichSubject($this->l->t('You commented on {file}'), [
-						'file' => $this->generateFileParameter($event->getObjectId(), $subjectParameters[1]),
+						'file' => $this->generateFileParameter($subjectParameters['fileId'], $subjectParameters['filePath']),
 					]);
 			} else {
-				$author = $this->generateUserParameter($subjectParameters[0]);
+				$author = $this->generateUserParameter($subjectParameters['actor']);
 				$event->setParsedSubject($this->l->t('%1$s commented on %2$s', [
 						$author['name'],
-						trim($subjectParameters[1], '/'),
+						$subjectParameters['filePath'],
 					]))
 					->setRichSubject($this->l->t('{author} commented on {file}'), [
 						'author' => $author,
-						'file' => $this->generateFileParameter($event->getObjectId(), $subjectParameters[1]),
+						'file' => $this->generateFileParameter($subjectParameters['fileId'], $subjectParameters['filePath']),
 					]);
 			}
 		} else {
@@ -163,13 +167,34 @@ class Provider implements IProvider {
 		return $event;
 	}
 
+	protected function getSubjectParameters(IEvent $event) {
+		$subjectParameters = $event->getSubjectParameters();
+		if (isset($subjectParameters['fileId'])) {
+			return $subjectParameters;
+		}
+
+		// Fix subjects from 12.0.3 and older
+		return [
+			'actor' => $subjectParameters[0],
+			'fileId' => (int) $event->getObjectId(),
+			'filePath' => trim($subjectParameters[1], '/'),
+		];
+	}
+
 	/**
 	 * @param IEvent $event
 	 */
 	protected function parseMessage(IEvent $event) {
 		$messageParameters = $event->getMessageParameters();
+		if (empty($messageParameters)) {
+			// Email
+			return;
+		}
+
+		$commentId = isset($messageParameters['commentId']) ? $messageParameters['commentId'] : $messageParameters[0];
+
 		try {
-			$comment = $this->commentsManager->get((int) $messageParameters[0]);
+			$comment = $this->commentsManager->get((string) $commentId);
 			$message = $comment->getMessage();
 			$message = str_replace("\n", '<br />', str_replace(['<', '>'], ['&lt;', '&gt;'], $message));
 

@@ -24,6 +24,7 @@ namespace OCA\Activity;
 
 use OCA\Activity\AppInfo\Application;
 use OCP\IDBConnection;
+use OCP\Util;
 
 /**
  * Handles the stream and mail queue of a user when he is being deleted
@@ -67,5 +68,34 @@ class Hooks {
 			->where($queryBuilder->expr()->eq('amq_affecteduser', $queryBuilder->createParameter('user')))
 			->setParameter('user', $user);
 		$queryBuilder->execute();
+	}
+
+	static public function setDefaultsForUser($params) {
+		$config = \OC::$server->getConfig();
+		if ($config->getUserValue($params['uid'], 'activity','notify_setting_batchtime', null) !== null) {
+			// Already has settings
+			return;
+		}
+
+		foreach ($config->getAppKeys('activity') as $key) {
+			if (strpos($key, 'notify_') !== 0) {
+				continue;
+			}
+
+			$config->setUserValue(
+				$params['uid'],
+				'activity',
+				$key,
+				$config->getAppValue('activity', $key)
+			);
+		}
+	}
+
+	/**
+	 * Load additional scripts when the files app is visible
+	 */
+	public static function onLoadFilesAppScripts() {
+		Util::addStyle('activity', 'style');
+		Util::addScript('activity', 'activity-sidebar');
 	}
 }

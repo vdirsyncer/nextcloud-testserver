@@ -25,18 +25,24 @@
 
 namespace OCA\FederatedFileSharing\Controller;
 
+use OC\Files\Filesystem;
 use OC\HintException;
+use OC\Share\Helper;
 use OCA\FederatedFileSharing\AddressHandler;
 use OCA\FederatedFileSharing\FederatedShareProvider;
+use OCA\Files_Sharing\External\Manager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Federation\ICloudIdManager;
+use OCP\Files\StorageInvalidException;
 use OCP\Http\Client\IClientService;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IUserSession;
 use OCP\Share\IManager;
+use OCP\Util;
 
 /**
  * Class MountPublicLinkController
@@ -68,6 +74,9 @@ class MountPublicLinkController extends Controller {
 	/** @var IClientService */
 	private $clientService;
 
+	/** @var ICloudIdManager  */
+	private $cloudIdManager;
+
 	/**
 	 * MountPublicLinkController constructor.
 	 *
@@ -80,6 +89,7 @@ class MountPublicLinkController extends Controller {
 	 * @param IL10N $l
 	 * @param IUserSession $userSession
 	 * @param IClientService $clientService
+	 * @param ICloudIdManager $cloudIdManager
 	 */
 	public function __construct($appName,
 								IRequest $request,
@@ -89,7 +99,8 @@ class MountPublicLinkController extends Controller {
 								ISession $session,
 								IL10N $l,
 								IUserSession $userSession,
-								IClientService $clientService
+								IClientService $clientService,
+								ICloudIdManager $cloudIdManager
 	) {
 		parent::__construct($appName, $request);
 
@@ -100,6 +111,7 @@ class MountPublicLinkController extends Controller {
 		$this->l = $l;
 		$this->userSession = $userSession;
 		$this->clientService = $clientService;
+		$this->cloudIdManager = $cloudIdManager;
 	}
 
 	/**
@@ -107,6 +119,7 @@ class MountPublicLinkController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @BruteForceProtection(action=publicLink2FederatedShare)
 	 *
 	 * @param string $shareWith
 	 * @param string $token
@@ -134,10 +147,12 @@ class MountPublicLinkController extends Controller {
 		$authenticated = $this->session->get('public_link_authenticated') === $share->getId() ||
 			$this->shareManager->checkPassword($share, $password);
 		if (!empty($storedPassword) && !$authenticated ) {
-			return new JSONResponse(
+			$response = new JSONResponse(
 				['message' => 'No permission to access the share'],
 				Http::STATUS_BAD_REQUEST
 			);
+			$response->throttle();
+			return $response;
 		}
 
 		$share->setSharedWith($shareWith);
@@ -170,7 +185,7 @@ class MountPublicLinkController extends Controller {
 			return new JSONResponse(['message' => $this->l->t('Server to server sharing is not enabled on this server')], Http::STATUS_BAD_REQUEST);
 		}
 
-		$shareWith = $this->userSession->getUser()->getUID() . '@' . $this->addressHandler->generateRemoteURL();
+		$cloudId = $this->cloudIdManager->getCloudId($this->userSession->getUser()->getUID(), $this->addressHandler->generateRemoteURL());
 
 		$httpClient = $this->clientService->newClient();
 
@@ -180,7 +195,7 @@ class MountPublicLinkController extends Controller {
 					'body' =>
 						[
 							'token' => $token,
-							'shareWith' => rtrim($shareWith, '/'),
+							'shareWith' => rtrim($cloudId->getId(), '/'),
 							'password' => $password
 						],
 					'connect_timeout' => 10,
@@ -199,7 +214,7 @@ class MountPublicLinkController extends Controller {
 		$result = json_decode($body, true);
 
 		if (is_array($result) && isset($result['remoteUrl'])) {
-			return new JSONResponse(['message' => $this->l->t('Federated Share request was successful, you will receive a invitation. Check your notifications.')]);
+			return new JSONResponse(['message' => $this->l->t('Federated Share request sent, you will receive an invitation. Check your notifications.')]);
 		}
 
 		// if we doesn't get the expected response we assume that we try to add
@@ -226,30 +241,27 @@ class MountPublicLinkController extends Controller {
 	private function legacyMountPublicLink($token, $remote, $password, $name, $owner, $ownerDisplayName) {
 
 		// Check for invalid name
-		if (!\OCP\Util::isValidFileName($name)) {
+		if (!Util::isValidFileName($name)) {
 			return new JSONResponse(['message' => $this->l->t('The mountpoint name contains invalid characters.')], Http::STATUS_BAD_REQUEST);
 		}
 		$currentUser = $this->userSession->getUser()->getUID();
 		$currentServer = $this->addressHandler->generateRemoteURL();
-		if (\OC\Share\Helper::isSameUserOnSameServer($owner, $remote, $currentUser, $currentServer)) {
+		if (Helper::isSameUserOnSameServer($owner, $remote, $currentUser, $currentServer)) {
 			return new JSONResponse(['message' => $this->l->t('Not allowed to create a federated share with the owner.')], Http::STATUS_BAD_REQUEST);
 		}
-		$discoveryManager = new \OCA\FederatedFileSharing\DiscoveryManager(
-			\OC::$server->getMemCacheFactory(),
-			\OC::$server->getHTTPClientService()
-		);
-		$externalManager = new \OCA\Files_Sharing\External\Manager(
+		$externalManager = new Manager(
 			\OC::$server->getDatabaseConnection(),
-			\OC\Files\Filesystem::getMountManager(),
-			\OC\Files\Filesystem::getLoader(),
+			Filesystem::getMountManager(),
+			Filesystem::getLoader(),
 			\OC::$server->getHTTPClientService(),
 			\OC::$server->getNotificationManager(),
-			$discoveryManager,
+			\OC::$server->query(\OCP\OCS\IDiscoveryService::class),
 			\OC::$server->getUserSession()->getUser()->getUID()
 		);
 
 		// check for ssl cert
-		if (substr($remote, 0, 5) === 'https') {
+
+		if (strpos($remote, 'https') === 0) {
 			try {
 				$client = $this->clientService->newClient();
 				$client->get($remote, [
@@ -268,19 +280,19 @@ class MountPublicLinkController extends Controller {
 		try {
 			// check if storage exists
 			$storage->checkStorageAvailability();
-		} catch (\OCP\Files\StorageInvalidException $e) {
+		} catch (StorageInvalidException $e) {
 			// note: checkStorageAvailability will already remove the invalid share
-			\OCP\Util::writeLog(
+			Util::writeLog(
 				'federatedfilesharing',
 				'Invalid remote storage: ' . get_class($e) . ': ' . $e->getMessage(),
-				\OCP\Util::DEBUG
+				Util::DEBUG
 			);
 			return new JSONResponse(['message' => $this->l->t('Could not authenticate to remote share, password might be wrong')], Http::STATUS_BAD_REQUEST);
 		} catch (\Exception $e) {
-			\OCP\Util::writeLog(
+			Util::writeLog(
 				'federatedfilesharing',
 				'Invalid remote storage: ' . get_class($e) . ': ' . $e->getMessage(),
-				\OCP\Util::DEBUG
+				Util::DEBUG
 			);
 			$externalManager->removeShare($mount->getMountPoint());
 			return new JSONResponse(['message' => $this->l->t('Storage not valid')], Http::STATUS_BAD_REQUEST);
@@ -291,31 +303,31 @@ class MountPublicLinkController extends Controller {
 				$storage->getScanner()->scanAll();
 				return new JSONResponse(
 					[
-						'message' => $this->l->t('Federated Share successfully added'),
+						'message' => $this->l->t('Federated share added'),
 						'legacyMount' => '1'
 					]
 				);
-			} catch (\OCP\Files\StorageInvalidException $e) {
-				\OCP\Util::writeLog(
+			} catch (StorageInvalidException $e) {
+				Util::writeLog(
 					'federatedfilesharing',
 					'Invalid remote storage: ' . get_class($e) . ': ' . $e->getMessage(),
-					\OCP\Util::DEBUG
+					Util::DEBUG
 				);
 				return new JSONResponse(['message' => $this->l->t('Storage not valid')], Http::STATUS_BAD_REQUEST);
 			} catch (\Exception $e) {
-				\OCP\Util::writeLog(
+				Util::writeLog(
 					'federatedfilesharing',
 					'Invalid remote storage: ' . get_class($e) . ': ' . $e->getMessage(),
-					\OCP\Util::DEBUG
+					Util::DEBUG
 				);
 				return new JSONResponse(['message' => $this->l->t('Couldn\'t add remote share')], Http::STATUS_BAD_REQUEST);
 			}
 		} else {
 			$externalManager->removeShare($mount->getMountPoint());
-			\OCP\Util::writeLog(
+			Util::writeLog(
 				'federatedfilesharing',
 				'Couldn\'t add remote share',
-				\OCP\Util::DEBUG
+				Util::DEBUG
 			);
 			return new JSONResponse(['message' => $this->l->t('Couldn\'t add remote share')], Http::STATUS_BAD_REQUEST);
 		}

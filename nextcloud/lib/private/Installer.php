@@ -42,16 +42,19 @@
 namespace OC;
 
 use Doctrine\DBAL\Exception\TableExistsException;
+use OC\App\AppManager;
+use OC\App\AppStore\Bundles\Bundle;
 use OC\App\AppStore\Fetcher\AppFetcher;
 use OC\App\CodeChecker\CodeChecker;
 use OC\App\CodeChecker\EmptyCheck;
 use OC\App\CodeChecker\PrivateCheck;
-use OC\Archive\Archive;
 use OC\Archive\TAR;
 use OC_App;
 use OC_DB;
 use OC_Helper;
+use OCP\App\IAppManager;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\ILogger;
 use OCP\ITempManager;
 use phpseclib\File\X509;
@@ -68,21 +71,26 @@ class Installer {
 	private $tempManager;
 	/** @var ILogger */
 	private $logger;
+	/** @var IConfig */
+	private $config;
 
 	/**
 	 * @param AppFetcher $appFetcher
 	 * @param IClientService $clientService
 	 * @param ITempManager $tempManager
 	 * @param ILogger $logger
+	 * @param IConfig $config
 	 */
 	public function __construct(AppFetcher $appFetcher,
 								IClientService $clientService,
 								ITempManager $tempManager,
-								ILogger $logger) {
+								ILogger $logger,
+								IConfig $config) {
 		$this->appFetcher = $appFetcher;
 		$this->clientService = $clientService;
 		$this->tempManager = $tempManager;
 		$this->logger = $logger;
+		$this->config = $config;
 	}
 
 	/**
@@ -90,7 +98,7 @@ class Installer {
 	 *
 	 * @param string $appId App to install
 	 * @throws \Exception
-	 * @return integer
+	 * @return string app ID
 	 */
 	public function installApp($appId) {
 		$app = \OC_App::findAppInDirectories($appId);
@@ -101,6 +109,29 @@ class Installer {
 		$basedir = $app['path'].'/'.$appId;
 		$info = OC_App::getAppInfo($basedir.'/appinfo/info.xml', true);
 
+		$l = \OC::$server->getL10N('core');
+
+		if(!is_array($info)) {
+			throw new \Exception(
+				$l->t('App "%s" cannot be installed because appinfo file cannot be read.',
+					[$info['name']]
+				)
+			);
+		}
+
+		$version = \OCP\Util::getVersion();
+		if (!\OC_App::isAppCompatible($version, $info)) {
+			throw new \Exception(
+				// TODO $l
+				$l->t('App "%s" cannot be installed because it is not compatible with this version of the server.',
+					[$info['name']]
+				)
+			);
+		}
+
+		// check for required dependencies
+		\OC_App::checkAppDependencies($this->config, $l, $info);
+
 		//install the database
 		if(is_file($basedir.'/appinfo/database.xml')) {
 			if (\OC::$server->getAppConfig()->getValue($info['id'], 'installed_version') === null) {
@@ -110,7 +141,11 @@ class Installer {
 			}
 		}
 
+		\OC_App::registerAutoloading($appId, $basedir);
 		\OC_App::setupBackgroundJobs($info['background-jobs']);
+		if(isset($info['settings']) && is_array($info['settings'])) {
+			\OC::$server->getSettingsManager()->setupSettings($info['settings']);
+		}
 
 		//run appinfo/install.php
 		if((!isset($data['noinstall']) or $data['noinstall']==false)) {
@@ -418,6 +453,27 @@ class Installer {
 			return false;
 		}
 
+	}
+
+	/**
+	 * Installs the app within the bundle and marks the bundle as installed
+	 *
+	 * @param Bundle $bundle
+	 * @throws \Exception If app could not get installed
+	 */
+	public function installAppBundle(Bundle $bundle) {
+		$appIds = $bundle->getAppIdentifiers();
+		foreach($appIds as $appId) {
+			if(!$this->isDownloaded($appId)) {
+				$this->downloadApp($appId);
+			}
+			$this->installApp($appId);
+			$app = new OC_App();
+			$app->enable($appId);
+		}
+		$bundles = json_decode($this->config->getAppValue('core', 'installed.bundles', json_encode([])), true);
+		$bundles[] = $bundle->getIdentifier();
+		$this->config->setAppValue('core', 'installed.bundles', json_encode($bundles));
 	}
 
 	/**

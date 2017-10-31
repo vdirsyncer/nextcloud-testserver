@@ -17,9 +17,7 @@
 
 	var TEMPLATE =
 		'<span class="reshare">' +
-		'    {{#if avatarEnabled}}' +
 		'    <div class="avatar" data-userName="{{reshareOwner}}"></div>' +
-		'    {{/if}}' +
 		'    {{sharedByText}}' +
 		'</span><br/>'
 		;
@@ -80,7 +78,7 @@
 					'core',
 					'Shared with you and the group {group} by {owner}',
 					{
-						group: this.model.getReshareWith(),
+						group: this.model.getReshareWithDisplayName(),
 						owner: ownerDisplayName
 					}
 				);
@@ -93,17 +91,19 @@
 			}
 
 			this.$el.html(reshareTemplate({
-				avatarEnabled: this.configModel.areAvatarsEnabled(),
 				reshareOwner: this.model.getReshareOwner(),
 				sharedByText: sharedByText
 			}));
 
-			if(this.configModel.areAvatarsEnabled()) {
-				this.$el.find('.avatar').each(function() {
-					var $this = $(this);
-					$this.avatar($this.data('username'), 32);
-				});
-			}
+			this.$el.find('.avatar').each(function() {
+				var $this = $(this);
+				$this.avatar($this.data('username'), 32);
+			});
+
+			this.$el.find('.reshare').contactsMenu(
+				this.model.getReshareOwner(),
+				OC.Share.SHARE_TYPE_USER,
+				this.$el);
 
 			return this;
 		},

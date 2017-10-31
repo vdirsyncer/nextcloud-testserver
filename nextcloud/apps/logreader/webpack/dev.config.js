@@ -1,21 +1,23 @@
 var path = require('path');
 var webpack = require('webpack');
 var assetsPath = path.resolve(__dirname, '../build');
-var host = 'localhost';
-var port = parseInt(process.env.PORT) + 1 || 3001;
+var host = process.env.HOST || 'localhost';
+var port = parseInt(process.env.PORT) || 3000;
+var targetUrl = process.env.PROXY_URL || 'http://localhost:' + port + '/';
 
 module.exports = {
-	ocRoot: 'http://localhost/owncloud/',
+	ocRoot: 'https://' + host + '/',
 	appId: 'logreader',
 
-	webPackPort: port,
-	devtool: 'inline-source-map',
+	webPackPort: 444,
+	devtool: 'cheap-module-source-map',
 	context: path.resolve(__dirname, '..'),
 	entry: {
 		'main': [
+			// 'webpack-dev-server/client?' + targetUrl,
+			'react-hot-loader/patch',
+			'webpack-hot-middleware/client',
 			'babel-polyfill',
-			'webpack-dev-server/client?http://' + host + ':' + port,
-			'webpack/hot/only-dev-server',
 			'./js/index.js'
 		]
 	},
@@ -23,7 +25,7 @@ module.exports = {
 		path: assetsPath,
 		filename: '[name].js',
 		chunkFilename: '[name]-[chunkhash].js',
-		publicPath: 'http://' + host + ':' + port + '/build/'
+		publicPath: '/build/'
 	},
 	module: {
 		loaders: [
@@ -35,7 +37,7 @@ module.exports = {
 			{
 				test: /\.js$/,
 				exclude: /node_modules/,
-				loaders: ['react-hot-loader/webpack', 'babel-loader']
+				loaders: ['babel-loader']
 			},
 			{test: /\.json$/, loader: 'json-loader'},
 			{

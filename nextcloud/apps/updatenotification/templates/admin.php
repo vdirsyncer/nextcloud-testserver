@@ -23,7 +23,7 @@
 			<a href="<?php p($_['downloadLink']); ?>" class="button<?php if ($_['updaterEnabled']) { p(' hidden'); } ?>"><?php p($l->t('Download now')) ?></a>
 		<?php } ?>
 	<?php } else { ?>
-		<strong><?php print_unescaped($l->t('Your version is up to date.')); ?></strong>
+		<?php p($l->t('Your version is up to date.')); ?>
 		<span class="icon-info svg" title="<?php p($l->t('Checked on %s', [$lastCheckedDate])) ?>"></span>
 	<?php } ?>
 
@@ -41,6 +41,7 @@
 	</p>
 	<p>
 		<em><?php p($l->t('You can always update to a newer version / experimental channel. But you can never downgrade to a more stable channel.')); ?></em>
+		<em><?php p($l->t('Note that after a new release it can take some time before it shows up here. We roll out new versions spread out over time to our users and sometimes skip a version when issues are found.')); ?></em>
 	</p>
 
 

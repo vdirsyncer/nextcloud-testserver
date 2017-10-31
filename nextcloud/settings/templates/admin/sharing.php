@@ -31,6 +31,7 @@
 	<a target="_blank" rel="noreferrer" class="icon-info"
 	   title="<?php p($l->t('Open documentation'));?>"
 	   href="<?php p(link_to_docs('admin-sharing')); ?>"></a>
+        <p class="settings-hint"><?php p($l->t('As admin you can fine-tune the sharing behavior. Please see the documentation for more information.'));?></p>
 	<p id="enable">
 		<input type="checkbox" name="shareapi_enabled" id="shareAPIEnabled" class="checkbox"
 			   value="1" <?php if ($_['shareAPIEnabled'] === 'yes') print_unescaped('checked="checked"'); ?> />
@@ -46,7 +47,9 @@
 		<input type="checkbox" name="shareapi_allow_public_upload" id="allowPublicUpload" class="checkbox"
 			   value="1" <?php if ($_['allowPublicUpload'] == 'yes') print_unescaped('checked="checked"'); ?> />
 		<label for="allowPublicUpload"><?php p($l->t('Allow public uploads'));?></label><br/>
-
+		<input type="checkbox" name="shareapi_enable_link_password_by_default" id="enableLinkPasswordByDefault" class="checkbox"
+			   value="1" <?php if ($_['enableLinkPasswordByDefault'] === 'yes') print_unescaped('checked="checked"'); ?> />
+		<label for="enableLinkPasswordByDefault"><?php p($l->t('Always ask for a password'));?></label><br/>
 		<input type="checkbox" name="shareapi_enforce_links_password" id="enforceLinkPassword" class="checkbox"
 			   value="1" <?php if ($_['enforceLinkPassword']) print_unescaped('checked="checked"'); ?> />
 		<label for="enforceLinkPassword"><?php p($l->t('Enforce password protection'));?></label><br/>

@@ -24,7 +24,10 @@
  */
 
 // no php execution timeout for webdav
-set_time_limit(0);
+if (strpos(@ini_get('disable_functions'), 'set_time_limit') === false) {
+	@set_time_limit(0);
+}
+ignore_user_abort(true);
 
 // Turn off output buffering to prevent memory problems
 \OC_Util::obEnd();
@@ -49,12 +52,25 @@ $authBackend = new \OCA\DAV\Connector\Sabre\Auth(
 	\OC::$server->getBruteForceThrottler(),
 	'principals/'
 );
+$authPlugin = new \Sabre\DAV\Auth\Plugin($authBackend);
+$bearerAuthPlugin = new \OCA\DAV\Connector\Sabre\BearerAuth(
+	\OC::$server->getUserSession(),
+	\OC::$server->getSession(),
+	\OC::$server->getRequest()
+);
+$authPlugin->addBackend($bearerAuthPlugin);
+
 $requestUri = \OC::$server->getRequest()->getRequestUri();
 
-$server = $serverFactory->createServer($baseuri, $requestUri, $authBackend, function() {
+$server = $serverFactory->createServer($baseuri, $requestUri, $authPlugin, function() {
 	// use the view for the logged in user
 	return \OC\Files\Filesystem::getView();
 });
+
+$dispatcher = \OC::$server->getEventDispatcher();
+// allow setup of additional plugins
+$event = new \OCP\SabrePluginEvent($server);
+$dispatcher->dispatch('OCA\DAV\Connector\Sabre::addPlugin', $event);
 
 // And off we go!
 $server->exec();

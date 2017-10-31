@@ -1,4 +1,15 @@
-/* global $, DOMPurify, Gallery */
+/**
+ * Nextcloud - Gallery
+ *
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Olivier Paroz <galleryapps@oparoz.com>
+ *
+ * @copyright Olivier Paroz 2017
+ */
+/* global $, DOMPurify, OC, Gallery */
 /**
  * A thumbnail is the actual image attached to the GalleryImage object
  *
@@ -132,7 +143,7 @@ function Thumbnail (fileId, square) {
 							};
 							thumb.image.onerror = function () {
 								thumb.valid = false;
-								var icon = Thumbnails._getMimeIcon(preview.mimetype);
+								var icon = OC.MimeType.getIconUrl(preview.mimetype);
 								setTimeout(function () {
 									thumb.image.src = icon;
 								}, 0);
@@ -147,31 +158,13 @@ function Thumbnail (fileId, square) {
 									'data:' + preview.mimetype + ';base64,' + imageData;
 							} else {
 								thumb.valid = false;
-								thumb.image.src = Thumbnails._getMimeIcon(preview.mimetype);
+								thumb.image.src = OC.MimeType.getIconUrl(preview.mimetype);
 							}
 						}
 					});
 			}
 
 			return batch;
-		},
-
-		/**
-		 * Returns the link to the media type icon
-		 *
-		 * Modern browsers get an SVG, older ones a PNG
-		 *
-		 * @param mimeType
-		 *
-		 * @returns {*|string}
-		 * @private
-		 */
-		_getMimeIcon: function (mimeType) {
-			var icon = OC.MimeType.getIconUrl(mimeType);
-			if (Gallery.ieVersion !== false) {
-				icon = icon.substr(0, icon.lastIndexOf(".")) + ".png";
-			}
-			return icon;
 		},
 
 		/**

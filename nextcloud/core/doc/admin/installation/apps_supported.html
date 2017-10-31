@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Supported Apps in Nextcloud &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Supported Apps &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Installing PHP 5.4 on RHEL 6 and CentOS 6" href="php_54_installation.html" />
+    <link rel="next" title="SELinux Configuration" href="selinux_configuration.html" />
     <link rel="prev" title="Installing and Managing Apps" href="apps_management_installation.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,29 +66,24 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Deployment Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing from Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Supported Apps in Nextcloud</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#agpl-apps">AGPL Apps</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Supported Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html">Nginx Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -111,31 +106,31 @@
     </a>
   </li>
   <li class="next">
-    <a href="php_54_installation.html" title="Next Chapter: Installing PHP 5.4 on RHEL 6 and CentOS 6"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing PH... &raquo;</span>
+    <a href="selinux_configuration.html" title="Next Chapter: SELinux Configuration"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">SELinux Confi... &raquo;</span>
     </a>
   </li>
 </ul>
 						
-  <div class="section" id="supported-apps-in-nextcloud">
-<h1>Supported Apps in Nextcloud<a class="headerlink" href="#supported-apps-in-nextcloud" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="agpl-apps">
-<h2>AGPL Apps<a class="headerlink" href="#agpl-apps" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="supported-apps">
+<h1>Supported Apps<a class="headerlink" href="#supported-apps" title="Permalink to this headline">¶</a></h1>
+<p>Below is the list of apps supported for Nextcloud 12. Supported here means that we&#8217;ll accept bugreports and resolve them in these apps with regard to functionality and compatibility with Nextcloud 12. To get access to work-arounds, long term support, priority bug fixing and custom consulting, contact Nextcloud GmbH.</p>
 <ul class="simple">
 <li>Activity</li>
 <li>Admin Audit Log</li>
 <li>AntiVirus</li>
 <li>Calendar</li>
+<li>Circles</li>
 <li>Collaborative Tags</li>
 <li>Comments</li>
 <li>Contacts</li>
 <li>Encryption</li>
 <li>External Sites</li>
-<li>External Storage</li>
 <li>Federated File Sharing (allows file sharing across Nextcloud instances)</li>
 <li>Federation (allows usernname auto-complete across Nextcloud instances)</li>
 <li>Files (cannot be disabled)</li>
 <li>Files Access Control</li>
 <li>Files Automated Tagging</li>
+<li>Files External (external storage)</li>
 <li>Files PDF Viewer</li>
 <li>Files Sharing</li>
 <li>Files Text Editor</li>
@@ -144,20 +139,29 @@
 <li>Files Video Player</li>
 <li>First Run Wizard</li>
 <li>Gallery</li>
+<li>Logreader</li>
+<li>Lookup Server Connector</li>
+<li>Nextant</li>
+<li>Nextcloud Announcements</li>
 <li>Notifications</li>
 <li>Object Storage (Swift)</li>
 <li>Password Policy</li>
 <li>Provisioning API</li>
+<li>Server info (monitoring app)</li>
+<li>Sharebymail</li>
+<li>Socialsharing (Diaspora, email, Facebook, Google+ and Twitter)</li>
+<li>Sharepoint (external storage)</li>
 <li>Template Editor (for notification emails)</li>
 <li>Theming</li>
 <li>Update Notifications</li>
 <li>User External</li>
 <li>User LDAP</li>
 <li>User Shibboleth/SAML</li>
+<li>Video Calls (former Spreed)</li>
 <li>WebDAV Endpoint (handles old and new webdav endpoints)</li>
 <li>Workflow Engine (cannot be disabled)</li>
 </ul>
-</div>
+<p>All apps are licensed under the AGPL.</p>
 </div>
 
 
@@ -168,7 +172,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="php_54_installation.html" title="Next Chapter: Installing PHP 5.4 on RHEL 6 and CentOS 6"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installing PH... &raquo;</span>
+    <a href="selinux_configuration.html" title="Next Chapter: SELinux Configuration"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">SELinux Confi... &raquo;</span>
     </a>
   </li>
 </ul>

@@ -20,7 +20,8 @@ OC.Settings = OC.Settings || {};
 jQuery.fn.keyUpDelayedOrEnter = function (callback, allowEmptyValue) {
 	var cb = callback;
 	var that = this;
-	this.keyup(_.debounce(function (event) {
+
+	this.on('input', _.debounce(function (event) {
 		// enter is already handled in keypress
 		if (event.keyCode === 13) {
 			return;
@@ -34,14 +35,6 @@ jQuery.fn.keyUpDelayedOrEnter = function (callback, allowEmptyValue) {
 		if (event.keyCode === 13 && (allowEmptyValue || that.val() !== '')) {
 			event.preventDefault();
 			cb(event);
-		}
-	});
-
-	this.bind('paste', null, function (event) {
-		if(!event.keyCode){
-			if (allowEmptyValue || that.val() !== '') {
-				cb(event);
-			}
 		}
 	});
 };
@@ -175,7 +168,6 @@ $(document).ready(function () {
 				if (data.status === "success") {
 					$("#passwordbutton").after("<span class='checkmark icon icon-checkmark password-state'></span>");
 					removeloader();
-					$(".personal-show-label").show();
 					$('#pass1').val('');
 					$('#pass2').val('').change();
 				}
@@ -191,6 +183,7 @@ $(document).ready(function () {
 						}
 					);
 				}
+				$(".personal-show-label").show();
 				$(".password-loading").remove();
 				$("#passwordbutton").removeAttr('disabled');
 			});
@@ -208,28 +201,88 @@ $(document).ready(function () {
 		}
 	});
 
+	var showVerifyDialog = function(dialog, howToVerify, verificationCode) {
+		var dialogContent = dialog.children('.verification-dialog-content');
+		dialogContent.children(".explainVerification").text(howToVerify);
+		dialogContent.children(".verificationCode").text(verificationCode);
+		dialog.css('display', 'block');
+	};
+
+	$(".verify").click(function (event) {
+
+		event.stopPropagation();
+
+		var verify = $(this);
+		var indicator = $(this).children('img');
+		var accountId = indicator.attr('id');
+		var status = indicator.data('status');
+
+		var onlyVerificationCode = false;
+		if (parseInt(status) === 1) {
+			onlyVerificationCode = true;
+		}
+
+		if (indicator.hasClass('verify-action')) {
+			$.ajax(
+				OC.generateUrl('/settings/users/{account}/verify', {account: accountId}),
+				{
+					method: 'GET',
+					data: {onlyVerificationCode: onlyVerificationCode}
+				}
+			).done(function (data) {
+				var dialog = verify.children('.verification-dialog');
+				showVerifyDialog($(dialog), data.msg, data.code);
+				indicator.attr('data-origin-title', t('core', 'Verifying …'));
+				indicator.attr('src', OC.imagePath('core', 'actions/verifying.svg'));
+				indicator.data('status', '1');
+			});
+		}
+
+	});
+
+	// When the user clicks anywhere outside of the verification dialog we close it
+	$(document).click(function(event){
+		var element = event.target;
+		var isDialog = $(element).hasClass('verificationCode')
+			|| $(element).hasClass('explainVerification')
+			|| $(element).hasClass('verification-dialog-content')
+			|| $(element).hasClass('verification-dialog');
+		if (!isDialog) {
+			$(document).find('.verification-dialog').css('display', 'none');
+		}
+	});
+
+
 	var federationSettingsView = new OC.Settings.FederationSettingsView({
 		el: '#personal-settings'
 	});
 	federationSettingsView.render();
 
-	$("#languageinput").change(function () {
-		// Serialize the data
-		var post = $("#languageinput").serialize();
-		// Ajax foo
-		$.ajax(
-			'ajax/setlanguage.php',
-			{
-				method: 'POST',
-				data: post
+	var updateLanguage = function () {
+		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
+			OC.PasswordConfirmation.requirePasswordConfirmation(updateLanguage);
+			return;
+		}
+
+		var selectedLang = $("#languageinput").val(),
+			user = OC.getCurrentUser();
+
+		$.ajax({
+			url: OC.linkToOCS('cloud/users', 2) + user['uid'],
+			method: 'PUT',
+			data: {
+				key: 'language',
+				value: selectedLang
+			},
+			success: function() {
+				location.reload();
+			},
+			fail: function() {
+				OC.Notification.showTemporary(t('settings', 'An error occured while changing your language. Please reload the page and try again.'));
 			}
-		).done(function() {
-			location.reload();
-		}).fail(function(jqXHR) {
-			$('#passworderror').text(jqXHR.responseJSON.message);
 		});
-		return false;
-	});
+	};
+	$("#languageinput").change(updateLanguage);
 
 	var uploadparms = {
 		pasteZone: null,
@@ -334,16 +387,14 @@ $(document).ready(function () {
 	});
 
 	// Load the big avatar
-	if (oc_config.enable_avatars) {
-		$('#avatarform .avatardiv').avatar(OC.currentUser, 145, true, null, function() {
-			if($('#displayavatar img').length === 0) {
-				$('#removeavatar').removeClass('inlineblock').addClass('hidden');
-			} else {
-				$('#removeavatar').removeClass('hidden').addClass('inlineblock');
-			}
-		});
-	}
-	
+	$('#avatarform .avatardiv').avatar(OC.currentUser, 145, true, null, function() {
+		if($('#displayavatar img').length === 0) {
+			$('#removeavatar').removeClass('inlineblock').addClass('hidden');
+		} else {
+			$('#removeavatar').removeClass('hidden').addClass('inlineblock');
+		}
+	});
+
 
 	// Show token views
 	var collection = new OC.Settings.AuthTokenCollection();

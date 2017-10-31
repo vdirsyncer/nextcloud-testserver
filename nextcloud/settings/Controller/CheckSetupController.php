@@ -26,6 +26,7 @@
 
 namespace OC\Settings\Controller;
 
+use bantu\IniGetWrapper\IniGetWrapper;
 use GuzzleHttp\Exception\ClientException;
 use OC\AppFramework\Http;
 use OC\IntegrityCheck\Checker;
@@ -285,6 +286,20 @@ class CheckSetupController extends Controller {
 	}
 
 	/**
+	 * Checks if set_time_limit is not disabled.
+	 *
+	 * @return bool
+	 */
+	private function isSettimelimitAvailable() {
+		if (function_exists('set_time_limit')
+			&& strpos(@ini_get('disable_functions'), 'set_time_limit') === false) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * @return RedirectResponse
 	 */
 	public function rescanFailedIntegrityCheck() {
@@ -355,6 +370,42 @@ Raw output
 	}
 
 	/**
+	 * Checks whether a PHP opcache is properly set up
+	 * @return bool
+	 */
+	protected function isOpcacheProperlySetup() {
+		$iniWrapper = new IniGetWrapper();
+
+		$isOpcacheProperlySetUp = true;
+
+		if(!$iniWrapper->getBool('opcache.enable')) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		if(!$iniWrapper->getBool('opcache.save_comments')) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		if(!$iniWrapper->getBool('opcache.enable_cli')) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		if($iniWrapper->getNumeric('opcache.max_accelerated_files') < 10000) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		if($iniWrapper->getNumeric('opcache.memory_consumption') < 128) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		if($iniWrapper->getNumeric('opcache.interned_strings_buffer') < 8) {
+			$isOpcacheProperlySetUp = false;
+		}
+
+		return $isOpcacheProperlySetUp;
+	}
+
+	/**
 	 * @return DataResponse
 	 */
 	public function check() {
@@ -372,6 +423,9 @@ Raw output
 				'isCorrectMemcachedPHPModuleInstalled' => $this->isCorrectMemcachedPHPModuleInstalled(),
 				'hasPassedCodeIntegrityCheck' => $this->checker->hasPassedCheck(),
 				'codeIntegrityCheckerDocumentation' => $this->urlGenerator->linkToDocs('admin-code-integrity'),
+				'isOpcacheProperlySetup' => $this->isOpcacheProperlySetup(),
+				'phpOpcacheDocumentation' => $this->urlGenerator->linkToDocs('admin-php-opcache'),
+				'isSettimelimitAvailable' => $this->isSettimelimitAvailable(),
 			]
 		);
 	}

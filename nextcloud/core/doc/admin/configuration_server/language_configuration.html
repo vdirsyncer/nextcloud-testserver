@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Language Configuration &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Language Configuration &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Logging Configuration" href="logging_configuration.html" />
     <link rel="prev" title="Knowledge Base Configuration" href="knowledgebase_configuration.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -82,7 +82,8 @@
 <li class="toctree-l2"><a class="reference internal" href="custom_client_repos.html">Custom Client Download Repositories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knowledgebase_configuration.html">Knowledge Base Configuration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Language Configuration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#default-language">Default language</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#force-language">Force language</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="logging_configuration.html">Logging Configuration</a></li>
@@ -90,12 +91,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -125,21 +127,40 @@
 						
   <div class="section" id="language-configuration">
 <h1>Language Configuration<a class="headerlink" href="#language-configuration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="default-language">
+<h2>Default language<a class="headerlink" href="#default-language" title="Permalink to this headline">¶</a></h2>
 <p>In normal cases Nextcloud will automatically detect the language of the Web-GUI.
 If this does not work properly or you want to make sure that Nextcloud always
-starts with a given language, you can use the <strong>default_language</strong> parameter.</p>
-<p>Please keep in mind, that this will not effect a users language preference,
-which has been configured under &#8220;personal -&gt; language&#8221; once he has logged in.</p>
-<p>Please check <a class="reference external" href="https://www.transifex.com/explore/languages/">Transifex language codes</a> for the list of valid language
-codes.</p>
-<div class="section" id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+starts with a given language, you can set a <strong>default_language</strong> parameter in the
+<code class="file docutils literal"><span class="pre">config/config.php</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The default_language paramenter is only used, when the browser does not
+send any language, and the user hasn&#8217;t configured own language preferences.</p>
+</div>
 <div class="highlight-python"><div class="highlight"><pre>&lt;?php
 
   &quot;default_language&quot; =&gt; &quot;en&quot;,
 </pre></div>
 </div>
-<p>This parameters can be set in the <code class="file docutils literal"><span class="pre">config/config.php</span></code></p>
+</div>
+<div class="section" id="force-language">
+<h2>Force language<a class="headerlink" href="#force-language" title="Permalink to this headline">¶</a></h2>
+<p>If you want to force a specific language, users will no longer be able to change
+their language in the personal settings. You can set a <strong>force_language</strong> parameter
+in the <code class="file docutils literal"><span class="pre">config/config.php</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;?php
+
+  &quot;force_language&quot; =&gt; &quot;en&quot;,
+</pre></div>
+</div>
+<p>If users shall be unable to change their language, but users have different languages,
+this value can be set to <code class="docutils literal"><span class="pre">true</span></code> instead of a language code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Please check <a class="reference external" href="https://www.transifex.com/explore/languages/">Transifex language codes</a> for the list of valid language
+codes.</p>
+</div>
 </div>
 </div>
 

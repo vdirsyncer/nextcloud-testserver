@@ -33,8 +33,19 @@ use OCP\Files\FileInfo;
 use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use OCP\Files\Search\ISearchOperator;
 
 class Folder extends Node implements \OCP\Files\Folder {
+	/**
+	 * Creates a Folder that represents a non-existing path
+	 *
+	 * @param string $path path
+	 * @return string non-existing node class
+	 */
+	protected function createNonExistingNode($path) {
+		return new NonExistingFolder($this->root, $this->view, $path);
+	}
+
 	/**
 	 * @param string $path path relative to the folder
 	 * @return string
@@ -180,11 +191,15 @@ class Folder extends Node implements \OCP\Files\Folder {
 	/**
 	 * search for files with the name matching $query
 	 *
-	 * @param string $query
+	 * @param string|ISearchOperator $query
 	 * @return \OC\Files\Node\Node[]
 	 */
 	public function search($query) {
-		return $this->searchCommon('search', array('%' . $query . '%'));
+		if (is_string($query)) {
+			return $this->searchCommon('search', array('%' . $query . '%'));
+		} else {
+			return $this->searchCommon('searchQuery', array($query));
+		}
 	}
 
 	/**
@@ -265,7 +280,12 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 */
 	public function getById($id) {
 		$mountCache = $this->root->getUserMountCache();
-		$mountsContainingFile = $mountCache->getMountsForFileId((int)$id);
+		if (strpos($this->getPath(), '/', 1) > 0) {
+			list(, $user) = explode('/', $this->getPath());
+		} else {
+			$user = null;
+		}
+		$mountsContainingFile = $mountCache->getMountsForFileId((int)$id, $user);
 		$mounts = $this->root->getMountsIn($this->path);
 		$mounts[] = $this->root->getMount($this->path);
 		/** @var IMountPoint[] $folderMounts */
@@ -322,51 +342,6 @@ class Folder extends Node implements \OCP\Files\Folder {
 			$this->exists = false;
 		} else {
 			throw new NotPermittedException('No delete permission for path');
-		}
-	}
-
-	/**
-	 * @param string $targetPath
-	 * @throws \OCP\Files\NotPermittedException
-	 * @return \OC\Files\Node\Node
-	 */
-	public function copy($targetPath) {
-		$targetPath = $this->normalizePath($targetPath);
-		$parent = $this->root->get(dirname($targetPath));
-		if ($parent instanceof Folder and $this->isValidPath($targetPath) and $parent->isCreatable()) {
-			$nonExisting = new NonExistingFolder($this->root, $this->view, $targetPath);
-			$this->root->emit('\OC\Files', 'preCopy', array($this, $nonExisting));
-			$this->root->emit('\OC\Files', 'preWrite', array($nonExisting));
-			$this->view->copy($this->path, $targetPath);
-			$targetNode = $this->root->get($targetPath);
-			$this->root->emit('\OC\Files', 'postCopy', array($this, $targetNode));
-			$this->root->emit('\OC\Files', 'postWrite', array($targetNode));
-			return $targetNode;
-		} else {
-			throw new NotPermittedException('No permission to copy to path');
-		}
-	}
-
-	/**
-	 * @param string $targetPath
-	 * @throws \OCP\Files\NotPermittedException
-	 * @return \OC\Files\Node\Node
-	 */
-	public function move($targetPath) {
-		$targetPath = $this->normalizePath($targetPath);
-		$parent = $this->root->get(dirname($targetPath));
-		if ($parent instanceof Folder and $this->isValidPath($targetPath) and $parent->isCreatable()) {
-			$nonExisting = new NonExistingFolder($this->root, $this->view, $targetPath);
-			$this->root->emit('\OC\Files', 'preRename', array($this, $nonExisting));
-			$this->root->emit('\OC\Files', 'preWrite', array($nonExisting));
-			$this->view->rename($this->path, $targetPath);
-			$targetNode = $this->root->get($targetPath);
-			$this->root->emit('\OC\Files', 'postRename', array($this, $targetNode));
-			$this->root->emit('\OC\Files', 'postWrite', array($targetNode));
-			$this->path = $targetPath;
-			return $targetNode;
-		} else {
-			throw new NotPermittedException('No permission to move to path');
 		}
 	}
 
@@ -443,7 +418,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 		$storage = $mount->getStorage();
 		if ($storage->instanceOfStorage('\OC\Files\Storage\Wrapper\Jail')) {
 			/** @var \OC\Files\Storage\Wrapper\Jail $storage */
-			$jailRoot = $storage->getSourcePath('');
+			$jailRoot = $storage->getUnjailedPath('');
 			$rootLength = strlen($jailRoot) + 1;
 			if ($path === $jailRoot) {
 				return $mount->getMountPoint();

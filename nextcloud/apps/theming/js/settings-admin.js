@@ -19,102 +19,73 @@
  *
  */
 
-function setThemingValue(setting, value) {
+function startLoading() {
 	OC.msg.startSaving('#theming_settings_msg');
+	$('#theming_settings_loading').show();
+}
+
+function setThemingValue(setting, value) {
+	startLoading();
 	$.post(
 		OC.generateUrl('/apps/theming/ajax/updateStylesheet'), {'setting' : setting, 'value' : value}
 	).done(function(response) {
-		OC.msg.finishedSaving('#theming_settings_msg', response);
 		hideUndoButton(setting, value);
+		preview(setting, value, response.data.serverCssUrl);
 	}).fail(function(response) {
 		OC.msg.finishedSaving('#theming_settings_msg', response);
+		$('#theming_settings_loading').hide();
 	});
-	preview(setting, value);
+
 }
 
-function calculateLuminance(rgb) {
-	var hexValue = rgb.replace(/[^0-9A-Fa-f]/, '');
-	var r,g,b;
-	if (hexValue.length === 3) {
-		hexValue = hexValue[0] + hexValue[0] + hexValue[1] + hexValue[1] + hexValue[2] + hexValue[2];
+function preview(setting, value, serverCssUrl) {
+	OC.msg.startAction('#theming_settings_msg', t('theming', 'Loading preview…'));
+	var stylesheetsLoaded = 1;
+	var reloadStylesheets = function(cssFile) {
+		var queryString = '?reload=' + new Date().getTime();
+		var url = cssFile + queryString;
+		var old = $('link[href*="' + cssFile.replace("/","\/") + '"]');
+		var stylesheet = $("<link/>", {
+			rel: "stylesheet",
+			type: "text/css",
+			href: url
+		});
+		stylesheet.load(function () {
+			$(old).remove();
+			stylesheetsLoaded--;
+			if(stylesheetsLoaded === 0) {
+				$('#theming_settings_loading').hide();
+				var response = { status: 'success', data: {message: t('theming', 'Saved')}};
+				OC.msg.finishedSaving('#theming_settings_msg', response);
+			}
+		});
+		stylesheet.appendTo("head");
+	};
+
+	if (serverCssUrl !== undefined) {
+		stylesheetsLoaded++;
+
+		reloadStylesheets(serverCssUrl);
 	}
-	if (hexValue.length !== 6) {
-		return 0;
-	}
-	r = parseInt(hexValue.substring(0,2), 16);
-	g = parseInt(hexValue.substring(2,4), 16);
-	b = parseInt(hexValue.substring(4,6), 16);
-	return (0.299*r + 0.587*g + 0.114*b)/255;
-}
+	reloadStylesheets(OC.generateUrl('/apps/theming/styles'));
 
-function generateRadioButton(color) {
-	var radioButton = '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16">' +
-		'<path d="M8 1a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7zm0 1a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" fill="' + color + '"/></svg>';
-	return btoa(radioButton);
-}
-
-function preview(setting, value) {
-	if (setting === 'color') {
-		var headerClass = document.getElementById('header');
-		var expandDisplayNameClass = document.getElementById('expandDisplayName');
-		var headerAppName = headerClass.getElementsByClassName('header-appname')[0];
-		var textColor, icon;
-		var luminance = calculateLuminance(value);
-		var elementColor = value;
-
-		if (luminance > 0.5) {
-			textColor = "#000000";
-			icon = 'caret-dark';
-		} else {
-			textColor = "#ffffff";
-			icon = 'caret';
-		}
-		if (luminance > 0.8) {
-			elementColor = '#555555';
-		}
-
-		headerClass.style.background = value;
-		headerClass.style.backgroundImage = '../img/logo-icon.svg';
-		expandDisplayNameClass.style.color = textColor;
-		headerAppName.style.color = textColor;
-
-		$('#previewStyles').html(
-			'#header .icon-caret { background-image: url(\'' + OC.getRootPath() + '/core/img/actions/' + icon + '.svg\') }' +
-			'input[type="checkbox"].checkbox:checked:enabled:not(.checkbox--white) + label:before {' +
-			'background-image:url(\'' + OC.getRootPath() + '/core/img/actions/checkmark-white.svg\');' +
-			'background-color: ' + elementColor + '; background-position: center center; background-size:contain;' +
-			'width:12px; height:12px; padding:0; margin:2px 6px 6px 2px; border-radius:1px;}' +
-			'input[type="radio"].radio:checked:not(.radio--white):not(:disabled) + label:before {' +
-			'background-image: url(\'data:image/svg+xml;base64,' + generateRadioButton(elementColor) + '\'); }'
-		);
-	}
-
+	// Preview images
 	var timestamp = new Date().getTime();
 	if (setting === 'logoMime') {
-		var logos = document.getElementsByClassName('logo-icon');
 		var previewImageLogo = document.getElementById('theming-preview-logo');
 		if (value !== '') {
-			logos[0].style.backgroundImage = "url('" + OC.generateUrl('/apps/theming/logo') + "?v" + timestamp + "')";
-			logos[0].style.backgroundSize = "contain";
 			previewImageLogo.src = OC.generateUrl('/apps/theming/logo') + "?v" + timestamp;
 		} else {
-			logos[0].style.backgroundImage = "url('" + OC.getRootPath() + '/core/img/logo-icon.svg?v' + timestamp + "')";
-			logos[0].style.backgroundSize = "contain";
 			previewImageLogo.src = OC.getRootPath() + '/core/img/logo-icon.svg?v' + timestamp;
 		}
 	}
-	if (setting === 'backgroundMime') {
-		var previewImage = document.getElementById('theming-preview');
-		if (value !== '') {
-			previewImage.style.backgroundImage = "url('" + OC.generateUrl('/apps/theming/loginbackground') + "?v" + timestamp + "')";
-		} else {
-			previewImage.style.backgroundImage = "url('" + OC.getRootPath() + '/core/img/background.jpg?v' + timestamp + "')";
-		}
 
-	}
 	if (setting === 'name') {
 		window.document.title = t('core', 'Admin') + " - " + value;
 	}
+
+	hideUndoButton(setting, value);
+
 }
 
 function hideUndoButton(setting, value) {
@@ -132,12 +103,18 @@ function hideUndoButton(setting, value) {
 	} else {
 		$('.theme-undo[data-setting=' + setting + ']').show();
 	}
+
+	if(setting === 'backgroundMime' && value !== 'backgroundColor')  {
+		$('.theme-remove-bg').show();
+	}
+	if(setting === 'backgroundMime' && value === 'backgroundColor')  {
+		$('.theme-remove-bg').hide();
+		$('.theme-undo[data-setting=backgroundMime]').show();
+	}
 }
 
 $(document).ready(function () {
 	$('#theming [data-toggle="tooltip"]').tooltip();
-
-	$('html > head').append($('<style type="text/css" id="previewStyles"></style>'));
 
 	$('#theming .theme-undo').each(function() {
 		var setting = $(this).data('setting');
@@ -147,6 +124,7 @@ $(document).ready(function () {
 		}
 		hideUndoButton(setting, value);
 	});
+
 	var uploadParamsLogo = {
 		pasteZone: null,
 		dropZone: null,
@@ -157,7 +135,7 @@ $(document).ready(function () {
 			$('.theme-undo[data-setting=logoMime]').show();
 		},
 		submit: function(e, response) {
-			OC.msg.startSaving('#theming_settings_msg');
+			startLoading();
 			$('label#uploadlogo').removeClass('icon-upload').addClass('icon-loading-small');
 		},
 		fail: function (e, response){
@@ -175,7 +153,7 @@ $(document).ready(function () {
 			$('.theme-undo[data-setting=backgroundMime]').show();
 		},
 		submit: function(e, response) {
-			OC.msg.startSaving('#theming_settings_msg');
+			startLoading();
 			$('label#upload-login-background').removeClass('icon-upload').addClass('icon-loading-small');
 		},
 		fail: function (e, response){
@@ -186,6 +164,14 @@ $(document).ready(function () {
 
 	$('#uploadlogo').fileupload(uploadParamsLogo);
 	$('#upload-login-background').fileupload(uploadParamsLogin);
+	// clicking preview should also trigger file upload dialog
+	$('#theming-preview-logo').on('click', function(e) {
+		e.stopPropagation();
+		$('#uploadlogo').click();
+	});
+	$('#theming-preview').on('click', function() {
+		$('#upload-login-background').click();
+	});
 
 	$('#theming-name').change(function(e) {
 		var el = $(this);
@@ -223,7 +209,7 @@ $(document).ready(function () {
 
 	$('.theme-undo').click(function (e) {
 		var setting = $(this).data('setting');
-		OC.msg.startSaving('#theming_settings_msg');
+		startLoading();
 		$('.theme-undo[data-setting=' + setting + ']').hide();
 		$.post(
 			OC.generateUrl('/apps/theming/ajax/undoChanges'), {'setting' : setting}
@@ -236,9 +222,19 @@ $(document).ready(function () {
 				var input = document.getElementById('theming-'+setting);
 				input.value = response.data.value;
 			}
+			preview(setting, response.data.value, response.data.serverCssUrl);
+		});
+	});
 
-			preview(setting, response.data.value);
+	$('.theme-remove-bg').click(function() {
+		startLoading();
+		$.post(
+			OC.generateUrl('/apps/theming/ajax/updateLogo'), {'backgroundColor' : true}
+		).done(function(response) {
+			preview('backgroundMime', 'backgroundColor');
+		}).fail(function(response) {
 			OC.msg.finishedSaving('#theming_settings_msg', response);
 		});
 	});
+	
 });

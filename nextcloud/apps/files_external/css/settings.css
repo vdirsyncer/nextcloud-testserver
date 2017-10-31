@@ -1,6 +1,5 @@
 #global_credentials {
 	padding: 0 30px;
-	margin-bottom: 0px;
 }
 
 #files_external {
@@ -114,4 +113,8 @@ td.mountPoint, td.backend { width:160px; }
 
 #externalStorage .mountOptionsDropdown {
 	margin-right: 40px;
+}
+
+.nav-icon-external-storage {
+	background-image: url('../img/app-dark.svg?v=1');
 }

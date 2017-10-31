@@ -29,6 +29,7 @@ use OC_Util;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\Authentication\TwoFactorAuth\TwoFactorException;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
@@ -68,8 +69,8 @@ class TwoFactorChallengeController extends Controller {
 	/**
 	 * @return string
 	 */
-	protected function getLogoutAttribute() {
-		return OC_User::getLogoutAttribute();
+	protected function getLogoutUrl() {
+		return OC_User::getLogoutUrl($this->urlGenerator);
 	}
 
 	/**
@@ -88,7 +89,7 @@ class TwoFactorChallengeController extends Controller {
 			'providers' => $providers,
 			'backupProvider' => $backupProvider,
 			'redirect_url' => $redirect_url,
-			'logout_attribute' => $this->getLogoutAttribute(),
+			'logout_url' => $this->getLogoutUrl(),
 		];
 		return new TemplateResponse($this->appName, 'twofactorselectchallenge', $data, 'guest');
 	}
@@ -115,19 +116,22 @@ class TwoFactorChallengeController extends Controller {
 			$backupProvider = null;
 		}
 
+		$errorMessage = '';
+		$error = false;
 		if ($this->session->exists('two_factor_auth_error')) {
 			$this->session->remove('two_factor_auth_error');
 			$error = true;
-		} else {
-			$error = false;
+			$errorMessage = $this->session->get("two_factor_auth_error_message");
+			$this->session->remove('two_factor_auth_error_message');
 		}
 		$tmpl = $provider->getTemplate($user);
 		$tmpl->assign('redirect_url', $redirect_url);
 		$data = [
 			'error' => $error,
+			'error_message' => $errorMessage,
 			'provider' => $provider,
 			'backupProvider' => $backupProvider,
-			'logout_attribute' => $this->getLogoutAttribute(),
+			'logout_url' => $this->getLogoutUrl(),
 			'redirect_url' => $redirect_url,
 			'template' => $tmpl->fetchPage(),
 		];
@@ -138,6 +142,8 @@ class TwoFactorChallengeController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * @UserRateThrottle(limit=5, period=100)
 	 *
 	 * @param string $challengeProviderId
 	 * @param string $challenge
@@ -151,11 +157,20 @@ class TwoFactorChallengeController extends Controller {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('core.TwoFactorChallenge.selectChallenge'));
 		}
 
-		if ($this->twoFactorManager->verifyChallenge($challengeProviderId, $user, $challenge)) {
-			if (!is_null($redirect_url)) {
-				return new RedirectResponse($this->urlGenerator->getAbsoluteURL(urldecode($redirect_url)));
+		try {
+			if ($this->twoFactorManager->verifyChallenge($challengeProviderId, $user, $challenge)) {
+				if (!is_null($redirect_url)) {
+					return new RedirectResponse($this->urlGenerator->getAbsoluteURL(urldecode($redirect_url)));
+				}
+				return new RedirectResponse(OC_Util::getDefaultPageUrl());
 			}
-			return new RedirectResponse(OC_Util::getDefaultPageUrl());
+		} catch (TwoFactorException $e) {
+			/*
+			 * The 2FA App threw an TwoFactorException. Now we display more
+			 * information to the user. The exception text is stored in the
+			 * session to be used in showChallenge()
+			 */
+			$this->session->set('two_factor_auth_error_message', $e->getMessage());
 		}
 
 		$this->session->set('two_factor_auth_error', true);

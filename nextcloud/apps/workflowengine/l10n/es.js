@@ -1,9 +1,9 @@
 OC.L10N.register(
     "workflowengine",
     {
-    "Successfully saved" : "Guardado con éxito",
+    "Saved" : "Guardado",
     "Saving failed:" : "Guardado fallido:",
-    "File mime type" : "Tipo mime del fichero",
+    "File MIME type" : "Tipo de archivo MIME",
     "is" : "es/esta",
     "is not" : "no es/esta",
     "matches" : "coincidencias",
@@ -42,7 +42,7 @@ OC.L10N.register(
     "is not member of" : "no es miembro de",
     "The given operator is invalid" : "La operación dada no es valida",
     "The given regular expression is invalid" : "La expresión regular dada no es valida",
-    "The given file size is invalid" : "El tamaño de fichero dado no es valido ",
+    "The given file size is invalid" : "El tamaño del archivo dado no es válido ",
     "The given tag id is invalid" : "El id de etiqueta dado no es valido",
     "The given IP range is invalid" : "El rango de IPs no es valido",
     "The given IP range is not valid for IPv4" : "El rango de IP no es valida para IPv4",
@@ -66,6 +66,8 @@ OC.L10N.register(
     "Reset" : "Reiniciar",
     "Save" : "Guardar",
     "Saving…" : "Guardando...",
-    "Loading…" : "Cargando..."
+    "Loading…" : "Cargando...",
+    "Successfully saved" : "Guardado con éxito",
+    "File mime type" : "Tipo MIME del archivo"
 },
 "nplurals=2; plural=(n != 1);");

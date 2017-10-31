@@ -37,11 +37,12 @@ use OCP\Http\Client\IClient;
 use OCP\Http\Client\IResponse;
 use OCP\ILogger;
 use OCP\IURLGenerator;
+use OCP\OCS\IDiscoveryService;
 
 /**
  * Class GetSharedSecret
  *
- * request shared secret from remote ownCloud
+ * request shared secret from remote Nextcloud
  *
  * @package OCA\Federation\Backgroundjob
  */
@@ -62,13 +63,18 @@ class GetSharedSecret extends Job{
 	/** @var DbHandler */
 	private $dbHandler;
 
+	/** @var IDiscoveryService  */
+	private $ocsDiscoveryService;
+
 	/** @var ILogger */
 	private $logger;
 
 	/** @var bool */
 	protected $retainJob = false;
 
-	private $endPoint = '/ocs/v2.php/apps/federation/api/v1/shared-secret?format=json';
+	private $format = '?format=json';
+
+	private $defaultEndPoint = '/ocs/v2.php/apps/federation/api/v1/shared-secret';
 
 	/**
 	 * RequestSharedSecret constructor.
@@ -79,6 +85,7 @@ class GetSharedSecret extends Job{
 	 * @param TrustedServers $trustedServers
 	 * @param ILogger $logger
 	 * @param DbHandler $dbHandler
+	 * @param IDiscoveryService $ocsDiscoveryService
 	 */
 	public function __construct(
 		IClient $httpClient = null,
@@ -86,13 +93,15 @@ class GetSharedSecret extends Job{
 		IJobList $jobList = null,
 		TrustedServers $trustedServers = null,
 		ILogger $logger = null,
-		DbHandler $dbHandler = null
+		DbHandler $dbHandler = null,
+		IDiscoveryService $ocsDiscoveryService = null
 	) {
 		$this->logger = $logger ? $logger : \OC::$server->getLogger();
 		$this->httpClient = $httpClient ? $httpClient : \OC::$server->getHTTPClientService()->newClient();
 		$this->jobList = $jobList ? $jobList : \OC::$server->getJobList();
 		$this->urlGenerator = $urlGenerator ? $urlGenerator : \OC::$server->getURLGenerator();
 		$this->dbHandler = $dbHandler ? $dbHandler : new DbHandler(\OC::$server->getDatabaseConnection(), \OC::$server->getL10N('federation'));
+		$this->ocsDiscoveryService = $ocsDiscoveryService ? $ocsDiscoveryService : \OC::$server->query(\OCP\OCS\IDiscoveryService::class);
 		if ($trustedServers) {
 			$this->trustedServers = $trustedServers;
 		} else {
@@ -142,10 +151,16 @@ class GetSharedSecret extends Job{
 		$source = rtrim($source, '/');
 		$token = $argument['token'];
 
+		$endPoints = $this->ocsDiscoveryService->discover($target, 'FEDERATED_SHARING');
+		$endPoint = isset($endPoints['shared-secret']) ? $endPoints['shared-secret'] : $this->defaultEndPoint;
+
+		// make sure that we have a well formated url
+		$url = rtrim($target, '/') . '/' . trim($endPoint, '/') . $this->format;
+
 		$result = null;
 		try {
 			$result = $this->httpClient->get(
-				$target . $this->endPoint,
+				$url,
 				[
 					'query' =>
 						[
@@ -164,7 +179,7 @@ class GetSharedSecret extends Job{
 			if ($status === Http::STATUS_FORBIDDEN) {
 				$this->logger->info($target . ' refused to exchange a shared secret with you.', ['app' => 'federation']);
 			} else {
-				$this->logger->logException($e, ['app' => 'federation']);
+				$this->logger->info($target . ' responded with a ' . $status . ' containing: ' . $e->getMessage(), ['app' => 'federation']);
 			}
 		} catch (\Exception $e) {
 			$status = Http::STATUS_INTERNAL_SERVER_ERROR;

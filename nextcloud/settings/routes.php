@@ -37,7 +37,6 @@ namespace OC\Settings;
 $application = new Application();
 $application->registerRoutes($this, [
 	'resources' => [
-		'groups' => ['url' => '/settings/users/groups'],
 		'users' => ['url' => '/settings/users/users'],
 		'AuthSettings' => ['url' => '/settings/personal/authtokens'],
 	],
@@ -53,6 +52,8 @@ $application->registerRoutes($this, [
 		['name' => 'Users#setDisplayName', 'url' => '/settings/users/{username}/displayName', 'verb' => 'POST'],
 		['name' => 'Users#setEMailAddress', 'url' => '/settings/users/{id}/mailAddress', 'verb' => 'PUT'],
 		['name' => 'Users#setUserSettings', 'url' => '/settings/users/{username}/settings', 'verb' => 'PUT'],
+		['name' => 'Users#getVerificationCode', 'url' => '/settings/users/{account}/verify', 'verb' => 'GET'],
+		['name' => 'Users#setEnabled', 'url' => '/settings/users/{id}/setEnabled', 'verb' => 'POST'],
 		['name' => 'Users#stats', 'url' => '/settings/users/stats', 'verb' => 'GET'],
 		['name' => 'LogSettings#setLogLevel', 'url' => '/settings/admin/log/level', 'verb' => 'POST'],
 		['name' => 'LogSettings#getEntries', 'url' => '/settings/admin/log/entries', 'verb' => 'GET'],
@@ -68,7 +69,11 @@ $application->registerRoutes($this, [
 		['name' => 'AdminSettings#form', 'url' => '/settings/admin/{section}', 'verb' => 'GET'],
 		['name' => 'ChangePassword#changePersonalPassword', 'url' => '/settings/personal/changepassword', 'verb' => 'POST'],
 		['name' => 'ChangePassword#changeUserPassword', 'url' => '/settings/users/changepassword', 'verb' => 'POST'],
-		['name' => 'Personal#setLanguage', 'url' => '/settings/ajax/setlanguage.php', 'verb' => 'POST'],
+		['name' => 'Groups#index', 'url' => '/settings/users/groups', 'verb' => 'GET'],
+		['name' => 'Groups#show', 'url' => '/settings/users/groups/{id}', 'requirements' => ['id' => '[^?]*'], 'verb' => 'GET'],
+		['name' => 'Groups#create', 'url' => '/settings/users/groups', 'verb' => 'POST'],
+		['name' => 'Groups#update', 'url' => '/settings/users/groups/{id}', 'requirements' => ['id' => '[^?]*'], 'verb' => 'PUT'],
+		['name' => 'Groups#destroy', 'url' => '/settings/users/groups/{id}', 'requirements' => ['id' => '[^?]*'], 'verb' => 'DELETE'],
 	]
 ]);
 

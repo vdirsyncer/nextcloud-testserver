@@ -82,6 +82,12 @@ class Updater extends BasicEmitter {
 		$this->log = $log;
 		$this->config = $config;
 		$this->checker = $checker;
+
+		// If at least PHP 7.0.0 is used we don't need to disable apps as we catch
+		// fatal errors and exceptions and disable the app just instead.
+		if(version_compare(phpversion(), '7.0.0', '>=')) {
+			$this->skip3rdPartyAppsDisable = true;
+		}
 	}
 
 	/**
@@ -151,13 +157,13 @@ class Updater extends BasicEmitter {
 	/**
 	 * Return version from which this version is allowed to upgrade from
 	 *
-	 * @return string allowed previous version
+	 * @return array allowed previous versions per vendor
 	 */
-	private function getAllowedPreviousVersion() {
+	private function getAllowedPreviousVersions() {
 		// this should really be a JSON file
 		require \OC::$SERVERROOT . '/version.php';
 		/** @var array $OC_VersionCanBeUpgradedFrom */
-		return implode('.', $OC_VersionCanBeUpgradedFrom);
+		return $OC_VersionCanBeUpgradedFrom;
 	}
 
 	/**
@@ -176,26 +182,37 @@ class Updater extends BasicEmitter {
 	 * Whether an upgrade to a specified version is possible
 	 * @param string $oldVersion
 	 * @param string $newVersion
-	 * @param string $allowedPreviousVersion
+	 * @param array $allowedPreviousVersions
 	 * @return bool
 	 */
-	public function isUpgradePossible($oldVersion, $newVersion, $allowedPreviousVersion) {
-		$allowedUpgrade = (version_compare($allowedPreviousVersion, $oldVersion, '<=')
-			&& (version_compare($oldVersion, $newVersion, '<=') || $this->config->getSystemValue('debug', false)));
+	public function isUpgradePossible($oldVersion, $newVersion, array $allowedPreviousVersions) {
+		$version = explode('.', $oldVersion);
+		$majorMinor = $version[0] . '.' . $version[1];
 
-		if ($allowedUpgrade) {
-			return $allowedUpgrade;
+		$currentVendor = $this->config->getAppValue('core', 'vendor', '');
+
+		// Vendor was not set correctly on install, so we have to white-list known versions
+		if ($currentVendor === '') {
+			if (in_array($oldVersion, [
+				'11.0.2.7',
+				'11.0.1.2',
+				'11.0.0.10',
+			], true)) {
+				$currentVendor = 'nextcloud';
+			} else if (isset($allowedPreviousVersions['owncloud'][$oldVersion])) {
+				$currentVendor = 'owncloud';
+			}
 		}
 
-		// Upgrade not allowed, someone switching vendor?
-		if ($this->getVendor() !== $this->config->getAppValue('core', 'vendor', '')) {
-			$oldVersion = explode('.', $oldVersion);
-			$newVersion = explode('.', $newVersion);
-
-			return $oldVersion[0] === $newVersion[0] && $oldVersion[1] === $newVersion[1];
+		if ($currentVendor === 'nextcloud') {
+			return isset($allowedPreviousVersions[$currentVendor][$majorMinor])
+				&& (version_compare($oldVersion, $newVersion, '<=') ||
+					$this->config->getSystemValue('debug', false));
 		}
 
-		return false;
+		// Check if the instance can be migrated
+		return isset($allowedPreviousVersions[$currentVendor][$majorMinor]) ||
+			isset($allowedPreviousVersions[$currentVendor][$oldVersion]);
 	}
 
 	/**
@@ -209,8 +226,8 @@ class Updater extends BasicEmitter {
 	 */
 	private function doUpgrade($currentVersion, $installedVersion) {
 		// Stop update if the update is over several major versions
-		$allowedPreviousVersion = $this->getAllowedPreviousVersion();
-		if (!self::isUpgradePossible($installedVersion, $currentVersion, $allowedPreviousVersion)) {
+		$allowedPreviousVersions = $this->getAllowedPreviousVersions();
+		if (!$this->isUpgradePossible($installedVersion, $currentVersion, $allowedPreviousVersions)) {
 			throw new \Exception('Updates between multiple major versions and downgrades are unsupported.');
 		}
 
@@ -241,11 +258,14 @@ class Updater extends BasicEmitter {
 		}
 
 		// update all shipped apps
-		$disabledApps = $this->checkAppsRequirements();
+		$this->checkAppsRequirements();
 		$this->doAppUpgrade();
 
+		// Update the appfetchers version so it downloads the correct list from the appstore
+		\OC::$server->getAppFetcher()->setVersion($currentVersion);
+
 		// upgrade appstore apps
-		$this->upgradeAppStoreApps($disabledApps);
+		$this->upgradeAppStoreApps(\OC::$server->getAppManager()->getInstalledApps());
 
 		// install new shipped apps on upgrade
 		OC_App::loadApps('authentication');
@@ -363,7 +383,7 @@ class Updater extends BasicEmitter {
 					// load authentication, filesystem and logging apps after
 					// upgrading them. Other apps my need to rely on modifying
 					// user and/or filesystem aspects.
-					\OC_App::loadApp($appId, false);
+					\OC_App::loadApp($appId);
 				}
 			}
 		}
@@ -439,12 +459,15 @@ class Updater extends BasicEmitter {
 					\OC::$server->getAppFetcher(),
 					\OC::$server->getHTTPClientService(),
 					\OC::$server->getTempManager(),
-					$this->log
+					$this->log,
+					\OC::$server->getConfig()
 				);
+				$this->emit('\OC\Updater', 'checkAppStoreAppBefore', [$app]);
 				if (Installer::isUpdateAvailable($app, \OC::$server->getAppFetcher())) {
 					$this->emit('\OC\Updater', 'upgradeAppStoreApp', [$app]);
 					$installer->updateAppstoreApp($app);
 				}
+				$this->emit('\OC\Updater', 'checkAppStoreApp', [$app]);
 			} catch (\Exception $ex) {
 				$this->log->logException($ex, ['app' => 'core']);
 			}
@@ -572,8 +595,14 @@ class Updater extends BasicEmitter {
 		$this->listen('\OC\Updater', 'thirdPartyAppDisabled', function ($app) use ($log) {
 			$log->info('\OC\Updater::thirdPartyAppDisabled: Disabled 3rd-party app: ' . $app, ['app' => 'updater']);
 		});
+		$this->listen('\OC\Updater', 'checkAppStoreAppBefore', function ($app) use($log) {
+			$log->info('\OC\Updater::checkAppStoreAppBefore: Checking for update of app "' . $app . '" in appstore', ['app' => 'updater']);
+		});
 		$this->listen('\OC\Updater', 'upgradeAppStoreApp', function ($app) use($log) {
-			$log->info('\OC\Updater::upgradeAppStoreApp: Update 3rd-party app: ' . $app, ['app' => 'updater']);
+			$log->info('\OC\Updater::upgradeAppStoreApp: Update app "' . $app . '" from appstore', ['app' => 'updater']);
+		});
+		$this->listen('\OC\Updater', 'checkAppStoreApp', function ($app) use($log) {
+			$log->info('\OC\Updater::checkAppStoreApp: Checked for update of app "' . $app . '" in appstore', ['app' => 'updater']);
 		});
 		$this->listen('\OC\Updater', 'appUpgradeCheckBefore', function () use ($log) {
 			$log->info('\OC\Updater::appUpgradeCheckBefore: Checking updates of apps', ['app' => 'updater']);

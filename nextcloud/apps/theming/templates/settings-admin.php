@@ -28,7 +28,11 @@ style('theming', 'settings-admin');
 ?>
 <div id="theming" class="section">
 	<h2 class="inlineblock"><?php p($l->t('Theming')); ?></h2>
-		<div id="theming_settings_msg" class="msg success inlineblock" style="display: none;">Saved</div>
+        <p class="settings-hint"><?php p($l->t('Theming makes it possible to easily customize the look and feel of your instance and supported clients. This will be visible for all users.')); ?></p>
+		<div id="theming_settings_status">
+			<div id="theming_settings_loading" class="icon-loading-small" style="display: none;"></div>
+			<span id="theming_settings_msg" class="msg success" style="display: none;">Saved</span>
+		</div>
 	<?php if ($_['themable'] === false) { ?>
 	<p>
 		<?php p($_['errorMessage']) ?>
@@ -63,7 +67,7 @@ style('theming', 'settings-admin');
 		</label>
 	</div>
 	<div>
-		<form class="uploadButton inlineblock" method="post" action="<?php p($_['uploadLogoRoute']) ?>">
+		<form class="uploadButton" method="post" action="<?php p($_['uploadLogoRoute']) ?>">
 			<input type="hidden" id="current-logoMime" name="current-logoMime" value="<?php p($_['logoMime']); ?>" />
 			<label for="uploadlogo"><span><?php p($l->t('Logo')) ?></span></label>
 			<input id="uploadlogo" class="upload-logo-field" name="uploadlogo" type="file" />
@@ -72,16 +76,16 @@ style('theming', 'settings-admin');
 		</form>
 	</div>
 	<div>
-		<form class="uploadButton inlineblock" method="post" action="<?php p($_['uploadLogoRoute']) ?>">
+		<form class="uploadButton" method="post" action="<?php p($_['uploadLogoRoute']) ?>">
 			<input type="hidden" id="current-backgroundMime" name="current-backgroundMime" value="<?php p($_['backgroundMime']); ?>" />
-			<label for="upload-login-background"><span><?php p($l->t('Log in image')) ?></span></label>
+			<label for="upload-login-background"><span><?php p($l->t('Login image')) ?></span></label>
 			<input id="upload-login-background" class="upload-logo-field" name="upload-login-background" type="file">
 			<label for="upload-login-background" class="button icon-upload svg" id="upload-login-background" title="<?php p($l->t("Upload new login background")) ?>"></label>
 			<div data-setting="backgroundMime" data-toggle="tooltip" data-original-title="<?php p($l->t('reset to default')); ?>" class="theme-undo icon icon-history"></div>
+			<div class="theme-remove-bg icon icon-delete" data-toggle="tooltip" data-original-title="<?php p($l->t('Remove background image')); ?>"></div>
 		</form>
 	</div>
-
-	<div id="theming-preview" style="background-color:<?php p($_['color']);?>; background-image:url(<?php p($_['background']); ?>);">
+	<div id="theming-preview">
 		<img src="<?php p($_['logo']); ?>" id="theming-preview-logo" />
 	</div>
 	<?php } ?>

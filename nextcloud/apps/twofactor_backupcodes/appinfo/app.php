@@ -1,7 +1,8 @@
 <?php
-
 /**
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @copyright Copyright (c) 2017 Joas Schilling <coding@schilljs.com>
+ *
+ * @author Joas Schilling <coding@schilljs.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -19,4 +20,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-OC_App::registerPersonal('twofactor_backupcodes', 'settings/personal');
+
+$app = new \OCA\TwoFactorBackupCodes\AppInfo\Application();
+$app->register();

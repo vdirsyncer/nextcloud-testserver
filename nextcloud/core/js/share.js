@@ -9,6 +9,8 @@ OC.Share = _.extend(OC.Share || {}, {
 	SHARE_TYPE_LINK:3,
 	SHARE_TYPE_EMAIL:4,
 	SHARE_TYPE_REMOTE:6,
+	SHARE_TYPE_CIRCLE:7,
+	SHARE_TYPE_GUEST:8,
 
 	/**
 	 * Regular expression for splitting parts of remote share owners:
@@ -106,7 +108,7 @@ OC.Share = _.extend(OC.Share || {}, {
 		}
 		// TODO: iterating over the files might be more efficient
 		for (item in OC.Share.statuses){
-			var iconClass = 'icon-share';
+			var iconClass = 'icon-shared';
 			var data = OC.Share.statuses[item];
 			var hasLink = data.link;
 			// Links override shared in terms of icon display
@@ -114,7 +116,7 @@ OC.Share = _.extend(OC.Share || {}, {
 				iconClass = 'icon-public';
 			}
 			if (itemType !== 'file' && itemType !== 'folder') {
-				$('a.share[data-item="'+item+'"] .icon').removeClass('icon-share icon-public').addClass(iconClass);
+				$('a.share[data-item="'+item+'"] .icon').removeClass('icon-shared icon-public').addClass(iconClass);
 			} else {
 				// TODO: ultimately this part should be moved to files_sharing app
 				var file = $fileList.find('tr[data-id="'+item+'"]');
@@ -172,12 +174,12 @@ OC.Share = _.extend(OC.Share || {}, {
 					}
 				} else if (OC.Share.itemShares[index].length > 0) {
 					shares = true;
-					iconClass = 'icon-share';
+					iconClass = 'icon-shared';
 				}
 			}
 		});
 		if (itemType != 'file' && itemType != 'folder') {
-			$('a.share[data-item="'+itemSource+'"] .icon').removeClass('icon-share icon-public').addClass(iconClass);
+			$('a.share[data-item="'+itemSource+'"] .icon').removeClass('icon-shared icon-public').addClass(iconClass);
 		} else {
 			var $tr = $('tr').filterAttr('data-id', String(itemSource));
 			if ($tr.length > 0) {
@@ -190,7 +192,7 @@ OC.Share = _.extend(OC.Share || {}, {
 		}
 		if (shares) {
 			OC.Share.statuses[itemSource] = OC.Share.statuses[itemSource] || {};
-			OC.Share.statuses[itemSource]['link'] = link;
+			OC.Share.statuses[itemSource].link = link;
 		} else {
 			delete OC.Share.statuses[itemSource];
 		}
@@ -261,7 +263,7 @@ OC.Share = _.extend(OC.Share || {}, {
 		var recipients;
 		var owner = $tr.attr('data-share-owner');
 		var shareFolderIcon;
-		var iconClass = 'icon-share';
+		var iconClass = 'icon-shared';
 		action.removeClass('shared-style');
 		// update folder icon
 		if (type === 'dir' && (hasShares || hasLink || owner)) {
@@ -302,7 +304,7 @@ OC.Share = _.extend(OC.Share || {}, {
 			}
 			action.html('<span> ' + message + '</span>').prepend(icon);
 			if (owner || recipients) {
-				action.find('.remoteAddress').tipsy({gravity: 's'});
+				action.find('.remoteAddress').tooltip({placement: 'top'});
 			}
 		}
 		else {
@@ -311,94 +313,7 @@ OC.Share = _.extend(OC.Share || {}, {
 		if (hasLink) {
 			iconClass = 'icon-public';
 		}
-		icon.removeClass('icon-share icon-public').addClass(iconClass);
-	},
-	/**
-	 *
-	 * @param itemType
-	 * @param itemSource
-	 * @param callback - optional. If a callback is given this method works
-	 * asynchronous and the callback will be provided with data when the request
-	 * is done.
-	 * @returns {OC.Share.Types.ShareInfo}
-	 */
-	loadItem:function(itemType, itemSource, callback) {
-		var data = '';
-		var checkReshare = true;
-		var async = !_.isUndefined(callback);
-		if (typeof OC.Share.statuses[itemSource] === 'undefined') {
-			// NOTE: Check does not always work and misses some shares, fix later
-			var checkShares = true;
-		} else {
-			var checkShares = true;
-		}
-		$.ajax({type: 'GET', url: OC.filePath('core', 'ajax', 'share.php'), data: { fetch: 'getItem', itemType: itemType, itemSource: itemSource, checkReshare: checkReshare, checkShares: checkShares }, async: async, success: function(result) {
-			if (result && result.status === 'success') {
-				data = result.data;
-			} else {
-				data = false;
-			}
-			if(async) {
-				callback(data);
-			}
-		}});
-
-		return data;
-	},
-	share:function(itemType, itemSource, shareType, shareWith, permissions, itemSourceName, expirationDate, callback, errorCallback) {
-		// Add a fallback for old share() calls without expirationDate.
-		// We should remove this in a later version,
-		// after the Apps have been updated.
-		if (typeof callback === 'undefined' &&
-			typeof expirationDate === 'function') {
-			callback = expirationDate;
-			expirationDate = '';
-			console.warn(
-				"Call to 'OC.Share.share()' with too few arguments. " +
-				"'expirationDate' was assumed to be 'callback'. " +
-				"Please revisit the call and fix the list of arguments."
-			);
-		}
-
-		return $.post(OC.filePath('core', 'ajax', 'share.php'),
-			{
-				action: 'share',
-				itemType: itemType,
-				itemSource: itemSource,
-				shareType: shareType,
-				shareWith: shareWith,
-				permissions: permissions,
-				itemSourceName: itemSourceName,
-				expirationDate: expirationDate
-			}, function (result) {
-				if (result && result.status === 'success') {
-					if (callback) {
-						callback(result.data);
-					}
-				} else {
-					if (_.isUndefined(errorCallback)) {
-						var msg = t('core', 'Error');
-						if (result.data && result.data.message) {
-							msg = result.data.message;
-						}
-						OC.dialogs.alert(msg, t('core', 'Error while sharing'));
-					} else {
-						errorCallback(result);
-					}
-				}
-			}
-		);
-	},
-	unshare:function(itemType, itemSource, shareType, shareWith, callback) {
-		$.post(OC.filePath('core', 'ajax', 'share.php'), { action: 'unshare', itemType: itemType, itemSource: itemSource, shareType: shareType, shareWith: shareWith }, function(result) {
-			if (result && result.status === 'success') {
-				if (callback) {
-					callback();
-				}
-			} else {
-				OC.dialogs.alert(t('core', 'Error while unsharing'), t('core', 'Error'));
-			}
-		});
+		icon.removeClass('icon-shared icon-public').addClass(iconClass);
 	},
 	showDropDown:function(itemType, itemSource, appendTo, link, possiblePermissions, filename) {
 		var configModel = new OC.Share.ShareConfigModel();

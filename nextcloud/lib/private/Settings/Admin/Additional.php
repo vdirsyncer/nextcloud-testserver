@@ -23,16 +23,8 @@
 
 namespace OC\Settings\Admin;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
-use Doctrine\DBAL\Platforms\SqlitePlatform;
-use OC\Lock\DBLockingProvider;
-use OC\Lock\NoopLockingProvider;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
-use OCP\IDBConnection;
-use OCP\IL10N;
-use OCP\Lock\ILockingProvider;
 use OCP\Settings\ISettings;
 
 class Additional implements ISettings {
@@ -64,6 +56,10 @@ class Additional implements ISettings {
 			'mail_smtpname'         => $this->config->getSystemValue('mail_smtpname', ''),
 			'mail_smtppassword'     => $this->config->getSystemValue('mail_smtppassword', ''),
 		];
+
+		if ($parameters['mail_smtppassword'] !== '') {
+			$parameters['mail_smtppassword'] = '********';
+		}
 
 		return new TemplateResponse('settings', 'admin/additional-mail', $parameters, '');
 	}

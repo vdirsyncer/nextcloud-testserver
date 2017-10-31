@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Roger Szabo <roger.szabo@web.de>
+ * @copyright Copyright (c) 2017 Roger Szabo <roger.szabo@web.de>
  *
  * @author Roger Szabo <roger.szabo@web.de>
  *

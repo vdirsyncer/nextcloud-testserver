@@ -41,6 +41,7 @@ use OCA\User_LDAP\Exceptions\NotOnLDAP;
 use OCA\User_LDAP\User\OfflineUser;
 use OCA\User_LDAP\User\User;
 use OCP\IConfig;
+use OCP\Notification\IManager as INotificationManager;
 use OCP\Util;
 
 class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserInterface, IUserLDAP {
@@ -50,18 +51,23 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	/** @var \OCP\IConfig */
 	protected $ocConfig;
 
+	/** @var INotificationManager */
+	protected $notificationManager;
+
 	/**
 	 * @param Access $access
 	 * @param \OCP\IConfig $ocConfig
+	 * @param \OCP\Notification\IManager $notificationManager
 	 */
-	public function __construct(Access $access, IConfig $ocConfig) {
+	public function __construct(Access $access, IConfig $ocConfig, INotificationManager $notificationManager) {
 		parent::__construct($access);
 		$this->ocConfig = $ocConfig;
+		$this->notificationManager = $notificationManager;
 	}
 
 	/**
-	 * checks whether the user is allowed to change his avatar in ownCloud
-	 * @param string $uid the ownCloud user name
+	 * checks whether the user is allowed to change his avatar in Nextcloud
+	 * @param string $uid the Nextcloud user name
 	 * @return boolean either the user can or cannot
 	 */
 	public function canChangeAvatar($uid) {
@@ -136,17 +142,16 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	}
 
 	/**
-	 * Check if the password is correct
+	 * Check if the password is correct without logging in the user
+	 *
 	 * @param string $uid The username
 	 * @param string $password The password
 	 * @return false|string
-	 *
-	 * Check if the password is correct without logging in the user
 	 */
 	public function checkPassword($uid, $password) {
 		try {
 			$ldapRecord = $this->getLDAPUserByLoginName($uid);
-		} catch(\Exception $e) {
+		} catch(NotOnLDAP $e) {
 			if($this->ocConfig->getSystemValue('loglevel', Util::WARN) === Util::DEBUG) {
 				\OC::$server->getLogger()->logException($e, ['app' => 'user_ldap']);
 			}
@@ -191,8 +196,19 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 			throw new \Exception('LDAP setPassword: Could not get user object for uid ' . $uid .
 				'. Maybe the LDAP entry has no set display name attribute?');
 		}
-		if($user->getUsername() !== false) {
-			return $this->access->setPassword($user->getDN(), $password);
+		if($user->getUsername() !== false && $this->access->setPassword($user->getDN(), $password)) {
+			$ldapDefaultPPolicyDN = $this->access->connection->ldapDefaultPPolicyDN;
+			$turnOnPasswordChange = $this->access->connection->turnOnPasswordChange;
+			if (!empty($ldapDefaultPPolicyDN) && (intval($turnOnPasswordChange) === 1)) {
+				//remove last password expiry warning if any
+				$notification = $this->notificationManager->createNotification();
+				$notification->setApp('user_ldap')
+					->setUser($uid)
+					->setObject('pwd_exp_warn', $uid)
+				;
+				$this->notificationManager->markProcessed($notification);
+			}
+			return true;
 		}
 
 		return false;
@@ -235,7 +251,7 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 			$filter,
 			$this->access->userManager->getAttributes(true),
 			$limit, $offset);
-		$ldap_users = $this->access->ownCloudUserNames($ldap_users);
+		$ldap_users = $this->access->nextcloudUserNames($ldap_users);
 		Util::writeLog('user_ldap', 'getUsers: '.count($ldap_users). ' Users found', Util::DEBUG);
 
 		$this->access->connection->writeToCache($cachekey, $ldap_users);
@@ -245,7 +261,7 @@ class User_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 	/**
 	 * checks whether a user is still available on LDAP
 	 *
-	 * @param string|\OCA\User_LDAP\User\User $user either the ownCloud user
+	 * @param string|\OCA\User_LDAP\User\User $user either the Nextcloud user
 	 * name or an instance of that user
 	 * @return bool
 	 * @throws \Exception

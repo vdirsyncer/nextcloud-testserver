@@ -1,3 +1,14 @@
+/**
+ * Nextcloud - Gallery
+ *
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Olivier Paroz <galleryapps@oparoz.com>
+ *
+ * @copyright Olivier Paroz 2017
+ */
 /* global Album, GalleryImage */
 (function ($, OC, t) {
 	"use strict";
@@ -194,7 +205,7 @@
 				event.stopPropagation();
 
 				var currentAlbum = Gallery.albumMap[Gallery.currentAlbum];
-				$('a.share').data('path', currentAlbum.path)
+				$('#controls a.share').data('path', currentAlbum.path)
 					.data('link', true)
 					.data('item-source', currentAlbum.fileId)
 					.data('possible-permissions', currentAlbum.permissions)

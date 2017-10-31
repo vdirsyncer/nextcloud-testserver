@@ -41,19 +41,20 @@ namespace OC;
 
 use bantu\IniGetWrapper\IniGetWrapper;
 use Exception;
-use OCP\IConfig;
+use OC\App\AppStore\Bundles\BundleFetcher;
+use OCP\Defaults;
 use OCP\IL10N;
 use OCP\ILogger;
 use OCP\Security\ISecureRandom;
 
 class Setup {
-	/** @var \OCP\IConfig */
+	/** @var SystemConfig */
 	protected $config;
 	/** @var IniGetWrapper */
 	protected $iniWrapper;
 	/** @var IL10N */
 	protected $l10n;
-	/** @var \OC_Defaults */
+	/** @var Defaults */
 	protected $defaults;
 	/** @var ILogger */
 	protected $logger;
@@ -61,14 +62,17 @@ class Setup {
 	protected $random;
 
 	/**
-	 * @param IConfig $config
+	 * @param SystemConfig $config
 	 * @param IniGetWrapper $iniWrapper
-	 * @param \OC_Defaults $defaults
+	 * @param IL10N $l10n
+	 * @param Defaults $defaults
+	 * @param ILogger $logger
+	 * @param ISecureRandom $random
 	 */
-	function __construct(IConfig $config,
+	public function __construct(SystemConfig $config,
 						 IniGetWrapper $iniWrapper,
 						 IL10N $l10n,
-						 \OC_Defaults $defaults,
+						 Defaults $defaults,
 						 ILogger $logger,
 						 ISecureRandom $random
 		) {
@@ -80,13 +84,13 @@ class Setup {
 		$this->random = $random;
 	}
 
-	static $dbSetupClasses = array(
-		'mysql' => '\OC\Setup\MySQL',
-		'pgsql' => '\OC\Setup\PostgreSQL',
-		'oci'   => '\OC\Setup\OCI',
-		'sqlite' => '\OC\Setup\Sqlite',
-		'sqlite3' => '\OC\Setup\Sqlite',
-	);
+	static $dbSetupClasses = [
+		'mysql' => \OC\Setup\MySQL::class,
+		'pgsql' => \OC\Setup\PostgreSQL::class,
+		'oci'   => \OC\Setup\OCI::class,
+		'sqlite' => \OC\Setup\Sqlite::class,
+		'sqlite3' => \OC\Setup\Sqlite::class,
+	];
 
 	/**
 	 * Wrapper around the "class_exists" PHP function to be able to mock it
@@ -125,8 +129,8 @@ class Setup {
 	public function getSupportedDatabases($allowAllDatabases = false) {
 		$availableDatabases = array(
 			'sqlite' =>  array(
-				'type' => 'class',
-				'call' => 'SQLite3',
+				'type' => 'pdo',
+				'call' => 'sqlite',
 				'name' => 'SQLite'
 			),
 			'mysql' => array(
@@ -148,7 +152,7 @@ class Setup {
 		if ($allowAllDatabases) {
 			$configuredDatabases = array_keys($availableDatabases);
 		} else {
-			$configuredDatabases = $this->config->getSystemValue('supportedDatabases',
+			$configuredDatabases = $this->config->getValue('supportedDatabases',
 				array('sqlite', 'mysql', 'pgsql'));
 		}
 		if(!is_array($configuredDatabases)) {
@@ -163,9 +167,7 @@ class Setup {
 				$type = $availableDatabases[$database]['type'];
 				$call = $availableDatabases[$database]['call'];
 
-				if($type === 'class') {
-					$working = $this->class_exists($call);
-				} elseif ($type === 'function') {
+				if ($type === 'function') {
 					$working = $this->is_callable($call);
 				} elseif($type === 'pdo') {
 					$working = in_array($call, $this->getAvailableDbDriversForPdo(), TRUE);
@@ -189,7 +191,7 @@ class Setup {
 	public function getSystemInfo($allowAllDatabases = false) {
 		$databases = $this->getSupportedDatabases($allowAllDatabases);
 
-		$dataDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT.'/data');
+		$dataDir = $this->config->getValue('datadirectory', \OC::$SERVERROOT.'/data');
 
 		$errors = array();
 
@@ -317,7 +319,7 @@ class Setup {
 		$secret = $this->random->generate(48);
 
 		//write the config file
-		$this->config->setSystemValues([
+		$this->config->setValues([
 			'passwordsalt'		=> $salt,
 			'secret'			=> $secret,
 			'trusted_domains'	=> $trustedDomains,
@@ -359,12 +361,27 @@ class Setup {
 			$config = \OC::$server->getConfig();
 			$config->setAppValue('core', 'installedat', microtime(true));
 			$config->setAppValue('core', 'lastupdatedat', microtime(true));
+			$config->setAppValue('core', 'vendor', $this->getVendor());
 
 			$group =\OC::$server->getGroupManager()->createGroup('admin');
 			$group->addUser($user);
 
-			//guess what this does
+			// Install shipped apps and specified app bundles
 			Installer::installShippedApps();
+			$installer = new Installer(
+				\OC::$server->getAppFetcher(),
+				\OC::$server->getHTTPClientService(),
+				\OC::$server->getTempManager(),
+				\OC::$server->getLogger(),
+				\OC::$server->getConfig()
+			);
+			$bundleFetcher = new BundleFetcher(\OC::$server->getL10N('lib'));
+			$defaultInstallationBundles = $bundleFetcher->getDefaultInstallationBundle();
+			foreach($defaultInstallationBundles as $bundle) {
+				try {
+					$installer->installAppBundle($bundle);
+				} catch (Exception $e) {}
+			}
 
 			// create empty file in data dir, so we can later find
 			// out that this is indeed an ownCloud data directory
@@ -373,11 +390,6 @@ class Setup {
 			// Update .htaccess files
 			Setup::updateHtaccess();
 			Setup::protectDataDirectory();
-
-			//try to write logtimezone
-			if (date_default_timezone_get()) {
-				$config->setSystemValue('logtimezone', date_default_timezone_get());
-			}
 
 			self::installBackgroundJobs();
 
@@ -413,11 +425,11 @@ class Setup {
 	 * @return bool True when success, False otherwise
 	 */
 	public static function updateHtaccess() {
-		$config = \OC::$server->getConfig();
+		$config = \OC::$server->getSystemConfig();
 
 		// For CLI read the value from overwrite.cli.url
 		if(\OC::$CLI) {
-			$webRoot = $config->getSystemValue('overwrite.cli.url', '');
+			$webRoot = $config->getValue('overwrite.cli.url', '');
 			if($webRoot === '') {
 				return false;
 			}
@@ -428,7 +440,7 @@ class Setup {
 		}
 
 		$setupHelper = new \OC\Setup($config, \OC::$server->getIniWrapper(),
-			\OC::$server->getL10N('lib'), \OC::$server->getThemingDefaults(), \OC::$server->getLogger(),
+			\OC::$server->getL10N('lib'), \OC::$server->query(Defaults::class), \OC::$server->getLogger(),
 			\OC::$server->getSecureRandom());
 
 		$htaccessContent = file_get_contents($setupHelper->pathToHtaccess());
@@ -442,7 +454,7 @@ class Setup {
 		$content.= "\nErrorDocument 404 ".$webRoot."/core/templates/404.php";
 
 		// Add rewrite rules if the RewriteBase is configured
-		$rewriteBase = $config->getSystemValue('htaccess.RewriteBase', '');
+		$rewriteBase = $config->getValue('htaccess.RewriteBase', '');
 		if($rewriteBase !== '') {
 			$content .= "\n<IfModule mod_rewrite.c>";
 			$content .= "\n  Options -MultiViews";
@@ -450,6 +462,7 @@ class Setup {
 			$content .= "\n  RewriteRule ^core/preview.png$ index.php [PT,E=PATH_INFO:$1]";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !\\.(css|js|svg|gif|png|html|ttf|woff|ico|jpg|jpeg)$";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !core/img/favicon.ico$";
+			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !core/img/manifest.json$";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/remote.php";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/public.php";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/cron.php";
@@ -457,6 +470,7 @@ class Setup {
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/status.php";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/ocs/v1.php";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/ocs/v2.php";
+			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/robots.txt";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/updater/";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/ocs-provider/";
 			$content .= "\n  RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge/.*";
@@ -482,7 +496,7 @@ class Setup {
 	public static function protectDataDirectory() {
 		//Require all denied
 		$now =  date('Y-m-d H:i:s');
-		$content = "# Generated by ownCloud on $now\n";
+		$content = "# Generated by Nextcloud on $now\n";
 		$content.= "# line below if for Apache 2.4\n";
 		$content.= "<ifModule mod_authz_core.c>\n";
 		$content.= "Require all denied\n";
@@ -493,10 +507,26 @@ class Setup {
 		$content.= "Satisfy All\n";
 		$content.= "</ifModule>\n\n";
 		$content.= "# section for Apache 2.2 and 2.4\n";
+		$content.= "<ifModule mod_autoindex.c>\n";
 		$content.= "IndexIgnore *\n";
+		$content.= "</ifModule>\n";
 
 		$baseDir = \OC::$server->getConfig()->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
 		file_put_contents($baseDir . '/.htaccess', $content);
 		file_put_contents($baseDir . '/index.html', '');
+	}
+
+	/**
+	 * Return vendor from which this version was published
+	 *
+	 * @return string Get the vendor
+	 *
+	 * Copy of \OC\Updater::getVendor()
+	 */
+	private function getVendor() {
+		// this should really be a JSON file
+		require \OC::$SERVERROOT . '/version.php';
+		/** @var string $vendor */
+		return (string) $vendor;
 	}
 }

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Providing Default Files &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Providing Default Files &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Configuring External Storage (GUI)" href="external_storage_configuration_gui.html" />
     <link rel="prev" title="Uploading big files &gt; 512MB" href="big_file_upload_configuration.html" />
@@ -66,19 +66,16 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">File Sharing and Management</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="file_sharing_configuration.html">File Sharing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="federated_cloud_sharing_configuration.html">Configuring Federation Sharing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="big_file_upload_configuration.html">Uploading big files &gt; 512MB</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Providing Default Files</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#additional-configuration">Additional Configuration</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Providing Default Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage_configuration_gui.html">Configuring External Storage (GUI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage_configuration.html">Configuring External Storage (Configuration File)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage/auth_mechanisms.html">External Storage Authentication mechanisms</a></li>
@@ -87,9 +84,9 @@
 <li class="toctree-l2"><a class="reference internal" href="files_locking_transactional.html">Transactional File Locking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="previews_configuration.html">Previews Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_versioning.html">Controlling File Versions and Aging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="files_access_control.html">Files Access Control</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -120,24 +117,26 @@
   <div class="section" id="providing-default-files">
 <h1>Providing Default Files<a class="headerlink" href="#providing-default-files" title="Permalink to this headline">¶</a></h1>
 <p>You may distribute a set of default files and folders to all users by placing
-them in the <code class="file docutils literal"><span class="pre">nextcloud/core/skeleton</span></code> directory on your Nextcloud server.
-These files appear only to new users after their initial login, and existing
-users will not see files that are added to this directory after their first
-login. The files in the <code class="file docutils literal"><span class="pre">skeleton</span></code> directory are copied into the users&#8217;
-data directories, so they may change and delete the files without affecting the
-originals.</p>
-<p>This screenshot shows a set of photos in the <code class="file docutils literal"><span class="pre">skeleton</span></code> directory.</p>
+them in directory that is readable by the webserver user. This allows you to
+overwrite the files that are shipped by default with Nextcloud in
+<code class="docutils literal"><span class="pre">core/skeleton</span></code>. That custom directory should then be configured in the
+<code class="docutils literal"><span class="pre">config.php</span></code> via the configuration option <code class="docutils literal"><span class="pre">skeletondirectory</span></code> (see
+<a class="reference internal" href="../configuration_server/config_sample_php_parameters.html"><em>Config.php Parameters</em></a>). Leave
+empty to not copy any skeleton files.</p>
+<p>These files will be copied only to new users after their initial login, and
+existing users will not see files that are added to this directory after their
+first login. The files in the  <code class="docutils literal"><span class="pre">skeleton</span></code> directory are copied into the
+users data directories, so they may change and delete the files without
+affecting the originals.</p>
+<p>This screenshot shows a set of photos in the <code class="docutils literal"><span class="pre">skeleton</span></code> directory.</p>
 <img alt="../_images/skeleton-files.png" src="../_images/skeleton-files.png" />
 <p>They appear on the user&#8217;s Nextcloud Files page just like any other files.</p>
 <img alt="../_images/skeleton-files1.png" src="../_images/skeleton-files1.png" />
-<div class="section" id="additional-configuration">
-<h2>Additional Configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
-<p>The configuration option <code class="docutils literal"><span class="pre">skeletondirectory</span></code> available in your
-<code class="docutils literal"><span class="pre">config.php</span></code> (See
-<a class="reference internal" href="../configuration_server/config_sample_php_parameters.html"><em>Config.php Parameters</em></a>) allows
-you to configure the directory where the skeleton files are located.
-These files will be copied to the data directory of new users. Leave
-empty to not copy any skeleton files.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Overwriting the files in <code class="docutils literal"><span class="pre">core/skeleton</span></code> is not recommended,
+because those changes will be overwritten on the next update of the Nextcloud
+server.</p>
 </div>
 </div>
 

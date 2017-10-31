@@ -32,8 +32,7 @@
 require_once __DIR__ . '/../lib/base.php';
 
 if (\OCP\Util::needUpgrade()
-	|| \OC::$server->getSystemConfig()->getValue('maintenance', false)
-	|| \OC::$server->getSystemConfig()->getValue('singleuser', false)) {
+	|| \OC::$server->getSystemConfig()->getValue('maintenance', false)) {
 	// since the behavior of apps or remotes are unpredictable during
 	// an upgrade, return a 503 directly
 	OC_Response::setStatus(OC_Response::STATUS_SERVICE_UNAVAILABLE);
@@ -55,9 +54,6 @@ try {
 	// load all apps to get all api routes properly setup
 	OC_App::loadApps();
 
-	// force language as given in the http request
-	\OC::$server->getL10NFactory()->setLanguageFromRequest();
-
 	OC::$server->getRouter()->match('/ocs'.\OC::$server->getRequest()->getRawPathInfo());
 	return;
 } catch (ResourceNotFoundException $e) {
@@ -65,8 +61,10 @@ try {
 } catch (MethodNotAllowedException $e) {
 	OC_API::setContentType();
 	OC_Response::setStatus(405);
-} catch (\OC\OCS\Exception $ex) {
+	exit();
+} catch (Exception $ex) {
 	OC_API::respond($ex->getResult(), OC_API::requestedFormat());
+	exit();
 }
 
 /*
@@ -79,7 +77,11 @@ try {
 	OC::$server->getRouter()->match('/ocsapp'.\OC::$server->getRequest()->getRawPathInfo());
 } catch (ResourceNotFoundException $e) {
 	OC_API::setContentType();
-	OC_OCS::notFound();
+
+	$format = \OC::$server->getRequest()->getParam('format', 'xml');
+	$txt='Invalid query, please check the syntax. API specifications are here:'
+		.' http://www.freedesktop.org/wiki/Specifications/open-collaboration-services. DEBUG OUTPUT:'."\n";
+	OC_API::respond(new OC_OCS_Result(null, \OCP\API::RESPOND_NOT_FOUND, $txt), $format);
 } catch (MethodNotAllowedException $e) {
 	OC_API::setContentType();
 	OC_Response::setStatus(405);
@@ -88,7 +90,12 @@ try {
 } catch (\OC\User\LoginException $e) {
 	OC_API::respond(new OC_OCS_Result(null, \OCP\API::RESPOND_UNAUTHORISED, 'Unauthorised'));
 } catch (\Exception $e) {
+	\OC::$server->getLogger()->logException($e);
 	OC_API::setContentType();
-	OC_OCS::notFound();
+
+	$format = \OC::$server->getRequest()->getParam('format', 'xml');
+	$txt='Invalid query, please check the syntax. API specifications are here:'
+		.' http://www.freedesktop.org/wiki/Specifications/open-collaboration-services. DEBUG OUTPUT:'."\n";
+	OC_API::respond(new OC_OCS_Result(null, \OCP\API::RESPOND_NOT_FOUND, $txt), $format);
 }
 

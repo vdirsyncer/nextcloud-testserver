@@ -35,40 +35,35 @@ $maxUploadFilesize = min($upload_max_filesize, $post_max_size);
 
 
 <header><div id="header" class="<?php p((isset($_['folder']) ? 'share-folder' : 'share-file')) ?>">
-		<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
-		   title="" id="nextcloud">
-			<div class="logo-icon svg">
-			</div>
-		</a>
-
-		<div class="header-appname-container">
-			<h1 class="header-appname">
-				<?php p($theme->getName()); ?>
-			</h1>
+		<div class="header-left">
+			<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
+				title="" id="nextcloud">
+				<div class="logo-icon svg"></div>
+				<h1 class="header-appname">
+					<?php p($theme->getName()); ?>
+				</h1>
+			</a>
 		</div>
 
 		<div id="logo-claim" style="display:none;"><?php p($theme->getLogoClaim()); ?></div>
 		<div class="header-right">
-			<span id="details">
-				<?php
-				if (!isset($_['hideFileList']) || (isset($_['hideFileList']) && $_['hideFileList'] === false)) {
-					if ($_['server2serversharing']) {
-						?>
-						<span id="save" data-protected="<?php p($_['protected']) ?>"
-							  data-owner-display-name="<?php p($_['displayName']) ?>" data-owner="<?php p($_['owner']) ?>" data-name="<?php p($_['filename']) ?>">
-						<button id="save-button"><?php p($l->t('Add to your Nextcloud')) ?></button>
-						<form class="save-form hidden" action="#">
-							<input type="text" id="remote_address" placeholder="user@yourNextcloud.org"/>
-							<button id="save-button-confirm" class="icon-confirm svg" disabled></button>
-						</form>
-					</span>
-					<?php } ?>
-					<a href="<?php p($_['downloadURL']); ?>" id="download" class="button">
-						<img class="svg" alt="" src="<?php print_unescaped(image_path("core", "actions/download.svg")); ?>"/>
-						<span id="download-text"><?php p($l->t('Download'))?></span>
-					</a>
+			<?php if (!isset($_['hideFileList']) || (isset($_['hideFileList']) && $_['hideFileList'] === false)) {
+				if ($_['server2serversharing']) {
+					?>
+					<span id="save" data-protected="<?php p($_['protected']) ?>"
+						  data-owner-display-name="<?php p($_['displayName']) ?>" data-owner="<?php p($_['owner']) ?>" data-name="<?php p($_['filename']) ?>">
+					<button id="save-button"><?php p($l->t('Add to your Nextcloud')) ?></button>
+					<form class="save-form hidden" action="#">
+						<input type="text" id="remote_address" placeholder="user@yourNextcloud.org"/>
+						<button id="save-button-confirm" class="icon-confirm svg" disabled></button>
+					</form>
+				</span>
 				<?php } ?>
-			</span>
+				<a href="<?php p($_['downloadURL']); ?>" id="download" class="button">
+					<span class="icon icon-download"></span>
+					<span id="download-text"><?php p($l->t('Download'))?></span>
+				</a>
+			<?php } ?>
 		</div>
 	</div></header>
 <div id="content-wrapper">
@@ -90,7 +85,7 @@ $maxUploadFilesize = min($upload_max_filesize, $post_max_size);
 				<?php endif; ?>
 				<div class="directDownload">
 					<a href="<?php p($_['downloadURL']); ?>" id="downloadFile" class="button">
-						<img class="svg" alt="" src="<?php print_unescaped(image_path("core", "actions/download.svg")); ?>"/>
+						<span class="icon icon-download"></span>
 						<?php p($l->t('Download %s', array($_['filename'])))?> (<?php p($_['fileSize']) ?>)
 					</a>
 				</div>
@@ -125,7 +120,7 @@ $maxUploadFilesize = min($upload_max_filesize, $post_max_size);
 	<input type="hidden" name="dir" id="dir" value="" />
 	<div class="hiddenuploadfield">
 	<input type="file" id="file_upload_start" class="hiddenuploadfield" name="files[]"
-		data-url="<?php print_unescaped(OCP\Util::linkTo('files', 'ajax/upload.php')); ?>" />
+		data-url="<?php p(OCP\Util::linkTo('files', 'ajax/upload.php')); ?>" />
 	</div>
 	<?php endif; ?>
 	<footer>

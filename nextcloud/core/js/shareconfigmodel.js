@@ -22,20 +22,23 @@
 		defaults: {
 			publicUploadEnabled: false,
 			enforcePasswordForPublicLink: oc_appconfig.core.enforcePasswordForPublicLink,
+			enableLinkPasswordByDefault: oc_appconfig.core.enableLinkPasswordByDefault,
 			isDefaultExpireDateEnforced: oc_appconfig.core.defaultExpireDateEnforced === true,
 			isDefaultExpireDateEnabled: oc_appconfig.core.defaultExpireDateEnabled === true,
 			isRemoteShareAllowed: oc_appconfig.core.remoteShareAllowed,
 			isMailShareAllowed: oc_appconfig.shareByMailEnabled !== undefined,
 			defaultExpireDate: oc_appconfig.core.defaultExpireDate,
 			isResharingAllowed: oc_appconfig.core.resharingAllowed,
+			isPasswordForMailSharesRequired: (oc_appconfig.shareByMail === undefined) ? false : oc_appconfig.shareByMail.enforcePasswordProtection,
 			allowGroupSharing: oc_appconfig.core.allowGroupSharing
 		},
 
 		/**
 		 * @returns {boolean}
+		 * @deprecated here for legacy reasons - will always return true
 		 */
 		areAvatarsEnabled: function() {
-			return oc_config.enable_avatars === true;
+			return true;
 		},
 
 		/**

@@ -6,7 +6,6 @@ OC.L10N.register(
     "Aborting preview. Could not find the file" : "A abortar a pré-visualização. Não foi possível encontrar o ficheiro",
     "Could not move \"{file}\", target exists" : "Não foi possível mover \"{file}\", alvo já existe",
     "Could not move \"{file}\"" : "Não foi possível mover \"{file}\"",
-    "Gallery view" : "Visualização da galeria",
     "Could not load the description" : "Não foi possível carregar a descrição",
     "Could not load the description: " : "Não foi possível carregar a descrição:",
     "Copyright" : "Direitos de Autor",
@@ -19,7 +18,6 @@ OC.L10N.register(
     "please install one of the following alternatives" : "por favor, instale uma das seguintes alternativas",
     "Album cannot be shown" : "O álbum não pode ser apresentado",
     "No media files found" : "Não foram encontrados quaisquer ficheiros multimédia",
-    "Upload pictures in the files app to display them here" : "Envie imagens na aplicação de ficheiros para as exibir aqui",
     "Upload new files via drag and drop or by using the [+] button above" : "Envie ficheiros novos através da técnica de arrastar e largar ou usando o botão [+] acima",
     "Configuration error" : "Erro de configuração",
     "New" : "Novo",
@@ -98,12 +96,12 @@ OC.L10N.register(
     "a conflicting app was installed" : "foi instalada uma app conflituosa",
     "a required component is missing or was disconnected" : "está em falta um componente necessário ou foi desligado",
     "the filesystem is not readable" : "o sistema de ficheiros não é legível",
-    "For more information, please contact your friendly ownCloud administrator." : "Para mais informação, por favor, contacte o seu administrador da ownCloud.",
     "Sorry, this link doesn't seem to work anymore." : "Desculpe, esta hiperligação parece que já não funciona.",
     "the item was removed" : "o item foi removido",
     "the link has expired" : "a hiperligação expirou",
     "sharing is disabled" : "a partilha está desativada",
     "For more information, please ask the person who has sent you this link." : "Para mais informação, por favor, pergunte à pessoa que lhe enviou esta hiperligação.",
-    "Picture view" : "Visualização da Imagem"
+    "Picture view" : "Visualização da Imagem",
+    "Gallery view" : "Visualização da galeria"
 },
 "nplurals=2; plural=(n != 1);");

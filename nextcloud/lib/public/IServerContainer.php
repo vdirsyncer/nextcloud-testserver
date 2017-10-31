@@ -54,7 +54,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * This container holds all ownCloud services
  * @since 6.0.0
  */
-interface IServerContainer {
+interface IServerContainer extends IContainer {
 
 	/**
 	 * The contacts manager will act as a broker between consumers for contacts information and
@@ -190,14 +190,6 @@ interface IServerContainer {
 	 * @since 9.0.0
 	 */
 	public function getCredentialsManager();
-
-	/**
-	 * Returns an instance of the db facade
-	 * @deprecated 8.1.0 use getDatabaseConnection, will be removed in ownCloud 10
-	 * @return \OCP\IDb
-	 * @since 7.0.0
-	 */
-	public function getDb();
 
 	/**
 	 * Returns the app config manager
@@ -533,4 +525,10 @@ interface IServerContainer {
 	 * @since 8.0.0
 	 */
 	public function getDateTimeFormatter();
+
+	/**
+	 * @return \OCP\Federation\ICloudIdManager
+	 * @since 12.0.0
+	 */
+	public function getCloudIdManager();
 }

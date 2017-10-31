@@ -26,6 +26,7 @@ namespace OCA\DAV\CardDAV;
 
 use OC\Accounts\AccountManager;
 use OCP\AppFramework\Http;
+use OCP\ICertificateManager;
 use OCP\ILogger;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -52,6 +53,9 @@ class SyncService {
 	/** @var AccountManager */
 	private $accountManager;
 
+	/** @var string */
+	protected $certPath;
+
 	/**
 	 * SyncService constructor.
 	 *
@@ -65,11 +69,13 @@ class SyncService {
 		$this->userManager = $userManager;
 		$this->logger = $logger;
 		$this->accountManager = $accountManager;
+		$this->certPath = '';
 	}
 
 	/**
 	 * @param string $url
 	 * @param string $userName
+	 * @param string $addressBookUrl
 	 * @param string $sharedSecret
 	 * @param string $syncToken
 	 * @param int $targetBookId
@@ -78,14 +84,14 @@ class SyncService {
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function syncRemoteAddressBook($url, $userName, $sharedSecret, $syncToken, $targetBookId, $targetPrincipal, $targetProperties) {
+	public function syncRemoteAddressBook($url, $userName, $addressBookUrl, $sharedSecret, $syncToken, $targetBookId, $targetPrincipal, $targetProperties) {
 		// 1. create addressbook
 		$book = $this->ensureSystemAddressBookExists($targetPrincipal, $targetBookId, $targetProperties);
 		$addressBookId = $book['id'];
 
 		// 2. query changes
 		try {
-			$response = $this->requestSyncReport($url, $userName, $sharedSecret, $syncToken);
+			$response = $this->requestSyncReport($url, $userName, $addressBookUrl, $sharedSecret, $syncToken);
 		} catch (ClientHttpException $ex) {
 			if ($ex->getCode() === Http::STATUS_UNAUTHORIZED) {
 				// remote server revoked access to the address book, remove it
@@ -100,7 +106,7 @@ class SyncService {
 		foreach ($response['response'] as $resource => $status) {
 			$cardUri = basename($resource);
 			if (isset($status[200])) {
-				$vCard = $this->download($url, $sharedSecret, $resource);
+				$vCard = $this->download($url, $userName, $sharedSecret, $resource);
 				$existingCard = $this->backend->getCard($addressBookId, $cardUri);
 				if ($existingCard === false) {
 					$this->backend->createCard($addressBookId, $cardUri, $vCard['body']);
@@ -133,50 +139,81 @@ class SyncService {
 	}
 
 	/**
+	 * Check if there is a valid certPath we should use
+	 *
+	 * @return string
+	 */
+	protected function getCertPath() {
+
+		// we already have a valid certPath
+		if ($this->certPath !== '') {
+			return $this->certPath;
+		}
+
+		/** @var ICertificateManager $certManager */
+		$certManager = \OC::$server->getCertificateManager(null);
+		$certPath = $certManager->getAbsoluteBundlePath();
+		if (file_exists($certPath)) {
+			$this->certPath = $certPath;
+		}
+
+		return $this->certPath;
+	}
+
+	/**
 	 * @param string $url
 	 * @param string $userName
+	 * @param string $addressBookUrl
 	 * @param string $sharedSecret
-	 * @param string $syncToken
-	 * @return array
+	 * @return Client
 	 */
-	protected function requestSyncReport($url, $userName, $sharedSecret, $syncToken) {
+	protected function getClient($url, $userName, $sharedSecret) {
 		$settings = [
 			'baseUri' => $url . '/',
 			'userName' => $userName,
 			'password' => $sharedSecret,
 		];
 		$client = new Client($settings);
+		$certPath = $this->getCertPath();
 		$client->setThrowExceptions(true);
 
-		$addressBookUrl = "remote.php/dav/addressbooks/system/system/system";
-		$body = $this->buildSyncCollectionRequestBody($syncToken);
+		if ($certPath !== '' && strpos($url, 'http://') !== 0) {
+			$client->addCurlSetting(CURLOPT_CAINFO, $this->certPath);
+		}
 
-		$response = $client->request('REPORT', $addressBookUrl, $body, [
-			'Content-Type' => 'application/xml'
-		]);
-
-		$result = $this->parseMultiStatus($response['body']);
-
-		return $result;
+		return $client;
 	}
 
 	/**
 	 * @param string $url
+	 * @param string $userName
+	 * @param string $addressBookUrl
+	 * @param string $sharedSecret
+	 * @param string $syncToken
+	 * @return array
+	 */
+	 protected function requestSyncReport($url, $userName, $addressBookUrl, $sharedSecret, $syncToken) {
+		 $client = $this->getClient($url, $userName, $sharedSecret);
+
+		 $body = $this->buildSyncCollectionRequestBody($syncToken);
+
+		 $response = $client->request('REPORT', $addressBookUrl, $body, [
+			 'Content-Type' => 'application/xml'
+		 ]);
+
+		 return $this->parseMultiStatus($response['body']);
+	 }
+
+	/**
+	 * @param string $url
+	 * @param string $userName
 	 * @param string $sharedSecret
 	 * @param string $resourcePath
 	 * @return array
 	 */
-	protected function download($url, $sharedSecret, $resourcePath) {
-		$settings = [
-			'baseUri' => $url,
-			'userName' => 'system',
-			'password' => $sharedSecret,
-		];
-		$client = new Client($settings);
-		$client->setThrowExceptions(true);
-
-		$response = $client->request('GET', $resourcePath);
-		return $response;
+	protected function download($url, $userName, $sharedSecret, $resourcePath) {
+		$client = $this->getClient($url, $userName, $sharedSecret);
+		return $client->request('GET', $resourcePath);
 	}
 
 	/**

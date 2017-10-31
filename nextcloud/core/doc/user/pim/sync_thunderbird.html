@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Thunderbird - Synchronize Addressbook &mdash; Nextcloud 11 User Manual 11 documentation</title>
+    <title>Thunderbird - Synchronize Addressbook and Calendar &mdash; Nextcloud 12 User Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 User Manual 11 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 User Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Contacts &amp; Calendar" href="index.html" />
     <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
-    <link rel="prev" title="Synchronizing with KDE SC" href="sync_kde.html" />
+    <link rel="prev" title="Synchronizing with OS X" href="sync_osx.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,8 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 User Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 11</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 12 User Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 12</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webinterface.html">The Nextcloud Web Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../files/index.html">Files &amp; Synchronization</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Contacts &amp; Calendar</a><ul class="current">
@@ -75,9 +75,9 @@
 <li class="toctree-l2"><a class="reference internal" href="calendar.html">Using the Calendar App</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sync_ios.html">iOS - Synchronize iPhone/iPad</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sync_osx.html">Synchronizing with OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sync_kde.html">Synchronizing with KDE SC</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Thunderbird - Synchronize Addressbook</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Thunderbird - Synchronize Addressbook and Calendar</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#addressbook">Addressbook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calendar">Calendar</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
@@ -100,7 +100,7 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="sync_kde.html" title="Previous Chapter: Synchronizing with KDE SC"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Synchronizing...</span>
+    <a href="sync_osx.html" title="Previous Chapter: Synchronizing with OS X"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Synchronizing...</span>
     </a>
   </li>
   <li class="next">
@@ -109,42 +109,62 @@
   </li>
 </ul>
 						
-  <div class="section" id="thunderbird-synchronize-addressbook">
-<h1>Thunderbird - Synchronize Addressbook<a class="headerlink" href="#thunderbird-synchronize-addressbook" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="thunderbird-synchronize-addressbook-and-calendar">
+<h1>Thunderbird - Synchronize Addressbook and Calendar<a class="headerlink" href="#thunderbird-synchronize-addressbook-and-calendar" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="addressbook">
 <h2>Addressbook<a class="headerlink" href="#addressbook" title="Permalink to this headline">¶</a></h2>
-<p>As someone who is new to Nextcloud, New to SoGo Connector, and new to Thunderbird Addressbook... here is what you need in excruciating pithy detail to make this work (for all the other lost souls out there):</p>
+<p>As someone who is new to Nextcloud and new to CardBook here is what you need in excruciating pithy detail to make this work:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.mozilla.org/en-US/thunderbird/">Thunderbird</a> for your OS unless it comes with your OS distribution (Linux)</li>
+<li><a class="reference external" href="https://addons.mozilla.org/en-US/thunderbird/addon/cardbook/">CardBook</a> (a Thunderbird contacts add-on.)</li>
+</ul>
+<p>Once you&#8217;ve installed CardBook and Thunderbird do like this:</p>
 <ol class="arabic simple">
-<li><a class="reference external" href="http://www.mozilla.org/en-US/thunderbird/">Thunderbird</a> for your OS unless it comes with your OS distribution (Linux)</li>
-<li><a class="reference external" href="http://www.sogo.nu/downloads/frontends.html">Sogo Connector</a> (latest release)</li>
-<li><a class="reference external" href="https://addons.mozilla.org/en-US/thunderbird/addon/lightning/">Lightning</a> (a Thunderbird calendar add-on. At the time (Aug 14), syncing your contacts only works with this add-on installed.)</li>
+<li>In the bottom left of the Contacts View (in Nextcloud contatcs) look for a little impeller symbol that looks like this:</li>
 </ol>
-<p>With an installed Thunderbird mailtool, an installed SoGo Connector, and an installed Lightning add-on:</p>
-<ol class="arabic simple">
-<li>Thunderbird Addressbook is in the Thunderbird &#8220;Tools&#8221; Menu</li>
-<li>In the Thunderbird Addressbook application:<ul>
-<li>&#8220;File &gt; New &gt; <strong>Remote Addressbook</strong>&#8221; (SoGo Connector added this)</li>
-<li>&#8220;<strong>Name:</strong>&#8221; is the name you want to give your Addressbook in the Thunderbird addressbook bar area</li>
-<li>&#8220;<strong>URL:</strong>&#8221; is found in your Nextcloud Contacts area, that little Gear symbol</li>
+<img alt="../_images/contacts_link.png" src="../_images/contacts_link.png" />
+<p>which will display and URL that looks something like this:
+<a class="reference external" href="https://cloud.nextcloud.com/remote.php/dav/addressbooks/users/daniel/Thunderbird/">https://cloud.nextcloud.com/remote.php/dav/addressbooks/users/daniel/Thunderbird/</a></p>
+<ol class="arabic simple" start="2">
+<li>Cardbook is found in the upper right corner of Thunderbird:</li>
+</ol>
+<img alt="../_images/cardbook_icon.png" src="../_images/cardbook_icon.png" />
+<ol class="arabic simple" start="3">
+<li>In the Thunderbird Cardbook add-on:<ul>
+<li>&#8220;Adressbook &gt; New Adressbook <strong>Remote</strong> &gt; Next</li>
+<li>Fill in your information</li>
 </ul>
 </li>
 </ol>
-<img alt="../_images/contact_thunderbird-Symbol_Gear.jpg" src="../_images/contact_thunderbird-Symbol_Gear.jpg" />
-<p>in the -bottom left- of the Contacts View (same symbol as found in the -top right- in the Calendar view). Then look for a little impeller symbol</p>
-<img alt="../_images/contact_thunderbird-Symbol_Impeller.jpg" src="../_images/contact_thunderbird-Symbol_Impeller.jpg" />
-<p>which will display the URL you need for your installation to work.</p>
-<img alt="../_images/contact_thunderbird-URL_config.jpg" src="../_images/contact_thunderbird-URL_config.jpg" />
-<p>Once installed, synchronize (right click on your newly made remote address book and select &#8220;Synchronize&#8221;).
-You&#8217;ll see your address book populate from Nextcloud! Don&#8217;t click &#8220;read only&#8221; above unless you don&#8217;t want to
-modify your Nextcloud server addressbook, like it contains a listing of corporate contacts and is shared with
-lots of people, and you don&#8217;t want a new user dragging it somewhere unintended.</p>
-<p>The rest of the details of dealing with Thunderbird addressbook are left to the reader... First thing I learned
-is dragging a contact to a different addressbook is a &#8220;move&#8221; operation. If you are worried about losing the
-contact, save it to a VCF file using Nextcloud (Or LDIF using Thunderbird Addressbook) first! Like dragging
-from &#8220;Nextcloud Addressbook&#8221; to &#8220;Personal Address Book&#8221; removes the contact from Nextcloud Server
-(<em>deleting it from all the other synchronized installations</em>) and puts it in your Local Machine -only-
-Address Book. So be careful or you&#8217;ll have unintended consequences where you might have intended a &#8220;copy&#8221; operation.</p>
-<p>Contact <em>Pictures</em> are also sync&#8217;ed!</p>
+<img alt="../_images/new_addressbook.png" src="../_images/new_addressbook.png" />
+<ol class="arabic simple" start="4">
+<li>Validate your settings and click Next, then choose the name of the addressbook and click Next again.</li>
+</ol>
+<img alt="../_images/addressbook_name.png" src="../_images/addressbook_name.png" />
+<p>5. Once installed, synchronize your addressbook by clicking &#8220;Synchronize&#8221; in the top left corner of CardBook.
+You&#8217;ll see your address book populate from Nextcloud!</p>
+<img alt="../_images/synchronize_cardbook.png" src="../_images/synchronize_cardbook.png" />
+<p>The rest of the details of dealing with Thunderbird CardBook are left to the reader...</p>
+</div>
+<div class="section" id="calendar">
+<h2>Calendar<a class="headerlink" href="#calendar" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://www.mozilla.org/en-US/thunderbird/">Thunderbird</a> for your OS unless it comes with your OS distribution (Linux)</li>
+<li><a class="reference external" href="https://addons.mozilla.org/en-US/thunderbird/addon/lightning/">Lightning</a> (a Thunderbird calendar add-on.)</li>
+</ul>
+<p>Once you&#8217;ve installed Lighning and Thunderbird do like this:</p>
+<p>1. Go to your Nextcloud Calendar and click on the 3 dotted menu for the calendar that you want to synchronize which will display and URL that looks something like this:
+<a class="reference external" href="https://cloud.nextcloud.com/remote.php/dav/calendars/daniel/personal/">https://cloud.nextcloud.com/remote.php/dav/calendars/daniel/personal/</a></p>
+<ol class="arabic simple" start="2">
+<li>Go to the calendar view in Thunderbird and right click in the calendar menu to the left (where the names of the calendars are) to add a <strong>New Calendar</strong>.</li>
+<li>Choose <strong>On the network</strong></li>
+</ol>
+<img alt="../_images/new_calendar.png" src="../_images/new_calendar.png" />
+<ol class="arabic simple" start="4">
+<li>Choose <strong>CalDAV</strong> and fill in the missing information:</li>
+</ol>
+<img alt="../_images/CalDAV_calendar.png" src="../_images/CalDAV_calendar.png" />
+<p>The rest of the details of dealing with Thunderbird Calendar are left to the reader...</p>
 </div>
 </div>
 
@@ -152,7 +172,7 @@ Address Book. So be careful or you&#8217;ll have unintended consequences where y
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="sync_kde.html" title="Previous Chapter: Synchronizing with KDE SC"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Synchronizing...</span>
+    <a href="sync_osx.html" title="Previous Chapter: Synchronizing with OS X"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Synchronizing...</span>
     </a>
   </li>
   <li class="next">

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Encrypting Your Nextcloud Files &mdash; Nextcloud 11 User Manual 11 documentation</title>
+    <title>Encrypting Your Nextcloud Files &mdash; Nextcloud 12 User Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 User Manual 11 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 User Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Files &amp; Synchronization" href="index.html" />
     <link rel="next" title="Using Federation Shares" href="federated_cloud_sharing.html" />
     <link rel="prev" title="Desktop and Mobile Synchronization" href="desktop_mobile_sync.html" />
@@ -66,8 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 User Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 11</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 12 User Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 12</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webinterface.html">The Nextcloud Web Interface</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Files &amp; Synchronization</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="access_webgui.html">Accessing your Files Using the Nextcloud Web Interface</a></li>
@@ -76,6 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="deleted_file_management.html">Managing Deleted Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="desktop_mobile_sync.html">Desktop and Mobile Synchronization</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Encrypting Your Nextcloud Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#encryption-faq">Encryption FAQ</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-encryption">Using Encryption</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sharing-encrypted-files">Sharing Encrypted Files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#files-not-encrypted">Files Not Encrypted</a></li>
@@ -138,6 +139,35 @@ possible for your Nextcloud admin to snoop in your files, and if the server is
 compromised the intruder may get access to your files. (Read
 <a class="reference external" href="https://owncloud.org/blog/how-owncloud-uses-encryption-to-protect-your-data/">How Nextcloud uses encryption to protect your data</a>
 to learn more.)</p>
+<div class="section" id="encryption-faq">
+<h2>Encryption FAQ<a class="headerlink" href="#encryption-faq" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-can-encryption-be-disabled">
+<h3>How Can Encryption Be Disabled?<a class="headerlink" href="#how-can-encryption-be-disabled" title="Permalink to this headline">¶</a></h3>
+<p>The only way to disable encryption is to run the <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_server/occ_command.html#encryption-label">&#8220;decrypt all&#8221;</a>.</p>
+<p>script, which decrypts all files and disables encryption.</p>
+</div>
+<div class="section" id="is-it-possible-to-disable-encryption-with-the-recovery-key">
+<h3>Is It Possible To Disable Encryption With The Recovery Key?<a class="headerlink" href="#is-it-possible-to-disable-encryption-with-the-recovery-key" title="Permalink to this headline">¶</a></h3>
+<p>Yes, <em>if</em> every user uses the <a class="reference external" href="https://docs.nextcloud.com/server/12/admin_manual/configuration_files/encryption_configuration.html#enabling-users-file-recovery-keys">file recovery key</a>,  <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_server/occ_command.html#encryption-label">&#8220;decrypt all&#8221;</a> will use it to decrypt all files.</p>
+</div>
+<div class="section" id="can-encryption-be-disabled-without-the-users-password">
+<h3>Can Encryption Be Disabled Without The User’s Password?<a class="headerlink" href="#can-encryption-be-disabled-without-the-users-password" title="Permalink to this headline">¶</a></h3>
+<p>If you don&#8217;t have the users password or <a class="reference external" href="https://docs.nextcloud.com/server/12/admin_manual/configuration_files/encryption_configuration.html#enabling-users-file-recovery-keys">file recovery key</a>.</p>
+<p>then there is no way to decrypt all files. What&#8217;s
+more, running it on login would be dangerous, because you would most likely run
+into timeouts.</p>
+</div>
+<div class="section" id="is-it-planned-to-move-this-to-the-next-user-login-or-a-background-job">
+<h3>Is It Planned To Move This To The Next User Login Or A Background Job?<a class="headerlink" href="#is-it-planned-to-move-this-to-the-next-user-login-or-a-background-job" title="Permalink to this headline">¶</a></h3>
+<p>If we did that, then we would need to store your login password in the database.
+This could be seen as a security issue, so nothing like that is planned.</p>
+</div>
+<div class="section" id="is-group-sharing-possible-with-the-recovery-key">
+<h3>Is Group Sharing Possible With The Recovery Key?<a class="headerlink" href="#is-group-sharing-possible-with-the-recovery-key" title="Permalink to this headline">¶</a></h3>
+<p>If you mean adding users to groups and make it magically work? No. This only
+works with the master key.</p>
+</div>
+</div>
 <div class="section" id="using-encryption">
 <h2>Using Encryption<a class="headerlink" href="#using-encryption" title="Permalink to this headline">¶</a></h2>
 <p>Nextcloud encryption is pretty much set it and forget it, but you have a few
@@ -206,7 +236,7 @@ third-party storage providers are guaranteed to be encrypted.</p>
 <h3>Change Private Key Password<a class="headerlink" href="#change-private-key-password" title="Permalink to this headline">¶</a></h3>
 <p>This option is only available if your log-in password, but not your encryption
 password, was changed by your administrator. This can occur if your Nextcloud
-provider uses a external user back-end (for example, LDAP) and changed your
+provider uses an external user back-end (for example, LDAP) and changed your
 login password using that back-end configuration. In this case, you can set
 your encryption password to your new login password by providing your old and
 new login password. The Encryption app works only if your login password and

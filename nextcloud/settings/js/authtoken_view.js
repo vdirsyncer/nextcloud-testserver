@@ -36,10 +36,10 @@
 		+ '<div class="popovermenu bubble open menu configure">'
 		+ '{{#if canScope}}'
 		+ '<input class="filesystem checkbox" type="checkbox" id="{{id}}_filesystem" {{#if scope.filesystem}}checked{{/if}}/>'
-		+ '<label for="{{id}}_filesystem">' + t('core', 'Allow filesystem access') + '</label><br/>'
+		+ '<label for="{{id}}_filesystem">' + t('settings', 'Allow filesystem access') + '</label><br/>'
 		+ '{{/if}}'
 		+ '{{#if canDelete}}'
-		+ '<a class="icon icon-delete has-tooltip" title="' + t('core', 'Disconnect') + '">' + t('core', 'Revoke') +'</a>'
+		+ '<a class="icon icon-delete has-tooltip" title="' + t('settings', 'Disconnect') + '">' + t('settings', 'Revoke') +'</a>'
 		+ '{{/if}}'
 		+ '</div>'
 		+ '</td>'
@@ -47,15 +47,6 @@
 
 	var SubView = OC.Backbone.View.extend({
 		collection: null,
-
-		/**
-		 * token type
-		 * - 0: browser
-		 * - 1: device
-		 *
-		 * @see OC\Authentication\Token\IToken
-		 */
-		type: 0,
 
 		_template: undefined,
 
@@ -68,7 +59,6 @@
 		},
 
 		initialize: function (options) {
-			this.type = options.type;
 			this.collection = options.collection;
 
 			this.on(this.collection, 'change', this.render);
@@ -79,7 +69,7 @@
 
 			var list = this.$('.token-list');
 			var tokens = this.collection.filter(function (token) {
-				return token.get('type') === _this.type;
+				return true;
 			});
 			list.html('');
 
@@ -131,7 +121,7 @@
 				androidChrome: /Android.*(?:; (.*) Build\/).*Chrome\/(\d+)[0-9.]+/,
 				iphone: / *CPU +iPhone +OS +([0-9]+)_(?:[0-9_])+ +like +Mac +OS +X */,
 				ipad: /\(iPad\; *CPU +OS +([0-9]+)_(?:[0-9_])+ +like +Mac +OS +X */,
-				iosClient: /^Mozilla\/5\.0 \(iOS\) ownCloud\-iOS.*$/,
+				iosClient: /^Mozilla\/5\.0 \(iOS\) (ownCloud|Nextcloud)\-iOS.*$/,
 				androidClient:/^Mozilla\/5\.0 \(Android\) ownCloud\-android.*$/,
 				// DAVdroid/1.2 (2016/07/03; dav4android; okhttp3) Android/6.0.1
 				davDroid: /DAVdroid\/([0-9.]+)/,
@@ -183,7 +173,7 @@
 	var AuthTokenView = OC.Backbone.View.extend({
 		collection: null,
 
-		_views: [],
+		_view: [],
 
 		_form: undefined,
 
@@ -206,30 +196,31 @@
 		initialize: function (options) {
 			this.collection = options.collection;
 
-			var tokenTypes = [0, 1];
-			var _this = this;
-			_.each(tokenTypes, function (type) {
-				var el = type === 0 ? '#sessions' : '#apppasswords';
-				_this._views.push(new SubView({
-					el: el,
-					type: type,
-					collection: _this.collection
-				}));
-
-				var $el = $(el);
-				$('body').on('click', _.bind(_this._hideConfigureToken, _this));
-				$el.on('click', '.popovermenu', function(event) {
-					event.stopPropagation();
-				});
-				$el.on('click', 'a.icon-delete', _.bind(_this._onDeleteToken, _this));
-				$el.on('click', '.icon-more', _.bind(_this._onConfigureToken, _this));
-				$el.on('change', 'input.filesystem', _.bind(_this._onSetTokenScope, _this));
+			var el = '#security';
+			this._view = new SubView({
+				el: el,
+				collection: this.collection
 			});
+
+			var $el = $(el);
+			$('body').on('click', _.bind(this._hideConfigureToken, this));
+			$el.on('click', '.popovermenu', function(event) {
+				event.stopPropagation();
+			});
+			$el.on('click', 'a.icon-delete', _.bind(this._onDeleteToken, this));
+			$el.on('click', '.icon-more', _.bind(this._onConfigureToken, this));
+			$el.on('change', 'input.filesystem', _.bind(this._onSetTokenScope, this));
 
 			this._form = $('#app-password-form');
 			this._tokenName = $('#app-password-name');
 			this._addAppPasswordBtn = $('#add-app-password');
 			this._addAppPasswordBtn.click(_.bind(this._addAppPassword, this));
+			this._appPasswordName = $('#app-password-name');
+			this._appPasswordName.on('keypress', function(event) {
+				if (event.which === 13) {
+					this._addAppPassword();
+				}
+			});
 
 			this._result = $('#app-password-result');
 			this._newAppLoginName = $('#new-app-login-name');
@@ -281,18 +272,14 @@
 		},
 
 		render: function () {
-			_.each(this._views, function (view) {
-				view.render();
-				view.toggleLoading(false);
-			});
+			this._view.render();
+			this._view.toggleLoading(false);
 		},
 
 		reload: function () {
 			var _this = this;
 
-			_.each(this._views, function (view) {
-				view.toggleLoading(true);
-			});
+			this._view.toggleLoading(true);
 
 			var loadingTokens = this.collection.fetch();
 

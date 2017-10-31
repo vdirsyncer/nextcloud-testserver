@@ -1,9 +1,9 @@
 OC.L10N.register(
     "workflowengine",
     {
-    "Successfully saved" : "Sparades framgångsrikt",
+    "Saved" : "Sparad",
     "Saving failed:" : "Gick ej att spara: ",
-    "File mime type" : "Filens \"mime\" typ",
+    "File MIME type" : "Filens MIME-typ",
     "is" : "är",
     "is not" : "är inte",
     "matches" : "träffar",
@@ -32,7 +32,7 @@ OC.L10N.register(
     "Request URL" : "Begär URL",
     "Predefined URLs" : "Förinställda URL:er",
     "Files WebDAV" : "Filer WebDAV",
-    "Request user agent" : "Begär Användaragent",
+    "Request user agent" : "Begär användaragent",
     "Sync clients" : "Synkroniseringsklienter",
     "Android client" : "Android-klient",
     "iOS client" : "iOS-klient",
@@ -66,6 +66,8 @@ OC.L10N.register(
     "Reset" : "Återställ",
     "Save" : "Spara",
     "Saving…" : "Sparar...",
-    "Loading…" : "Laddar..."
+    "Loading…" : "Laddar...",
+    "Successfully saved" : "Sparades framgångsrikt",
+    "File mime type" : "Filens \"mime\" typ"
 },
 "nplurals=2; plural=(n != 1);");

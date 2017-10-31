@@ -65,6 +65,10 @@ class Files extends Action {
 	 * @param array $params
 	 */
 	public function create(array $params) {
+		if ($params['path'] === '/' || $params['path'] === '' || $params['path'] === null) {
+			return;
+		}
+
 		$this->log(
 			'File created: "%s"',
 			$params,
@@ -96,6 +100,10 @@ class Files extends Action {
 	 * @param array $params
 	 */
 	public function write(array $params) {
+		if ($params['path'] === '/' || $params['path'] === '' || $params['path'] === null) {
+			return;
+		}
+
 		$this->log(
 			'File written to: "%s"',
 			$params,
@@ -131,6 +139,25 @@ class Files extends Action {
 			$params,
 			[
 				'path',
+			]
+		);
+	}
+
+	/**
+	 * Logs preview access to a file
+	 *
+	 * @param array $params
+	 */
+	public function preview(array $params) {
+		$this->log(
+			'Preview accessed: "%s" (width: "%s", height: "%s" crop: "%s", mode: "%s")',
+			$params,
+			[
+				'path',
+				'width',
+				'height',
+				'crop',
+				'mode'
 			]
 		);
 	}

@@ -23,11 +23,13 @@
 namespace OCA\Activity\AppInfo;
 
 use OC\Files\View;
+use OCA\Activity\Capabilities;
 use OCA\Activity\Consumer;
 use OCA\Activity\Controller\Activities;
 use OCA\Activity\Controller\APIv1;
-use OCA\Activity\Controller\EndPoint;
+use OCA\Activity\Controller\APIv2;
 use OCA\Activity\Controller\Feed;
+use OCA\Activity\Controller\RemoteActivity;
 use OCA\Activity\Controller\Settings;
 use OCA\Activity\FilesHooksStatic;
 use OCA\Activity\Hooks;
@@ -51,29 +53,21 @@ class Application extends App {
 		// Aliases for the controllers so we can use the automatic DI
 		$container->registerAlias('ActivitiesController', Activities::class);
 		$container->registerAlias('APIv1Controller', APIv1::class);
-		$container->registerAlias('EndPointController', EndPoint::class);
+		$container->registerAlias('APIv2Controller', APIv2::class);
 		$container->registerAlias('FeedController', Feed::class);
+		$container->registerAlias('RemoteActivityController', RemoteActivity::class);
 		$container->registerAlias('SettingsController', Settings::class);
+
+		$container->registerCapability(Capabilities::class);
 	}
 
 	/**
-	 * Register the navigation entry
+	 * Register the different app parts
 	 */
-	public function registerNavigationEntry() {
-		$c = $this->getContainer();
-		/** @var \OCP\IServerContainer $server */
-		$server = $c->getServer();
-
-		$navigationEntry = function () use ($c, $server) {
-			return [
-				'id' => $c->getAppName(),
-				'order' => 1,
-				'name' => $c->query(IL10N::class)->t('Activity'),
-				'href' => $server->getURLGenerator()->linkToRoute('activity.Activities.showList'),
-				'icon' => $server->getURLGenerator()->imagePath($c->getAppName(), 'activity.svg'),
-			];
-		};
-		$server->getNavigationManager()->add($navigationEntry);
+	public function register() {
+		$this->registerActivityConsumer();
+		$this->registerHooksAndEvents();
+		$this->registerPersonalPage();
 	}
 
 	/**
@@ -94,9 +88,10 @@ class Application extends App {
 	 */
 	public function registerHooksAndEvents() {
 		$eventDispatcher = $this->getContainer()->getServer()->getEventDispatcher();
-		$eventDispatcher->addListener('OCA\Files::loadAdditionalScripts', [FilesHooksStatic::class, 'onLoadFilesAppScripts']);
+		$eventDispatcher->addListener('OCA\Files::loadAdditionalScripts', [Hooks::class, 'onLoadFilesAppScripts']);
 
 		Util::connectHook('OC_User', 'post_deleteUser', Hooks::class, 'deleteUser');
+		Util::connectHook('OC_User', 'post_login', Hooks::class, 'setDefaultsForUser');
 
 		$this->registerFilesActivity();
 	}
@@ -113,7 +108,9 @@ class Application extends App {
 		Util::connectHook('OC_Filesystem', 'post_rename', FilesHooksStatic::class, 'fileMovePost');
 		Util::connectHook('\OCA\Files_Trashbin\Trashbin', 'post_restore', FilesHooksStatic::class, 'fileRestore');
 		Util::connectHook('OCP\Share', 'post_shared', FilesHooksStatic::class, 'share');
-		Util::connectHook('OCP\Share', 'pre_unshare', FilesHooksStatic::class, 'unShare');
+
+		$eventDispatcher = $this->getContainer()->getServer()->getEventDispatcher();
+		$eventDispatcher->addListener('OCP\Share::preUnshare', [FilesHooksStatic::class, 'unShare']);
 	}
 
 	/**

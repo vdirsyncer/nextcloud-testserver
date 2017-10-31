@@ -14,6 +14,7 @@
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Thomas Pulzer <t.pulzer@kniel.de>
  * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Roger Szabo <roger.szabo@web.de>
  *
  * @license AGPL-3.0
  *
@@ -75,8 +76,8 @@ class File {
 		$config = \OC::$server->getSystemConfig();
 
 		// default to ISO8601
-		$format = $config->getValue('logdateformat', 'c');
-		$logTimeZone = $config->getValue( "logtimezone", 'UTC' );
+		$format = $config->getValue('logdateformat', \DateTime::ATOM);
+		$logTimeZone = $config->getValue('logtimezone', 'UTC');
 		try {
 			$timezone = new \DateTimeZone($logTimeZone);
 		} catch (\Exception $e) {
@@ -101,22 +102,37 @@ class File {
 		} else {
 			$user = '--';
 		}
+		$userAgent = $request->getHeader('User-Agent') ?: '--';
 		$version = $config->getValue('version', '');
 		$entry = compact(
 			'reqId',
-			'remoteAddr',
-			'app',
-			'message',
 			'level',
 			'time',
+			'remoteAddr',
+			'user',
+			'app',
 			'method',
 			'url',
-			'user',
+			'message',
+			'userAgent',
 			'version'
 		);
-		$entry = json_encode($entry);
+		// PHP's json_encode only accept proper UTF-8 strings, loop over all
+		// elements to ensure that they are properly UTF-8 compliant or convert
+		// them manually.
+		foreach($entry as $key => $value) {
+			if(is_string($value)) {
+				$testEncode = json_encode($value);
+				if($testEncode === false) {
+					$entry[$key] = utf8_encode($value);
+				}
+			}
+		}
+		$entry = json_encode($entry, JSON_PARTIAL_OUTPUT_ON_ERROR);
 		$handle = @fopen(self::$logFile, 'a');
-		@chmod(self::$logFile, 0640);
+		if ((fileperms(self::$logFile) & 0777) != 0640) {
+			@chmod(self::$logFile, 0640);
+		}
 		if ($handle) {
 			fwrite($handle, $entry."\n");
 			fclose($handle);

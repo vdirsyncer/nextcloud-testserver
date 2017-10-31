@@ -38,6 +38,7 @@ OCP.AppConfig = {
 			return;
 		}
 
+		options = options || {};
 		$.ajax({
 			type: method.toUpperCase(),
 			url: OC.linkToOCS('apps/provisioning_api/api/v1', 2) + 'config/apps' + endpoint,
@@ -78,7 +79,7 @@ OCP.AppConfig = {
 	 */
 	getValue: function(app, key, defaultValue, options) {
 		options = options || {};
-		options['data'] = {
+		options.data = {
 			defaultValue: defaultValue
 		};
 
@@ -96,7 +97,7 @@ OCP.AppConfig = {
 	 */
 	setValue: function(app, key, value, options) {
 		options = options || {};
-		options['data'] = {
+		options.data = {
 			value: value
 		};
 

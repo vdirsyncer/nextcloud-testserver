@@ -54,7 +54,7 @@
 			var showHidden = $('#showHiddenFiles').val() === "1";
 			this.$showHiddenFiles.prop('checked', showHidden);
 			if ($('#fileNotFound').val() === "1") {
-				OC.Notification.showTemporary(t('files', 'File could not be found'));
+				OC.Notification.show(t('files', 'File could not be found'), {type: 'error'});
 			}
 
 			this._filesConfig = new OC.Backbone.Model({
@@ -107,6 +107,10 @@
 			this._setupEvents();
 			// trigger URL change event handlers
 			this._onPopState(urlParams);
+
+			$('#quota.has-tooltip').tooltip({
+				placement: 'top'
+			});
 
 			this._debouncedPersistShowHiddenFilesState = _.debounce(this._persistShowHiddenFilesState, 1200);
 		},
@@ -315,4 +319,3 @@ $(document).ready(function() {
 		OCA.Files.App.initialize();
 	});
 });
-

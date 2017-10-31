@@ -306,6 +306,45 @@ interface IExpressionBuilder {
 	public function notIn($x, $y, $type = null);
 
 	/**
+	 * Creates a $x = '' statement, because Oracle needs a different check
+	 *
+	 * @param string $x The field in string format to be inspected by the comparison.
+	 * @return string
+	 * @since 13.0.0
+	 */
+	public function emptyString($x);
+
+	/**
+	 * Creates a `$x <> ''` statement, because Oracle needs a different check
+	 *
+	 * @param string $x The field in string format to be inspected by the comparison.
+	 * @return string
+	 * @since 13.0.0
+	 */
+	public function nonEmptyString($x);
+
+
+	/**
+	 * Creates a bitwise AND comparison
+	 *
+	 * @param string|ILiteral $x The field or value to check
+	 * @param int $y Bitmap that must be set
+	 * @return IQueryFunction
+	 * @since 12.0.0
+	 */
+	public function bitwiseAnd($x, $y);
+
+	/**
+	 * Creates a bitwise OR comparison
+	 *
+	 * @param string|ILiteral $x The field or value to check
+	 * @param int $y Bitmap that must be set
+	 * @return IQueryFunction
+	 * @since 12.0.0
+	 */
+	public function bitwiseOr($x, $y);
+
+	/**
 	 * Quotes a given input parameter.
 	 *
 	 * @param mixed $input The parameter to be quoted.

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Defining Background Jobs &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Defining Background Jobs &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Config.php Parameters" href="config_sample_php_parameters.html" />
     <link rel="prev" title="Configuring Memory Caching" href="caching_configuration.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -91,12 +91,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -208,6 +209,47 @@ path to your current Nextcloud installation.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Please refer to the crontab man page for the exact command syntax.</p>
+</div>
+</div>
+<div class="section" id="systemd">
+<h3>systemd<a class="headerlink" href="#systemd" title="Permalink to this headline">¶</a></h3>
+<p>If systemd is installed on the system, a systemd timer could be an alternative to a cronjob.</p>
+<p>This approach requires two files: <strong>nextcloudcron.service</strong> and <strong>nextcloudcron.timer</strong>. Create these two files in <code class="docutils literal"><span class="pre">/etc/systemd/system/</span></code>.</p>
+<p><strong>nextcloudcron.service</strong> should look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>[Unit]
+Description=Nextcloud cron.php job
+
+[Service]
+User=www-data
+ExecStart=/usr/bin/php -f /var/www/nextcloud/cron.php
+
+[Install]
+WantedBy=basic.target
+</pre></div>
+</div>
+<p>Replace the user <code class="docutils literal"><span class="pre">www-data</span></code> with the user of your http server and <code class="docutils literal"><span class="pre">/var/www/nextcloud/cron.php</span></code> with the location of <strong>cron.php</strong> in your nextcloud directory.</p>
+<p><strong>nextcloudcron.timer</strong> should look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>[Unit]
+Description=Run Nextcloud cron.php every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Unit=nextcloudcron.service
+
+[Install]
+WantedBy=timers.target
+</pre></div>
+</div>
+<p>The important parts in the timer-unit are <code class="docutils literal"><span class="pre">OnBootSec</span></code> and <code class="docutils literal"><span class="pre">OnUnitActiveSec</span></code>.``OnBootSec`` will start the timer 5 minutes after boot, otherwise you would have to start it manually after every boot. <code class="docutils literal"><span class="pre">OnUnitActiveSec</span></code> will set a 15 minute timer after the service-unit was last activated.</p>
+<p>Now all that is left is to start and enable the timer by running these commands:</p>
+<div class="highlight-python"><div class="highlight"><pre>systemctl start nextcloudcron.timer
+systemctl enable nextcloudcron.timer
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Select the option <code class="docutils literal"><span class="pre">Cron</span></code> in the admin menu for background jobs. if left on <code class="docutils literal"><span class="pre">AJAX</span></code> it would execute the AJAX job on every page load.</p>
 </div>
 </div>
 </div>

@@ -40,7 +40,7 @@ use OCP\Security\ISecureRandom;
 /**
  * Class OCSAuthAPI
  *
- * OCS API end-points to exchange shared secret between two connected ownClouds
+ * OCS API end-points to exchange shared secret between two connected Nextclouds
  *
  * @package OCA\Federation\Controller
  */
@@ -88,6 +88,37 @@ class OCSAuthAPIController extends OCSController{
 		$this->trustedServers = $trustedServers;
 		$this->dbHandler = $dbHandler;
 		$this->logger = $logger;
+	}
+
+	/**
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 *
+	 * request received to ask remote server for a shared secret, for legacy end-points
+	 *
+	 * @param string $url
+	 * @param string $token
+	 * @return Http\DataResponse
+	 * @throws OCSForbiddenException
+	 */
+	public function requestSharedSecretLegacy($url, $token) {
+		return $this->requestSharedSecret($url, $token);
+	}
+
+
+	/**
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 *
+	 * create shared secret and return it, for legacy end-points
+	 *
+	 * @param string $url
+	 * @param string $token
+	 * @return Http\DataResponse
+	 * @throws OCSForbiddenException
+	 */
+	public function getSharedSecretLegacy($url, $token) {
+		return $this->getSharedSecret($url, $token);
 	}
 
 	/**

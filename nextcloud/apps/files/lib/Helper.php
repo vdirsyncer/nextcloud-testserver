@@ -32,6 +32,7 @@
 namespace OCA\Files;
 
 use OCP\Files\FileInfo;
+use OCP\ITagManager;
 
 /**
  * Helper class for manipulating file information
@@ -157,12 +158,9 @@ class Helper {
 			$entry['isShareMountPoint'] = $i['is_share_mount_point'];
 		}
 		$mountType = null;
-		if ($i->isShared()) {
-			$mountType = 'shared';
-		} else if ($i->isMounted()) {
-			$mountType = 'external';
-		}
-		if ($mountType !== null) {
+		$mount = $i->getMountPoint();
+		$mountType = $mount->getMountType();
+		if ($mountType !== '') {
 			if ($i->getInternalPath() === '') {
 				$mountType .= '-root';
 			}
@@ -208,20 +206,40 @@ class Helper {
 	 * Populate the result set with file tags
 	 *
 	 * @param array $fileList
+	 * @param string $fileIdentifier identifier attribute name for values in $fileList
+	 * @param ITagManager $tagManager
 	 * @return array file list populated with tags
 	 */
-	public static function populateTags(array $fileList) {
-		$filesById = array();
+	public static function populateTags(array $fileList, $fileIdentifier = 'fileid', ITagManager $tagManager) {
+		$ids = [];
 		foreach ($fileList as $fileData) {
-			$filesById[$fileData['fileid']] = $fileData;
+			$ids[] = $fileData[$fileIdentifier];
 		}
-		$tagger = \OC::$server->getTagManager()->load('files');
-		$tags = $tagger->getTagsForObjects(array_keys($filesById));
-		if ($tags) {
+		$tagger = $tagManager->load('files');
+		$tags = $tagger->getTagsForObjects($ids);
+
+		if (!is_array($tags)) {
+			throw new \UnexpectedValueException('$tags must be an array');
+		}
+
+		// Set empty tag array
+		foreach ($fileList as $key => $fileData) {
+			$fileList[$key]['tags'] = [];
+		}
+
+		if (!empty($tags)) {
 			foreach ($tags as $fileId => $fileTags) {
-				$filesById[$fileId]['tags'] = $fileTags;
+
+				foreach ($fileList as $key => $fileData) {
+					if ($fileId !== $fileData[$fileIdentifier]) {
+						continue;
+					}
+
+					$fileList[$key]['tags'] = $fileTags;
+				}
 			}
 		}
+
 		return $fileList;
 	}
 

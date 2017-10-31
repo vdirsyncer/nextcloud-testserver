@@ -26,6 +26,7 @@ namespace OCA\Theming;
 use Imagick;
 use ImagickPixel;
 use OCP\App\AppPathNotFoundException;
+use OCP\Files\SimpleFS\ISimpleFile;
 
 class IconBuilder {
 	/** @var ThemingDefaults */
@@ -52,14 +53,18 @@ class IconBuilder {
 	 * @return string|false image blob
 	 */
 	public function getFavicon($app) {
-		$icon = $this->renderAppIcon($app, 32);
-		if($icon === false) {
+		try {
+			$icon = $this->renderAppIcon($app, 32);
+			if ($icon === false) {
+				return false;
+			}
+			$icon->setImageFormat("png24");
+			$data = $icon->getImageBlob();
+			$icon->destroy();
+			return $data;
+		} catch (\ImagickException $e) {
 			return false;
 		}
-		$icon->setImageFormat("png24");
-		$data = $icon->getImageBlob();
-		$icon->destroy();
-		return $data;
 	}
 
 	/**
@@ -67,14 +72,18 @@ class IconBuilder {
 	 * @return string|false image blob
 	 */
 	public function getTouchIcon($app) {
-		$icon = $this->renderAppIcon($app, 512);
-		if($icon === false) {
+		try {
+			$icon = $this->renderAppIcon($app, 512);
+			if ($icon === false) {
+				return false;
+			}
+			$icon->setImageFormat("png24");
+			$data = $icon->getImageBlob();
+			$icon->destroy();
+			return $data;
+		} catch (\ImagickException $e) {
 			return false;
 		}
-		$icon->setImageFormat("png24");
-		$data = $icon->getImageBlob();
-		$icon->destroy();
-		return $data;
 	}
 
 	/**
@@ -86,19 +95,23 @@ class IconBuilder {
 	 * @return Imagick|false
 	 */
 	public function renderAppIcon($app, $size) {
-		try {
-			$appIcon = $this->util->getAppIcon($app);
+		$appIcon = $this->util->getAppIcon($app);
+		if($appIcon === false) {
+			return false;
+		}
+		if ($appIcon instanceof ISimpleFile) {
+			$appIconContent = $appIcon->getContent();
+			$mime = $appIcon->getMimeType();
+		} else {
 			$appIconContent = file_get_contents($appIcon);
-		} catch (AppPathNotFoundException $e) {
+			$mime = mime_content_type($appIcon);
+		}
+
+		if($appIconContent === false || $appIconContent === "") {
 			return false;
 		}
 
-		if($appIconContent === false) {
-			return false;
-		}
-
-		$color = $this->themingDefaults->getMailHeaderColor();
-		$mime = mime_content_type($appIcon);
+		$color = $this->themingDefaults->getColorPrimary();
 
 		// generate background image with rounded corners
 		$background = '<?xml version="1.0" encoding="UTF-8"?>' .
@@ -136,10 +149,9 @@ class IconBuilder {
 		} else {
 			$appIconFile = new Imagick();
 			$appIconFile->setBackgroundColor(new ImagickPixel('transparent'));
-			$appIconFile->readImageBlob(file_get_contents($appIcon));
+			$appIconFile->readImageBlob($appIconContent);
 			$appIconFile->scaleImage(512, 512, true);
 		}
-
 		// offset for icon positioning
 		$border_w = (int)($appIconFile->getImageWidth() * 0.05);
 		$border_h = (int)($appIconFile->getImageHeight() * 0.05);
@@ -178,7 +190,7 @@ class IconBuilder {
 		}
 		$svg = file_get_contents($imageFile);
 		if ($svg !== false && $svg !== "") {
-			$color = $this->util->elementColor($this->themingDefaults->getMailHeaderColor());
+			$color = $this->util->elementColor($this->themingDefaults->getColorPrimary());
 			$svg = $this->util->colorizeSvg($svg, $color);
 			return $svg;
 		} else {

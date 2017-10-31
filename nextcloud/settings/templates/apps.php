@@ -3,7 +3,7 @@ style('settings', 'settings');
 vendor_script(
 	'core',
 	[
-		'handlebars/handlebars'
+		'marked/marked.min',
 	]
 );
 script(
@@ -24,15 +24,68 @@ script(
 
 <?php if($_['appstoreEnabled']): ?>
 	<li>
-		<a class="app-external" target="_blank" rel="noreferrer" href="https://docs.nextcloud.org/server/11/developer_manual/"><?php p($l->t('Developer documentation'));?> ↗</a>
+		<a class="app-external" target="_blank" rel="noreferrer" href="https://docs.nextcloud.org/server/12/developer_manual/"><?php p($l->t('Developer documentation'));?> ↗</a>
 	</li>
 <?php endif; ?>
+</script>
+
+<script id="app-template-installed" type="text/x-handlebars">
+{{#if newCategory}}
+<div class="apps-header">
+	<div class="app-image"></div>
+	<h2>{{categoryName}} <input class="enable" type="submit" data-bundleid="{{bundleId}}" data-active="true" value="<?php p($l->t('Enable all'));?>"/></h2>
+	<div class="app-version"></div>
+	<div class="app-level"></div>
+	<div class="app-groups"></div>
+	<div class="actions">&nbsp;</div>
+</div>
+{{/if}}
+<div class="section" id="app-{{id}}">
+	<div class="app-image app-image-icon"></div>
+	<div class="app-name">
+		{{#if detailpage}}
+			<a href="{{detailpage}}" target="_blank" rel="noreferrer">{{name}}</a>
+		{{else}}
+			{{name}}
+		{{/if}}
+	</div>
+	<div class="app-version">{{version}}</div>
+	<div class="app-level">
+		{{{level}}}{{#unless internal}}<a href="https://apps.nextcloud.com/apps/{{id}}"><?php p($l->t('View in store'));?> ↗</a>{{/unless}}
+	</div>
+
+	<div class="app-groups">
+		{{#if active}}
+		<div class="groups-enable">
+			<input type="checkbox" class="groups-enable__checkbox checkbox" id="groups_enable-{{id}}"/>
+			<label for="groups_enable-{{id}}"><?php p($l->t('Limit to groups')); ?></label>
+			<input type="hidden" class="group_select" title="<?php p($l->t('All')); ?>">
+		</div>
+		{{/if}}
+	</div>
+
+	<div class="actions">
+		<div class="app-dependencies update hidden">
+			<p><?php p($l->t('This app has an update available.')); ?></p>
+		</div>
+		<div class="warning hidden"></div>
+		<input class="update hidden" type="submit" value="<?php p($l->t('Update to %s', array('{{update}}'))); ?>" data-appid="{{id}}" />
+		{{#if canUnInstall}}
+		<input class="uninstall" type="submit" value="<?php p($l->t('Remove')); ?>" data-appid="{{id}}" />
+		{{/if}}
+		{{#if active}}
+		<input class="enable" type="submit" data-appid="{{id}}" data-active="true" value="<?php p($l->t("Disable"));?>"/>
+		{{else}}
+		<input class="enable{{#if needsDownload}} needs-download{{/if}}" type="submit" data-appid="{{id}}" data-active="false" {{#unless canInstall}}disabled="disabled"{{/unless}} value="<?php p($l->t("Enable"));?>"/>
+		{{/if}}
+	</div>
+</div>
 </script>
 
 <script id="app-template" type="text/x-handlebars">
 	<div class="section" id="app-{{id}}">
 	{{#if preview}}
-	<div class="app-image{{#if previewAsIcon}} app-image-icon{{/if}} hidden">
+	<div class="app-image{{#if previewAsIcon}} app-image-icon{{/if}} icon-loading">
 	</div>
 	{{/if}}
 	<h2 class="app-name">
@@ -42,14 +95,6 @@ script(
 			{{name}}
 		{{/if}}
 	</h2>
-	<div class="app-version"> {{version}}</div>
-	{{#if profilepage}}<a href="{{profilepage}}" target="_blank" rel="noreferrer">{{/if}}
-	<div class="app-author"><?php p($l->t('by %s', ['{{author}}']));?>
-		{{#if licence}}
-		(<?php p($l->t('%s-licensed', ['{{licence}}'])); ?>)
-		{{/if}}
-	</div>
-	{{#if profilepage}}</a>{{/if}}
 	<div class="app-level">
 		{{{level}}}
 	</div>
@@ -59,7 +104,15 @@ script(
 	<div class="app-detailpage"></div>
 
 	<div class="app-description-container hidden">
-		<div class="app-description"><pre>{{description}}</pre></div>
+		<div class="app-version">{{version}}</div>
+		{{#if profilepage}}<a href="{{profilepage}}" target="_blank" rel="noreferrer">{{/if}}
+		<div class="app-author"><?php p($l->t('by %s', ['{{author}}']));?>
+			{{#if licence}}
+			(<?php p($l->t('%s-licensed', ['{{licence}}'])); ?>)
+			{{/if}}
+		</div>
+		{{#if profilepage}}</a>{{/if}}
+		<div class="app-description">{{{description}}}</div>
 		<!--<div class="app-changed">{{changed}}</div>-->
 		{{#if documentation}}
 		<p class="documentation">
@@ -129,12 +182,12 @@ script(
 		<input type="checkbox" class="groups-enable__checkbox checkbox" id="groups_enable-{{id}}"/>
 		<label for="groups_enable-{{id}}"><?php p($l->t('Enable only for specific groups')); ?></label>
 	</div>
-	<input type="hidden" id="group_select" title="<?php p($l->t('All')); ?>" style="width: 200px">
+	<input type="hidden" class="group_select" title="<?php p($l->t('All')); ?>" style="width: 200px">
 	{{else}}
 	<input class="enable{{#if needsDownload}} needs-download{{/if}}" type="submit" data-appid="{{id}}" data-active="false" {{#unless canInstall}}disabled="disabled"{{/unless}} value="<?php p($l->t("Enable"));?>"/>
 	{{/if}}
 	{{#if canUnInstall}}
-	<input class="uninstall" type="submit" value="<?php p($l->t('Uninstall app')); ?>" data-appid="{{id}}" />
+	<input class="uninstall" type="submit" value="<?php p($l->t('Remove')); ?>" data-appid="{{id}}" />
 	{{/if}}
 
 	<div class="warning hidden"></div>
@@ -147,11 +200,11 @@ script(
 
 	</ul>
 </div>
-<div id="app-content">
-	<svg height="0">
+<div id="app-content" class="icon-loading">
+	<svg class="app-filter">
 		<defs><filter id="invertIcon"><feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"></feColorMatrix></filter></defs>
 	</svg>
-	<div id="apps-list" class="icon-loading"></div>
+	<div id="apps-list"></div>
 	<div id="apps-list-empty" class="hidden emptycontent emptycontent-search">
 		<div class="icon-search"></div>
 		<h2><?php p($l->t('No apps found for your version')) ?></h2>

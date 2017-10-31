@@ -42,6 +42,8 @@ OC.L10N.register(
     "%s (invisible)" : "%s (invisibile)",
     "<strong>System tags</strong> for a file have been modified" : "Le <strong>etichette di sistema</strong> per un file sono state modificate",
     "Collaborative tags" : "Etichette collaborative",
+    "Create and edit collaborative tags. These tags affect all users." : "Crea e modifica etichette collaborative. Queste etichette interessano tutti gli utenti.",
+    "Select tag …" : "Seleziona etichetta...",
     "Name" : "Nome",
     "Delete" : "Elimina",
     "Public" : "Pubblico",
@@ -51,17 +53,6 @@ OC.L10N.register(
     "No files in here" : "Qui non c'è alcun file",
     "No entries found in this folder" : "Nessuna voce trovata in questa cartella",
     "Size" : "Dimensione",
-    "Modified" : "Modificato",
-    "You assigned system tag %3$s" : "Hai assegnato l'etichetta di sistema %3$s",
-    "%1$s assigned system tag %3$s" : "%1$s ha assegnato l'etichetta di sistema %3$s",
-    "You unassigned system tag %3$s" : "Hai rimosso l'etichetta di sistema %3$s",
-    "%1$s unassigned system tag %3$s" : "%1$s ha rimosso l'etichetta di sistema %3$s",
-    "You created system tag %2$s" : "Hai creato l'etichetta di sistema %2$s",
-    "You deleted system tag %2$s" : "Hai eliminato l'etichetta di sistema %2$s",
-    "You updated system tag %3$s to %2$s" : "Hai aggiornato l'etichetta di sistema %3$s in %2$s",
-    "You assigned system tag %3$s to %2$s" : "Hai assegnato l'etichetta di sistema %3$s a %2$s",
-    "%1$s assigned system tag %3$s to %2$s" : "%1$s ha assegnato l'etichetta di sistema %3$s a %2$s",
-    "You unassigned system tag %3$s from %2$s" : "Hai rimosso l'etichetta di sistema %3$s da %2$s",
-    "%1$s unassigned system tag %3$s from %2$s" : "%1$s ha rimosso l'etichetta di sistema %3$s da %2$s"
+    "Modified" : "Modificato"
 },
 "nplurals=2; plural=(n != 1);");

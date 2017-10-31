@@ -68,8 +68,11 @@ class MountProvider implements IMountProvider {
 	 * @return \OCP\Files\Mount\IMountPoint[]
 	 */
 	public function getMountsForUser(IUser $user, IStorageFactory $storageFactory) {
+
 		$shares = $this->shareManager->getSharedWith($user->getUID(), \OCP\Share::SHARE_TYPE_USER, null, -1);
 		$shares = array_merge($shares, $this->shareManager->getSharedWith($user->getUID(), \OCP\Share::SHARE_TYPE_GROUP, null, -1));
+		$shares = array_merge($shares, $this->shareManager->getSharedWith($user->getUID(), \OCP\Share::SHARE_TYPE_CIRCLE, null, -1));
+
 		// filter out excluded shares and group shares that includes self
 		$shares = array_filter($shares, function (\OCP\Share\IShare $share) use ($user) {
 			return $share->getPermissions() > 0 && $share->getShareOwner() !== $user->getUID();
@@ -123,7 +126,7 @@ class MountProvider implements IMountProvider {
 		// sort by stime, the super share will be based on the least recent share
 		foreach ($tmp as &$tmp2) {
 			@usort($tmp2, function($a, $b) {
-				if ($a->getShareTime() < $b->getShareTime()) {
+				if ($a->getShareTime() <= $b->getShareTime()) {
 					return -1;
 				}
 				return 1;
@@ -170,7 +173,23 @@ class MountProvider implements IMountProvider {
 				if ($share->getTarget() !== $superShare->getTarget()) {
 					// adjust target, for database consistency
 					$share->setTarget($superShare->getTarget());
-					$this->shareManager->moveShare($share, $user->getUID());
+					try {
+						$this->shareManager->moveShare($share, $user->getUID());
+					} catch (\InvalidArgumentException $e) {
+						// ignore as it is not important and we don't want to
+						// block FS setup
+
+						// the subsequent code anyway only uses the target of the
+						// super share
+
+						// such issue can usually happen when dealing with
+						// null groups which usually appear with group backend
+						// caching inconsistencies
+						$this->logger->debug(
+							'Could not adjust share target for share ' . $share->getId() . ' to make it consistent: ' . $e->getMessage(),
+							['app' => 'files_sharing']
+						);
+					}
 				}
 				if (!is_null($share->getNodeCacheEntry())) {
 					$superShare->setNodeCacheEntry($share->getNodeCacheEntry());

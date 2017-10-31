@@ -5,7 +5,7 @@ OC.L10N.register(
     "Versions" : "Phiên bản",
     "Failed to revert {file} to revision {timestamp}." : "Thất bại khi trở lại {file} khi sử đổi {timestamp}.",
     "Restore" : "Khôi phục",
-    "More versions..." : "Nhiều phiên bản ...",
-    "No other versions available" : "Không có các phiên bản khác có sẵn"
+    "No versions available" : "Không có phiên bản có sẵn",
+    "More versions..." : "Nhiều phiên bản ..."
 },
 "nplurals=1; plural=0;");

@@ -22,57 +22,50 @@
 namespace OC\App\AppStore\Fetcher;
 
 use OC\App\AppStore\Version\VersionParser;
+use OC\Files\AppData\Factory;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Files\IAppData;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\ILogger;
 
 class AppFetcher extends Fetcher {
-	/** @var IConfig */
-	private $config;
-
 	/**
-	 * @param IAppData $appData
+	 * @param Factory $appDataFactory
 	 * @param IClientService $clientService
 	 * @param ITimeFactory $timeFactory
-	 * @param IConfig $config;
+	 * @param IConfig $config
+	 * @param ILogger $logger
 	 */
-	public function __construct(IAppData $appData,
+	public function __construct(Factory $appDataFactory,
 								IClientService $clientService,
 								ITimeFactory $timeFactory,
-								IConfig $config) {
+								IConfig $config,
+								ILogger $logger) {
 		parent::__construct(
-			$appData,
+			$appDataFactory,
 			$clientService,
-			$timeFactory
+			$timeFactory,
+			$config,
+			$logger
 		);
 
 		$this->fileName = 'apps.json';
-		$this->config = $config;
-
-		$versionArray = \OC_Util::getVersion();
-		$this->endpointUrl = sprintf(
-			'https://apps.nextcloud.com/api/v1/platform/%d.%d.%d/apps.json',
-			$versionArray[0],
-			$versionArray[1],
-			$versionArray[2]
-		);
+		$this->setEndpoint();
 	}
 
 	/**
 	 * Only returns the latest compatible app release in the releases array
 	 *
+	 * @param string $ETag
+	 * @param string $content
+	 *
 	 * @return array
 	 */
-	protected function fetch() {
-		$client = $this->clientService->newClient();
-		$response = $client->get($this->endpointUrl);
-		$responseJson = [];
-		$responseJson['data'] = json_decode($response->getBody(), true);
-		$responseJson['timestamp'] = $this->timeFactory->getTime();
-		$response = $responseJson;
+	protected function fetch($ETag, $content) {
+		/** @var mixed[] $response */
+		$response = parent::fetch($ETag, $content);
 
-		$ncVersion = $this->config->getSystemValue('version');
+		$ncVersion = $this->getVersion();
 		$ncMajorVersion = explode('.', $ncVersion)[0];
 		foreach($response['data'] as $dataKey => $app) {
 			$releases = [];
@@ -121,5 +114,23 @@ class AppFetcher extends Fetcher {
 
 		$response['data'] = array_values($response['data']);
 		return $response;
+	}
+
+	private function setEndpoint() {
+		$versionArray = explode('.', $this->getVersion());
+		$this->endpointUrl = sprintf(
+			'https://apps.nextcloud.com/api/v1/platform/%d.%d.%d/apps.json',
+			$versionArray[0],
+			$versionArray[1],
+			$versionArray[2]
+		);
+	}
+
+	/**
+	 * @param string $version
+	 */
+	public function setVersion($version) {
+		parent::setVersion($version);
+		$this->setEndpoint();
 	}
 }

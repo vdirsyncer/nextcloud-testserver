@@ -80,8 +80,7 @@ $(function(){
 			var self = this;
 
 			$.ajax({
-				//url: OC.linkToOCS('apps/activity/api/v2/activity', 2) + OCA.Activity.Filter.filter + '?format=json&previews=true&since=' + self.lastGivenId,
-				url: OC.generateUrl('/apps/activity/api/v2/activity') + '/' + OCA.Activity.Filter.filter + '?format=json&previews=true&since=' + self.lastGivenId,
+				url: OC.linkToOCS('apps/activity/api/v2/activity', 2) + OCA.Activity.Filter.filter + '?format=json&previews=true&since=' + self.lastGivenId,
 				type: 'GET',
 				beforeSend: function(xhr) {
 					xhr.setRequestHeader("Accept-Language", OC.getLocale());
@@ -235,13 +234,14 @@ $(function(){
 			}
 
 			if (activity.previews && activity.previews.length) {
-				content += '<br />';
+				content += '<div class="activity-previews">';
 				for (var i = 0; i < activity.previews.length; i++) {
 					var preview = activity.previews[i];
 					content += ((preview.link) ? '<a href="' + preview.link + '">' + "\n" : '')
 						+ '<img class="preview' + ((preview.isMimeTypeIcon) ? ' preview-mimetype-icon' : '') + '" src="' + preview.source + '" alt=""/>' + "\n"
 						+ ((preview.link) ? '</a>' + "\n" : '')
 				}
+				content += '</div>';
 			}
 
 			content += '	</div>' + "\n"
@@ -262,6 +262,14 @@ $(function(){
 				} else {
 					element.avatar(element.data('user'), 21);
 				}
+			});
+
+			$element.find('.avatar-name-wrapper').each(function() {
+				var element = $(this);
+				var avatar = element.find('.avatar');
+				var label = element.find('strong');
+
+				$.merge(avatar, label).contactsMenu(element.data('user'), 0, element);
 			});
 
 			$element.find('.activity-more-link').click(function() {
@@ -296,4 +304,3 @@ $(function(){
 		event.preventDefault();
 	});
 });
-

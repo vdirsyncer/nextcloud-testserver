@@ -105,6 +105,25 @@ class Helper {
 		return $result;
 	}
 
+	/**
+	 * return the next available configuration prefix
+	 *
+	 * @return string
+	 */
+	public function getNextServerConfigurationPrefix() {
+		$serverConnections = $this->getServerConfigurationPrefixes();
+
+		if(count($serverConnections) === 0) {
+			return 's01';
+		}
+
+		sort($serverConnections);
+		$lastKey = array_pop($serverConnections);
+		$lastNumber = intval(str_replace('s', '', $lastKey));
+		$nextPrefix = 's' . str_pad($lastNumber + 1, 2, '0', STR_PAD_LEFT);
+		return $nextPrefix;
+	}
+
 	private function getServersConfig($value) {
 		$regex = '/' . $value . '$/S';
 
@@ -274,9 +293,10 @@ class Helper {
 		$configPrefixes = $helper->getServerConfigurationPrefixes(true);
 		$ldapWrapper = new LDAP();
 		$ocConfig = \OC::$server->getConfig();
+		$notificationManager = \OC::$server->getNotificationManager();
 
 		$userBackend  = new User_Proxy(
-			$configPrefixes, $ldapWrapper, $ocConfig
+			$configPrefixes, $ldapWrapper, $ocConfig, $notificationManager
 		);
 		$uid = $userBackend->loginName2UserName($param['uid'] );
 		if($uid !== false) {

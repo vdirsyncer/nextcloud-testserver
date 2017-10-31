@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>General Troubleshooting &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>General Troubleshooting &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Issues and Troubleshooting" href="index.html" />
     <link rel="next" title="Code Signing" href="code_signing.html" />
     <link rel="prev" title="Issues and Troubleshooting" href="index.html" />
@@ -66,12 +66,13 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -126,7 +127,7 @@ to typical mistakes or frequently occurring issues</p>
 <li><p class="first"><a class="reference external" href="https://help.nextcloud.com">The Nextcloud forums</a></p>
 </li>
 <li><p class="first">The Nextcloud IRC chat channel <code class="docutils literal"><span class="pre">irc://#nextcloud&#64;freenode.net</span></code> on
-freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloudhttps://docs.nextcloud.org/server/11/developer_manual/bugtracker/index.html">webchat</a></p>
+freenode.net, also accessible via <a class="reference external" href="http://webchat.freenode.net/?channels=nextcloudhttps://docs.nextcloud.org/server/12/developer_manual/bugtracker/index.html">webchat</a></p>
 </li>
 </ul>
 <p>Please understand that all these channels essentially consist of users like you
@@ -350,8 +351,8 @@ running Nextcloud at the document root of your Web server the correct URL is:</p
 <p><code class="docutils literal"><span class="pre">https://example.com/nextcloud/remote.php/dav</span></code></p>
 <p>For the first case the <code class="file docutils literal"><span class="pre">.htaccess</span></code> file shipped with Nextcloud should do
 this work for your when running Apache. You only need to make sure that your
-Web server is using this file. When running NGINX please refer to
-<a class="reference internal" href="../installation/nginx_examples.html"><em>Nginx Example Configurations</em></a>.</p>
+Web server is using this file. When running Nginx please refer to
+<a class="reference internal" href="../installation/nginx.html"><em>Nginx Configuration</em></a>.</p>
 <p>If your Nextcloud instance is installed in a subfolder called <code class="docutils literal"><span class="pre">nextcloud</span></code> and
 you&#8217;re running Apache create or edit the <code class="file docutils literal"><span class="pre">.htaccess</span></code> file within the
 document root of your Web server and add the following lines:</p>

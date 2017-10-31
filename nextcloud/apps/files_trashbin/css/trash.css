@@ -8,11 +8,8 @@
  *
  */
 #app-content-trashbin tbody tr[data-type="file"] td a.name,
-#app-content-trashbin tbody tr[data-type="file"] td a.name {
-    cursor: default;
-}
-
-span.nametext, span.innernametext, span.extension {
+#app-content-trashbin tbody tr[data-type="file"] td a.name span.nametext,
+#app-content-trashbin tbody tr[data-type="file"] td a.name span.nametext span {
 	cursor: default;
 }
 
@@ -23,20 +20,17 @@ span.nametext, span.innernametext, span.extension {
 	display: none;
 }
 
-#app-navigation > ul {
-	padding-bottom: 44px;
-}
-
 /* move Deleted Files to bottom of sidebar */
 .nav-trashbin {
 	position: fixed !important;
-	bottom: 44px;
+	bottom: 88px;
 	width: inherit !important;
 	background-color: #fff;
 	border-right: 1px solid #eee;
+	margin-bottom: 0px !important;
 }
 /* double padding to account for Deleted files entry, issue with Firefox */
 .app-files #app-navigation > ul li:nth-last-child(2) {
-	margin-bottom: 44px;
+	margin-bottom: 88px;
 }
 

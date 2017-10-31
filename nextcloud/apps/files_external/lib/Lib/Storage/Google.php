@@ -36,6 +36,7 @@
 namespace OCA\Files_External\Lib\Storage;
 
 use GuzzleHttp\Exception\RequestException;
+use Icewind\Streams\CallbackWrapper;
 use Icewind\Streams\IteratorDirectory;
 use Icewind\Streams\RetryWrapper;
 
@@ -49,8 +50,6 @@ class Google extends \OC\Files\Storage\Common {
 	private $id;
 	private $service;
 	private $driveFiles;
-
-	private static $tempFiles = array();
 
 	// Google Doc mimetypes
 	const FOLDER = 'application/vnd.google-apps.folder';
@@ -127,7 +126,7 @@ class Google extends \OC\Files\Storage\Common {
 					$q = "title='" . str_replace("'","\\'", $name) . "' and '" . str_replace("'","\\'", $parentId) . "' in parents and trashed = false";
 					$result = $this->service->files->listFiles(array('q' => $q))->getItems();
 					if (!empty($result)) {
-						// Google Drive allows files with the same name, ownCloud doesn't
+						// Google Drive allows files with the same name, Nextcloud doesn't
 						if (count($result) > 1) {
 							$this->onDuplicateFileDetected($path);
 							return false;
@@ -295,7 +294,7 @@ class Google extends \OC\Files\Storage\Common {
 					} else {
 						$filepath = $path.'/'.$name;
 					}
-					// Google Drive allows files with the same name, ownCloud doesn't
+					// Google Drive allows files with the same name, Nextcloud doesn't
 					// Prevent opendir() from returning any duplicate files
 					$key = array_search($name, $files);
 					if ($key !== false || isset($duplicates[$filepath])) {
@@ -387,6 +386,19 @@ class Google extends \OC\Files\Storage\Common {
 	}
 
 	public function rename($path1, $path2) {
+		// Avoid duplicate files with the same name
+                $testRegex = '/^.+\.ocTransferId\d+\.part$/';
+                if (preg_match($testRegex, $path1)) {
+                        if ($this->is_file($path2)) {
+                                $testFile2 = $this->getDriveFile($path2);
+                                if ($testFile2) {
+                                        $this->service->files->trash($testFile2->getId());
+                                        \OCP\Util::writeLog('files_external', 'trash file '.$path2.
+                                        ' for renaming '.$path1.' on Google Drive.', \OCP\Util::DEBUG);
+                                }
+                        }
+                }
+		
 		$file = $this->getDriveFile($path1);
 		if ($file) {
 			$newFile = $this->getDriveFile($path2);
@@ -495,94 +507,91 @@ class Google extends \OC\Files\Storage\Common {
 			case 'c':
 			case 'c+':
 				$tmpFile = \OCP\Files::tmpFile($ext);
-				\OC\Files\Stream\Close::registerCallback($tmpFile, array($this, 'writeBack'));
 				if ($this->file_exists($path)) {
 					$source = $this->fopen($path, 'rb');
 					file_put_contents($tmpFile, $source);
 				}
-				self::$tempFiles[$tmpFile] = $path;
-				return fopen('close://'.$tmpFile, $mode);
+				$handle = fopen($tmpFile, $mode);
+				return CallbackWrapper::wrap($handle, null, null, function () use ($path, $tmpFile) {
+					$this->writeBack($tmpFile, $path);
+				});
 		}
 	}
 
-	public function writeBack($tmpFile) {
-		if (isset(self::$tempFiles[$tmpFile])) {
-			$path = self::$tempFiles[$tmpFile];
-			$parentFolder = $this->getDriveFile(dirname($path));
-			if ($parentFolder) {
-				$mimetype = \OC::$server->getMimeTypeDetector()->detect($tmpFile);
-				$params = array(
-					'mimeType' => $mimetype,
-					'uploadType' => 'media'
-				);
-				$result = false;
+	public function writeBack($tmpFile, $path) {
+		$parentFolder = $this->getDriveFile(dirname($path));
+		if ($parentFolder) {
+			$mimetype = \OC::$server->getMimeTypeDetector()->detect($tmpFile);
+			$params = array(
+				'mimeType' => $mimetype,
+				'uploadType' => 'media'
+			);
+			$result = false;
 
-				$chunkSizeBytes = 10 * 1024 * 1024;
+			$chunkSizeBytes = 10 * 1024 * 1024;
 
-				$useChunking = false;
-				$size = filesize($tmpFile);
-				if ($size > $chunkSizeBytes) {
-					$useChunking = true;
-				} else {
-					$params['data'] = file_get_contents($tmpFile);
-				}
-
-				if ($this->file_exists($path)) {
-					$file = $this->getDriveFile($path);
-					$this->client->setDefer($useChunking);
-					$request = $this->service->files->update($file->getId(), $file, $params);
-				} else {
-					$file = new \Google_Service_Drive_DriveFile();
-					$file->setTitle(basename($path));
-					$file->setMimeType($mimetype);
-					$parent = new \Google_Service_Drive_ParentReference();
-					$parent->setId($parentFolder->getId());
-					$file->setParents(array($parent));
-					$this->client->setDefer($useChunking);
-					$request = $this->service->files->insert($file, $params);
-				}
-
-				if ($useChunking) {
-					// Create a media file upload to represent our upload process.
-					$media = new \Google_Http_MediaFileUpload(
-						$this->client,
-						$request,
-						'text/plain',
-						null,
-						true,
-						$chunkSizeBytes
-					);
-					$media->setFileSize($size);
-
-					// Upload the various chunks. $status will be false until the process is
-					// complete.
-					$status = false;
-					$handle = fopen($tmpFile, 'rb');
-					while (!$status && !feof($handle)) {
-						$chunk = fread($handle, $chunkSizeBytes);
-						$status = $media->nextChunk($chunk);
-					}
-
-					// The final value of $status will be the data from the API for the object
-					// that has been uploaded.
-					$result = false;
-					if ($status !== false) {
-						$result = $status;
-					}
-
-					fclose($handle);
-				} else {
-					$result = $request;
-				}
-
-				// Reset to the client to execute requests immediately in the future.
-				$this->client->setDefer(false);
-
-				if ($result) {
-					$this->setDriveFile($path, $result);
-				}
+			$useChunking = false;
+			$size = filesize($tmpFile);
+			if ($size > $chunkSizeBytes) {
+				$useChunking = true;
+			} else {
+				$params['data'] = file_get_contents($tmpFile);
 			}
-			unlink($tmpFile);
+
+			if ($this->file_exists($path)) {
+				$file = $this->getDriveFile($path);
+				$this->client->setDefer($useChunking);
+				$request = $this->service->files->update($file->getId(), $file, $params);
+			} else {
+				$file = new \Google_Service_Drive_DriveFile();
+				$file->setTitle(basename($path));
+				$file->setMimeType($mimetype);
+				$parent = new \Google_Service_Drive_ParentReference();
+				$parent->setId($parentFolder->getId());
+				$file->setParents(array($parent));
+				$this->client->setDefer($useChunking);
+				$request = $this->service->files->insert($file, $params);
+			}
+
+			if ($useChunking) {
+				// Create a media file upload to represent our upload process.
+				$media = new \Google_Http_MediaFileUpload(
+					$this->client,
+					$request,
+					'text/plain',
+					null,
+					true,
+					$chunkSizeBytes
+				);
+				$media->setFileSize($size);
+
+				// Upload the various chunks. $status will be false until the process is
+				// complete.
+				$status = false;
+				$handle = fopen($tmpFile, 'rb');
+				while (!$status && !feof($handle)) {
+					$chunk = fread($handle, $chunkSizeBytes);
+					$status = $media->nextChunk($chunk);
+				}
+
+				// The final value of $status will be the data from the API for the object
+				// that has been uploaded.
+				$result = false;
+				if ($status !== false) {
+					$result = $status;
+				}
+
+				fclose($handle);
+			} else {
+				$result = $request;
+			}
+
+			// Reset to the client to execute requests immediately in the future.
+			$this->client->setDefer(false);
+
+			if ($result) {
+				$this->setDriveFile($path, $result);
+			}
 		}
 	}
 

@@ -49,16 +49,22 @@ $application->registerRoutes($this, [
 		['name' => 'login#confirmPassword', 'url' => '/login/confirm', 'verb' => 'POST'],
 		['name' => 'login#showLoginForm', 'url' => '/login', 'verb' => 'GET'],
 		['name' => 'login#logout', 'url' => '/logout', 'verb' => 'GET'],
+		['name' => 'ClientFlowLogin#showAuthPickerPage', 'url' => '/login/flow', 'verb' => 'GET'],
+		['name' => 'ClientFlowLogin#redirectPage', 'url' => '/login/flow/redirect', 'verb' => 'GET'],
+		['name' => 'ClientFlowLogin#generateAppPassword', 'url' => '/login/flow', 'verb' => 'POST'],
 		['name' => 'TwoFactorChallenge#selectChallenge', 'url' => '/login/selectchallenge', 'verb' => 'GET'],
 		['name' => 'TwoFactorChallenge#showChallenge', 'url' => '/login/challenge/{challengeProviderId}', 'verb' => 'GET'],
 		['name' => 'TwoFactorChallenge#solveChallenge', 'url' => '/login/challenge/{challengeProviderId}', 'verb' => 'POST'],
 		['name' => 'OCJS#getConfig', 'url' => '/core/js/oc.js', 'verb' => 'GET'],
 		['name' => 'Preview#getPreview', 'url' => '/core/preview', 'verb' => 'GET'],
 		['name' => 'Preview#getPreview', 'url' => '/core/preview.png', 'verb' => 'GET'],
+		['name' => 'Css#getCss', 'url' => '/css/{appName}/{fileName}', 'verb' => 'GET'],
+		['name' => 'Js#getJs', 'url' => '/js/{appName}/{fileName}', 'verb' => 'GET'],
+		['name' => 'contactsMenu#index', 'url' => '/contactsmenu/contacts', 'verb' => 'POST'],
+		['name' => 'contactsMenu#findOne', 'url' => '/contactsmenu/findOne', 'verb' => 'POST'],
 	],
 	'ocs' => [
 		['root' => '/cloud', 'name' => 'OCS#getCapabilities', 'url' => '/capabilities', 'verb' => 'GET'],
-		['root' => '/cloud', 'name' => 'OCS#getCurrentUser', 'url' => '/user', 'verb' => 'GET'],
 		['root' => '', 'name' => 'OCS#getConfig', 'url' => '/config', 'verb' => 'GET'],
 		['root' => '/person', 'name' => 'OCS#personCheck', 'url' => '/check', 'verb' => 'POST'],
 		['root' => '/identityproof', 'name' => 'OCS#getIdentityProof', 'url' => '/key/{cloudId}', 'verb' => 'GET'],
@@ -82,22 +88,48 @@ $this->create('files.viewcontroller.showFile', '/f/{fileid}')->action(function($
 	$app->dispatch('ViewController', 'index');
 });
 
+// Call routes
+$this->create('spreed.pagecontroller.showCall', '/call/{token}')->action(function($urlParams) {
+	if (class_exists(\OCA\Spreed\AppInfo\Application::class, false)) {
+		$app = new \OCA\Spreed\AppInfo\Application($urlParams);
+		$app->dispatch('PageController', 'index');
+	} else {
+		throw new \OC\HintException('App spreed is not enabled');
+	}
+});
+
 // Sharing routes
 $this->create('files_sharing.sharecontroller.showShare', '/s/{token}')->action(function($urlParams) {
-	$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
-	$app->dispatch('ShareController', 'showShare');
+	if (class_exists(\OCA\Files_Sharing\AppInfo\Application::class, false)) {
+		$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
+		$app->dispatch('ShareController', 'showShare');
+	} else {
+		throw new \OC\HintException('App file sharing is not enabled');
+	}
 });
 $this->create('files_sharing.sharecontroller.authenticate', '/s/{token}/authenticate')->post()->action(function($urlParams) {
-	$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
-	$app->dispatch('ShareController', 'authenticate');
+	if (class_exists(\OCA\Files_Sharing\AppInfo\Application::class, false)) {
+		$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
+		$app->dispatch('ShareController', 'authenticate');
+	} else {
+		throw new \OC\HintException('App file sharing is not enabled');
+	}
 });
 $this->create('files_sharing.sharecontroller.showAuthenticate', '/s/{token}/authenticate')->get()->action(function($urlParams) {
-	$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
-	$app->dispatch('ShareController', 'showAuthenticate');
+	if (class_exists(\OCA\Files_Sharing\AppInfo\Application::class, false)) {
+		$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
+		$app->dispatch('ShareController', 'showAuthenticate');
+	} else {
+		throw new \OC\HintException('App file sharing is not enabled');
+	}
 });
 $this->create('files_sharing.sharecontroller.downloadShare', '/s/{token}/download')->get()->action(function($urlParams) {
-	$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
-	$app->dispatch('ShareController', 'downloadShare');
+	if (class_exists(\OCA\Files_Sharing\AppInfo\Application::class, false)) {
+		$app = new \OCA\Files_Sharing\AppInfo\Application($urlParams);
+		$app->dispatch('ShareController', 'downloadShare');
+	} else {
+		throw new \OC\HintException('App file sharing is not enabled');
+	}
 });
 
 // used for heartbeat

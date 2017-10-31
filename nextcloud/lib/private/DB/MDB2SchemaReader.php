@@ -32,15 +32,10 @@
 namespace OC\DB;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Schema\SchemaConfig;
-use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Schema\Schema;
 use OCP\IConfig;
 
 class MDB2SchemaReader {
-	/**
-	 * @var string $DBNAME
-	 */
-	protected $DBNAME;
 
 	/**
 	 * @var string $DBTABLEPREFIX
@@ -52,9 +47,6 @@ class MDB2SchemaReader {
 	 */
 	protected $platform;
 
-	/** @var \Doctrine\DBAL\Schema\SchemaConfig $schemaConfig */
-	protected $schemaConfig;
-
 	/** @var IConfig */
 	protected $config;
 
@@ -65,23 +57,16 @@ class MDB2SchemaReader {
 	public function __construct(IConfig $config, AbstractPlatform $platform) {
 		$this->platform = $platform;
 		$this->config = $config;
-		$this->DBNAME = $config->getSystemValue('dbname', 'owncloud');
 		$this->DBTABLEPREFIX = $config->getSystemValue('dbtableprefix', 'oc_');
-
-		// Oracle does not support longer index names then 30 characters.
-		// We use this limit for all DBs to make sure it does not cause a
-		// problem.
-		$this->schemaConfig = new SchemaConfig();
-		$this->schemaConfig->setMaxIdentifierLength(30);
 	}
 
 	/**
 	 * @param string $file
-	 * @return \Doctrine\DBAL\Schema\Schema
+	 * @param Schema $schema
+	 * @return Schema
 	 * @throws \DomainException
 	 */
-	public function loadSchemaFromFile($file) {
-		$schema = new \Doctrine\DBAL\Schema\Schema();
+	public function loadSchemaFromFile($file, Schema $schema) {
 		$loadEntities = libxml_disable_entity_loader(false);
 		$xml = simplexml_load_file($file);
 		libxml_disable_entity_loader($loadEntities);
@@ -123,15 +108,6 @@ class MDB2SchemaReader {
 					$name = str_replace('*dbprefix*', $this->DBTABLEPREFIX, $name);
 					$name = $this->platform->quoteIdentifier($name);
 					$table = $schema->createTable($name);
-					$table->setSchemaConfig($this->schemaConfig);
-
-					if($this->platform instanceof MySqlPlatform && $this->config->getSystemValue('mysql.utf8mb4', false)) {
-						$table->addOption('charset', 'utf8mb4');
-						$table->addOption('collate', 'utf8mb4_bin');
-						$table->addOption('row_format', 'compressed');
-					} else {
-						$table->addOption('collate', 'utf8_bin');
-					}
 					break;
 				case 'create':
 				case 'overwrite':
@@ -284,6 +260,7 @@ class MDB2SchemaReader {
 			) {
 				$options['primary'] = true;
 			}
+
 			$table->addColumn($name, $type, $options);
 			if (!empty($options['primary']) && $options['primary']) {
 				$table->setPrimaryKey(array($name));

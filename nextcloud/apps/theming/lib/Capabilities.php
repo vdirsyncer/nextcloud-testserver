@@ -24,6 +24,7 @@
 namespace OCA\Theming;
 
 use OCP\Capabilities\ICapability;
+use OCP\IConfig;
 use OCP\IURLGenerator;
 
 /**
@@ -36,17 +37,26 @@ class Capabilities implements ICapability {
 	/** @var ThemingDefaults */
 	protected $theming;
 
+	/** @var Util */
+	protected $util;
 
 	/** @var IURLGenerator */
 	protected $url;
 
+	/** @var IConfig */
+	protected $config;
+
 	/**
 	 * @param ThemingDefaults $theming
+	 * @param Util $util
 	 * @param IURLGenerator $url
+	 * @param IConfig $config
 	 */
-	public function __construct(ThemingDefaults $theming, IURLGenerator $url) {
+	public function __construct(ThemingDefaults $theming, Util $util, IURLGenerator $url, IConfig $config) {
 		$this->theming = $theming;
+		$this->util = $util;
 		$this->url = $url;
+		$this->config = $config;
 	}
 
 	/**
@@ -55,14 +65,19 @@ class Capabilities implements ICapability {
 	 * @return array
 	 */
 	public function getCapabilities() {
+		$backgroundLogo = $this->config->getAppValue('theming', 'backgroundMime', false);
+
 		return [
 			'theming' => [
 				'name' => $this->theming->getName(),
 				'url' => $this->theming->getBaseUrl(),
 				'slogan' => $this->theming->getSlogan(),
-				'color' => $this->theming->getMailHeaderColor(),
+				'color' => $this->theming->getColorPrimary(),
+				'color-text' => $this->util->invertTextColor($this->theming->getColorPrimary()) ? '#000000' : '#FFFFFF',
 				'logo' => $this->url->getAbsoluteURL($this->theming->getLogo()),
-				'background' => $this->url->getAbsoluteURL($this->theming->getBackground()),
+				'background' => $backgroundLogo === 'backgroundColor' ?
+					$this->theming->getColorPrimary() :
+					$this->url->getAbsoluteURL($this->theming->getBackground()),
 			],
 		];
 	}

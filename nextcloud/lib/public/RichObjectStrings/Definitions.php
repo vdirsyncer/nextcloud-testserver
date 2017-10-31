@@ -152,6 +152,56 @@ class Definitions {
 				],
 			],
 		],
+		'call' => [
+			'author' => 'Nextcloud',
+			'app' => 'spreed',
+			'since' => '11.0.2',
+			'parameters' => [
+				'id' => [
+					'since' => '11.0.2',
+					'required' => true,
+					'description' => 'The id used to identify the call on the instance',
+					'example' => '42',
+				],
+				'name' => [
+					'since' => '11.0.2',
+					'required' => true,
+					'description' => 'The display name of the call which should be used in the visual representation',
+					'example' => 'Company call',
+				],
+				'call-type' => [
+					'since' => '11.0.2',
+					'required' => true,
+					'description' => 'The type of the call: one2one, group or public',
+					'example' => 'one2one',
+				],
+			],
+		],
+		'circle' => [
+			'author' => 'Maxence Lange',
+			'app' => 'circles',
+			'since' => '12.0.0',
+			'parameters' => [
+				'id' => [
+					'since' => '12.0.0',
+					'required' => true,
+					'description' => 'The id used to identify the circle on the instance',
+					'example' => '42',
+				],
+				'name' => [
+					'since' => '12.0.0',
+					'required' => true,
+					'description' => 'The display name of the circle which should be used in the visual representation',
+					'example' => 'My friends',
+				],
+				'link' => [
+					'since' => '12.0.0',
+					'required' => true,
+					'description' => 'The full URL to the circle',
+					'example' => 'http://localhost/index.php/apps/circles/#42',
+				],
+			],
+		],
 		'email' => [
 			'author' => 'Nextcloud',
 			'app' => 'sharebymail',
@@ -191,7 +241,7 @@ class Definitions {
 				'path' => [
 					'since' => '11.0.0',
 					'required' => true,
-					'description' => 'The full path of the file for the user',
+					'description' => 'The full path of the file for the user, should not start with a slash',
 					'example' => 'path/to/file.txt',
 				],
 				'link' => [
@@ -199,6 +249,49 @@ class Definitions {
 					'required' => false,
 					'description' => 'The full URL to the file',
 					'example' => 'http://localhost/index.php/f/42',
+				],
+			],
+		],
+		'open-graph' => [
+			'author' => 'Maxence Lange',
+			'app' => 'mood',
+			'since' => '12.0.0',
+			'parameters' => [
+				'id' => [
+					'since' => '12.0.0',
+					'required' => true,
+					'description' => 'The id used to identify the open graph data on the instance',
+					'example' => '42',
+				],
+				'name' => [
+					'since' => '12.0.0',
+					'required' => true,
+					'description' => 'The open graph title of the website',
+					'example' => 'This is a website',
+				],
+				'description' => [
+					'since' => '12.0.0',
+					'required' => false,
+					'description' => 'The open graph description from the website',
+					'example' => 'This is the description of the website',
+				],
+				'thumb' => [
+					'since' => '12.0.0',
+					'required' => false,
+					'description' => 'The full URL of the open graph thumbnail',
+					'example' => 'http://localhost/index.php/apps/mood/data/image?url=https%3A%2F%2Fthumb.example.com%2Fimage.png',
+				],
+				'website' => [
+					'since' => '12.0.0',
+					'required' => false,
+					'description' => 'The name of the described website',
+					'example' => 'Nextcloud - App Store',
+				],
+				'link' => [
+					'since' => '12.0.0',
+					'required' => false,
+					'description' => 'The full link to the website',
+					'example' => 'https://apps.nextcloud.com/apps/mood',
 				],
 			],
 		],

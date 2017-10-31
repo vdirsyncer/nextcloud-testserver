@@ -76,14 +76,22 @@ class Capabilities implements ICapability {
 			$res['resharing'] = $this->config->getAppValue('core', 'shareapi_allow_resharing', 'yes') === 'yes';
 
 			$res['user']['send_mail'] = false;
+			$res['user']['expire_date']['enabled'] = true;
 
+			// deprecated in favour of 'group', but we need to keep it for now
+			// in order to stay compatible with older clients
 			$res['group_sharing'] = $this->config->getAppValue('core', 'shareapi_allow_group_sharing', 'yes') === 'yes';
+
+			$res['group'] = [];
+			$res['group']['enabled'] = $this->config->getAppValue('core', 'shareapi_allow_group_sharing', 'yes') === 'yes';
+			$res['group']['expire_date']['enabled'] = true;
 		}
 
 		//Federated sharing
 		$res['federation'] = [
 			'outgoing'  => $this->config->getAppValue('files_sharing', 'outgoing_server2server_share_enabled', 'yes') === 'yes',
-			'incoming' => $this->config->getAppValue('files_sharing', 'incoming_server2server_share_enabled', 'yes') === 'yes'
+			'incoming' => $this->config->getAppValue('files_sharing', 'incoming_server2server_share_enabled', 'yes') === 'yes',
+			'expire_date' => ['enabled' => true]
 		];
 
 		return [

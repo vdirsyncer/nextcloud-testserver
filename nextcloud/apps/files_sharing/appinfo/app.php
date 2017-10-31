@@ -26,8 +26,6 @@
  *
  */
 
-$l = \OC::$server->getL10N('files_sharing');
-
 \OCA\Files_Sharing\Helper::registerHooks();
 
 \OCP\Share::registerBackend('file', 'OCA\Files_Sharing\ShareBackend\File');
@@ -40,51 +38,48 @@ $eventDispatcher = \OC::$server->getEventDispatcher();
 $eventDispatcher->addListener(
 	'OCA\Files::loadAdditionalScripts',
 	function() {
-		\OCP\Util::addScript('files_sharing', 'share');
-		\OCP\Util::addScript('files_sharing', 'sharetabview');
-		\OCP\Util::addScript('files_sharing', 'sharebreadcrumbview');
-		\OCP\Util::addStyle('files_sharing', 'sharetabview');
-		\OCP\Util::addStyle('files_sharing', 'sharebreadcrumb');
+		\OCP\Util::addStyle('files_sharing', 'mergedAdditionalStyles');
+		\OCP\Util::addScript('files_sharing', 'additionalScripts');
 	}
 );
 
-// \OCP\Util::addStyle('files_sharing', 'sharetabview');
-
 $config = \OC::$server->getConfig();
 if ($config->getAppValue('core', 'shareapi_enabled', 'yes') === 'yes') {
-
-	\OCA\Files\App::getNavigationManager()->add(
-		array(
-			"id" => 'sharingin',
-			"appname" => 'files_sharing',
-			"script" => 'list.php',
-			"order" => 10,
-			"name" => $l->t('Shared with you')
-		)
-	);
+	\OCA\Files\App::getNavigationManager()->add(function () {
+		$l = \OC::$server->getL10N('files_sharing');
+		return [
+			'id' => 'sharingin',
+			'appname' => 'files_sharing',
+			'script' => 'list.php',
+			'order' => 10,
+			'name' => $l->t('Shared with you'),
+		];
+	});
 
 	if (\OCP\Util::isSharingDisabledForUser() === false) {
+		\OCA\Files\App::getNavigationManager()->add(function () {
+			$l = \OC::$server->getL10N('files_sharing');
+			return [
+				'id' => 'sharingout',
+				'appname' => 'files_sharing',
+				'script' => 'list.php',
+				'order' => 15,
+				'name' => $l->t('Shared with others'),
+			];
+		});
 
-		\OCA\Files\App::getNavigationManager()->add(
-			array(
-				"id" => 'sharingout',
-				"appname" => 'files_sharing',
-				"script" => 'list.php',
-				"order" => 15,
-				"name" => $l->t('Shared with others')
-			)
-		);
 		// Check if sharing by link is enabled
 		if ($config->getAppValue('core', 'shareapi_allow_links', 'yes') === 'yes') {
-			\OCA\Files\App::getNavigationManager()->add(
-				array(
-					"id" => 'sharinglinks',
-					"appname" => 'files_sharing',
-					"script" => 'list.php',
-					"order" => 20,
-					"name" => $l->t('Shared by link')
-				)
-			);
+			\OCA\Files\App::getNavigationManager()->add(function () {
+				$l = \OC::$server->getL10N('files_sharing');
+				return [
+					'id' => 'sharinglinks',
+					'appname' => 'files_sharing',
+					'script' => 'list.php',
+					'order' => 20,
+					'name' => $l->t('Shared by link'),
+				];
+			});
 		}
 	}
 }

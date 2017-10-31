@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installing Nextcloud from the Command Line &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Installing from Command Line &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Installing and Managing Apps" href="apps_management_installation.html" />
     <link rel="prev" title="Installation Wizard" href="installation_wizard.html" />
@@ -66,29 +66,27 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Deployment Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Installing Nextcloud from the Command Line</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Installing from Command Line</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#binlog-format-statement">BINLOG_FORMAT = STATEMENT</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html">Nginx Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -116,14 +114,14 @@
   </li>
 </ul>
 						
-  <div class="section" id="installing-nextcloud-from-the-command-line">
-<h1>Installing Nextcloud from the Command Line<a class="headerlink" href="#installing-nextcloud-from-the-command-line" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="installing-from-command-line">
+<h1>Installing from Command Line<a class="headerlink" href="#installing-from-command-line" title="Permalink to this headline">¶</a></h1>
 <p>It is now possible to install Nextcloud entirely from the command line. This is
 convenient for scripted operations, headless servers, and sysadmins who prefer
 the command line. There are three stages to installing Nextcloud via the command
 line:</p>
 <ol class="arabic simple">
-<li>Download the Nextcloud code and unpack the tarball in the appropriate directories. (See <a class="reference internal" href="source_installation.html"><em>Manual Installation on Linux</em></a>.)</li>
+<li>Download the Nextcloud code and unpack the tarball in the appropriate directories. (See <a class="reference internal" href="source_installation.html"><em>Installation on Linux</em></a>.)</li>
 </ol>
 <p>2. Change the ownership of your <code class="docutils literal"><span class="pre">nextcloud</span></code> directory to your HTTP user, like
 this example for Debian/Ubuntu. You must run <code class="docutils literal"><span class="pre">occ</span></code> as your HTTP user; see
@@ -152,10 +150,6 @@ a PHP fatal error message.</p>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="../configuration_server/occ_command.html#command-line-installation-label"><span>Command Line Installation</span></a> for more information.</p>
-<p>Finally, apply the correct strong permissions to your Nextcloud files and
-directories (see <a class="reference internal" href="installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>). This is an extremely important
-step. It helps protect your Nextcloud installation, and ensures that it will run
-correctly.</p>
 <div class="section" id="binlog-format-statement">
 <h2>BINLOG_FORMAT = STATEMENT<a class="headerlink" href="#binlog-format-statement" title="Permalink to this headline">¶</a></h2>
 <p>If your Nextcloud installation fails and you see this in your Nextcloud log:</p>
@@ -167,7 +161,7 @@ row-logging when transaction isolation level is READ COMMITTED or READ
 UNCOMMITTED.&#39;
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-binlog-label"><span>MySQL / MariaDB with Binary Logging Enabled</span></a>.</p>
+<p>See <span class="xref std std-ref">db-binlog-label</span>.</p>
 </div>
 </div>
 

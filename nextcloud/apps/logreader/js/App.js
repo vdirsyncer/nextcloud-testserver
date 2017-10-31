@@ -58,6 +58,7 @@ export class App extends Component {
 	}
 
 	fetchNextPage = _.throttle(async () => {
+		console.log(this.state.provider.hasMore);
 		if (this.state.provider.hasMore) {
 			this.setState({loading: true});
 			this.state.provider.limit += 25;
@@ -106,7 +107,9 @@ export class App extends Component {
 			data = event.clipboardData.getData('text/plain');
 		}
 		data = data.trim();
-		this.onLogFile(data);
+		if (data.indexOf('{') !== -1 && data.indexOf('}')) {
+			this.onLogFile(data);
+		}
 	};
 
 	render () {
@@ -128,9 +131,11 @@ export class App extends Component {
 
 		let content;
 
-		if (entries.length > 0) {
+		if (this.state.loading && entries.length < 1) {
+			content = <div className="loading log-loading"/>
+		} else {
 			content = <ReactScrolla
-				id="app-content"
+				className={styles.scrollContainer}
 				percentage={85}
 				onPercentage={this.fetchNextPage}
 				isLoading={this.state.loading}>
@@ -142,22 +147,16 @@ export class App extends Component {
 						setLevel={this.setLevel.bind(this)}
 						entries={entries}
 						relative={this.state.relative}
-						dateFormat={this.state.dateFormat}/>
+						dateFormat={this.state.dateFormat}
+						hidden={this.state.entries.length - entries.length}
+					/>
 				</div>
 			</ReactScrolla>
-		} else if (this.state.loading) {
-			content = <div className="loading log-loading"/>
-		} else {
-			content = <div className="emptycontent">
-				<div className="icon-filetype-text"/>
-				<h2>{t('logreader', 'No server logs')}</h2>
-				<p>{t('logreader', 'Everything is working fine')}</p>
-			</div>
 		}
 
 		return (
 
-			<AppContainer appId="logreader">
+			<div>
 				{!this.props.inlineSettings ?
 					<SideBar><LogUploader
 						onLogFile={this.onLogFile}/>
@@ -174,7 +173,7 @@ export class App extends Component {
 					: <div/>}
 
 				{content}
-			</AppContainer>
+			</div>
 		);
 	}
 }

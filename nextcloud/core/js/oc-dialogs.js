@@ -326,7 +326,7 @@ var OCdialogs = {
 					}
 				};
 				buttonlist[0] = {
-					text: t('core', 'Ok'),
+					text: t('core', 'OK'),
 					click: functionToCall,
 					defaultButton: true
 				};
@@ -561,7 +561,7 @@ var OCdialogs = {
 						.prop('checked', true)
 						.prop('disabled', true);
 				$originalDiv.find('.message')
-					.text(t('core','read-only'))
+					.text(t('core','read-only'));
 			}
 		};
 		//var selection = controller.getSelection(data.originalFiles);
@@ -813,11 +813,13 @@ var OCdialogs = {
 
 			$.each(files, function(idx, entry) {
 				entry.icon = OC.MimeType.getIconUrl(entry.mimetype);
+				var simpleSize, sizeColor;
 				if (typeof(entry.size) !== 'undefined' && entry.size >= 0) {
-					var simpleSize = humanFileSize(parseInt(entry.size, 10), true);
-					var sizeColor = Math.round(160 - Math.pow((entry.size / (1024 * 1024)), 2));
+					simpleSize = humanFileSize(parseInt(entry.size, 10), true);
+					sizeColor = Math.round(160 - Math.pow((entry.size / (1024 * 1024)), 2));
 				} else {
 					simpleSize = t('files', 'Pending');
+					sizeColor = 80;
 				}
 				var $row = self.$listTmpl.octemplate({
 					type: entry.type,

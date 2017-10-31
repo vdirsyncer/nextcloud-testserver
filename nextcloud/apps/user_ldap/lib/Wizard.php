@@ -15,6 +15,7 @@
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Stefan Weil <sw@weilnetz.de>
  * @author Victor Dubiniuk <dubiniuk@owncloud.com>
+ * @author Xuanwo <xuanwo@yunify.com>
  *
  * @license AGPL-3.0
  *
@@ -106,7 +107,7 @@ class Wizard extends LDAPUtility {
 		} else if ($type === 'objects') {
 			$result = $this->access->countObjects($limit);
 		} else {
-			throw new \Exception('internal error: invalid object type', 500);
+			throw new \Exception('Internal error: Invalid object type', 500);
 		}
 
 		return $result;
@@ -243,7 +244,7 @@ class Wizard extends LDAPUtility {
 			}
 		};
 
-		throw new \Exception(self::$l->t('Could not detect user display name attribute. Please specify it yourself in advanced ldap settings.'));
+		throw new \Exception(self::$l->t('Could not detect user display name attribute. Please specify it yourself in advanced LDAP settings.'));
 	}
 
 	/**
@@ -775,12 +776,12 @@ class Wizard extends LDAPUtility {
 
 	/**
 	 * tries to detect the group member association attribute which is
-	 * one of 'uniqueMember', 'memberUid', 'member'
+	 * one of 'uniqueMember', 'memberUid', 'member', 'gidNumber'
 	 * @return string|false, string with the attribute name, false on error
 	 * @throws \Exception
 	 */
 	private function detectGroupMemberAssoc() {
-		$possibleAttrs = array('uniqueMember', 'memberUid', 'member');
+		$possibleAttrs = array('uniqueMember', 'memberUid', 'member', 'gidNumber');
 		$filter = $this->configuration->ldapGroupFilter;
 		if(empty($filter)) {
 			return false;

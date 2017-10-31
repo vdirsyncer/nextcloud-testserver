@@ -37,7 +37,7 @@
 	 */
 	var FederationScopeMenu = OC.Backbone.View.extend({
 		tagName: 'div',
-		className: 'federationScopeMenu popovermenu bubble hidden open menu',
+		className: 'federationScopeMenu popovermenu bubble hidden menu',
 		field: undefined,
 		_scopes: undefined,
 
@@ -111,7 +111,7 @@
 		 */
 		show: function(context) {
 			this._context = context;
-			var currentlyActiveValue = $('#'+context.target.closest('form').id).find('.icon-checkmark > input')[0].value;
+			var currentlyActiveValue = $('#'+context.target.closest('form').id).find('input[type="hidden"]')[0].value;
 
 			for(var i in this._scopes) {
 				this._scopes[i].active = false;

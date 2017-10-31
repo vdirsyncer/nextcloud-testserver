@@ -24,6 +24,7 @@ namespace OC\Template;
 
 use bantu\IniGetWrapper\IniGetWrapper;
 use OCP\App\IAppManager;
+use OCP\Defaults;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -36,7 +37,7 @@ class JSConfigHelper {
 	/** @var IL10N */
 	private $l;
 
-	/** @var \OC_Defaults */
+	/** @var Defaults */
 	private $defaults;
 
 	/** @var IAppManager */
@@ -62,7 +63,7 @@ class JSConfigHelper {
 
 	/**
 	 * @param IL10N $l
-	 * @param \OC_Defaults $defaults
+	 * @param Defaults $defaults
 	 * @param IAppManager $appManager
 	 * @param ISession $session
 	 * @param IUser|null $currentUser
@@ -72,7 +73,7 @@ class JSConfigHelper {
 	 * @param IURLGenerator $urlGenerator
 	 */
 	public function __construct(IL10N $l,
-								\OC_Defaults $defaults,
+								Defaults $defaults,
 								IAppManager $appManager,
 								ISession $session,
 								$currentUser,
@@ -112,6 +113,9 @@ class JSConfigHelper {
 			$apps_paths[$app] = \OC_App::getAppWebPath($app);
 		}
 
+
+		$enableLinkPasswordByDefault = $this->config->getAppValue('core', 'shareapi_enable_link_password_by_default', 'no');
+		$enableLinkPasswordByDefault = ($enableLinkPasswordByDefault === 'yes') ? true : false;
 		$defaultExpireDateEnabled = $this->config->getAppValue('core', 'shareapi_default_expire_date', 'no') === 'yes';
 		$defaultExpireDate = $enforceDefaultExpireDate = null;
 		if ($defaultExpireDateEnabled) {
@@ -204,9 +208,12 @@ class JSConfigHelper {
 				'session_keepalive'	=> $this->config->getSystemValue('session_keepalive', true),
 				'version'			=> implode('.', \OCP\Util::getVersion()),
 				'versionstring'		=> \OC_Util::getVersionString(),
-				'enable_avatars'	=> $this->config->getSystemValue('enable_avatars', true) === true,
+				'enable_avatars'	=> true, // here for legacy reasons - to not crash existing code that relies on this value
 				'lost_password_link'=> $this->config->getSystemValue('lost_password_link', null),
-				'modRewriteWorking'	=> (\OC::$server->getConfig()->getSystemValue('htaccess.IgnoreFrontController', false) === true || getenv('front_controller_active') === 'true'),
+				'modRewriteWorking'	=> ($this->config->getSystemValue('htaccess.IgnoreFrontController', false) === true || getenv('front_controller_active') === 'true'),
+				'sharing.maxAutocompleteResults' => intval($this->config->getSystemValue('sharing.maxAutocompleteResults', 0)),
+				'sharing.minSearchStringLength' => intval($this->config->getSystemValue('sharing.minSearchStringLength', 0)),
+				'blacklist_files_regex' => \OCP\Files\FileInfo::BLACKLIST_FILES_REGEX,
 			]),
 			"oc_appconfig" => json_encode([
 				'core' => [
@@ -214,6 +221,7 @@ class JSConfigHelper {
 					'defaultExpireDate' => $defaultExpireDate,
 					'defaultExpireDateEnforced' => $enforceDefaultExpireDate,
 					'enforcePasswordForPublicLink' => \OCP\Util::isPublicLinkPasswordRequired(),
+					'enableLinkPasswordByDefault' => $enableLinkPasswordByDefault,
 					'sharingDisabledForUser' => \OCP\Util::isSharingDisabledForUser(),
 					'resharingAllowed' => \OCP\Share::isResharingAllowed(),
 					'remoteShareAllowed' => $outgoingServer2serverShareEnabled,

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Encryption Configuration &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Encryption Configuration &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="File Sharing and Management" href="index.html" />
     <link rel="next" title="Transactional File Locking" href="files_locking_transactional.html" />
     <link rel="prev" title="Primary Storage" href="primary_storage.html" />
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">File Sharing and Management</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="file_sharing_configuration.html">File Sharing</a></li>
@@ -95,9 +95,9 @@
 <li class="toctree-l2"><a class="reference internal" href="files_locking_transactional.html">Transactional File Locking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="previews_configuration.html">Previews Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="file_versioning.html">Controlling File Versions and Aging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="files_access_control.html">Files Access Control</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -257,7 +257,7 @@ storage mount, see <a class="reference internal" href="external_storage_configur
 (<a class="reference internal" href="external_storage_configuration_gui.html"><em>Configuring External Storage (GUI)</em></a>)</p>
 </div>
 <div class="section" id="enabling-users-file-recovery-keys">
-<h2>Enabling Users File Recovery Keys<a class="headerlink" href="#enabling-users-file-recovery-keys" title="Permalink to this headline">¶</a></h2>
+<span id="enable-file-recovery-key"></span><h2>Enabling Users File Recovery Keys<a class="headerlink" href="#enabling-users-file-recovery-keys" title="Permalink to this headline">¶</a></h2>
 <p>If you lose your Nextcloud password, then you lose access to your encrypted
 files. If one of your users loses their Nextcloud password their files are
 unrecoverable. You cannot reset their password in the normal way; you&#8217;ll see a
@@ -318,10 +318,10 @@ module is OC_DEFAULT_MODULE):</p>
 <p>Encrypt all data files for all users. For performance reasons, when you enable
 encryption on an Nextcloud server only new and changed files are encrypted. This
 command gives you the option to encrypt all files. You must first put your
-Nextcloud server into single-user mode to prevent any user activity until
+Nextcloud server into maintenance mode to prevent any user activity until
 encryption is completed:</p>
-<div class="highlight-python"><div class="highlight"><pre>occ maintenance:singleuser --on
-Single user mode is currently enabled
+<div class="highlight-python"><div class="highlight"><pre>occ maintenance:mode --on
+Maintenance mode is currently enabled
 </pre></div>
 </div>
 <p>Then run <code class="docutils literal"><span class="pre">occ</span></code>:</p>
@@ -371,13 +371,13 @@ disable it:</p>
 <h2>Disabling Encryption<a class="headerlink" href="#disabling-encryption" title="Permalink to this headline">¶</a></h2>
 <p>You may disable encryption only with <code class="docutils literal"><span class="pre">occ</span></code>. Make sure you have backups of all
 encryption keys, including users&#8217;. Put your Nextcloud server into
-single-user mode, and then disable your encryption module with this command:</p>
-<div class="highlight-python"><div class="highlight"><pre>occ maintenance:singleuser --on
+maintenance mode, and then disable your encryption module with this command:</p>
+<div class="highlight-python"><div class="highlight"><pre>occ maintenance:mode --on
 occ encryption:disable
 </pre></div>
 </div>
-<p>Take it out of single-user mode when you are finished:</p>
-<div class="highlight-python"><div class="highlight"><pre>occ maintenance:singleuser --off
+<p>Take it out of maintenance mode when you are finished:</p>
+<div class="highlight-python"><div class="highlight"><pre>occ maintenance:mode --off
 </pre></div>
 </div>
 </div>

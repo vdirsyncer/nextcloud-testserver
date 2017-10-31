@@ -38,7 +38,8 @@
 	 */
 	var NewFileMenu = OC.Backbone.View.extend({
 		tagName: 'div',
-		className: 'newFileMenu popovermenu bubble hidden open menu',
+		// Menu is opened by default because it's rendered on "add-button" click
+		className: 'newFileMenu popovermenu bubble menu open menu-left',
 
 		events: {
 			'click .menuitem': '_onClickAction'
@@ -64,7 +65,7 @@
 
 			this._menuItems = [{
 				id: 'folder',
-				displayName: t('files', 'Folder'),
+				displayName: t('files', 'New folder'),
 				templateName: t('files', 'New folder'),
 				iconClass: 'icon-folder',
 				fileType: 'folder',
@@ -155,6 +156,7 @@
 				} catch (error) {
 					$input.attr('title', error);
 					$input.tooltip({placement: 'right', trigger: 'manual'});
+					$input.tooltip('fixTitle');
 					$input.tooltip('show');
 					$input.addClass('error');
 				}
@@ -222,7 +224,7 @@
 		render: function() {
 			this.$el.html(this.template({
 				uploadMaxHumanFileSize: 'TODO',
-				uploadLabel: t('files', 'Upload'),
+				uploadLabel: t('files', 'Upload file'),
 				items: this._menuItems
 			}));
 			OC.Util.scaleFixForIE8(this.$('.svg'));
@@ -235,13 +237,6 @@
 		 */
 		showAt: function($target) {
 			this.render();
-			var targetOffset = $target.offset();
-			this.$el.css({
-				left: targetOffset.left,
-				top: targetOffset.top + $target.height()
-			});
-			this.$el.removeClass('hidden');
-
 			OC.showMenu(null, this.$el);
 		}
 	});

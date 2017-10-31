@@ -128,7 +128,6 @@ class SecurityMiddleware extends Middleware {
 		$this->cspNonceManager = $cspNonceManager;
 	}
 
-
 	/**
 	 * This runs all the security checks before a method call. The
 	 * security checks are determined by inspecting the controller method
@@ -247,12 +246,11 @@ class SecurityMiddleware extends Middleware {
 				);
 			} else {
 				if($exception instanceof NotLoggedInException) {
-					$url = $this->urlGenerator->linkToRoute(
-						'core.login.showLoginForm',
-						[
-							'redirect_url' => $this->request->server['REQUEST_URI'],
-						]
-					);
+					$params = [];
+					if (isset($this->request->server['REQUEST_URI'])) {
+						$params['redirect_url'] = $this->request->server['REQUEST_URI'];
+					}
+					$url = $this->urlGenerator->linkToRoute('core.login.showLoginForm', $params);
 					$response = new RedirectResponse($url);
 				} else {
 					$response = new TemplateResponse('core', '403', ['file' => $exception->getMessage()], 'guest');

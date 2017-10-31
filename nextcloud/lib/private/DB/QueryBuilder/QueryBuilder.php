@@ -26,11 +26,17 @@ namespace OC\DB\QueryBuilder;
 
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use OC\DB\OracleConnection;
 use OC\DB\QueryBuilder\ExpressionBuilder\ExpressionBuilder;
 use OC\DB\QueryBuilder\ExpressionBuilder\MySqlExpressionBuilder;
 use OC\DB\QueryBuilder\ExpressionBuilder\OCIExpressionBuilder;
 use OC\DB\QueryBuilder\ExpressionBuilder\PgSqlExpressionBuilder;
+use OC\DB\QueryBuilder\ExpressionBuilder\SqliteExpressionBuilder;
+use OC\DB\QueryBuilder\FunctionBuilder\FunctionBuilder;
+use OC\DB\QueryBuilder\FunctionBuilder\OCIFunctionBuilder;
+use OC\DB\QueryBuilder\FunctionBuilder\PgSqlFunctionBuilder;
+use OC\DB\QueryBuilder\FunctionBuilder\SqliteFunctionBuilder;
 use OC\SystemConfig;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\DB\QueryBuilder\IQueryFunction;
@@ -110,8 +116,38 @@ class QueryBuilder implements IQueryBuilder {
 			return new PgSqlExpressionBuilder($this->connection);
 		} else if ($this->connection->getDatabasePlatform() instanceof MySqlPlatform) {
 			return new MySqlExpressionBuilder($this->connection);
+		} else if ($this->connection->getDatabasePlatform() instanceof SqlitePlatform) {
+			return new SqliteExpressionBuilder($this->connection);
 		} else {
 			return new ExpressionBuilder($this->connection);
+		}
+	}
+
+	/**
+	 * Gets an FunctionBuilder used for object-oriented construction of query functions.
+	 * This producer method is intended for convenient inline usage. Example:
+	 *
+	 * <code>
+	 *     $qb = $conn->getQueryBuilder()
+	 *         ->select('u')
+	 *         ->from('users', 'u')
+	 *         ->where($qb->fun()->md5('u.id'));
+	 * </code>
+	 *
+	 * For more complex function construction, consider storing the function
+	 * builder object in a local variable.
+	 *
+	 * @return \OCP\DB\QueryBuilder\IFunctionBuilder
+	 */
+	public function func() {
+		if ($this->connection instanceof OracleConnection) {
+			return new OCIFunctionBuilder($this->helper);
+		} else if ($this->connection->getDatabasePlatform() instanceof SqlitePlatform) {
+			return new SqliteFunctionBuilder($this->helper);
+		} else if ($this->connection->getDatabasePlatform() instanceof PostgreSqlPlatform) {
+			return new PgSqlFunctionBuilder($this->helper);
+		} else {
+			return new FunctionBuilder($this->helper);
 		}
 	}
 
@@ -524,7 +560,7 @@ class QueryBuilder implements IQueryBuilder {
 	public function from($from, $alias = null) {
 		$this->queryBuilder->from(
 			$this->getTableName($from),
-			$alias
+			$this->quoteAlias($alias)
 		);
 
 		return $this;
@@ -549,9 +585,9 @@ class QueryBuilder implements IQueryBuilder {
 	 */
 	public function join($fromAlias, $join, $alias, $condition = null) {
 		$this->queryBuilder->join(
-			$fromAlias,
+			$this->quoteAlias($fromAlias),
 			$this->getTableName($join),
-			$alias,
+			$this->quoteAlias($alias),
 			$condition
 		);
 
@@ -577,9 +613,9 @@ class QueryBuilder implements IQueryBuilder {
 	 */
 	public function innerJoin($fromAlias, $join, $alias, $condition = null) {
 		$this->queryBuilder->innerJoin(
-			$fromAlias,
+			$this->quoteAlias($fromAlias),
 			$this->getTableName($join),
-			$alias,
+			$this->quoteAlias($alias),
 			$condition
 		);
 
@@ -605,9 +641,9 @@ class QueryBuilder implements IQueryBuilder {
 	 */
 	public function leftJoin($fromAlias, $join, $alias, $condition = null) {
 		$this->queryBuilder->leftJoin(
-			$fromAlias,
+			$this->quoteAlias($fromAlias),
 			$this->getTableName($join),
-			$alias,
+			$this->quoteAlias($alias),
 			$condition
 		);
 
@@ -633,9 +669,9 @@ class QueryBuilder implements IQueryBuilder {
 	 */
 	public function rightJoin($fromAlias, $join, $alias, $condition = null) {
 		$this->queryBuilder->rightJoin(
-			$fromAlias,
+			$this->quoteAlias($fromAlias),
 			$this->getTableName($join),
-			$alias,
+			$this->quoteAlias($alias),
 			$condition
 		);
 
@@ -1156,5 +1192,19 @@ class QueryBuilder implements IQueryBuilder {
 		}
 
 		return $this->helper->quoteColumnName($tableAlias . $column);
+	}
+
+	/**
+	 * Returns the column name quoted and with table alias prefix as needed by the implementation
+	 *
+	 * @param string $alias
+	 * @return string
+	 */
+	public function quoteAlias($alias) {
+		if ($alias === '' || $alias === null) {
+			return $alias;
+		}
+
+		return $this->helper->quoteColumnName($alias);
 	}
 }

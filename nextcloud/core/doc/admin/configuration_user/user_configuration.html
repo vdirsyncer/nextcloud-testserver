@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>User Management &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>User Management &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="User Management" href="index.html" />
     <link rel="next" title="Resetting a Lost Admin Password" href="reset_admin_password.html" />
     <link rel="prev" title="User Management" href="index.html" />
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Management</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="">User Management</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-new-user">Creating a New User</a></li>
@@ -78,6 +78,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#granting-administrator-privileges-to-a-user">Granting Administrator Privileges to a User</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#managing-groups">Managing Groups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setting-storage-quotas">Setting Storage Quotas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#disable-and-enable-users">Disable and Enable users</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deleting-users">Deleting users</a></li>
 </ul>
 </li>
@@ -88,10 +89,12 @@
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ftp_smb_imap.html">User Authentication with IMAP, SMB, and FTP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ldap.html">User Authentication with LDAP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ldap_cleanup.html">LDAP User Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_auth_ldap_api.html">LDAP Configuration API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_provisioning_api.html">User Provisioning API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -132,6 +135,7 @@
 <li>View and set quotas</li>
 <li>Create and edit their email addresses</li>
 <li>Send an automatic email notification to new users</li>
+<li>Disable and Enable users</li>
 <li>Delete them with a single click</li>
 </ul>
 <p>The default view displays basic information about your users.</p>
@@ -191,6 +195,8 @@ lower left sidebar, you may also enter the new user&#8217;s email address, and
 Nextcloud will automatically send them a notification with their new login
 information. You may edit this email using the email template editor on your
 Admin page (see <a class="reference internal" href="../configuration_server/email_configuration.html"><em>Email Configuration</em></a>).</p>
+<p>Set the <strong>Send email to new user</strong>-checkbox allows you to leave the <strong>Password</strong>
+field empty. The user will get an activation-email to set his own password.</p>
 </div>
 <div class="section" id="reset-a-user-s-password">
 <h2>Reset a User&#8217;s Password<a class="headerlink" href="#reset-a-user-s-password" title="Permalink to this headline">¶</a></h2>
@@ -273,13 +279,31 @@ against quotas.</p>
 <p>When a user creates a public share via URL, and allows uploads, any uploaded
 files count against that user&#8217;s quota.</p>
 </div>
+<div class="section" id="disable-and-enable-users">
+<h2>Disable and Enable users<a class="headerlink" href="#disable-and-enable-users" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="../_images/users-actions.png" src="../_images/users-actions.png" />
+</div>
+<p>Sometimes you may want to disable a user without permanently deleting his
+settings and files. The user can be activated any time again, without data-loss.</p>
+<p>Hover your cursor over their name on the <strong>Users</strong> page until the &#8221;...&#8221;-menu icon
+appears at the far right. After clicking on it, you will see the <strong>Disable</strong> option.</p>
+<p>The user will not longer be able to access his Nextcloud until you enable him again.
+Keep in mind that the files, which were shared by this user will not longer be accessible.</p>
+<p>You will find all disabled users in the <strong>disabled</strong>-section on the left pane.
+Enabling users is as easy as disabling them. Just click on the &#8221;...&#8221;-menu, and
+select <strong>Enable</strong>.</p>
+</div>
 <div class="section" id="deleting-users">
 <h2>Deleting users<a class="headerlink" href="#deleting-users" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="../_images/users-actions.png" src="../_images/users-actions.png" />
+</div>
 <p>Deleting a user is easy: hover your cursor over their name on the <strong>Users</strong> page
-until a trashcan icon appears at the far right. Click the trashcan, and they&#8217;re
-gone. You&#8217;ll see an undo button at the top of the page, which remains until you
-refresh the page. When the undo button is gone you cannot recover the deleted
-user.</p>
+until the &#8221;...&#8221;-menu icon appears at the far right. After clicking on it, you will
+see the <strong>Delete</strong> option. Clicking on it, delets a user with all his data immediately.</p>
+<p>You&#8217;ll see an undo button at the top of the page, which remains for some seconds.
+When the undo button is gone you cannot recover the deleted user.</p>
 <p>All of the files owned by the user are deleted as well, including all files they
 have shared. If you need to preserve the user&#8217;s files and shares, you must first
 download them from your Nextcloud Files page, which compresses them into a zip

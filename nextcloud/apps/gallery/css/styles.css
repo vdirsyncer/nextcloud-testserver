@@ -70,7 +70,6 @@ div.crumb.last a {
 }
 
 #content-wrapper {
-	background-color: #fff;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
 	-webkit-transition: background-color 1s linear;
@@ -351,8 +350,4 @@ http://www.bypeople.com/author/comatosed/*/
 
 .mask.transparent {
 	opacity: 0;
-}
-
-.icon-loading-dark.small {
-	background-size: 16px;
 }

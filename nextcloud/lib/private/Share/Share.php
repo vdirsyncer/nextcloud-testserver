@@ -43,13 +43,13 @@
 namespace OC\Share;
 
 use OC\Files\Filesystem;
-use OCA\FederatedFileSharing\DiscoveryManager;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\ILogger;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\IDBConnection;
 use OCP\IConfig;
+use OCP\Util;
 
 /**
  * This class provides the ability for apps to share their content between users.
@@ -92,14 +92,7 @@ class Share extends Constants {
 					'supportedFileExtensions' => $supportedFileExtensions
 				);
 				if(count(self::$backendTypes) === 1) {
-					\OC_Util::addScript('core', 'shareconfigmodel');
-					\OC_Util::addScript('core', 'shareitemmodel');
-					\OC_Util::addScript('core', 'sharedialogresharerinfoview');
-					\OC_Util::addScript('core', 'sharedialoglinkshareview');
-					\OC_Util::addScript('core', 'sharedialogexpirationview');
-					\OC_Util::addScript('core', 'sharedialogshareelistview');
-					\OC_Util::addScript('core', 'sharedialogview');
-					\OC_Util::addScript('core', 'share');
+					Util::addScript('core', 'merged-share-backend');
 					\OC_Util::addStyle('core', 'share');
 				}
 				return true;
@@ -237,8 +230,19 @@ class Share extends Constants {
 			if (\OCP\DB::isError($result)) {
 				\OCP\Util::writeLog('OCP\Share', \OC_DB::getErrorMessage(), \OCP\Util::ERROR);
 			} else {
+				$groupManager = \OC::$server->getGroupManager();
 				while ($row = $result->fetchRow()) {
-					$usersInGroup = \OC_Group::usersInGroup($row['share_with']);
+
+					$usersInGroup = [];
+					$group = $groupManager->get($row['share_with']);
+					if ($group) {
+						$users = $group->searchUsers('', -1, 0);
+						$userIds = array();
+						foreach ($users as $user) {
+							$userIds[] = $user->getUID();
+						}
+						$usersInGroup = $userIds;
+					}
 					$shares = array_merge($shares, $usersInGroup);
 					if ($returnUserPaths) {
 						foreach ($usersInGroup as $user) {
@@ -258,10 +262,10 @@ class Share extends Constants {
 				$query = \OC_DB::prepare('
 					SELECT `share_with`
 					FROM `*PREFIX*share`
-					WHERE `item_source` = ? AND `share_type` = ? AND `item_type` IN (\'file\', \'folder\')', 1
+					WHERE `item_source` = ? AND `share_type` IN (?, ?) AND `item_type` IN (\'file\', \'folder\')', 1
 				);
 
-				$result = $query->execute(array($source, self::SHARE_TYPE_LINK));
+				$result = $query->execute(array($source, self::SHARE_TYPE_LINK, self::SHARE_TYPE_EMAIL));
 
 				if (\OCP\DB::isError($result)) {
 					\OCP\Util::writeLog('OCP\Share', \OC_DB::getErrorMessage(), \OCP\Util::ERROR);
@@ -334,6 +338,7 @@ class Share extends Constants {
 							}
 						}
 					}
+					$result->closeCursor();
 				}
 			}
 
@@ -468,7 +473,11 @@ class Share extends Constants {
 
 		//if didn't found a result than let's look for a group share.
 		if(empty($shares) && $user !== null) {
-			$groups = \OC_Group::getUserGroups($user);
+			$userObject = \OC::$server->getUserManager()->get($user);
+			$groups = [];
+			if ($userObject) {
+				$groups = \OC::$server->getGroupManager()->getUserGroupIds($userObject);
+			}
 
 			if (!empty($groups)) {
 				$where = $fileDependentWhere . ' WHERE `' . $column . '` = ? AND `item_type` = ? AND `share_with` in (?)';
@@ -628,7 +637,18 @@ class Share extends Constants {
 				if ((int)$item['share_type'] === self::SHARE_TYPE_USER) {
 					$users[] = $item['share_with'];
 				} else if ((int)$item['share_type'] === self::SHARE_TYPE_GROUP) {
-					$users = array_merge($users, \OC_Group::usersInGroup($item['share_with']));
+
+					$group = \OC::$server->getGroupManager()->get($item['share_with']);
+					$userIds = [];
+					if ($group) {
+						$users = $group->searchUsers('', -1, 0);
+						foreach ($users as $user) {
+							$userIds[] = $user->getUID();
+						}
+						return $userIds;
+					}
+
+					$users = array_merge($users, $userIds);
 				}
 			}
 		}
@@ -740,7 +760,19 @@ class Share extends Constants {
 				throw new \Exception($message_t);
 			}
 			if ($shareWithinGroupOnly) {
-				$inGroup = array_intersect(\OC_Group::getUserGroups($uidOwner), \OC_Group::getUserGroups($shareWith));
+				$userManager = \OC::$server->getUserManager();
+				$groupManager = \OC::$server->getGroupManager();
+				$userOwner = $userManager->get($uidOwner);
+				$userShareWith = $userManager->get($shareWith);
+				$groupsOwner = [];
+				$groupsShareWith = [];
+				if ($userOwner) {
+					$groupsOwner = $groupManager->getUserGroupIds($userOwner);
+				}
+				if ($userShareWith) {
+					$groupsShareWith = $groupManager->getUserGroupIds($userShareWith);
+				}
+				$inGroup = array_intersect($groupsOwner, $groupsShareWith);
 				if (empty($inGroup)) {
 					$message = 'Sharing %s failed, because the user '
 						.'%s is not a member of any groups that %s is a member of';
@@ -775,18 +807,22 @@ class Share extends Constants {
 				}
 			}
 		} else if ($shareType === self::SHARE_TYPE_GROUP) {
-			if (!\OC_Group::groupExists($shareWith)) {
+			if (!\OC::$server->getGroupManager()->groupExists($shareWith)) {
 				$message = 'Sharing %s failed, because the group %s does not exist';
 				$message_t = $l->t('Sharing %s failed, because the group %s does not exist', array($itemSourceName, $shareWith));
 				\OCP\Util::writeLog('OCP\Share', sprintf($message, $itemSourceName, $shareWith), \OCP\Util::DEBUG);
 				throw new \Exception($message_t);
 			}
-			if ($shareWithinGroupOnly && !\OC_Group::inGroup($uidOwner, $shareWith)) {
-				$message = 'Sharing %s failed, because '
-					.'%s is not a member of the group %s';
-				$message_t = $l->t('Sharing %s failed, because %s is not a member of the group %s', array($itemSourceName, $uidOwner, $shareWith));
-				\OCP\Util::writeLog('OCP\Share', sprintf($message, $itemSourceName, $uidOwner, $shareWith), \OCP\Util::DEBUG);
-				throw new \Exception($message_t);
+			if ($shareWithinGroupOnly) {
+				$group = \OC::$server->getGroupManager()->get($shareWith);
+				$user = \OC::$server->getUserManager()->get($uidOwner);
+				if (!$group || !$user || !$group->inGroup($user)) {
+					$message = 'Sharing %s failed, because '
+						. '%s is not a member of the group %s';
+					$message_t = $l->t('Sharing %s failed, because %s is not a member of the group %s', array($itemSourceName, $uidOwner, $shareWith));
+					\OCP\Util::writeLog('OCP\Share', sprintf($message, $itemSourceName, $uidOwner, $shareWith), \OCP\Util::DEBUG);
+					throw new \Exception($message_t);
+				}
 			}
 			// Check if the item source is already shared with the group, either from the same owner or a different user
 			// The check for each user in the group is done inside the put() function
@@ -804,7 +840,18 @@ class Share extends Constants {
 			$group = $shareWith;
 			$shareWith = array();
 			$shareWith['group'] = $group;
-			$shareWith['users'] = array_diff(\OC_Group::usersInGroup($group), array($uidOwner));
+
+
+			$groupObject = \OC::$server->getGroupManager()->get($group);
+			$userIds = [];
+			if ($groupObject) {
+				$users = $groupObject->searchUsers('', -1, 0);
+				foreach ($users as $user) {
+					$userIds[] = $user->getUID();
+				}
+			}
+
+			$shareWith['users'] = array_diff($userIds, array($uidOwner));
 		} else if ($shareType === self::SHARE_TYPE_LINK) {
 			$updateExistingShare = false;
 			if (\OC::$server->getAppConfig()->getValue('core', 'shareapi_allow_links', 'yes') == 'yes') {
@@ -1057,7 +1104,9 @@ class Share extends Constants {
 				$itemUnshared = true;
 				break;
 			} elseif ((int)$share['share_type'] === \OCP\Share::SHARE_TYPE_GROUP) {
-				if (\OC_Group::inGroup($uid, $share['share_with'])) {
+				$group = \OC::$server->getGroupManager()->get($share['share_with']);
+				$user = \OC::$server->getUserManager()->get($uid);
+				if ($group && $user && $group->inGroup($user)) {
 					$groupShare = $share;
 				}
 			} elseif ((int)$share['share_type'] === self::$shareTypeGroupUserUnique &&
@@ -1413,8 +1462,9 @@ class Share extends Constants {
 			->from('share')
 			->where($qb->expr()->eq('id', $qb->createParameter('shareId')))
 			->setParameter(':shareId', $shareId);
-		$result = $qb->execute();
-		$result = $result->fetch();
+		$dbResult = $qb->execute();
+		$result = $dbResult->fetch();
+		$dbResult->closeCursor();
 
 		if (empty($result)) {
 			throw new \Exception('Share not found');
@@ -1746,7 +1796,12 @@ class Share extends Constants {
 				$queryArgs[] = self::SHARE_TYPE_USER;
 				$queryArgs[] = self::$shareTypeGroupUserUnique;
 				$queryArgs[] = $shareWith;
-				$groups = \OC_Group::getUserGroups($shareWith);
+
+				$user = \OC::$server->getUserManager()->get($shareWith);
+				$groups = [];
+				if ($user) {
+					$groups = \OC::$server->getGroupManager()->getUserGroupIds($user);
+				}
 				if (!empty($groups)) {
 					$placeholders = join(',', array_fill(0, count($groups), '?'));
 					$where .= ' OR (`share_type` = ? AND `share_with` IN ('.$placeholders.')) ';
@@ -2171,7 +2226,17 @@ class Share extends Constants {
 			if (isset($shareWith['users'])) {
 				$users = $shareWith['users'];
 			} else {
-				$users = \OC_Group::usersInGroup($shareWith['group']);
+				$group = \OC::$server->getGroupManager()->get($shareWith['group']);
+				if ($group) {
+					$users = $group->searchUsers('', -1, 0);
+					$userIds = [];
+					foreach ($users as $user) {
+						$userIds[] = $user->getUID();
+					}
+					$users = $userIds;
+				} else {
+					$users = [];
+				}
 			}
 			// remove current user from list
 			if (in_array(\OCP\User::getUser(), $users)) {
@@ -2678,12 +2743,10 @@ class Share extends Constants {
 			'result' => '',
 		];
 		$try = 0;
-		$discoveryManager = new DiscoveryManager(
-			\OC::$server->getMemCacheFactory(),
-			\OC::$server->getHTTPClientService()
-		);
+		$discoveryService = \OC::$server->query(\OCP\OCS\IDiscoveryService::class);
 		while ($result['success'] === false && $try < 2) {
-			$endpoint = $discoveryManager->getShareEndpoint($protocol . $remoteDomain);
+			$federationEndpoints = $discoveryService->discover($protocol . $remoteDomain, 'FEDERATED_SHARING');
+			$endpoint = isset($federationEndpoints['share']) ? $federationEndpoints['share'] : '/ocs/v2.php/cloud/shares';
 			$result = \OC::$server->getHTTPHelper()->post($protocol . $remoteDomain . $endpoint . $urlSuffix . '?format=' . self::RESPONSE_FORMAT, $fields);
 			$try++;
 			$protocol = 'http://';
@@ -2811,7 +2874,7 @@ class Share extends Constants {
 
 	/**
 	 * @param IConfig $config
-	 * @return bool 
+	 * @return bool
 	 */
 	public static function enforcePassword(IConfig $config) {
 		$enforcePassword = $config->getAppValue('core', 'shareapi_enforce_links_password', 'no');

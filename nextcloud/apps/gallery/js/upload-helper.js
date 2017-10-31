@@ -1,4 +1,15 @@
-/* global Gallery, Thumbnails */
+/**
+ * Nextcloud - Gallery
+ *
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Olivier Paroz <galleryapps@oparoz.com>
+ *
+ * @copyright Olivier Paroz 2017
+ */
+/* global _, Gallery, Thumbnails */
 /**
  * OCA.FileList methods needed for file uploading
  *
@@ -7,9 +18,9 @@
  *
  * Empty methods are for the "new" button, if we want to implement that one day
  *
- * @type {{inList: FileList.inList, lastAction: FileList.lastAction, getUniqueName:
- *     FileList.getUniqueName, getCurrentDirectory: FileList.getCurrentDirectory, add:
- *     FileList.add, checkName: FileList.checkName}}
+ * @type {{findFile: FileList.findFile, createFile: FileList.createFile,
+ *     getCurrentDirectory: FileList.getCurrentDirectory, getUploadUrl:
+ *     FileList.getUploadUrl}}
  */
 var FileList = {
 	/**
@@ -39,34 +50,6 @@ var FileList = {
 		} else {
 			return null;
 		}
-	},
-
-	/**
-	 * Refreshes the photowall
-	 *
-	 * Called at the end of the uploading process when 1 or multiple files are sent
-	 * Never called with folders on Chrome, unless files are uploaded at the same time as folders
-	 *
-	 * @param fileList
-	 */
-	highlightFiles: function (fileList) {
-		"use strict";
-		//Ask for a refresh of the photowall
-		Gallery.getFiles(Gallery.currentAlbum).done(function () {
-			var fileId, path;
-			// Removes the cached thumbnails of files which have been re-uploaded
-			_(fileList).each(function (fileName) {
-				path = Gallery.currentAlbum + '/' + fileName;
-				if (Gallery.imageMap[path]) {
-					fileId = Gallery.imageMap[path].fileId;
-					if (Thumbnails.map[fileId]) {
-						delete Thumbnails.map[fileId];
-					}
-				}
-			});
-
-			Gallery.view.init(Gallery.currentAlbum);
-		});
 	},
 
 	/**
@@ -144,6 +127,32 @@ var FileList = {
 
 		// In Files, dirs start with a /
 		return '/' + Gallery.currentAlbum;
+	},
+
+	/**
+	 * Retrieves the WebDAV upload URL
+	 *
+	 * @param {string} fileName
+	 * @param {string} dir
+	 *
+	 * @returns {string}
+	 */
+	getUploadUrl: function (fileName, dir) {
+		if (_.isUndefined(dir)) {
+			dir = this.getCurrentDirectory();
+		}
+
+		var pathSections = dir.split('/');
+		if (!_.isUndefined(fileName)) {
+			pathSections.push(fileName);
+		}
+		var encodedPath = '';
+		_.each(pathSections, function (section) {
+			if (section !== '') {
+				encodedPath += '/' + encodeURIComponent(section);
+			}
+		});
+		return OC.linkToRemoteBase('webdav') + encodedPath;
 	}
 };
 

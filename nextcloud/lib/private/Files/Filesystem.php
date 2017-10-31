@@ -64,7 +64,6 @@ use OC\Files\Mount\MountPoint;
 use OC\Files\Storage\StorageFactory;
 use OC\Lockdown\Filesystem\NullStorage;
 use OCP\Files\Config\IMountProvider;
-use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
 use OCP\IUserManager;
 
@@ -443,8 +442,7 @@ class Filesystem {
 
 			// Chance to mount for other storages
 			if ($userObject) {
-				$mounts = $mountConfigManager->getMountsForUser($userObject);
-				array_walk($mounts, array(self::$mounts, 'addMount'));
+				$mounts = $mountConfigManager->addMountForUser($userObject, self::getMountManager());
 				$mounts[] = $homeMount;
 				$mountConfigManager->registerMounts($userObject, $mounts);
 			}

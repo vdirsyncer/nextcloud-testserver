@@ -38,24 +38,17 @@ translation('settings');
 	<?php print_unescaped($this->inc('users/part.grouplist')); ?>
 	<div id="app-settings">
 		<div id="app-settings-header">
-			<button class="settings-button" tabindex="0" data-apps-slide-toggle="#app-settings-content"></button>
+			<button class="settings-button" tabindex="0" data-apps-slide-toggle="#app-settings-content"><?php p($l->t('Settings'));?></button>
 		</div>
 		<div id="app-settings-content">
 			<?php print_unescaped($this->inc('users/part.setquota')); ?>
 
 			<div id="userlistoptions">
 				<p>
-					<input type="checkbox" name="StorageLocation" value="StorageLocation" id="CheckboxStorageLocation" 
+					<input type="checkbox" name="StorageLocation" value="StorageLocation" id="CheckboxStorageLocation"
 						class="checkbox" <?php if ($_['show_storage_location'] === 'true') print_unescaped('checked="checked"'); ?> />
 					<label for="CheckboxStorageLocation">
 						<?php p($l->t('Show storage location')) ?>
-					</label>
-				</p>
-				<p>
-					<input type="checkbox" name="LastLogin" value="LastLogin" id="CheckboxLastLogin"
-						class="checkbox" <?php if ($_['show_last_login'] === 'true') print_unescaped('checked="checked"'); ?> />
-					<label for="CheckboxLastLogin">
-						<?php p($l->t('Show last log in')) ?>
 					</label>
 				</p>
 				<p>
@@ -66,10 +59,10 @@ translation('settings');
 					</label>
 				</p>
 				<p>
-					<input type="checkbox" name="MailOnUserCreate" value="MailOnUserCreate" id="CheckboxMailOnUserCreate"
-						class="checkbox" <?php if ($_['send_email'] === 'true') print_unescaped('checked="checked"'); ?> />
-					<label for="CheckboxMailOnUserCreate">
-						<?php p($l->t('Send email to new user')) ?>
+					<input type="checkbox" name="LastLogin" value="LastLogin" id="CheckboxLastLogin"
+						class="checkbox" <?php if ($_['show_last_login'] === 'true') print_unescaped('checked="checked"'); ?> />
+					<label for="CheckboxLastLogin">
+						<?php p($l->t('Show last login')) ?>
 					</label>
 				</p>
 				<p>
@@ -78,6 +71,16 @@ translation('settings');
 					<label for="CheckboxEmailAddress">
 						<?php p($l->t('Show email address')) ?>
 					</label>
+				</p>
+				<p>
+					<input type="checkbox" name="MailOnUserCreate" value="MailOnUserCreate" id="CheckboxMailOnUserCreate"
+						class="checkbox" <?php if ($_['send_email'] === 'true') print_unescaped('checked="checked"'); ?> />
+					<label for="CheckboxMailOnUserCreate">
+						<?php p($l->t('Send email to new user')) ?>
+					</label>
+				</p>
+				<p class="info-text">
+					<?php p($l->t('When the password of a new user is left empty, an activation email with a link to set the password is sent.')) ?>
 				</p>
 			</div>
 		</div>

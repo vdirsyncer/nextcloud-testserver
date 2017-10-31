@@ -138,4 +138,21 @@ class PermissionsMask extends Wrapper {
 		$sourceCache = parent::getCache($path, $storage);
 		return new CachePermissionsMask($sourceCache, $this->mask);
 	}
+
+	public function getMetaData($path) {
+		$data = parent::getMetaData($path);
+
+		if ($data && isset($data['permissions'])) {
+			$data['scan_permissions'] = isset($data['scan_permissions']) ? $data['scan_permissions'] : $data['permissions'];
+			$data['permissions'] &= $this->mask;
+		}
+		return $data;
+	}
+
+	public function getScanner($path = '', $storage = null) {
+		if (!$storage) {
+			$storage = $this->storage;
+		}
+		return parent::getScanner($path, $storage);
+	}
 }

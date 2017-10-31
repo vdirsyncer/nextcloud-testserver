@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Two Factor Authentication &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Two Factor Authentication &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="User Management" href="index.html" />
     <link rel="next" title="User Authentication with IMAP, SMB, and FTP" href="user_auth_ftp_smb_imap.html" />
     <link rel="prev" title="User Password Policy App" href="user_password_policy.html" />
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Management</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="user_configuration.html">User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reset_admin_password.html">Resetting a Lost Admin Password</a></li>
@@ -82,10 +82,12 @@
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ftp_smb_imap.html">User Authentication with IMAP, SMB, and FTP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ldap.html">User Authentication with LDAP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_auth_ldap_cleanup.html">LDAP User Cleanup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_auth_ldap_api.html">LDAP Configuration API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_provisioning_api.html">User Provisioning API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -120,7 +122,7 @@
 Several 2FA apps are already available including
 <a class="reference external" href="https://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm">TOTP</a>,
 SMS 2-factor and <a class="reference external" href="https://en.wikipedia.org/wiki/Universal_2nd_Factor">U2F</a>.
-Developers can <a class="reference external" href="https://docs.nextcloud.com/server/11/developer_manual/app/two-factor-provider.html">built new two-factor provider apps</a>.
+Developers can <a class="reference external" href="https://docs.nextcloud.com/server/12/developer_manual/app/two-factor-provider.html">built new two-factor provider apps</a>.
 .. TODO ON RELEASE: Update version number above on release</p>
 <div class="section" id="enabling-two-factor-authentication">
 <h2>Enabling Two Factor Authentication<a class="headerlink" href="#enabling-two-factor-authentication" title="Permalink to this headline">¶</a></h2>
@@ -131,7 +133,7 @@ you want, 2FA will be installed and enabled on your Nextcloud server.</p>
 <div class="figure">
 <img alt="../_images/2fa-app-install.png" src="../_images/2fa-app-install.png" />
 </div>
-<p>Once 2FA has been enabled, users have to <a class="reference external" href="https://docs.nextcloud.com/server/11/user_manual/user_2fa.html">activate it in their personal settings.</a>
+<p>Once 2FA has been enabled, users have to <a class="reference external" href="https://docs.nextcloud.com/server/12/user_manual/user_2fa.html">activate it in their personal settings.</a>
 .. TODO ON RELEASE: Update version number above on release</p>
 </div>
 </div>

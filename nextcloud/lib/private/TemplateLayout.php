@@ -35,15 +35,10 @@
  */
 namespace OC;
 
-use Assetic\Asset\AssetCollection;
-use Assetic\Asset\FileAsset;
-use Assetic\AssetWriter;
-use Assetic\Filter\CssImportFilter;
-use Assetic\Filter\CssMinFilter;
-use Assetic\Filter\CssRewriteFilter;
-use Assetic\Filter\JSqueezeFilter;
-use Assetic\Filter\SeparatorFilter;
+use OC\Template\JSCombiner;
 use OC\Template\JSConfigHelper;
+use OC\Template\SCSSCacher;
+use OCP\Defaults;
 
 class TemplateLayout extends \OC_Template {
 
@@ -62,6 +57,7 @@ class TemplateLayout extends \OC_Template {
 
 		// yes - should be injected ....
 		$this->config = \OC::$server->getConfig();
+
 
 		// Decide which page we show
 		if($renderAs == 'user') {
@@ -99,15 +95,8 @@ class TemplateLayout extends \OC_Template {
 				}
 			}
 			$userDisplayName = \OC_User::getDisplayName();
-			$appsMgmtActive = strpos(\OC::$server->getRequest()->getRequestUri(), \OC::$server->getURLGenerator()->linkToRoute('settings.AppSettings.viewApps')) === 0;
-			if ($appsMgmtActive) {
-				$l = \OC::$server->getL10N('lib');
-				$this->assign('application', $l->t('Apps'));
-			}
 			$this->assign('user_displayname', $userDisplayName);
 			$this->assign('user_uid', \OC_User::getUser());
-			$this->assign('appsmanagement_active', $appsMgmtActive);
-			$this->assign('enableAvatars', $this->config->getSystemValue('enable_avatars', true) === true);
 
 			if (\OC_User::getUser() === false) {
 				$this->assign('userAvatarSet', false);
@@ -146,7 +135,7 @@ class TemplateLayout extends \OC_Template {
 			if (\OC::$server->getContentSecurityPolicyNonceManager()->browserSupportsCspV3()) {
 				$jsConfigHelper = new JSConfigHelper(
 					\OC::$server->getL10N('core'),
-					\OC::$server->getThemingDefaults(),
+					\OC::$server->query(Defaults::class),
 					\OC::$server->getAppManager(),
 					\OC::$server->getSession(),
 					\OC::$server->getUserSession()->getUser(),
@@ -156,7 +145,6 @@ class TemplateLayout extends \OC_Template {
 					\OC::$server->getURLGenerator()
 				);
 				$this->assign('inline_ocjs', $jsConfigHelper->getConfig());
-				$this->assign('foo', 'bar');
 			} else {
 				$this->append('jsfiles', \OC::$server->getURLGenerator()->linkToRoute('core.OCJS.getConfig', ['v' => self::$versionHash]));
 			}
@@ -164,11 +152,29 @@ class TemplateLayout extends \OC_Template {
 		foreach($jsFiles as $info) {
 			$web = $info[1];
 			$file = $info[2];
-			$this->append( 'jsfiles', $web.'/'.$file . '?v=' . self::$versionHash);
+			$this->append( 'jsfiles', $web.'/'.$file . $this->getVersionHashSuffix() );
 		}
 
-		// Add the css files
-		$cssFiles = self::findStylesheetFiles(\OC_Util::$styles);
+		try {
+			$pathInfo = \OC::$server->getRequest()->getPathInfo();
+		} catch (\Exception $e) {
+			$pathInfo = '';
+		}
+
+		// Do not initialise scss appdata until we have a fully installed instance
+		// Do not load scss for update, errors, installation or login page
+		if(\OC::$server->getSystemConfig()->getValue('installed', false)
+			&& !\OCP\Util::needUpgrade()
+			&& $pathInfo !== ''
+			&& !preg_match('/^\/login/', $pathInfo)) {
+			$cssFiles = self::findStylesheetFiles(\OC_Util::$styles);
+		} else {
+			// If we ignore the scss compiler,
+			// we need to load the guest css fallback
+			\OC_Util::addStyle('guest');
+			$cssFiles = self::findStylesheetFiles(\OC_Util::$styles, false);
+		}
+
 		$this->assign('cssfiles', array());
 		$this->assign('printcssfiles', []);
 		$this->assign('versionHash', self::$versionHash);
@@ -177,26 +183,45 @@ class TemplateLayout extends \OC_Template {
 			$file = $info[2];
 
 			if (substr($file, -strlen('print.css')) === 'print.css') {
-				$this->append( 'printcssfiles', $web.'/'.$file . '?v=' . self::$versionHash);
+				$this->append( 'printcssfiles', $web.'/'.$file . $this->getVersionHashSuffix() );
 			} else {
-				$this->append( 'cssfiles', $web.'/'.$file . '?v=' . self::$versionHash);
+				$this->append( 'cssfiles', $web.'/'.$file . $this->getVersionHashSuffix()  );
 			}
 		}
+	}
+
+	protected function getVersionHashSuffix() {
+		if(\OC::$server->getConfig()->getSystemValue('debug', false)) {
+			// allows chrome workspace mapping in debug mode
+			return "";
+		}
+		if ($this->config->getSystemValue('installed', false) && \OC::$server->getAppManager()->isInstalled('theming')) {
+			return '?v=' . self::$versionHash . '-' . $this->config->getAppValue('theming', 'cachebuster', '0');
+		}
+		return '?v=' . self::$versionHash;
 	}
 
 	/**
 	 * @param array $styles
 	 * @return array
 	 */
-	static public function findStylesheetFiles($styles) {
+	static public function findStylesheetFiles($styles, $compileScss = true) {
 		// Read the selected theme from the config file
 		$theme = \OC_Util::getTheme();
+
+		if($compileScss) {
+			$SCSSCacher = \OC::$server->query(SCSSCacher::class);
+		} else {
+			$SCSSCacher = null;
+		}
 
 		$locator = new \OC\Template\CSSResourceLocator(
 			\OC::$server->getLogger(),
 			$theme,
 			array( \OC::$SERVERROOT => \OC::$WEBROOT ),
-			array( \OC::$SERVERROOT => \OC::$WEBROOT ));
+			array( \OC::$SERVERROOT => \OC::$WEBROOT ),
+			$SCSSCacher
+		);
 		$locator->find($styles);
 		return $locator->getResources();
 	}
@@ -213,7 +238,14 @@ class TemplateLayout extends \OC_Template {
 			\OC::$server->getLogger(),
 			$theme,
 			array( \OC::$SERVERROOT => \OC::$WEBROOT ),
-			array( \OC::$SERVERROOT => \OC::$WEBROOT ));
+			array( \OC::$SERVERROOT => \OC::$WEBROOT ),
+			new JSCombiner(
+				\OC::$server->getAppDataDir('js'),
+				\OC::$server->getURLGenerator(),
+				\OC::$server->getMemCacheFactory()->create('JS'),
+				\OC::$server->getSystemConfig()
+			)
+			);
 		$locator->find($scripts);
 		return $locator->getResources();
 	}

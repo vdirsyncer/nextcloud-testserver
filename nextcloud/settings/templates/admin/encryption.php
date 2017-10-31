@@ -31,7 +31,7 @@
 	<a target="_blank" rel="noreferrer" class="icon-info"
 	   title="<?php p($l->t('Open documentation'));?>"
 	   href="<?php p(link_to_docs('admin-encryption')); ?>"></a>
-
+	<p class="settings-hint"><?php p($l->t('Server-side encryption makes it possible to encrypt files which are uploaded to this server. This comes with limitations like a performance penalty, so enable this only if needed.')); ?></p>
 	<p id="enable">
 		<input type="checkbox"
 			   id="enableEncryption" class="checkbox"
@@ -63,7 +63,7 @@
 				<h3><?php p($l->t('Select default encryption module:')) ?></h3>
 				<fieldset id='encryptionModules'>
 					<?php foreach ($_['encryptionModules'] as $id => $module): ?>
-						<input type="radio" id="<?php p($id) ?>"
+						<input type="radio" id="<?php p($id) ?>" class="radio"
 							   name="default_encryption_module"
 							   value="<?php p($id) ?>"
 							<?php if ($module['default']) {

@@ -46,9 +46,9 @@ class OC_Defaults {
 	private $defaultDocVersion;
 	private $defaultSlogan;
 	private $defaultLogoClaim;
-	private $defaultMailHeaderColor;
+	private $defaultColorPrimary;
 
-	function __construct() {
+	public function __construct() {
 		$this->l = \OC::$server->getL10N('lib');
 
 		$this->defaultEntity = 'Nextcloud'; /* e.g. company name, used for footers and copyright notices */
@@ -60,10 +60,10 @@ class OC_Defaults {
 		$this->defaultiTunesAppId = '1125420102';
 		$this->defaultAndroidClientUrl = 'https://play.google.com/store/apps/details?id=com.nextcloud.client';
 		$this->defaultDocBaseUrl = 'https://docs.nextcloud.com';
-		$this->defaultDocVersion = '11'; // used to generate doc links
+		$this->defaultDocVersion = '12'; // used to generate doc links
 		$this->defaultSlogan = $this->l->t('a safe home for all your data');
 		$this->defaultLogoClaim = '';
-		$this->defaultMailHeaderColor = '#0082c9'; /* header color of mail notifications */
+		$this->defaultColorPrimary = '#0082c9';
 
 		$themePath = OC::$SERVERROOT . '/themes/' . OC_Util::getTheme() . '/defaults.php';
 		if (file_exists($themePath)) {
@@ -263,6 +263,7 @@ class OC_Defaults {
 
 	/**
 	 * @param string $key
+	 * @return string URL to doc with key
 	 */
 	public function buildDocLinkToKey($key) {
 		if ($this->themeExist('buildDocLinkToKey')) {
@@ -272,18 +273,50 @@ class OC_Defaults {
 	}
 
 	/**
-	 * Returns mail header color
+	 * Returns primary color
 	 * @return string
 	 */
-	public function getMailHeaderColor() {
+	public function getColorPrimary() {
+
+		if ($this->themeExist('getColorPrimary')) {
+			return $this->theme->getColorPrimary();
+		}
 		if ($this->themeExist('getMailHeaderColor')) {
 			return $this->theme->getMailHeaderColor();
-		} else {
-			return $this->defaultMailHeaderColor;
 		}
+		return $this->defaultColorPrimary;
+	}
+
+	/**
+	 * @return array scss variables to overwrite
+	 */
+	public function getScssVariables() {
+		if($this->themeExist('getScssVariables')) {
+			return $this->theme->getScssVariables();
+		}
+		return [];
 	}
 
 	public function shouldReplaceIcons() {
 		return false;
+	}
+
+	/**
+	 * Themed logo url
+	 *
+	 * @param bool $useSvg Whether to point to the SVG image or a fallback
+	 * @return string
+	 */
+	public function getLogo($useSvg = true) {
+		if ($this->themeExist('getLogo')) {
+			return $this->theme->getLogo($useSvg);
+		}
+
+		if($useSvg) {
+			$logo = \OC::$server->getURLGenerator()->imagePath('core', 'logo.svg');
+		} else {
+			$logo = \OC::$server->getURLGenerator()->imagePath('core', 'logo.png');
+		}
+	    return $logo . '?v=' . hash('sha1', implode('.', \OCP\Util::getVersion()));
 	}
 }

@@ -19,13 +19,15 @@
  *
  */
 
-
 namespace OCA\LookupServerConnector\BackgroundJobs;
 
 
 use OC\BackgroundJob\Job;
+use OC\BackgroundJob\JobList;
 use OCP\BackgroundJob\IJobList;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
+use OCP\ILogger;
 
 class RetryJob extends Job {
 	/** @var IClientService */
@@ -33,23 +35,36 @@ class RetryJob extends Job {
 	/** @var IJobList */
 	private $jobList;
 	/** @var string */
-	private $lookupServer = 'https://lookup.nextcloud.com/users';
+	private $lookupServer;
+	/** @var int how much time should be between two tries (10 minutes) */
+	private $interval = 600;
 
 	/**
-	 * @param IClientService|null $clientService
-	 * @param IJobList|null $jobList
+	 * @param IClientService $clientService
+	 * @param IJobList $jobList
+	 * @param IConfig $config
 	 */
-	public function __construct(IClientService $clientService = null,
-								IJobList $jobList = null) {
-		if($clientService !== null) {
-			$this->clientService = $clientService;
-		} else {
-			$this->clientService = \OC::$server->getHTTPClientService();
-		}
-		if($jobList !== null) {
-			$this->jobList = $jobList;
-		} else {
-			$this->jobList = \OC::$server->getJobList();
+	public function __construct(IClientService $clientService,
+								IJobList $jobList,
+								IConfig $config) {
+		$this->clientService = $clientService;
+		$this->jobList = $jobList;
+
+		$this->lookupServer = $config->getSystemValue('lookup_server', 'https://lookup.nextcloud.com');
+		$this->lookupServer = rtrim($this->lookupServer, '/');
+		$this->lookupServer .= '/users';
+	}
+
+	/**
+	 * run the job, then remove it from the jobList
+	 *
+	 * @param JobList $jobList
+	 * @param ILogger $logger
+	 */
+	public function execute($jobList, ILogger $logger = null) {
+		if ($this->shouldRun($this->argument)) {
+			parent::execute($jobList, $logger);
+			$jobList->remove($this, $this->argument);
 		}
 	}
 
@@ -73,9 +88,20 @@ class RetryJob extends Job {
 				[
 					'dataArray' => $argument['dataArray'],
 					'retryNo' => $argument['retryNo'] + 1,
+					'lastRun' => time(),
 				]
 			);
 
 		}
+	}
+
+	/**
+	 * test if it is time for the next run
+	 *
+	 * @param array $argument
+	 * @return bool
+	 */
+	protected function shouldRun($argument) {
+		return !isset($argument['lastRun']) || ((time() - $argument['lastRun']) > $this->interval);
 	}
 }

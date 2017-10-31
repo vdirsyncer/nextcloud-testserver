@@ -19,6 +19,4 @@
  *
  */
 
-$settings = new \OCA\ShareByMail\Settings();
-
-\OCP\Util::connectHook('\OCP\Config', 'js', $settings, 'announceShareProvider');
+$app = new \OCA\ShareByMail\AppInfo\Application();

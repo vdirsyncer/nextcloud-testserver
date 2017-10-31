@@ -15,22 +15,31 @@
 	<licence>AGPL</licence>
 	<author>Frank Karlitschek, Joas Schilling</author>
 	<shipped>true</shipped>
-	<version>2.4.1</version>
+	<version>2.5.2</version>
 	<default_enable/>
 	<types>
 		<filesystem/>
 	</types>
 
-	<documentation>
-		<admin>https://docs.nextcloud.org/server/11/admin_manual/configuration_server/activity_configuration.html</admin>
-	</documentation>
 	<website>https://github.com/nextcloud/activity/</website>
 	<bugs>https://github.com/nextcloud/activity/issues</bugs>
 	<repository type="git">https://github.com/nextcloud/activity.git</repository>
 
+	<documentation>
+		<admin>https://docs.nextcloud.org/server/12/admin_manual/configuration_server/activity_configuration.html</admin>
+	</documentation>
 	<dependencies>
-		<nextcloud min-version="11" max-version="11" />
+		<nextcloud min-version="12" max-version="12" />
 	</dependencies>
+
+	<navigations>
+		<navigation>
+			<name>Activity</name>
+			<route>activity.Activities.showList</route>
+			<order>1</order>
+			<icon>activity.svg</icon>
+		</navigation>
+	</navigations>
 
 	<activity>
 		<filters>
@@ -40,8 +49,17 @@
 		</filters>
 	</activity>
 
+	<settings>
+		<admin>OCA\Activity\Settings\Admin</admin>
+		<admin-section>OCA\Activity\Settings\Section</admin-section>
+	</settings>
+
 	<background-jobs>
 		<job>OCA\Activity\BackgroundJob\EmailNotification</job>
 		<job>OCA\Activity\BackgroundJob\ExpireActivities</job>
 	</background-jobs>
+
+	<commands>
+		<command>OCA\Activity\Command\SendEmails</command>
+	</commands>
 </info>

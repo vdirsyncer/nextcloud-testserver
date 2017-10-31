@@ -8,29 +8,22 @@
 }
 
 .notification-container {
-	background-color: white;
+	background-color: #fff;
 	display: none;
 	position: absolute;
-	right: 50px;
+	right: 13px;
 	top: 45px;
 	width: 350px;
+	max-width: 90%;
 	min-height: 100px;
 	max-height: 260px;
 	border-radius: 0 0 3px 3px;
-	border: 1px solid rgb(238, 238, 238);;
+	border: 1px solid rgb(238, 238, 238);
 }
 
 .notification-container .emptycontent h2 {
 	font-weight: 300;
 	font-size: 16px;
-}
-
-/* Fill width on mobile */
-@media (max-width: 500px) {
-	.notification-container {
-		right: 5%;
-		width: 90%;
-	}
 }
 
 .notification {
@@ -87,7 +80,7 @@ img.notification-icon {
 	cursor: pointer;
 }
 
-.notification-delete img, .notifications-button img {
+.notification-delete div, .notifications-button img {
 	cursor: pointer;
 }
 
@@ -103,21 +96,19 @@ img.notification-icon {
 .notifications-button {
 	position: relative;
 	float: right;
-	width: 21px;
-	height: 21px;
+	width: 16px;
+	height: 16px;
 	display: block;
 	border-radius: 50%;
 	text-align: center;
 	padding: 10px;
-	opacity: 0.7;
+	opacity: .6;
 	cursor: pointer;
 }
-.notifications-button.hasNotifications {
+.notifications-button.hasNotifications,
+.notifications-button:hover,
+.notifications-button:focus {
 	opacity: 1 !important;
-}
-
-.notifications-button:hover {
-	opacity: 1;
 }
 
 .notification .button {
@@ -146,13 +137,15 @@ img.notification-icon {
 	margin-right: 20px;
 }
 
-.notification .notification-message {
+.notification .notification-message,
+.notification .notification-full-message {
 	line-height: 20px;
 	padding-bottom: 16px;
 	opacity: .57;
 }
 
 .notification .notification-message img,
+.notification .notification-full-message img,
 .notification .notification-subject img:not(.notification-icon) {
 	max-width: 32px;
 	max-height: 32px;
@@ -168,15 +161,26 @@ img.notification-icon {
 .notification strong,
 .notification .notification-subject a:not(.full-subject-link) {
 	font-weight: bold;
-	opacity: 2;
+	opacity: 1;
 }
 
-.notification-container {
-	box-shadow: 0 1px 10px rgba(50, 50, 50, .7);
-	overflow: auto;
-	overflow-x: hidden;
+/* Menu arrow */
+.notification-container:after {
+	right: 101px;
+}
+
+.notification-wrapper {
+	max-height: 260px;
+	overflow: hidden;
+	overflow-y: auto;
+	margin-right: 3px;
 }
 
 .notifications .emptycontent {
 	margin: 50px 0;
+}
+
+.notifications .avatar-name-wrapper {
+	position: relative;
+	cursor: pointer;
 }

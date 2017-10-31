@@ -40,11 +40,12 @@ OC_Util::checkSubAdminUser();
 \OC::$server->getNavigationManager()->setActiveEntry('core_users');
 
 $userManager = \OC::$server->getUserManager();
-$groupManager = \OC_Group::getManager();
+$groupManager = \OC::$server->getGroupManager();
 
 // Set the sort option: SORT_USERCOUNT or SORT_GROUPNAME
 $sortGroupsBy = \OC\Group\MetaData::SORT_USERCOUNT;
 
+$isLDAPUsed = false;
 if (\OC_App::isEnabled('user_ldap')) {
 	$isLDAPUsed =
 		   $groupManager->isBackendUsed('\OCA\User_LDAP\Group_LDAP')
@@ -59,12 +60,15 @@ $config = \OC::$server->getConfig();
 
 $isAdmin = OC_User::isAdminUser(OC_User::getUser());
 
+$isDisabled = !OC_User::isEnabled(OC_User::getUser());
+
 $groupsInfo = new \OC\Group\MetaData(
 	OC_User::getUser(),
 	$isAdmin,
 	$groupManager,
 	\OC::$server->getUserSession()
 );
+
 $groupsInfo->setSorting($sortGroupsBy);
 list($adminGroup, $groups) = $groupsInfo->get();
 
@@ -93,6 +97,13 @@ if($isAdmin) {
 	$subAdmins = false;
 }
 
+$disabledUsers = $isLDAPUsed ? 0 : $userManager->countDisabledUsers();
+$disabledUsersGroup = [
+	'id' => '_disabledUsers',
+	'name' => '_disabledUsers',
+	'usercount' => $disabledUsers
+];
+
 // load preset quotas
 $quotaPreset=$config->getAppValue('files', 'quota_preset', '1 GB, 5 GB, 10 GB');
 $quotaPreset=explode(',', $quotaPreset);
@@ -111,6 +122,7 @@ $tmpl = new OC_Template("settings", "users/main", "user");
 $tmpl->assign('groups', $groups);
 $tmpl->assign('sortGroups', $sortGroupsBy);
 $tmpl->assign('adminGroup', $adminGroup);
+$tmpl->assign('disabledUsersGroup', $disabledUsersGroup);
 $tmpl->assign('isAdmin', (int)$isAdmin);
 $tmpl->assign('subadmins', $subAdmins);
 $tmpl->assign('numofgroups', count($groups) + count($adminGroup));
@@ -118,7 +130,6 @@ $tmpl->assign('quota_preset', $quotaPreset);
 $tmpl->assign('default_quota', $defaultQuota);
 $tmpl->assign('defaultQuotaIsUserDefined', $defaultQuotaIsUserDefined);
 $tmpl->assign('recoveryAdminEnabled', $recoveryAdminEnabled);
-$tmpl->assign('enableAvatars', \OC::$server->getConfig()->getSystemValue('enable_avatars', true) === true);
 
 $tmpl->assign('show_storage_location', $config->getAppValue('core', 'umgmt_show_storage_location', 'false'));
 $tmpl->assign('show_last_login', $config->getAppValue('core', 'umgmt_show_last_login', 'false'));

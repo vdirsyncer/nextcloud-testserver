@@ -79,7 +79,8 @@ class OC_Template extends \OC\Template\Base {
 
 		$parts = explode('/', $app); // fix translation when app is something like core/lostpassword
 		$l10n = \OC::$server->getL10N($parts[0]);
-		$themeDefaults = \OC::$server->getThemingDefaults();
+		/** @var \OCP\Defaults $themeDefaults */
+		$themeDefaults = \OC::$server->query(\OCP\Defaults::class);
 
 		list($path, $template) = $this->findTemplate($theme, $app, $name);
 
@@ -106,65 +107,37 @@ class OC_Template extends \OC\Template\Base {
 				}
 			}
 
-			OC_Util::addStyle("tooltip",null,true);
 			OC_Util::addStyle('jquery-ui-fixes',null,true);
 			OC_Util::addVendorStyle('jquery-ui/themes/base/jquery-ui',null,true);
-			OC_Util::addStyle("mobile",null,true);
-			OC_Util::addStyle("multiselect",null,true);
-			OC_Util::addStyle("fixes",null,true);
-			OC_Util::addStyle("global",null,true);
-			OC_Util::addStyle("apps",null,true);
-			OC_Util::addStyle("fonts",null,true);
-			OC_Util::addStyle("icons",null,true);
-			OC_Util::addStyle("header",null,true);
-			OC_Util::addStyle("inputs");
-			OC_Util::addStyle("styles",null,true);
-
-			// avatars
-			if (\OC::$server->getSystemConfig()->getValue('enable_avatars', true) === true) {
-				\OC_Util::addScript('jquery.avatar', null, true);
-				\OC_Util::addScript('placeholder', null, true);
-			}
-
-			OC_Util::addVendorScript('select2/select2');
+			OC_Util::addStyle('server', null, true);
 			OC_Util::addVendorStyle('select2/select2', null, true);
-			OC_Util::addScript('select2-toggleselect');
-
-			OC_Util::addScript('oc-backbone', null, true);
-			OC_Util::addVendorScript('core', 'backbone/backbone', true);
-			OC_Util::addVendorScript('snapjs/dist/latest/snap', null, true);
-			OC_Util::addScript('mimetypelist', null, true);
-			OC_Util::addScript('mimetype', null, true);
-			OC_Util::addScript("apps", null, true);
-			OC_Util::addScript("oc-requesttoken", null, true);
-			OC_Util::addScript('search', 'search', true);
-			OC_Util::addScript("config", null, true);
-			OC_Util::addScript("public/appconfig", null, true);
-			OC_Util::addScript("eventsource", null, true);
-			OC_Util::addScript("octemplate", null, true);
+			OC_Util::addStyle('jquery.ocdialog');
 			OC_Util::addTranslations("core", null, true);
-			OC_Util::addScript("l10n", null, true);
-			OC_Util::addScript("js", null, true);
-			OC_Util::addScript("oc-dialogs", null, true);
-			OC_Util::addScript("jquery.ocdialog", null, true);
-			OC_Util::addScript("jquery-ui-fixes");
-			OC_Util::addStyle("jquery.ocdialog");
+			OC_Util::addScript('search', 'search', true);
+			OC_Util::addScript('merged-template-prepend', null, true);
+			OC_Util::addScript('jquery-ui-fixes');
 			OC_Util::addScript('files/fileinfo');
 			OC_Util::addScript('files/client');
+			OC_Util::addScript('contactsmenu');
 
-			// Add the stuff we need always
-			// following logic will import all vendor libraries that are
-			// specified in core/js/core.json
-			$fileContent = file_get_contents(OC::$SERVERROOT . '/core/js/core.json');
-			if($fileContent !== false) {
-				$coreDependencies = json_decode($fileContent, true);
-				foreach(array_reverse($coreDependencies['vendor']) as $vendorLibrary) {
-					// remove trailing ".js" as addVendorScript will append it
-					OC_Util::addVendorScript(
+			if (\OC::$server->getConfig()->getSystemValue('debug')) {
+				// Add the stuff we need always
+				// following logic will import all vendor libraries that are
+				// specified in core/js/core.json
+				$fileContent = file_get_contents(OC::$SERVERROOT . '/core/js/core.json');
+				if($fileContent !== false) {
+					$coreDependencies = json_decode($fileContent, true);
+					foreach(array_reverse($coreDependencies['vendor']) as $vendorLibrary) {
+						//remove trailing ".js" as addVendorScript will append it
+						OC_Util::addVendorScript(
 							substr($vendorLibrary, 0, strlen($vendorLibrary) - 3),null,true);
+						}
+ 				} else {
+					throw new \Exception('Cannot read core/js/core.json');
 				}
 			} else {
-				throw new \Exception('Cannot read core/js/core.json');
+				// Import all (combined) default vendor libraries
+				OC_Util::addVendorScript('core', null, true);
 			}
 
 			if (\OC::$server->getRequest()->isUserAgent([\OC\AppFramework\Http\Request::USER_AGENT_IE])) {
@@ -319,6 +292,11 @@ class OC_Template extends \OC\Template\Base {
 		* @param string $hint An optional hint message - needs to be properly escaped
 		*/
 	public static function printErrorPage( $error_msg, $hint = '' ) {
+		if (\OC_App::isEnabled('theming') && !\OC_App::isAppLoaded('theming')) {
+			\OC_App::loadApp('theming');
+		}
+
+
 		if ($error_msg === $hint) {
 			// If the hint is the same as the message there is no need to display it twice.
 			$hint = '';

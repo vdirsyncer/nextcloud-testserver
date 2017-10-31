@@ -21,23 +21,31 @@
 
 namespace OC\App\AppStore\Fetcher;
 
+use OC\Files\AppData\Factory;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Files\IAppData;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
+use OCP\ILogger;
 
 class CategoryFetcher extends Fetcher {
 	/**
-	 * @param IAppData $appData
+	 * @param Factory $appDataFactory
 	 * @param IClientService $clientService
 	 * @param ITimeFactory $timeFactory
+	 * @param IConfig $config
+	 * @param ILogger $logger
 	 */
-	public function __construct(IAppData $appData,
+	public function __construct(Factory $appDataFactory,
 								IClientService $clientService,
-								ITimeFactory $timeFactory) {
+								ITimeFactory $timeFactory,
+								IConfig $config,
+								ILogger $logger) {
 		parent::__construct(
-			$appData,
+			$appDataFactory,
 			$clientService,
-			$timeFactory
+			$timeFactory,
+			$config,
+			$logger
 		);
 		$this->fileName = 'categories.json';
 		$this->endpointUrl = 'https://apps.nextcloud.com/api/v1/categories.json';

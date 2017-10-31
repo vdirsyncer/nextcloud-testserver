@@ -150,7 +150,7 @@ class Principal implements BackendInterface {
 				$groups = $this->groupManager->getUserGroups($user);
 				$groups = array_map(function($group) {
 					/** @var IGroup $group */
-					return 'principals/groups/' . $group->getGID();
+					return 'principals/groups/' . urlencode($group->getGID());
 				}, $groups);
 
 				return $groups;
@@ -223,8 +223,8 @@ class Principal implements BackendInterface {
 		$email = $user->getEMailAddress();
 		if (!empty($email)) {
 			$principal['{http://sabredav.org/ns}email-address'] = $email;
-			return $principal;
 		}
+
 		return $principal;
 	}
 

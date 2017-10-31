@@ -24,7 +24,11 @@
 namespace OCA\UpdateNotification\Notification;
 
 
+use OCP\IConfig;
+use OCP\IGroupManager;
 use OCP\IURLGenerator;
+use OCP\IUser;
+use OCP\IUserSession;
 use OCP\L10N\IFactory;
 use OCP\Notification\IManager;
 use OCP\Notification\INotification;
@@ -35,11 +39,20 @@ class Notifier implements INotifier {
 	/** @var IURLGenerator */
 	protected $url;
 
+	/** @var IConfig */
+	protected $config;
+
 	/** @var IManager */
 	protected $notificationManager;
 
 	/** @var IFactory */
 	protected $l10NFactory;
+
+	/** @var IUserSession */
+	protected $userSession;
+
+	/** @var IGroupManager */
+	protected $groupManager;
 
 	/** @var string[] */
 	protected $appVersions;
@@ -48,13 +61,19 @@ class Notifier implements INotifier {
 	 * Notifier constructor.
 	 *
 	 * @param IURLGenerator $url
+	 * @param IConfig $config
 	 * @param IManager $notificationManager
 	 * @param IFactory $l10NFactory
+	 * @param IUserSession $userSession
+	 * @param IGroupManager $groupManager
 	 */
-	public function __construct(IURLGenerator $url, IManager $notificationManager, IFactory $l10NFactory) {
+	public function __construct(IURLGenerator $url, IConfig $config, IManager $notificationManager, IFactory $l10NFactory, IUserSession $userSession, IGroupManager $groupManager) {
 		$this->url = $url;
 		$this->notificationManager = $notificationManager;
+		$this->config = $config;
 		$this->l10NFactory = $l10NFactory;
+		$this->userSession = $userSession;
+		$this->groupManager = $groupManager;
 		$this->appVersions = $this->getAppVersions();
 	}
 
@@ -71,11 +90,24 @@ class Notifier implements INotifier {
 		}
 
 		$l = $this->l10NFactory->get('updatenotification', $languageCode);
-		if ($notification->getObjectType() === 'core') {
+		if ($notification->getSubject() === 'connection_error') {
+			$errors = (int) $this->config->getAppValue('updatenotification', 'update_check_errors', 0);
+			if ($errors === 0) {
+				$this->notificationManager->markProcessed($notification);
+				throw new \InvalidArgumentException();
+			}
+
+			$notification->setParsedSubject($l->t('The update server could not be reached since %d days to check for new updates.', [$errors]))
+				->setParsedMessage($l->t('Please check the Nextcloud and server log files for errors.'));
+		} elseif ($notification->getObjectType() === 'core') {
 			$this->updateAlreadyInstalledCheck($notification, $this->getCoreVersions());
 
 			$parameters = $notification->getSubjectParameters();
 			$notification->setParsedSubject($l->t('Update to %1$s is available.', [$parameters['version']]));
+
+			if ($this->isAdmin()) {
+				$notification->setLink($this->url->linkToRouteAbsolute('settings.AdminSettings.index') . '#updater');
+			}
 		} else {
 			$appInfo = $this->getAppInfo($notification->getObjectType());
 			$appName = ($appInfo === null) ? $notification->getObjectType() : $appInfo['name'];
@@ -92,6 +124,10 @@ class Notifier implements INotifier {
 						'name' => $appName,
 					]
 				]);
+
+			if ($this->isAdmin()) {
+				$notification->setLink($this->url->linkToRouteAbsolute('settings.AppSettings.viewApps') . '#app-' . $notification->getObjectType());
+			}
 		}
 
 		$notification->setIcon($this->url->getAbsoluteURL($this->url->imagePath('updatenotification', 'notification.svg')));
@@ -111,6 +147,19 @@ class Notifier implements INotifier {
 			$this->notificationManager->markProcessed($notification);
 			throw new \InvalidArgumentException();
 		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function isAdmin() {
+		$user = $this->userSession->getUser();
+
+		if ($user instanceof IUser) {
+			return $this->groupManager->isAdmin($user->getUID());
+		}
+
+		return false;
 	}
 
 	protected function getCoreVersions() {

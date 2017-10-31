@@ -20,8 +20,14 @@
 
 		_emailTemplate: '<a class="email" href="mailto:{{id}}">{{name}}</a>',
 
-		_userTemplate: '<strong>{{name}}</strong>',
-		_userWithAvatarTemplate: '<div class="avatar" data-user="{{id}}" data-user-display-name="{{name}}"></div>',
+		_userLocalTemplate: '<span class="avatar-name-wrapper" data-user="{{id}}"><div class="avatar" data-user="{{id}}" data-user-display-name="{{name}}"></div><strong>{{name}}</strong></span>',
+		_userRemoteTemplate: '<strong>{{name}}</strong>',
+
+		_openGraphTemplate: '{{#if link}}<a href="{{link}}">{{/if}}<div id="opengraph-{{id}}" class="opengraph">' +
+		'{{#if thumb}}<div class="opengraph-thumb" style="background-image: url(\'{{thumb}}\')"></div>{{/if}}' +
+		'<div class="opengraph-name {{#if thumb}}opengraph-with-thumb{{/if}}">{{name}}</div>' +
+		'<div class="opengraph-description {{#if thumb}}opengraph-with-thumb{{/if}}">{{description}}</div>' +
+		'<span class="opengraph-website">{{website}}</span></div>{{#if link}}</a>{{/if}}',
 
 		_unknownTemplate: '<strong>{{name}}</strong>',
 		_unknownLinkTemplate: '<a href="{{link}}">{{name}}</a>',
@@ -81,16 +87,26 @@
 
 					return this.emailTemplate(parameter);
 
-				case 'user':
-					if (!this.userTemplate) {
-						var template = this._userTemplate;
-						if (this.avatarsEnabled && _.isUndefined(parameter.server)) {
-							template = this._userWithAvatarTemplate + template;
-						}
-						this.userTemplate = Handlebars.compile(template);
+				case 'open-graph':
+					if (!this.openGraphTemplate) {
+						this.openGraphTemplate = Handlebars.compile(this._openGraphTemplate);
 					}
 
-					return this.userTemplate(parameter);
+					return this.openGraphTemplate(parameter);
+
+				case 'user':
+					if (_.isUndefined(parameter.server)) {
+						if (!this.userLocalTemplate) {
+							this.userLocalTemplate = Handlebars.compile(this._userLocalTemplate);
+						}
+						return this.userLocalTemplate(parameter);
+					}
+
+					if (!this.userRemoteTemplate) {
+						this.userRemoteTemplate = Handlebars.compile(this._userRemoteTemplate);
+					}
+
+					return this.userRemoteTemplate(parameter);
 
 				default:
 					if (!_.isUndefined(parameter.link)) {

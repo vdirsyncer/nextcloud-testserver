@@ -39,6 +39,9 @@ namespace OC;
  * configuration file of ownCloud.
  */
 class Config {
+
+	const ENV_PREFIX = 'NC_';
+
 	/** @var array Associative array ($key => $value) */
 	protected $cache = array();
 	/** @var string */
@@ -71,15 +74,22 @@ class Config {
 	}
 
 	/**
-	 * Gets a value from config.php
+	 * Returns a config value
 	 *
-	 * If it does not exist, $default will be returned.
+	 * gets its value from an `NC_` prefixed environment variable
+	 * if it doesn't exist from config.php
+	 * if this doesn't exist either, it will return the given `$default`
 	 *
 	 * @param string $key key
 	 * @param mixed $default = null default value
 	 * @return mixed the value or $default
 	 */
 	public function getValue($key, $default = null) {
+		$envValue = getenv(self::ENV_PREFIX . $key);
+		if ($envValue !== false) {
+			return $envValue;
+		}
+
 		if (isset($this->cache[$key])) {
 			return $this->cache[$key];
 		}
@@ -239,8 +249,7 @@ class Config {
 			$url = \OC::$server->getURLGenerator()->linkToDocs('admin-dir_permissions');
 			throw new HintException(
 				"Can't write into config directory!",
-				'This can usually be fixed by '
-				.'<a href="' . $url . '" target="_blank" rel="noreferrer">giving the webserver write access to the config directory</a>.');
+				'This can usually be fixed by giving the webserver write access to the config directory. See ' . $url);
 		}
 
 		// Try to acquire a file lock

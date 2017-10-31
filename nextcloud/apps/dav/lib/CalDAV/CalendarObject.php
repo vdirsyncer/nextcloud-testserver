@@ -1,8 +1,10 @@
 <?php
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
+ * @copyright Copyright (c) 2017, Georg Ehrke
  *
  * @author Thomas Müller <thomas.mueller@tmit.eu>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
  *
  * @license AGPL-3.0
  *
@@ -41,8 +43,12 @@ class CalendarObject extends \Sabre\CalDAV\CalendarObject {
 		return $data;
 	}
 
-	private function isShared() {
-		return isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal']);
+	protected function isShared() {
+		if (!isset($this->calendarInfo['{http://owncloud.org/ns}owner-principal'])) {
+			return false;
+		}
+
+		return $this->calendarInfo['{http://owncloud.org/ns}owner-principal'] !== $this->calendarInfo['principaluri'];
 	}
 
 	/**

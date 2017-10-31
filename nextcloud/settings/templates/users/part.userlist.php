@@ -1,9 +1,7 @@
 <table id="userlist" class="hascontrols grid" data-groups="<?php p($_['allGroups']);?>">
 	<thead>
 		<tr>
-		<?php if ($_['enableAvatars']): ?>
 			<th id="headerAvatar" scope="col"></th>
-		<?php endif; ?>
 			<th id="headerName" scope="col"><?php p($l->t('Username'))?></th>
 			<th id="headerDisplayName" scope="col"><?php p($l->t( 'Full name' )); ?></th>
 			<th id="headerPassword" scope="col"><?php p($l->t( 'Password' )); ?></th>
@@ -16,15 +14,13 @@
 			<th class="storageLocation" scope="col"><?php p($l->t('Storage location')); ?></th>
 			<th class="userBackend" scope="col"><?php p($l->t('User backend')); ?></th>
 			<th class="lastLogin" scope="col"><?php p($l->t('Last login')); ?></th>
-			<th id="headerRemove">&nbsp;</th>
+			<th class="userActions"></th>
 		</tr>
 	</thead>
 	<tbody>
 		<!-- the following <tr> is used as a template for the JS part -->
 		<tr style="display:none">
-		<?php if ($_['enableAvatars']): ?>
 			<td class="avatar"><div class="avatardiv"></div></td>
-		<?php endif; ?>
 			<th class="name" scope="row"></th>
 			<td class="displayName"><span></span> <img class="action"
 				src="<?php p(image_path('core', 'actions/rename.svg'))?>"
@@ -67,7 +63,26 @@
 			<td class="storageLocation"></td>
 			<td class="userBackend"></td>
 			<td class="lastLogin"></td>
-			<td class="remove"></td>
+			<td class="userActions"><span></span>
+				<div class="popovermenu bubble open menu">
+					<ul class="userActionsMenu">
+						<li>
+							<a href="#" class="menuitem action-togglestate permanent" data-action="togglestate"></a>
+						</li>
+						<li>
+							<a href="#" class="menuitem action-remove permanent" data-action="remove">
+								<span class="icon icon-delete"></span>
+								<span><?php p($l->t('Delete')); ?></span>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</td>
 		</tr>
 	</tbody>
 </table>
+
+<div class="emptycontent" style="display:none">
+	<div class="icon-search"></div>
+	<h2></h2>
+</div>

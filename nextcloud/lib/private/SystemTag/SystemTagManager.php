@@ -31,7 +31,6 @@ use OCP\SystemTag\ManagerEvent;
 use OCP\SystemTag\TagAlreadyExistsException;
 use OCP\SystemTag\TagNotFoundException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\SystemTag\ISystemTag;
 use OCP\IUser;
@@ -400,6 +399,9 @@ class SystemTagManager implements ISystemTagManager {
 					'gid' => $query->createParameter('gid'),
 				]);
 			foreach ($groupIds as $groupId) {
+				if ($groupId === '') {
+					continue;
+				}
 				$query->setParameter('gid', $groupId);
 				$query->execute();
 			}

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Nextcloud Server Tuning &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Server Tuning &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Theming" href="theming.html" />
     <link rel="prev" title="Automatic Configuration Setup" href="automatic_configuration.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -87,13 +87,14 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Nextcloud Server Tuning</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Server Tuning</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#using-cron-to-perform-background-jobs">Using cron to perform background jobs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#caching">Caching</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-mariadb-mysql-instead-of-sqlite">Using MariaDB/MySQL instead of SQLite</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-redis-based-transactional-file-locking">Using Redis-based Transactional File Locking</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ssl-encryption-app">SSL / Encryption App</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#enable-http2-for-faster-loading">Enable HTTP2 for faster loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-php-opcache">Enable PHP OPcache</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
@@ -101,6 +102,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -128,8 +130,8 @@
   </li>
 </ul>
 						
-  <div class="section" id="nextcloud-server-tuning">
-<h1>Nextcloud Server Tuning<a class="headerlink" href="#nextcloud-server-tuning" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="server-tuning">
+<h1>Server Tuning<a class="headerlink" href="#server-tuning" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="using-cron-to-perform-background-jobs">
 <h2>Using cron to perform background jobs<a class="headerlink" href="#using-cron-to-perform-background-jobs" title="Permalink to this headline">¶</a></h2>
 <p>See <a class="reference internal" href="background_jobs_configuration.html"><em>Defining Background Jobs</em></a> for a description and the
@@ -184,6 +186,20 @@ support.</li>
 <div class="section" id="enable-http2-for-faster-loading">
 <h2>Enable HTTP2 for faster loading<a class="headerlink" href="#enable-http2-for-faster-loading" title="Permalink to this headline">¶</a></h2>
 <p>HTTP2 has <a class="reference external" href="https://www.troyhunt.com/i-wanna-go-fast-https-massive-speed-advantage/">huge speed improvements</a> over HTTP with multiple request. Most <a class="reference external" href="http://caniuse.com/#feat=http2">browsers already support HTTP2 over SSL (HTTPS)</a>. So refer to your server manual for guides on how to use HTTP2.</p>
+</div>
+<div class="section" id="enable-php-opcache">
+<h2>Enable PHP OPcache<a class="headerlink" href="#enable-php-opcache" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://php.net/manual/en/intro.opcache.php">OPcache</a> improves the performance of PHP applications by caching precompiled bytecode. We recommend at least following settings:</p>
+<div class="code ini highlight-python"><div class="highlight"><pre><span class="n">opcache</span><span class="o">.</span><span class="n">enable</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">enable_cli</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">interned_strings_buffer</span><span class="o">=</span><span class="mi">8</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">max_accelerated_files</span><span class="o">=</span><span class="mi">10000</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">memory_consumption</span><span class="o">=</span><span class="mi">128</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">save_comments</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">opcache</span><span class="o">.</span><span class="n">revalidate_freq</span><span class="o">=</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>For more details check out the <a class="reference external" href="http://php.net/manual/en/opcache.configuration.php">official documentation</a> or <a class="reference external" href="https://www.scalingphpbook.com/blog/2014/02/14/best-zend-opcache-settings.html">this blog post about some recommended settings</a>.</p>
 </div>
 </div>
 

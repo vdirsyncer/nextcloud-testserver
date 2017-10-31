@@ -29,7 +29,8 @@ namespace OC\Core\Command\Maintenance;
 
 use InvalidArgumentException;
 use OC\Setup;
-use OCP\IConfig;
+use OC\SystemConfig;
+use OCP\Defaults;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,11 +41,11 @@ use Symfony\Component\Console\Question\Question;
 class Install extends Command {
 
 	/**
-	 * @var IConfig
+	 * @var SystemConfig
 	 */
 	private $config;
 
-	public function __construct(IConfig $config) {
+	public function __construct(SystemConfig $config) {
 		parent::__construct();
 		$this->config = $config;
 	}
@@ -60,6 +61,7 @@ class Install extends Command {
 			->addOption('database-user', null, InputOption::VALUE_REQUIRED, 'User name to connect to the database')
 			->addOption('database-pass', null, InputOption::VALUE_OPTIONAL, 'Password of the database user', null)
 			->addOption('database-table-prefix', null, InputOption::VALUE_OPTIONAL, 'Prefix for all tables (default: oc_)', null)
+			->addOption('database-table-space', null, InputOption::VALUE_OPTIONAL, 'Table space of the database (oci only)', null)
 			->addOption('admin-user', null, InputOption::VALUE_REQUIRED, 'User name of the admin account', 'admin')
 			->addOption('admin-pass', null, InputOption::VALUE_REQUIRED, 'Password of the admin account')
 			->addOption('data-dir', null, InputOption::VALUE_REQUIRED, 'Path to data directory', \OC::$SERVERROOT."/data");
@@ -70,7 +72,7 @@ class Install extends Command {
 		// validate the environment
 		$server = \OC::$server;
 		$setupHelper = new Setup($this->config, $server->getIniWrapper(),
-			$server->getL10N('lib'), $server->getThemingDefaults(), $server->getLogger(),
+			$server->getL10N('lib'), $server->query(Defaults::class), $server->getLogger(),
 			$server->getSecureRandom());
 		$sysInfo = $setupHelper->getSystemInfo(true);
 		$errors = $sysInfo['errors'];
@@ -170,6 +172,9 @@ class Install extends Command {
 			'adminpass' => $adminPassword,
 			'directory' => $dataDir
 		];
+		if ($db === 'oci') {
+			$options['dbtablespace'] = $input->getParameterOption('--database-table-space', '');
+		}
 		return $options;
 	}
 

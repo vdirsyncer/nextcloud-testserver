@@ -25,31 +25,35 @@ namespace OCA\Theming;
 
 use OCP\App\AppPathNotFoundException;
 use OCP\App\IAppManager;
+use OCP\Files\IAppData;
+use OCP\Files\NotFoundException;
+use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\IConfig;
 use OCP\Files\IRootFolder;
+use Leafo\ScssPhp\Compiler;
 
 class Util {
 
 	/** @var IConfig */
 	private $config;
 
-	/** @var IRootFolder */
-	private $rootFolder;
-
 	/** @var IAppManager */
 	private $appManager;
+
+	/** @var IAppData */
+	private $appData;
 
 	/**
 	 * Util constructor.
 	 *
 	 * @param IConfig $config
-	 * @param IRootFolder $rootFolder
 	 * @param IAppManager $appManager
+	 * @param IAppData $appData
 	 */
-	public function __construct(IConfig $config, IRootFolder $rootFolder, IAppManager $appManager) {
+	public function __construct(IConfig $config, IAppManager $appManager, IAppData $appData) {
 		$this->config = $config;
-		$this->rootFolder = $rootFolder;
 		$this->appManager = $appManager;
+		$this->appData = $appData;
 	}
 
 	/**
@@ -92,10 +96,12 @@ class Util {
 		if (strlen($hex) !== 6) {
 			return 0;
 		}
-		$r = hexdec(substr($hex, 0, 2));
-		$g = hexdec(substr($hex, 2, 2));
-		$b = hexdec(substr($hex, 4, 2));
-		return (0.299 * $r + 0.587 * $g + 0.114 * $b)/255;
+		$red = hexdec(substr($hex, 0, 2));
+		$green = hexdec(substr($hex, 2, 2));
+		$blue = hexdec(substr($hex, 4, 2));
+		$compiler = new Compiler();
+		$hsl = $compiler->toHSL($red, $green, $blue);
+		return $hsl[3]/100;
 	}
 
 	/**
@@ -111,7 +117,7 @@ class Util {
 
 	/**
 	 * @param $app string app name
-	 * @return string path to app icon / logo
+	 * @return string|ISimpleFile path to app icon / file of logo
 	 */
 	public function getAppIcon($app) {
 		$app = str_replace(array('\0', '/', '\\', '..'), '', $app);
@@ -127,8 +133,14 @@ class Util {
 			}
 		} catch (AppPathNotFoundException $e) {}
 
-		if($this->config->getAppValue('theming', 'logoMime', '') !== '' && $this->rootFolder->nodeExists('/themedinstancelogo')) {
-			return $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data/') . '/themedinstancelogo';
+		if ($this->config->getAppValue('theming', 'logoMime', '') !== '') {
+			$logoFile = null;
+			try {
+				$folder = $this->appData->getFolder('images');
+				if ($folder !== null) {
+					return $folder->getFile('logo');
+				}
+			} catch (NotFoundException $e) {}
 		}
 		return \OC::$SERVERROOT . '/core/img/logo.svg';
 	}

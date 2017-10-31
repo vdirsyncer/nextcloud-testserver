@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How to Upgrade Your Nextcloud Server &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>How to Upgrade &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Maintenance" href="index.html" />
-    <link rel="next" title="Upgrade Nextcloud From Packages" href="package_upgrade.html" />
-    <link rel="prev" title="Backing up Nextcloud" href="backup.html" />
+    <link rel="next" title="Upgrade via build-in Updater" href="update.html" />
+    <link rel="prev" title="Restoring Backup" href="restore.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,27 +66,29 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Maintenance</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="enable_maintenance.html">Maintenance Mode Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="backup.html">Backing up Nextcloud</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">How to Upgrade Your Nextcloud Server</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="backup.html">Backup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restore.html">Restoring Backup</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">How to Upgrade</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#update-notifications">Update Notifications</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maintenance-mode">Maintenance mode</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="package_upgrade.html">Upgrade Nextcloud From Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrading Nextcloud with the Nextcloud App</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual_upgrade.html">Manual Nextcloud Upgrade</a></li>
-<li class="toctree-l2"><a class="reference internal" href="restore.html">Restoring Nextcloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update.html">Upgrade via build-in Updater</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual_upgrade.html">Upgrade Manually</a></li>
+<li class="toctree-l2"><a class="reference internal" href="package_upgrade.html">Upgrade via Packages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating.html">Migrating to a Different Server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mysql_4byte_support.html">Enabling MySQL 4-byte support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating_owncloud.html">Migrating from ownCloud</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations/index.html">Operations</a></li>
@@ -104,22 +106,23 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="backup.html" title="Previous Chapter: Backing up Nextcloud"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Backing up Ne...</span>
+    <a href="restore.html" title="Previous Chapter: Restoring Backup"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Restoring Backup</span>
     </a>
   </li>
   <li class="next">
-    <a href="package_upgrade.html" title="Next Chapter: Upgrade Nextcloud From Packages"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Upgrade Nextc... &raquo;</span>
+    <a href="update.html" title="Next Chapter: Upgrade via build-in Updater"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Upgrade via b... &raquo;</span>
     </a>
   </li>
 </ul>
 						
-  <div class="section" id="how-to-upgrade-your-nextcloud-server">
-<h1>How to Upgrade Your Nextcloud Server<a class="headerlink" href="#how-to-upgrade-your-nextcloud-server" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="how-to-upgrade">
+<h1>How to Upgrade<a class="headerlink" href="#how-to-upgrade" title="Permalink to this headline">¶</a></h1>
 <p>There are three ways to upgrade your Nextcloud server:</p>
 <ul class="simple">
 <li>With the <a class="reference internal" href="update.html"><em>Updater App</em></a>.</li>
 <li><a class="reference internal" href="manual_upgrade.html"><em>Manually upgrading</em></a> with the Nextcloud <code class="docutils literal"><span class="pre">.tar</span></code> archive
 from our <a class="reference external" href="https://nextcloud.com/install/">Download page</a>.</li>
+<li><a class="reference internal" href="package_upgrade.html"><em>Upgrading</em></a> via the snap packages.</li>
 <li>Manually upgrading is also an option for users on shared hosting; download
 and unpack the Nextcloud tarball to your PC. Delete your existing Nextcloud
 files, except <code class="docutils literal"><span class="pre">data/</span></code> and <code class="docutils literal"><span class="pre">config/</span></code> files, on your hosting account. Then
@@ -146,6 +149,19 @@ installation and then restore your data from backup. Before doing this,
 file a support ticket (if you have paid support) or ask for help in the
 Nextcloud forums to see if your issue can be resolved without downgrading.</p>
 </div>
+<div class="section" id="update-notifications">
+<h2>Update Notifications<a class="headerlink" href="#update-notifications" title="Permalink to this headline">¶</a></h2>
+<p>Nextcloud has an update notification app, that informs the administrator about
+the availablilty of an update. Then you decide which update method to use.</p>
+<div class="figure" id="id1">
+<img alt="Both update notifications displayed on Admin page." src="../_images/2-updates.png" />
+<p class="caption"><span class="caption-text"><em>Figure 1: The top banner is the update notification that is shown on every
+page, and the Updates section can be found in the admin page</em></span></p>
+</div>
+<p>From there the web based updater can be used to fetch this new code. There is
+also an CLI based updater available, that does exactly the same as the web
+based updater but on the command line.</p>
+</div>
 <div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>You should always maintain <a class="reference internal" href="backup.html"><em>regular backups</em></a> and make a fresh
@@ -156,17 +172,41 @@ designation. <strong>Install unsupported apps at your own risk</strong>. Then, b
 upgrade, all 3rd party apps must be disabled. After the upgrade is complete you
 may re-enable them.</p>
 </div>
+<div class="section" id="maintenance-mode">
+<h2>Maintenance mode<a class="headerlink" href="#maintenance-mode" title="Permalink to this headline">¶</a></h2>
+<p>You can put your Nextcloud server into maintenance mode before performing
+upgrades, or for performing troubleshooting or maintenance. Please see
+<a class="reference internal" href="../configuration_server/occ_command.html"><em>Using the occ Command</em></a> to learn how to put your server into
+the maintenance mode (<code class="docutils literal"><span class="pre">maintenance:mode</span></code>) or execute repair commands
+(<code class="docutils literal"><span class="pre">maintenance:repair</span></code>) with the <code class="docutils literal"><span class="pre">occ</span></code> command.</p>
+<p>The <a class="reference internal" href="update.html"><em>build-in Updater</em></a> does this for you before replacing the
+existing Nextcloud code with the code of the new Nextcloud version.</p>
+<p><code class="docutils literal"><span class="pre">maintenance:mode</span></code> locks the sessions of logged-in users and prevents new
+logins. This is the mode to use for upgrades. You must run <code class="docutils literal"><span class="pre">occ</span></code> as the HTTP
+user, like this example on Ubuntu Linux:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo -u www-data php occ maintenance:mode --on
+</pre></div>
+</div>
+<p>You may also put your server into this mode by editing <code class="file docutils literal"><span class="pre">config/config.php</span></code>.
+Change <code class="docutils literal"><span class="pre">&quot;maintenance&quot;</span> <span class="pre">=&gt;</span> <span class="pre">false</span></code> to <code class="docutils literal"><span class="pre">&quot;maintenance&quot;</span> <span class="pre">=&gt;</span> <span class="pre">true</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;?php
+
+ &quot;maintenance&quot; =&gt; true,
+</pre></div>
+</div>
+<p>Then change it back to <code class="docutils literal"><span class="pre">false</span></code> when you are finished.</p>
+</div>
 </div>
 
 
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="backup.html" title="Previous Chapter: Backing up Nextcloud"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Backing up Ne...</span>
+    <a href="restore.html" title="Previous Chapter: Restoring Backup"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Restoring Backup</span>
     </a>
   </li>
   <li class="next">
-    <a href="package_upgrade.html" title="Next Chapter: Upgrade Nextcloud From Packages"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Upgrade Nextc... &raquo;</span>
+    <a href="update.html" title="Next Chapter: Upgrade via build-in Updater"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Upgrade via b... &raquo;</span>
     </a>
   </li>
 </ul>

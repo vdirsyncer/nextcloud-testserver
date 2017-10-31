@@ -40,7 +40,9 @@
 		'<form class="systemtags-rename-form">' +
 		'    <label class="hidden-visually" for="{{cid}}-rename-input">{{renameLabel}}</label>' +
 		'    <input id="{{cid}}-rename-input" type="text" value="{{name}}">' +
-		'    <a href="#" class="delete icon icon-delete" title="{{deleteTooltip}}"></a>' +
+		'    {{#if isAdmin}}' +
+		'      <a href="#" class="delete icon icon-delete" title="{{deleteTooltip}}"></a>' +
+		'    {{/if}}' +
 		'</form>';
 
 	/**
@@ -148,7 +150,8 @@
 				cid: this.cid,
 				name: oldName,
 				deleteTooltip: t('core', 'Delete'),
-				renameLabel: t('core', 'Rename')
+				renameLabel: t('core', 'Rename'),
+				isAdmin: this._isAdmin
 			}));
 			$item.find('.label').after($renameForm);
 			$item.find('.label, .systemtags-actions').addClass('hidden');
@@ -195,6 +198,7 @@
 			var $item = $(ev.target).closest('.systemtags-item');
 			var tagId = $item.attr('data-id');
 			this.collection.get(tagId).destroy();
+			$(ev.target).tooltip('hide');
 			$item.closest('.select2-result').remove();
 			// TODO: spinner
 			return false;
@@ -236,7 +240,11 @@
 							self.collection.fetch({
 								success: function(collection) {
 									// find the tag in the collection
-									var model = collection.where({name: e.object.name.trim(), userVisible: true, userAssignable: true});
+									var model = collection.where({
+										name: e.object.name.trim(),
+										userVisible: true,
+										userAssignable: true
+									});
 									if (model.length) {
 										model = model[0];
 										// the tag already exists or was already assigned,

@@ -34,6 +34,7 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Exception\ConstraintViolationException;
 use OC\DB\QueryBuilder\QueryBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -166,9 +167,6 @@ class Connection extends \Doctrine\DBAL\Connection implements IDBConnection {
 		$statement = $this->replaceTablePrefix($statement);
 		$statement = $this->adapter->fixupStatement($statement);
 
-		if(\OC::$server->getSystemConfig()->getValue( 'log_query', false)) {
-			\OCP\Util::writeLog('core', 'DB prepare : '.$statement, \OCP\Util::DEBUG);
-		}
 		return parent::prepare($statement);
 	}
 
@@ -284,7 +282,7 @@ class Connection extends \Doctrine\DBAL\Connection implements IDBConnection {
 					}, array_merge($keys, $values))
 				);
 			return $insertQb->execute();
-		} catch (\Doctrine\DBAL\Exception\ConstraintViolationException $e) {
+		} catch (ConstraintViolationException $e) {
 			// value already exists, try update
 			$updateQb = $this->getQueryBuilder();
 			$updateQb->update($table);
@@ -415,6 +413,9 @@ class Connection extends \Doctrine\DBAL\Connection implements IDBConnection {
 	 * @since 11.0.0
 	 */
 	public function supports4ByteText() {
-		return ! ($this->getDatabasePlatform() instanceof MySqlPlatform && $this->getParams()['charset'] !== 'utf8mb4');
+		if (!$this->getDatabasePlatform() instanceof MySqlPlatform) {
+			return true;
+		}
+		return $this->getParams()['charset'] === 'utf8mb4';
 	}
 }

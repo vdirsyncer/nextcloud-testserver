@@ -9,6 +9,12 @@
  */
 
 (function() {
+
+	_.extend(OC.Files.Client, {
+		PROPERTY_SHARE_TYPES:	'{' + OC.Files.Client.NS_OWNCLOUD + '}share-types',
+		PROPERTY_OWNER_DISPLAY_NAME:	'{' + OC.Files.Client.NS_OWNCLOUD + '}owner-display-name'
+	});
+
 	if (!OCA.Sharing) {
 		OCA.Sharing = {};
 	}
@@ -65,32 +71,38 @@
 					fileInfo.shareTypes = shareTypes;
 				}
 
+				if( $el.attr('data-expiration')){
+					var expirationTimestamp = parseInt($el.attr('data-expiration'));
+					fileInfo.shares = [];
+					fileInfo.shares.push({expiration: expirationTimestamp});
+				}
+
+				fileInfo.recipientsDisplayName = $el.attr('data-share-recipients') || undefined;
+
 				return fileInfo;
 			};
-
-			var NS_OC = 'http://owncloud.org/ns';
 
 			var oldGetWebdavProperties = fileList._getWebdavProperties;
 			fileList._getWebdavProperties = function() {
 				var props = oldGetWebdavProperties.apply(this, arguments);
-				props.push('{' + NS_OC + '}owner-display-name');
-				props.push('{' + NS_OC + '}share-types');
+				props.push(OC.Files.Client.PROPERTY_OWNER_DISPLAY_NAME);
+				props.push(OC.Files.Client.PROPERTY_SHARE_TYPES);
 				return props;
 			};
 
 			fileList.filesClient.addFileInfoParser(function(response) {
 				var data = {};
 				var props = response.propStat[0].properties;
-				var permissionsProp = props['{' + NS_OC + '}permissions'];
+				var permissionsProp = props[OC.Files.Client.PROPERTY_PERMISSIONS];
 
 				if (permissionsProp && permissionsProp.indexOf('S') >= 0) {
-					data.shareOwner = props['{' + NS_OC + '}owner-display-name'];
+					data.shareOwner = props[OC.Files.Client.PROPERTY_OWNER_DISPLAY_NAME];
 				}
 
-				var shareTypesProp = props['{' + NS_OC + '}share-types'];
+				var shareTypesProp = props[OC.Files.Client.PROPERTY_SHARE_TYPES];
 				if (shareTypesProp) {
 					data.shareTypes = _.chain(shareTypesProp).filter(function(xmlvalue) {
-						return (xmlvalue.namespaceURI === NS_OC && xmlvalue.nodeName.split(':')[1] === 'share-type');
+						return (xmlvalue.namespaceURI === OC.Files.Client.NS_OWNCLOUD && xmlvalue.nodeName.split(':')[1] === 'share-type');
 					}).map(function(xmlvalue) {
 						return parseInt(xmlvalue.textContent || xmlvalue.text, 10);
 					}).value();
@@ -122,6 +134,8 @@
 								hasShares = true;
 							} else if (shareType === OC.Share.SHARE_TYPE_REMOTE) {
 								hasShares = true;
+							} else if (shareType === OC.Share.SHARE_TYPE_CIRCLE) {
+								hasShares = true;
 							}
 						});
 						OCA.Sharing.Util._updateFileActionIcon($tr, hasShares, hasLink);
@@ -140,7 +154,7 @@
 				altText: t('core', 'Share'),
 				mime: 'all',
 				permissions: OC.PERMISSION_ALL,
-				iconClass: 'icon-share',
+				iconClass: 'icon-shared',
 				type: OCA.Files.FileActions.TYPE_INLINE,
 				actionHandler: function(fileName) {
 					fileList.showDetailsView(fileName, 'shareTabView');
@@ -175,13 +189,16 @@
 					// remove icon, if applicable
 					OC.Share.markFileAsShared($tr, false, false);
 				}
-				var newIcon = $tr.attr('data-icon');
-				// in case markFileAsShared decided to change the icon,
-				// we need to modify the model
-				// (FIXME: yes, this is hacky)
-				if (fileInfoModel.get('icon') !== newIcon) {
-					fileInfoModel.set('icon', newIcon);
-				}
+
+				// FIXME: this is too convoluted. We need to get rid of the above updates
+				// and only ever update the model and let the events take care of rerendering
+				fileInfoModel.set({
+					shareTypes: shareModel.getShareTypes(),
+					// in case markFileAsShared decided to change the icon,
+					// we need to modify the model
+					// (FIXME: yes, this is hacky)
+					icon: $tr.attr('data-icon')
+				});
 			});
 			fileList.registerTabView(shareTab);
 

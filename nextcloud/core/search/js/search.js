@@ -216,9 +216,9 @@
 				if (count === 0) {
 					$status.addClass('emptycontent').removeClass('status');
 					$status.html('');
-					$status.append('<div class="icon-search"></div>');
-					var error = t('core', "No search results in other folders for '{tag}{filter}{endtag}'", {filter:lastQuery});
-					$status.append('<h2>' + error.replace('{tag}', '<strong>').replace('{endtag}', '</strong>') + '</h2>');
+					$status.append($('<div>').addClass('icon-search'));
+					var error = t('core', 'No search results in other folders for {tag}{filter}{endtag}', {filter:lastQuery});
+					$status.append($('<h2>').html(error.replace('{tag}', '<strong>').replace('{endtag}', '</strong>')));
 				} else {
 					$status.removeClass('emptycontent').addClass('status');
 					$status.text(n('core', '{count} search result in another folder', '{count} search results in other folders', count, {count:count}));
@@ -405,6 +405,10 @@ $(document).ready(function() {
 			OC.Search = new OCA.Search($('#searchbox'), $('#searchresults'));
 		});
 	}
+	$('#searchbox + .icon-close-white').click(function() {
+		OC.Search.clear();
+		$('#searchbox').focus();
+	});
 });
 
 /**

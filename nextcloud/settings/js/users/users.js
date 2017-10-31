@@ -10,6 +10,7 @@
 
 var $userList;
 var $userListBody;
+var $emptyContainer;
 
 var UserDeleteHandler;
 var UserList = {
@@ -47,11 +48,12 @@ var UserList = {
 	 *				'backend':			'LDAP',
 	 *				'email':			'username@example.org'
 	 *				'isRestoreDisabled':false
+	 *				'isEnabled':		true
 	 * 			}
 	 */
 	add: function (user) {
-		if (this.currentGid && this.currentGid !== '_everyone' && _.indexOf(user.groups, this.currentGid) < 0) {
-			return;
+		if (this.currentGid && this.currentGid !== '_everyone' && this.currentGid !== '_disabledUsers' && _.indexOf(user.groups, this.currentGid) < 0) {
+			return false;
 		}
 
 		var $tr = $userListBody.find('tr:first-child').clone();
@@ -76,6 +78,7 @@ var UserList = {
 		$tr.data('displayname', user.displayname);
 		$tr.data('mailAddress', user.email);
 		$tr.data('restoreDisabled', user.isRestoreDisabled);
+		$tr.data('userEnabled', user.isEnabled);
 		$tr.find('.name').text(user.name);
 		$tr.find('td.displayName > span').text(user.displayname);
 		$tr.find('td.mailAddress > span').text(user.email);
@@ -96,18 +99,17 @@ var UserList = {
 		$tdSubadmins.find('.action').tooltip({placement: 'top'});
 
 		/**
-		 * remove action
+		 * user actions menu
 		 */
-		if ($tr.find('td.remove img').length === 0 && OC.currentUser !== user.name) {
-			var deleteImage = $('<img class="action">').attr({
-				src: OC.imagePath('core', 'actions/delete')
+		if ($tr.find('td.userActions > span > img').length === 0 && OC.currentUser !== user.name) {
+			var menuImage = $('<img class="svg action">').attr({
+				src: OC.imagePath('core', 'actions/more')
 			});
-			var deleteLink = $('<a class="action delete">')
-				.attr({ href: '#', 'original-title': t('settings', 'Delete')})
-				.append(deleteImage);
-			$tr.find('td.remove').append(deleteLink);
+			var menuLink = $('<span class="toggleUserActions"></span>')
+				.append(menuImage);
+			$tr.find('td.userActions > span').replaceWith(menuLink);
 		} else if (OC.currentUser === user.name) {
-			$tr.find('td.remove a').remove();
+		 	$tr.find('td.userActions').empty();
 		}
 
 		/**
@@ -159,14 +161,6 @@ var UserList = {
 		 * append generated row to user list
 		 */
 		$tr.appendTo($userList);
-		if(UserList.isEmpty === true) {
-			//when the list was emptied, one row was left, necessary to keep
-			//add working and the layout unbroken. We need to remove this item
-			$tr.show();
-			$userListBody.find('tr:first').remove();
-			UserList.isEmpty = false;
-			UserList.checkUsersToLoad();
-		}
 
 		$quotaSelect.on('change', UserList.onQuotaSelect);
 
@@ -337,6 +331,9 @@ var UserList = {
 	getRestoreDisabled: function(element) {
 		return ($(element).closest('tr').data('restoreDisabled') || '');
 	},
+	getUserEnabled: function(element) {
+		return ($(element).closest('tr').data('userEnabled') || '');
+	},
 	initDeleteHandling: function() {
 		//set up handler
 		UserDeleteHandler = new DeleteHandler('/settings/users/users', 'username',
@@ -350,7 +347,7 @@ var UserList = {
 										UserList.undoRemove);
 
 		//when to mark user for delete
-		$userListBody.on('click', '.delete', function () {
+		$userListBody.on('click', '.action-remove', function () {
 			// Call function for handling delete/undo
 			var uid = UserList.getUID(this);
 
@@ -396,15 +393,25 @@ var UserList = {
 					}
 					UserList.add(user);
 				});
+
 				if (result.length > 0) {
 					UserList.doSort();
 					$userList.siblings('.loading').css('visibility', 'hidden');
 					// reset state on load
 					UserList.noMoreEntries = false;
+					$userListHead.show();
+					$emptyContainer.hide();
+					$emptyContainer.find('h2').text('');
 				}
 				else {
 					UserList.noMoreEntries = true;
 					$userList.siblings('.loading').remove();
+
+					if (pattern !== ""){
+						$userListHead.hide();
+						$emptyContainer.show();
+						$emptyContainer.find('h2').html(t('settings', 'No user found for <strong>{pattern}</strong>', {pattern: pattern}));
+					}
 				}
 				UserList.offset += limit;
 			}).always(function() {
@@ -414,48 +421,69 @@ var UserList = {
 
 	applyGroupSelect: function (element, user, checked) {
 		if (OC.PasswordConfirmation.requiresPasswordConfirmation()) {
-			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this.applySubadminSelect, this, element, user, checked));
+			OC.PasswordConfirmation.requirePasswordConfirmation(_.bind(this.applyGroupSelect, this, element, user, checked));
 			return;
 		}
 
 		var $element = $(element);
 
-		var checkHandler = null;
+		var addUserToGroup = null,
+			removeUserFromGroup = null;
 		if(user) { // Only if in a user row, and not the #newusergroups select
-			checkHandler = function (group) {
-				if (user === OC.currentUser && group === 'admin') {
+			var handleUserGroupMembership = function (group, add) {
+				if (user === OC.getCurrentUser().uid && group === 'admin') {
 					return false;
 				}
 				if (!OC.isUserAdmin() && checked.length === 1 && checked[0] === group) {
 					return false;
 				}
-				$.post(
-					OC.filePath('settings', 'ajax', 'togglegroups.php'),
-					{
-						username: user,
-						group: group
-					},
-					function (response) {
-						if (response.status === 'success') {
-							GroupList.update();
-							var groupName = response.data.groupname;
-							if (UserList.availableGroups.indexOf(groupName) === -1 &&
-								response.data.action === 'add'
-							) {
-								UserList.availableGroups.push(groupName);
-							}
 
-							if (response.data.action === 'add') {
-								GroupList.incGroupCount(groupName);
-							} else {
-								GroupList.decGroupCount(groupName);
-							}
+				if (add && OC.isUserAdmin() && UserList.availableGroups.indexOf(group) === -1) {
+					GroupList.createGroup(group);
+					if (UserList.availableGroups.indexOf(group) === -1) {
+						UserList.availableGroups.push(group);
+					}
+				}
+
+				$.ajax({
+					url: OC.linkToOCS('cloud/users/' + user , 2) + 'groups',
+					data: {
+						groupid: group
+					},
+					type: add ? 'POST' : 'DELETE',
+					beforeSend: function (request) {
+						request.setRequestHeader('Accept', 'application/json');
+					},
+					success: function() {
+						GroupList.update();
+						if (add && UserList.availableGroups.indexOf(group) === -1) {
+							UserList.availableGroups.push(group);
 						}
-						if (response.data.message) {
-							OC.Notification.show(response.data.message);
+
+						if (add) {
+							GroupList.incGroupCount(group);
+						} else {
+							GroupList.decGroupCount(group);
+						}
+					},
+					error: function() {
+						if (add) {
+							OC.Notification.show(t('settings', 'Unable to add user to group {group}', {
+								group: group
+							}));
+						} else {
+							OC.Notification.show(t('settings', 'Unable to remove user from group {group}', {
+								group: group
+							}));
 						}
 					}
-				);
+				});
+			};
+			addUserToGroup = function (group) {
+				return handleUserGroupMembership(group, true);
+			};
+			removeUserFromGroup = function (group) {
+				return handleUserGroupMembership(group, false);
 			};
 		}
 		var addGroup = function (select, group) {
@@ -473,8 +501,8 @@ var UserList = {
 			createText: label,
 			selectedFirst: true,
 			checked: checked,
-			oncheck: checkHandler,
-			onuncheck: checkHandler,
+			oncheck: addUserToGroup,
+			onuncheck: removeUserFromGroup,
 			minWidth: 100
 		});
 	},
@@ -533,7 +561,7 @@ var UserList = {
 		if (quota === 'other') {
 			return;
 		}
-		if ((quota !== 'default' && quota !=="none") && (isNaN(parseInt(quota, 10)) || parseInt(quota, 10) < 0)) {
+		if ((quota !== 'default' && quota !=="none") && (!OC.Util.computerFileSize(quota))) {
 			// the select component has added the bogus value, delete it again
 			$select.find('option[selected]').remove();
 			OC.Notification.showTemporary(t('core', 'Invalid quota value "{val}"', {val: quota}));
@@ -645,8 +673,11 @@ var UserList = {
 };
 
 $(document).ready(function () {
+	OC.Plugins.attach('OC.Settings.UserList', UserList);
 	$userList = $('#userlist');
 	$userListBody = $userList.find('tbody');
+	$userListHead = $userList.find('thead');
+	$emptyContainer = $userList.siblings('.emptycontent');
 
 	UserList.initDeleteHandling();
 
@@ -704,9 +735,9 @@ $(document).ready(function () {
 		blurFunction = _.bind(blurFunction, $input);
 		if(isRestoreDisabled) {
 			$tr.addClass('row-warning');
-			// add tipsy if the password change could cause data loss - no recovery enabled
-			$input.tipsy({gravity:'s'});
+			// add tooltip if the password change could cause data loss - no recovery enabled
 			$input.attr('title', t('settings', 'Changing the password will result in data loss, because data recovery is not available for this user'));
+			$input.tooltip({placement:'bottom'});
 		}
 		$td.find('img').hide();
 		$td.children('span').replaceWith($input);
@@ -873,9 +904,75 @@ $(document).ready(function () {
 		UserList._triggerGroupEdit($td, isSubadminSelect);
 	});
 
+	$userListBody.on('click', '.toggleUserActions', function (event) {
+		event.stopPropagation();
+		var $td = $(this).closest('td');
+		var $tr = $($td).closest('tr');
+		var menudiv = $tr.find('.popovermenu');
+
+		if($tr.is('.active')) {
+			$tr.removeClass('active');
+			return;
+		}
+		$('#userlist tr.active').removeClass('active');
+		menudiv.find('.action-togglestate').empty();
+		if($tr.data('userEnabled')) {
+			$('.action-togglestate', $td).html('<span class="icon icon-close"></span><span>'+t('settings', 'Disable')+'</span>');
+		} else {
+			$('.action-togglestate', $td).html('<span class="icon icon-add"></span><span>'+t('settings', 'Enable')+'</span>');
+		}
+		$tr.addClass('active');
+	});
+
+	$(document.body).click(function() {
+		$('#userlist tr.active').removeClass('active');
+	});
+
+	$userListBody.on('click', '.action-togglestate', function (event) {
+		event.stopPropagation();
+		var $td = $(this).closest('td');
+		var $tr = $td.closest('tr');
+		var uid = UserList.getUID($td);
+		var setEnabled = UserList.getUserEnabled($td) ? 0 : 1;
+		$.post(
+			OC.generateUrl('/settings/users/{id}/setEnabled', {id: uid}),
+			{username: uid, enabled: setEnabled},
+			function (result) {
+				if (result && result.status==='success'){
+					var count = GroupList.getUserCount(GroupList.getGroupLI('_disabledUsers'));
+					$tr.remove();
+					if(result.data.enabled == 1) {
+						$tr.data('userEnabled', true);
+						GroupList.setUserCount(GroupList.getGroupLI('_disabledUsers'), count-1);
+					} else {
+						$tr.data('userEnabled', false);
+						GroupList.setUserCount(GroupList.getGroupLI('_disabledUsers'), count+1);
+					}
+				} else {
+					OC.dialogs.alert(result.data.message, t('settings', 'Error while changing status of {user}', {user: uid}));
+				}
+			}
+		).fail(function(result){
+			var message = 'Unknown error';
+			if( result.responseJSON &&
+				result.responseJSON.data &&
+				result.responseJSON.data.message) {
+				message = result.responseJSON.data.message;
+			}
+			OC.dialogs.alert(message, t('settings', 'Error while changing status of {user}', {user: uid}));
+		});
+	});
+	
 	// init the quota field select box after it is shown the first time
 	$('#app-settings').one('show', function() {
 		$(this).find('#default_quota').singleSelect().on('change', UserList.onQuotaSelect);
+	});
+
+	$('#newuser input').click(function() {
+		// empty the container also here to avoid visual delay
+		$emptyContainer.hide();
+		OC.Search = new OCA.Search($('#searchbox'), $('#searchresults'));
+		OC.Search.clear();
 	});
 
 	UserList._updateGroupListLabel($('#newuser .groups'), []);
@@ -897,7 +994,7 @@ $(document).ready(function () {
 			}));
 			return false;
 		}
-		if ($.trim(password) === '') {
+		if ($.trim(password) === '' && !$('#CheckboxMailOnUserCreate').is(':checked')) {
 			OC.Notification.showTemporary(t('settings', 'Error creating user: {message}', {
 				message: t('settings', 'A valid password must be provided')
 			}));
@@ -965,17 +1062,15 @@ $(document).ready(function () {
 	// Option to display/hide the "Storage location" column
 	$('#CheckboxStorageLocation').click(function() {
 		if ($('#CheckboxStorageLocation').is(':checked')) {
-			OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'true', {
-				success: function () {
-					$("#userlist .storageLocation").show();
-				}
-			});
+			$("#userlist .storageLocation").show();
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'true');
+			}
 		} else {
-			OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'false', {
-				success: function () {
-					$("#userlist .storageLocation").hide();
-				}
-			});
+			$("#userlist .storageLocation").hide();
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_storage_location', 'false');
+			}
 		}
 	});
 
@@ -986,10 +1081,14 @@ $(document).ready(function () {
 	$('#CheckboxLastLogin').click(function() {
 		if ($('#CheckboxLastLogin').is(':checked')) {
 			$("#userlist .lastLogin").show();
-			OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'true');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'true');
+			}
 		} else {
 			$("#userlist .lastLogin").hide();
-			OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'false');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_last_login', 'false');
+			}
 		}
 	});
 
@@ -1000,10 +1099,14 @@ $(document).ready(function () {
 	$('#CheckboxEmailAddress').click(function() {
 		if ($('#CheckboxEmailAddress').is(':checked')) {
 			$("#userlist .mailAddress").show();
-			OCP.AppConfig.setValue('core', 'umgmt_show_email', 'true');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_email', 'true');
+			}
 		} else {
 			$("#userlist .mailAddress").hide();
-			OCP.AppConfig.setValue('core', 'umgmt_show_email', 'false');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_email', 'false');
+			}
 		}
 	});
 
@@ -1014,10 +1117,14 @@ $(document).ready(function () {
 	$('#CheckboxUserBackend').click(function() {
 		if ($('#CheckboxUserBackend').is(':checked')) {
 			$("#userlist .userBackend").show();
-			OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'true');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'true');
+			}
 		} else {
 			$("#userlist .userBackend").hide();
-			OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'false');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_show_backend', 'false');
+			}
 		}
 	});
 
@@ -1028,10 +1135,14 @@ $(document).ready(function () {
 	$('#CheckboxMailOnUserCreate').click(function() {
 		if ($('#CheckboxMailOnUserCreate').is(':checked')) {
 			$("#newemail").show();
-			OCP.AppConfig.setValue('core', 'umgmt_send_email', 'true');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_send_email', 'true');
+			}
 		} else {
 			$("#newemail").hide();
-			OCP.AppConfig.setValue('core', 'umgmt_send_email', 'false');
+			if (OC.isUserAdmin()) {
+				OCP.AppConfig.setValue('core', 'umgmt_send_email', 'false');
+			}
 		}
 	});
 

@@ -26,17 +26,23 @@ namespace OCA\Activity;
 
 use OC\Files\Filesystem;
 use OC\Files\View;
+use OCA\Activity\BackgroundJob\RemoteActivity;
 use OCA\Activity\Extension\Files;
 use OCA\Activity\Extension\Files_Sharing;
 use OCP\Activity\IManager;
+use OCP\Files\IRootFolder;
 use OCP\Files\Mount\IMountPoint;
+use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 use OCP\IGroup;
 use OCP\IGroupManager;
+use OCP\ILogger;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\Share;
+use OCP\Share\IShare;
+use OCP\Share\IShareHelper;
 
 /**
  * The class to handle the filesystem hooks
@@ -62,16 +68,25 @@ class FilesHooks {
 	/** @var \OC\Files\View */
 	protected $view;
 
+	/** @var IRootFolder */
+	protected $rootFolder;
+
+	/** @var IShareHelper */
+	protected $shareHelper;
+
 	/** @var IURLGenerator */
 	protected $urlGenerator;
+
+	/** @var ILogger */
+	protected $logger;
 
 	/** @var CurrentUser */
 	protected $currentUser;
 
 	/** @var string|bool */
 	protected $moveCase = false;
-	/** @var string[] */
-	protected $oldParentUsers;
+	/** @var array */
+	protected $oldAccessList;
 	/** @var string */
 	protected $oldParentPath;
 	/** @var string */
@@ -87,18 +102,34 @@ class FilesHooks {
 	 * @param UserSettings $userSettings
 	 * @param IGroupManager $groupManager
 	 * @param View $view
+	 * @param IRootFolder $rootFolder
+	 * @param IShareHelper $shareHelper
 	 * @param IDBConnection $connection
 	 * @param IURLGenerator $urlGenerator
+	 * @param ILogger $logger
 	 * @param CurrentUser $currentUser
 	 */
-	public function __construct(IManager $manager, Data $activityData, UserSettings $userSettings, IGroupManager $groupManager, View $view, IDBConnection $connection, IURLGenerator $urlGenerator, CurrentUser $currentUser) {
+	public function __construct(IManager $manager,
+								Data $activityData,
+								UserSettings $userSettings,
+								IGroupManager $groupManager,
+								View $view,
+								IRootFolder $rootFolder,
+								IShareHelper $shareHelper,
+								IDBConnection $connection,
+								IURLGenerator $urlGenerator,
+								ILogger $logger,
+								CurrentUser $currentUser) {
 		$this->manager = $manager;
 		$this->activityData = $activityData;
 		$this->userSettings = $userSettings;
 		$this->groupManager = $groupManager;
 		$this->view = $view;
+		$this->rootFolder = $rootFolder;
+		$this->shareHelper = $shareHelper;
 		$this->connection = $connection;
 		$this->urlGenerator = $urlGenerator;
+		$this->logger = $logger;
 		$this->currentUser = $currentUser;
 	}
 
@@ -107,6 +138,10 @@ class FilesHooks {
 	 * @param string $path Path of the file that has been created
 	 */
 	public function fileCreate($path) {
+		if ($path === '/' || $path === '' || $path === null) {
+			return;
+		}
+
 		if ($this->currentUser->getUserIdentifier() !== '') {
 			$this->addNotificationsForFileAction($path, Files::TYPE_SHARE_CREATED, 'created_self', 'created_by');
 		} else {
@@ -158,11 +193,16 @@ class FilesHooks {
 			return;
 		}
 
-		$affectedUsers = $this->getUserPathsFromPath($filePath, $uidOwner);
+		$accessList = $this->getUserPathsFromPath($filePath, $uidOwner);
+
+		$this->generateRemoteActivity($accessList['remotes'], $activityType, time(), $this->currentUser->getCloudId(), $accessList['ownerPath']);
+
+		$affectedUsers = $accessList['users'];
 		$filteredStreamUsers = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'stream', $activityType);
 		$filteredEmailUsers = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'email', $activityType);
 
 		foreach ($affectedUsers as $user => $path) {
+			$user = (string) $user;
 			if (empty($filteredStreamUsers[$user]) && empty($filteredEmailUsers[$user])) {
 				continue;
 			}
@@ -182,6 +222,30 @@ class FilesHooks {
 				!empty($filteredEmailUsers[$user]) ? $filteredEmailUsers[$user] : 0,
 				$activityType
 			);
+		}
+	}
+
+	protected function generateRemoteActivity(array $remoteUsers, $type, $time, $actor, $ownerPath = false) {
+		foreach ($remoteUsers as $remoteUser => $info) {
+			if ($actor === $remoteUser) {
+				// Current user receives the notification on their own instance already
+				continue;
+			}
+
+			$arguments = [
+				$remoteUser,
+				$info['token'],
+				$ownerPath !== false ? substr($ownerPath, strlen($info['node_path'])) : $info['node_path'],
+				$type,
+				$time,
+				$actor,
+			];
+
+			if (isset($info['second_path'])) {
+				$arguments[] = $info['second_path'];
+			}
+
+			\OC::$server->getJobList()->add(RemoteActivity::class, $arguments);
 		}
 	}
 
@@ -252,7 +316,7 @@ class FilesHooks {
 			$this->moveCase = false;
 			return;
 		}
-		$this->oldParentUsers = $this->getUserPathsFromPath($this->oldParentPath, $this->oldParentOwner);
+		$this->oldAccessList = $this->getUserPathsFromPath($this->oldParentPath, $this->oldParentOwner);
 	}
 
 
@@ -300,8 +364,19 @@ class FilesHooks {
 			// Could not find the file for the owner ...
 			return;
 		}
-		$affectedUsers = $this->getUserPathsFromPath($parentPath, $parentOwner);
+		$accessList = $this->getUserPathsFromPath($parentPath, $parentOwner);
 
+		$renameRemotes = [];
+		foreach ($accessList['remotes'] as $remote => $info) {
+			$renameRemotes[$remote] = [
+				'token'       => $info['token'],
+				'node_path'   => substr($newPath, strlen($info['node_path'])),
+				'second_path' => substr($oldPath, strlen($info['node_path'])),
+			];
+		}
+		$this->generateRemoteActivity($renameRemotes, Files::TYPE_SHARE_CHANGED, time(), $this->currentUser->getCloudId());
+
+		$affectedUsers = $accessList['users'];
 		$filteredStreamUsers = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'stream', Files::TYPE_SHARE_CHANGED);
 		$filteredEmailUsers = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'email', Files::TYPE_SHARE_CHANGED);
 
@@ -352,19 +427,48 @@ class FilesHooks {
 			// Could not find the file for the owner ...
 			return;
 		}
-		$affectedUsers = $this->getUserPathsFromPath($parentPath, $parentOwner);
+		$accessList = $this->getUserPathsFromPath($parentPath, $parentOwner);
+		$affectedUsers = $accessList['users'];
+		$oldUsers = $this->oldAccessList['users'];
 
-		$beforeUsers = array_keys($this->oldParentUsers);
+		$beforeUsers = array_keys($oldUsers);
 		$afterUsers = array_keys($affectedUsers);
 
 		$deleteUsers = array_diff($beforeUsers, $afterUsers);
-		$this->generateDeleteActivities($deleteUsers, $this->oldParentUsers, $fileId, $oldFileName);
+		$this->generateDeleteActivities($deleteUsers, $oldUsers, $fileId, $oldFileName);
 
 		$addUsers = array_diff($afterUsers, $beforeUsers);
 		$this->generateAddActivities($addUsers, $affectedUsers, $fileId, $fileName);
 
 		$moveUsers = array_intersect($beforeUsers, $afterUsers);
-		$this->generateMoveActivities($moveUsers, $this->oldParentUsers, $affectedUsers, $fileId, $oldFileName, $fileName);
+		$this->generateMoveActivities($moveUsers, $oldUsers, $affectedUsers, $fileId, $oldFileName, $parentId, $fileName);
+
+		$beforeRemotes = $this->oldAccessList['remotes'];
+		$afterRemotes = $accessList['remotes'];
+
+		$addRemotes = $deleteRemotes = $moveRemotes = [];
+		foreach ($afterRemotes as $remote => $info) {
+			if (isset($beforeRemotes[$remote])) {
+				// Move
+				$info['node_path'] = substr($newPath, strlen($info['node_path']));
+				$info['second_path'] = substr($oldPath, strlen($beforeRemotes[$remote]['node_path']));
+				$moveRemotes[$remote] = $info;
+			} else {
+				$info['node_path'] = substr($newPath, strlen($info['node_path']));
+				$addRemotes[$remote] = $info;
+			}
+		}
+
+		foreach ($beforeRemotes as $remote => $info) {
+			if (!isset($afterRemotes[$remote])) {
+				$info['node_path'] = substr($oldPath, strlen($info['node_path']));
+				$deleteRemotes[$remote] = $info;
+			}
+		}
+
+		$this->generateRemoteActivity($deleteRemotes, Files::TYPE_SHARE_DELETED, time(), $this->currentUser->getCloudId());
+		$this->generateRemoteActivity($addRemotes, Files::TYPE_SHARE_CREATED, time(), $this->currentUser->getCloudId());
+		$this->generateRemoteActivity($moveRemotes, Files::TYPE_SHARE_CHANGED, time(), $this->currentUser->getCloudId());
 	}
 
 	/**
@@ -451,9 +555,10 @@ class FilesHooks {
 	 * @param string[] $afterPathMap
 	 * @param int $fileId
 	 * @param string $oldFileName
+	 * @param int $newParentId
 	 * @param string $fileName
 	 */
-	protected function generateMoveActivities($users, $beforePathMap, $afterPathMap, $fileId, $oldFileName, $fileName) {
+	protected function generateMoveActivities($users, $beforePathMap, $afterPathMap, $fileId, $oldFileName, $newParentId, $fileName) {
 		if (empty($users)) {
 			return;
 		}
@@ -466,20 +571,19 @@ class FilesHooks {
 				continue;
 			}
 
+			if ($oldFileName === $fileName) {
+				$userParams = [[$newParentId => $afterPathMap[$user] . '/']];
+			} else {
+				$userParams = [[$fileId => $afterPathMap[$user] . '/' . $fileName]];
+			}
+
 			if ($user === $this->currentUser->getUID()) {
 				$userSubject = 'moved_self';
-				$userParams = [
-					[$fileId => $afterPathMap[$user] . '/' . $fileName],
-					[$fileId => $beforePathMap[$user] . '/' . $oldFileName],
-				];
 			} else {
 				$userSubject = 'moved_by';
-				$userParams = [
-					[$fileId => $afterPathMap[$user] . '/' . $fileName],
-					$this->currentUser->getUserIdentifier(),
-					[$fileId => $beforePathMap[$user] . '/' . $oldFileName],
-				];
+				$userParams[] = $this->currentUser->getUserIdentifier();
 			}
+			$userParams[] = [$fileId => $beforePathMap[$user] . '/' . $oldFileName];
 
 			$this->addNotificationsForUser(
 				$user, $userSubject, $userParams,
@@ -499,7 +603,23 @@ class FilesHooks {
 	 * @return array
 	 */
 	protected function getUserPathsFromPath($path, $uidOwner) {
-		return Share::getUsersSharingFile($path, $uidOwner, true, true);
+		try {
+			$node = $this->rootFolder->getUserFolder($uidOwner)->get($path);
+		} catch (NotFoundException $e) {
+			return [];
+		}
+
+		if (!$node instanceof Node) {
+			return [];
+		}
+
+		$accessList = $this->shareHelper->getPathsForAccessList($node);
+
+		$path = $node->getPath();
+		$sections = explode('/', $path, 4);
+		$accessList['ownerPath'] = '/' . $sections[3];
+
+		return $accessList;
 	}
 
 	/**
@@ -510,29 +630,36 @@ class FilesHooks {
 	 */
 	protected function getSourcePathAndOwner($path) {
 		$view = Filesystem::getView();
-		$uidOwner = $view->getOwner($path);
+		$owner = $view->getOwner($path);
+		$owner = !is_string($owner) || $owner === '' ? null : $owner;
 		$fileId = 0;
+		$currentUser = $this->currentUser->getUID();
 
-		if ($uidOwner !== $this->currentUser->getUID()) {
+		if ($owner === null || $owner !== $currentUser) {
 			/** @var \OCP\Files\Storage\IStorage $storage */
 			list($storage,) = $view->resolvePath($path);
-			if (!$storage->instanceOfStorage('OCA\Files_Sharing\External\Storage')) {
-				Filesystem::initMountPoints($uidOwner);
+
+			if ($owner !== null && !$storage->instanceOfStorage('OCA\Files_Sharing\External\Storage')) {
+				Filesystem::initMountPoints($owner);
 			} else {
 				// Probably a remote user, let's try to at least generate activities
 				// for the current user
-				$uidOwner = $this->currentUser->getUID();
+				if ($currentUser === null) {
+					list(,$owner,) = explode('/', $view->getAbsolutePath($path), 3);
+				} else {
+					$owner = $currentUser;
+				}
 			}
 		}
 
 		$info = Filesystem::getFileInfo($path);
 		if ($info !== false) {
-			$ownerView = new View('/' . $uidOwner . '/files');
+			$ownerView = new View('/' . $owner . '/files');
 			$fileId = (int) $info['fileid'];
 			$path = $ownerView->getPath($fileId);
 		}
 
-		return array($path, $uidOwner, $fileId);
+		return array($path, $owner, $fileId);
 	}
 
 	/**
@@ -542,27 +669,11 @@ class FilesHooks {
 	public function share($params) {
 		if ($params['itemType'] === 'file' || $params['itemType'] === 'folder') {
 			if ((int) $params['shareType'] === Share::SHARE_TYPE_USER) {
-				$this->shareFileOrFolderWithUser($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], true);
+				$this->shareWithUser($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget']);
 			} else if ((int) $params['shareType'] === Share::SHARE_TYPE_GROUP) {
-				$this->shareFileOrFolderWithGroup($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], (int) $params['id'], true);
+				$this->shareWithGroup($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], (int) $params['id']);
 			} else if ((int) $params['shareType'] === Share::SHARE_TYPE_LINK) {
-				$this->shareFileOrFolderByLink((int) $params['fileSource'], $params['itemType'], $params['uidOwner'], true);
-			}
-		}
-	}
-
-	/**
-	 * Manage sharing events
-	 * @param array $params The hook params
-	 */
-	public function unShare($params) {
-		if ($params['itemType'] === 'file' || $params['itemType'] === 'folder') {
-			if ((int) $params['shareType'] === Share::SHARE_TYPE_USER) {
-				$this->shareFileOrFolderWithUser($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], false);
-			} else if ((int) $params['shareType'] === Share::SHARE_TYPE_GROUP) {
-				$this->shareFileOrFolderWithGroup($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], (int) $params['id'], false);
-			} else if ((int) $params['shareType'] === Share::SHARE_TYPE_LINK) {
-				$this->shareFileOrFolderByLink((int) $params['fileSource'], $params['itemType'], $params['uidOwner'], false);
+				$this->shareByLink((int) $params['fileSource'], $params['itemType'], $params['uidOwner']);
 			}
 		}
 	}
@@ -574,29 +685,18 @@ class FilesHooks {
 	 * @param int $fileSource File ID that is being shared
 	 * @param string $itemType File type that is being shared (file or folder)
 	 * @param string $fileTarget File path
-	 * @param bool $isSharing True if sharing, false if unsharing
 	 */
-	protected function shareFileOrFolderWithUser($shareWith, $fileSource, $itemType, $fileTarget, $isSharing) {
-		if ($isSharing) {
-			$actionSharer = 'shared_user_self';
-			$actionOwner = 'reshared_user_by';
-			$actionUser = 'shared_with_by';
-		} else {
-			$actionSharer = 'unshared_user_self';
-			$actionOwner = 'unshared_user_by';
-			$actionUser = 'unshared_by';
-		}
-
+	protected function shareWithUser($shareWith, $fileSource, $itemType, $fileTarget) {
 		// User performing the share
-		$this->shareNotificationForSharer($actionSharer, $shareWith, $fileSource, $itemType);
+		$this->shareNotificationForSharer('shared_user_self', $shareWith, $fileSource, $itemType);
 		if ($this->currentUser->getUID() !== null) {
-			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), $actionOwner, $shareWith, $fileSource, $itemType);
+			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), 'reshared_user_by', $shareWith, $fileSource, $itemType);
 		}
 
 		// New shared user
 		$this->addNotificationsForUser(
-			$shareWith, $actionUser, [[$fileSource => $fileTarget], $this->currentUser->getUserIdentifier()],
-			(int) $fileSource, $fileTarget, ($itemType === 'file'),
+			$shareWith, 'shared_with_by', [[$fileSource => $fileTarget], $this->currentUser->getUserIdentifier()],
+			(int) $fileSource, $fileTarget, $itemType === 'file',
 			$this->userSettings->getUserSetting($shareWith, 'stream', Files_Sharing::TYPE_SHARED),
 			$this->userSettings->getUserSetting($shareWith, 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($shareWith, 'setting', 'batchtime') : 0
 		);
@@ -610,19 +710,8 @@ class FilesHooks {
 	 * @param string $itemType File type that is being shared (file or folder)
 	 * @param string $fileTarget File path
 	 * @param int $shareId The Share ID of this share
-	 * @param bool $isSharing True if sharing, false if unsharing
 	 */
-	protected function shareFileOrFolderWithGroup($shareWith, $fileSource, $itemType, $fileTarget, $shareId, $isSharing) {
-		if ($isSharing) {
-			$actionSharer = 'shared_group_self';
-			$actionOwner = 'reshared_group_by';
-			$actionUser = 'shared_with_by';
-		} else {
-			$actionSharer = 'unshared_group_self';
-			$actionOwner = 'unshared_group_by';
-			$actionUser = 'unshared_by';
-		}
-
+	protected function shareWithGroup($shareWith, $fileSource, $itemType, $fileTarget, $shareId) {
 		// Members of the new group
 		$group = $this->groupManager->get($shareWith);
 		if (!($group instanceof IGroup)) {
@@ -630,17 +719,147 @@ class FilesHooks {
 		}
 
 		// User performing the share
-		$this->shareNotificationForSharer($actionSharer, $shareWith, $fileSource, $itemType);
+		$this->shareNotificationForSharer('shared_group_self', $shareWith, $fileSource, $itemType);
 		if ($this->currentUser->getUID() !== null) {
-			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), $actionOwner, $shareWith, $fileSource, $itemType);
+			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), 'reshared_group_by', $shareWith, $fileSource, $itemType);
 		}
 
 		$offset = 0;
 		$users = $group->searchUsers('', self::USER_BATCH_SIZE, $offset);
 		while (!empty($users)) {
-			$this->addNotificationsForGroupUsers($users, $actionUser, $fileSource, $itemType, $fileTarget, $shareId);
+			$this->addNotificationsForGroupUsers($users, 'shared_with_by', $fileSource, $itemType, $fileTarget, $shareId);
 			$offset += self::USER_BATCH_SIZE;
 			$users = $group->searchUsers('', self::USER_BATCH_SIZE, $offset);
+		}
+	}
+
+	/**
+	 * Sharing a file or folder via link/public
+	 *
+	 * @param int $fileSource File ID that is being shared
+	 * @param string $itemType File type that is being shared (file or folder)
+	 * @param string $linkOwner
+	 */
+	protected function shareByLink($fileSource, $itemType, $linkOwner) {
+		$this->view->chroot('/' . $linkOwner . '/files');
+
+		try {
+			$path = $this->view->getPath($fileSource);
+		} catch (NotFoundException $e) {
+			return;
+		}
+
+		$this->shareNotificationForOriginalOwners($linkOwner, 'reshared_link_by', '', $fileSource, $itemType);
+
+		$this->addNotificationsForUser(
+			$linkOwner, 'shared_link_self', [[$fileSource => $path]],
+			(int) $fileSource, $path, $itemType === 'file',
+			$this->userSettings->getUserSetting($linkOwner, 'stream', Files_Sharing::TYPE_SHARED),
+			$this->userSettings->getUserSetting($linkOwner, 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($linkOwner, 'setting', 'batchtime') : 0
+		);
+	}
+
+	/**
+	 * Manage unsharing events
+	 * @param IShare $share
+	 * @throws \OCP\Files\NotFoundException
+	 */
+	public function unShare(IShare $share) {
+		if (in_array($share->getNodeType(), ['file', 'folder'], true)) {
+			if ($share->getShareType() === Share::SHARE_TYPE_USER) {
+				$this->unshareFromUser($share);
+			} else if ($share->getShareType() === Share::SHARE_TYPE_GROUP) {
+				$this->unshareFromGroup($share);
+			} else if ($share->getShareType() === Share::SHARE_TYPE_LINK) {
+				$this->unshareLink($share);
+			}
+		}
+	}
+
+	/**
+	 * Unharing a file or folder from a user
+	 *
+	 * @param IShare $share
+	 * @throws \OCP\Files\NotFoundException
+	 */
+	protected function unshareFromUser(IShare $share) {
+		// User performing the share
+		$this->shareNotificationForSharer('unshared_user_self', $share->getSharedWith(), $share->getNodeId(), $share->getNodeType());
+
+		// Owner
+		if ($this->currentUser->getUID() !== null) {
+			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), 'unshared_user_by', $share->getSharedWith(), $share->getNodeId(), $share->getNodeType());
+		}
+
+		// Recipient
+		$this->addNotificationsForUser(
+			$share->getSharedWith(), 'unshared_by', [[$share->getNodeId() => $share->getTarget()], $this->currentUser->getUserIdentifier()],
+			$share->getNodeId(), $share->getTarget(), $share->getNodeType() === 'file',
+			$this->userSettings->getUserSetting($share->getSharedWith(), 'stream', Files_Sharing::TYPE_SHARED),
+			$this->userSettings->getUserSetting($share->getSharedWith(), 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($share->getSharedWith(), 'setting', 'batchtime') : 0
+		);
+	}
+
+	/**
+	 * Unsharing a file or folder from a group
+	 *
+	 * @param IShare $share
+	 * @throws \OCP\Files\NotFoundException
+	 */
+	protected function unshareFromGroup(IShare $share) {
+		// Members of the new group
+		$group = $this->groupManager->get($share->getSharedWith());
+		if (!($group instanceof IGroup)) {
+			return;
+		}
+
+		// User performing the share
+		$this->shareNotificationForSharer('unshared_group_self', $share->getSharedWith(), $share->getNodeId(), $share->getNodeType());
+		if ($this->currentUser->getUID() !== null) {
+			$this->shareNotificationForOriginalOwners($this->currentUser->getUID(), 'unshared_group_by', $share->getSharedWith(), $share->getNodeId(), $share->getNodeType());
+		}
+
+		$offset = 0;
+		$users = $group->searchUsers('', self::USER_BATCH_SIZE, $offset);
+		while (!empty($users)) {
+			$this->addNotificationsForGroupUsers($users, 'unshared_by', $share->getNodeId(), $share->getNodeType(), $share->getTarget(), $share->getId());
+			$offset += self::USER_BATCH_SIZE;
+			$users = $group->searchUsers('', self::USER_BATCH_SIZE, $offset);
+		}
+	}
+
+	/**
+	 * Sharing a file or folder via link/public
+	 *
+	 * @param IShare $share
+	 * @throws \OCP\Files\NotFoundException
+	 */
+	protected function unshareLink(IShare $share) {
+		$owner = $share->getSharedBy();
+		if ($this->currentUser->getUID() === null) {
+			// Link expired
+			$actionSharer = 'link_expired';
+			$actionOwner = 'link_by_expired';
+		} else {
+			$actionSharer = 'unshared_link_self';
+			$actionOwner = 'unshared_link_by';
+		}
+
+		$this->addNotificationsForUser(
+			$owner, $actionSharer, [[$share->getNodeId() => $share->getTarget()]],
+			$share->getNodeId(), $share->getTarget(), $share->getNodeType() === 'file',
+			$this->userSettings->getUserSetting($owner, 'stream', Files_Sharing::TYPE_SHARED),
+			$this->userSettings->getUserSetting($owner, 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($owner, 'setting', 'batchtime') : 0
+		);
+
+		if ($share->getSharedBy() !== $share->getShareOwner()) {
+			$owner = $share->getShareOwner();
+			$this->addNotificationsForUser(
+				$owner, $actionOwner, [[$share->getNodeId() => $share->getTarget()], $share->getSharedBy()],
+				$share->getNodeId(), $share->getTarget(), $share->getNodeType() === 'file',
+				$this->userSettings->getUserSetting($owner, 'stream', Files_Sharing::TYPE_SHARED),
+				$this->userSettings->getUserSetting($owner, 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($owner, 'setting', 'batchtime') : 0
+			);
 		}
 	}
 
@@ -706,48 +925,6 @@ class FilesHooks {
 		}
 
 		return $affectedUsers;
-	}
-
-	/**
-	 * Sharing a file or folder via link/public
-	 *
-	 * @param int $fileSource File ID that is being shared
-	 * @param string $itemType File type that is being shared (file or folder)
-	 * @param string $linkOwner
-	 * @param bool $isSharing True if sharing, false if unsharing
-	 */
-	protected function shareFileOrFolderByLink($fileSource, $itemType, $linkOwner, $isSharing) {
-		$owner = $this->currentUser->getUID();
-		if ($isSharing) {
-			$actionSharer = 'shared_link_self';
-			$actionOwner = 'reshared_link_by';
-		} else if ($owner !== $linkOwner) {
-			// Link expired
-			$actionSharer = 'link_expired';
-			$actionOwner = 'link_by_expired';
-			$owner = $linkOwner;
-			\OC::$server->getUserFolder($linkOwner);
-		} else {
-			$actionSharer = 'unshared_link_self';
-			$actionOwner = 'unshared_link_by';
-		}
-
-		$this->view->chroot('/' . $owner . '/files');
-
-		try {
-			$path = $this->view->getPath($fileSource);
-		} catch (NotFoundException $e) {
-			return;
-		}
-
-		$this->shareNotificationForOriginalOwners($owner, $actionOwner, '', $fileSource, $itemType);
-
-		$this->addNotificationsForUser(
-			$owner, $actionSharer, [[$fileSource => $path]],
-			(int) $fileSource, $path, ($itemType === 'file'),
-			$this->userSettings->getUserSetting($owner, 'stream', Files_Sharing::TYPE_SHARED),
-			$this->userSettings->getUserSetting($owner, 'email', Files_Sharing::TYPE_SHARED) ? $this->userSettings->getUserSetting($owner, 'setting', 'batchtime') : 0
-		);
 	}
 
 	/**
@@ -883,14 +1060,22 @@ class FilesHooks {
 		$objectType = ($fileId) ? 'files' : '';
 
 		$event = $this->manager->generateEvent();
-		$event->setApp($app)
-			->setType($type)
-			->setAffectedUser($user)
-			->setAuthor($this->currentUser->getUID())
-			->setTimestamp(time())
-			->setSubject($subject, $subjectParams)
-			->setObject($objectType, $fileId, $path)
-			->setLink($link);
+		try {
+			$event->setApp($app)
+				->setType($type)
+				->setAffectedUser($user)
+				->setTimestamp(time())
+				->setSubject($subject, $subjectParams)
+				->setObject($objectType, $fileId, $path)
+				->setLink($link);
+
+			if ($this->currentUser->getUID() !== null) {
+				// Allow this to be empty for guests
+				$event->setAuthor($this->currentUser->getUID());
+			}
+		} catch (\InvalidArgumentException $e) {
+			$this->logger->logException($e);
+		}
 
 		// Add activity to stream
 		if ($streamSetting && (!$selfAction || $this->userSettings->getUserSetting($this->currentUser->getUID(), 'setting', 'self'))) {

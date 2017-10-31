@@ -31,7 +31,6 @@ use OC\Encryption\Exceptions\ModuleDoesNotExistsException;
 use OC\Files\Filesystem;
 use OC\Files\View;
 use OCP\Encryption\IEncryptionModule;
-use OCP\Files\Storage;
 use OCP\IConfig;
 
 class Util {
@@ -98,6 +97,7 @@ class Util {
 
 		$this->excludedPaths[] = 'files_encryption';
 		$this->excludedPaths[] = 'appdata_' . $config->getSystemValue('instanceid', null);
+		$this->excludedPaths[] = 'files_external';
 	}
 
 	/**
@@ -273,8 +273,18 @@ class Util {
 			$result = \OCP\User::getUsers();
 		} else {
 			$result = array_merge($result, $users);
+
+			$groupManager = \OC::$server->getGroupManager();
 			foreach ($groups as $group) {
-				$result = array_merge($result, \OC_Group::usersInGroup($group));
+				$groupObject = $groupManager->get($group);
+				if ($groupObject) {
+					$foundUsers = $groupObject->searchUsers('', -1, 0);
+					$userIds = [];
+					foreach ($foundUsers as $user) {
+						$userIds[] = $user->getUID();
+					}
+					$result = array_merge($result, $userIds);
+				}
 			}
 		}
 

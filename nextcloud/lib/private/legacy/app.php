@@ -51,7 +51,6 @@ use OC\App\DependencyAnalyzer;
 use OC\App\InfoParser;
 use OC\App\Platform;
 use OC\Installer;
-use OC\OCSClient;
 use OC\Repair;
 use OCP\App\ManagerEvent;
 
@@ -134,10 +133,8 @@ class OC_App {
 	 * load a single app
 	 *
 	 * @param string $app
-	 * @param bool $checkUpgrade whether an upgrade check should be done
-	 * @throws \OC\NeedsUpdateException
 	 */
-	public static function loadApp($app, $checkUpgrade = true) {
+	public static function loadApp($app) {
 		self::$loadedApps[] = $app;
 		$appPath = self::getAppPath($app);
 		if($appPath === false) {
@@ -149,9 +146,6 @@ class OC_App {
 
 		if (is_file($appPath . '/appinfo/app.php')) {
 			\OC::$server->getEventLogger()->start('load_app_' . $app, 'Load app: ' . $app);
-			if ($checkUpgrade and self::shouldUpgrade($app)) {
-				throw new \OC\NeedsUpdateException();
-			}
 			self::requireAppFile($app);
 			if (self::isType($app, array('authentication'))) {
 				// since authentication apps affect the "is app enabled for group" check,
@@ -194,6 +188,7 @@ class OC_App {
 		self::$alreadyRegistered[$key] = true;
 		// Register on PSR-4 composer autoloader
 		$appNamespace = \OC\AppFramework\App::buildAppNamespace($app);
+		\OC::$server->registerNamespace($app, $appNamespace);
 		\OC::$composerAutoloader->addPsr4($appNamespace . '\\', $path . '/lib/', true);
 		if (defined('PHPUNIT_RUN') || defined('CLI_TEST_RUN')) {
 			\OC::$composerAutoloader->addPsr4($appNamespace . '\\Tests\\', $path . '/tests/', true);
@@ -362,15 +357,14 @@ class OC_App {
 	public function enable($appId,
 						   $groups = null) {
 		self::$enabledAppsCache = []; // flush
-		$l = \OC::$server->getL10N('core');
-		$config = \OC::$server->getConfig();
 
 		// Check if app is already downloaded
 		$installer = new Installer(
 			\OC::$server->getAppFetcher(),
 			\OC::$server->getHTTPClientService(),
 			\OC::$server->getTempManager(),
-			\OC::$server->getLogger()
+			\OC::$server->getLogger(),
+			\OC::$server->getConfig()
 		);
 		$isDownloaded = $installer->isDownloaded($appId);
 
@@ -378,23 +372,7 @@ class OC_App {
 			$installer->downloadApp($appId);
 		}
 
-		if (!Installer::isInstalled($appId)) {
-			$appId = self::installApp(
-				$appId,
-				$config,
-				$l
-			);
-			$appPath = self::getAppPath($appId);
-			self::registerAutoloading($appId, $appPath);
-			$installer->installApp($appId);
-		} else {
-			// check for required dependencies
-			$info = self::getAppInfo($appId);
-			self::checkAppDependencies($config, $l, $info);
-			$appPath = self::getAppPath($appId);
-			self::registerAutoloading($appId, $appPath);
-			$installer->installApp($appId);
-		}
+		$installer->installApp($appId);
 
 		$appManager = \OC::$server->getAppManager();
 		if (!is_null($groups)) {
@@ -409,13 +387,6 @@ class OC_App {
 			$appManager->enableAppForGroups($appId, $groupsList);
 		} else {
 			$appManager->enableApp($appId);
-		}
-
-		$info = self::getAppInfo($appId);
-		if(isset($info['settings']) && is_array($info['settings'])) {
-			$appPath = self::getAppPath($appId);
-			self::registerAutoloading($appId, $appPath);
-			\OC::$server->getSettingsManager()->setupSettings($info['settings']);
 		}
 	}
 
@@ -432,7 +403,8 @@ class OC_App {
 			\OC::$server->getAppFetcher(),
 			\OC::$server->getHTTPClientService(),
 			\OC::$server->getTempManager(),
-			\OC::$server->getLogger()
+			\OC::$server->getLogger(),
+			\OC::$server->getConfig()
 		);
 		return $installer->removeApp($app);
 	}
@@ -461,89 +433,8 @@ class OC_App {
 		$appManager->disableApp($app);
 	}
 
-	/**
-	 * Returns the Settings Navigation
-	 *
-	 * @return string[]
-	 *
-	 * This function returns an array containing all settings pages added. The
-	 * entries are sorted by the key 'order' ascending.
-	 */
-	public static function getSettingsNavigation() {
-		$l = \OC::$server->getL10N('lib');
-		$urlGenerator = \OC::$server->getURLGenerator();
-
-		$settings = array();
-		// by default, settings only contain the help menu
-		if (\OC::$server->getSystemConfig()->getValue('knowledgebaseenabled', true)) {
-			$settings = array(
-				array(
-					"id" => "help",
-					"order" => 4,
-					"href" => $urlGenerator->linkToRoute('settings_help'),
-					"name" => $l->t("Help"),
-					"icon" => $urlGenerator->imagePath("settings", "help.svg")
-				)
-			);
-		}
-
-		// if the user is logged-in
-		if (OC_User::isLoggedIn()) {
-			// personal menu
-			$settings[] = array(
-				"id" => "personal",
-				"order" => 1,
-				"href" => $urlGenerator->linkToRoute('settings_personal'),
-				"name" => $l->t("Personal"),
-				"icon" => $urlGenerator->imagePath("settings", "personal.svg")
-			);
-
-			//SubAdmins are also allowed to access user management
-			$userObject = \OC::$server->getUserSession()->getUser();
-			$isSubAdmin = false;
-			if($userObject !== null) {
-				$isSubAdmin = \OC::$server->getGroupManager()->getSubAdmin()->isSubAdmin($userObject);
-			}
-			if ($isSubAdmin) {
-				// admin users menu
-				$settings[] = array(
-					"id" => "core_users",
-					"order" => 3,
-					"href" => $urlGenerator->linkToRoute('settings_users'),
-					"name" => $l->t("Users"),
-					"icon" => $urlGenerator->imagePath("settings", "users.svg")
-				);
-			}
-
-			// if the user is an admin
-			if (OC_User::isAdminUser(OC_User::getUser())) {
-				// admin settings
-				$settings[] = array(
-					"id" => "admin",
-					"order" => 2,
-					"href" => $urlGenerator->linkToRoute('settings.AdminSettings.index'),
-					"name" => $l->t("Admin"),
-					"icon" => $urlGenerator->imagePath("settings", "admin.svg")
-				);
-			}
-		}
-
-		$navigation = self::proceedNavigation($settings);
-		return $navigation;
-	}
-
 	// This is private as well. It simply works, so don't ask for more details
 	private static function proceedNavigation($list) {
-		$activeApp = OC::$server->getNavigationManager()->getActiveEntry();
-		foreach ($list as &$navEntry) {
-			if ($navEntry['id'] == $activeApp) {
-				$navEntry['active'] = true;
-			} else {
-				$navEntry['active'] = false;
-			}
-		}
-		unset($navEntry);
-
 		usort($list, function($a, $b) {
 			if (isset($a['order']) && isset($b['order'])) {
 				return ($a['order'] < $b['order']) ? -1 : 1;
@@ -553,6 +444,16 @@ class OC_App {
 				return ($a['name'] < $b['name']) ? -1 : 1;
 			}
 		});
+
+		$activeApp = OC::$server->getNavigationManager()->getActiveEntry();
+		foreach ($list as $index => &$navEntry) {
+			if ($navEntry['id'] == $activeApp) {
+				$navEntry['active'] = true;
+			} else {
+				$navEntry['active'] = false;
+			}
+		}
+		unset($navEntry);
 
 		return $list;
 	}
@@ -742,8 +643,20 @@ class OC_App {
 	 */
 	public static function getNavigation() {
 		$entries = OC::$server->getNavigationManager()->getAll();
-		$navigation = self::proceedNavigation($entries);
-		return $navigation;
+		return self::proceedNavigation($entries);
+	}
+
+	/**
+	 * Returns the Settings Navigation
+	 *
+	 * @return string[]
+	 *
+	 * This function returns an array containing all settings pages added. The
+	 * entries are sorted by the key 'order' ascending.
+	 */
+	public static function getSettingsNavigation() {
+		$entries = OC::$server->getNavigationManager()->getAll('settings');
+		return self::proceedNavigation($entries);
 	}
 
 	/**
@@ -1138,13 +1051,12 @@ class OC_App {
 		unset(self::$appVersion[$appId]);
 		// run upgrade code
 		if (file_exists($appPath . '/appinfo/update.php')) {
-			self::loadApp($appId, false);
+			self::loadApp($appId);
 			include $appPath . '/appinfo/update.php';
 		}
+		self::registerAutoloading($appId, $appPath);
 		self::setupBackgroundJobs($appData['background-jobs']);
 		if(isset($appData['settings']) && is_array($appData['settings'])) {
-			$appPath = self::getAppPath($appId);
-			self::registerAutoloading($appId, $appPath);
 			\OC::$server->getSettingsManager()->setupSettings($appData['settings']);
 		}
 
@@ -1183,7 +1095,7 @@ class OC_App {
 			return;
 		}
 		// load the app
-		self::loadApp($appId, false);
+		self::loadApp($appId);
 
 		$dispatcher = OC::$server->getEventDispatcher();
 
@@ -1227,7 +1139,7 @@ class OC_App {
 	 */
 	public static function getStorage($appId) {
 		if (OC_App::isEnabled($appId)) { //sanity check
-			if (OC_User::isLoggedIn()) {
+			if (\OC::$server->getUserSession()->isLoggedIn()) {
 				$view = new \OC\Files\View('/' . OC_User::getUser());
 				if (!$view->file_exists($appId)) {
 					$view->mkdir($appId);
@@ -1304,45 +1216,23 @@ class OC_App {
 			$data['summary'] = self::findBestL10NOption($data['summary'], $lang);
 		}
 		if ($lang && isset($data['description']) && is_array($data['description'])) {
-			$data['description'] = self::findBestL10NOption($data['description'], $lang);
-		}
-
-		// just modify the description if it is available
-		// otherwise this will create a $data element with an empty 'description'
-		if (isset($data['description'])) {
-			if (is_string($data['description'])) {
-				// sometimes the description contains line breaks and they are then also
-				// shown in this way in the app management which isn't wanted as HTML
-				// manages line breaks itself
-
-				// first of all we split on empty lines
-				$paragraphs = preg_split("!\n[[:space:]]*\n!mu", $data['description']);
-
-				$result = [];
-				foreach ($paragraphs as $value) {
-					// replace multiple whitespace (tabs, space, newlines) inside a paragraph
-					// with a single space - also trims whitespace
-					$result[] = trim(preg_replace('![[:space:]]+!mu', ' ', $value));
-				}
-
-				// join the single paragraphs with a empty line in between
-				$data['description'] = implode("\n\n", $result);
-
-			} else {
-				$data['description'] = '';
-			}
+			$data['description'] = trim(self::findBestL10NOption($data['description'], $lang));
+		} else if (isset($data['description']) && is_string($data['description'])) {
+			$data['description'] = trim($data['description']);
+		} else  {
+			$data['description'] = '';
 		}
 
 		return $data;
 	}
 
 	/**
-	 * @param $config
-	 * @param $l
-	 * @param $info
-	 * @throws Exception
+	 * @param \OCP\IConfig $config
+	 * @param \OCP\IL10N $l
+	 * @param array $info
+	 * @throws \Exception
 	 */
-	protected static function checkAppDependencies($config, $l, $info) {
+	public static function checkAppDependencies($config, $l, $info) {
 		$dependencyAnalyzer = new DependencyAnalyzer(new Platform($config), $l);
 		$missing = $dependencyAnalyzer->analyze($info);
 		if (!empty($missing)) {

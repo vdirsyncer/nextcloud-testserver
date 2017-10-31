@@ -30,6 +30,7 @@
 
 namespace OC\User;
 
+use OC\Accounts\AccountManager;
 use OC\Files\Cache\Storage;
 use OC\Hooks\Emitter;
 use OC_Helper;
@@ -158,12 +159,15 @@ class User implements IUser {
 	 * @since 9.0.0
 	 */
 	public function setEMailAddress($mailAddress) {
+		$oldMailAddress = $this->getEMailAddress();
 		if($mailAddress === '') {
 			$this->config->deleteUserValue($this->uid, 'settings', 'email');
 		} else {
 			$this->config->setUserValue($this->uid, 'settings', 'email', $mailAddress);
 		}
-		$this->triggerChange('eMailAddress', $mailAddress);
+		if($oldMailAddress !== $mailAddress) {
+			$this->triggerChange('eMailAddress', $mailAddress, $oldMailAddress);
+		}
 	}
 
 	/**
@@ -197,20 +201,32 @@ class User implements IUser {
 		if ($this->emitter) {
 			$this->emitter->emit('\OC\User', 'preDelete', array($this));
 		}
+		// get the home now because it won't return it after user deletion
+		$homePath = $this->getHome();
 		$result = $this->backend->deleteUser($this->uid);
 		if ($result) {
 
 			// FIXME: Feels like an hack - suggestions?
 
+			$groupManager = \OC::$server->getGroupManager();
 			// We have to delete the user from all groups
-			foreach (\OC::$server->getGroupManager()->getUserGroupIds($this) as $groupId) {
-				\OC_Group::removeFromGroup($this->uid, $groupId);
+			foreach ($groupManager->getUserGroupIds($this) as $groupId) {
+				$group = $groupManager->get($groupId);
+				if ($group) {
+					\OC_Hook::emit("OC_Group", "pre_removeFromGroup", ["run" => true, "uid" => $this->uid, "gid" => $groupId]);
+					$group->removeUser($this);
+					\OC_Hook::emit("OC_User", "post_removeFromGroup", ["uid" => $this->uid, "gid" => $groupId]);
+				}
 			}
 			// Delete the user's keys in preferences
 			\OC::$server->getConfig()->deleteAllUserValues($this->uid);
 
 			// Delete user files in /data/
-			\OC_Helper::rmdirr($this->getHome());
+			if ($homePath !== false) {
+				// FIXME: this operates directly on FS, should use View instead...
+				// also this is not testable/mockable...
+				\OC_Helper::rmdirr($homePath);
+			}
 
 			// Delete the users entry in the storage table
 			Storage::remove('home::' . $this->uid);
@@ -221,6 +237,10 @@ class User implements IUser {
 			$notification = \OC::$server->getNotificationManager()->createNotification();
 			$notification->setUser($this->uid);
 			\OC::$server->getNotificationManager()->markProcessed($notification);
+
+			/** @var AccountManager $accountManager */
+			$accountManager = \OC::$server->query(AccountManager::class);
+			$accountManager->deleteUser($this);
 
 			if ($this->emitter) {
 				$this->emitter->emit('\OC\User', 'postDelete', array($this));
@@ -261,7 +281,7 @@ class User implements IUser {
 			if ($this->backend->implementsActions(Backend::GET_HOME) and $home = $this->backend->getHome($this->uid)) {
 				$this->home = $home;
 			} elseif ($this->config) {
-				$this->home = $this->config->getSystemValue('datadirectory') . '/' . $this->uid;
+				$this->home = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data') . '/' . $this->uid;
 			} else {
 				$this->home = \OC::$SERVERROOT . '/data/' . $this->uid;
 			}
@@ -329,9 +349,13 @@ class User implements IUser {
 	 * @param bool $enabled
 	 */
 	public function setEnabled($enabled) {
+		$oldStatus = $this->isEnabled();
 		$this->enabled = $enabled;
 		$enabled = ($enabled) ? 'true' : 'false';
-		$this->config->setUserValue($this->uid, 'core', 'enabled', $enabled);
+		if ($oldStatus !== $this->enabled) {
+			$this->triggerChange('enabled', $enabled);
+			$this->config->setUserValue($this->uid, 'core', 'enabled', $enabled);
+		}
 	}
 
 	/**
@@ -366,12 +390,15 @@ class User implements IUser {
 	 * @since 9.0.0
 	 */
 	public function setQuota($quota) {
+		$oldQuota = $this->config->getUserValue($this->uid, 'files', 'quota', '');
 		if($quota !== 'none' and $quota !== 'default') {
 			$quota = OC_Helper::computerFileSize($quota);
 			$quota = OC_Helper::humanFileSize($quota);
 		}
 		$this->config->setUserValue($this->uid, 'files', 'quota', $quota);
-		$this->triggerChange('quota', $quota);
+		if($quota !== $oldQuota) {
+			$this->triggerChange('quota', $quota);
+		}
 	}
 
 	/**
@@ -405,7 +432,8 @@ class User implements IUser {
 	public function getCloudId() {
 		$uid = $this->getUID();
 		$server = $this->urlGenerator->getAbsoluteURL('/');
-		return $uid . '@' . rtrim( $this->removeProtocolFromUrl($server), '/');
+		$server =  rtrim( $this->removeProtocolFromUrl($server), '/');
+		return \OC::$server->getCloudIdManager()->getCloudId($uid, $server)->getId();
 	}
 
 	/**
@@ -422,9 +450,9 @@ class User implements IUser {
 		return $url;
 	}
 
-	public function triggerChange($feature, $value = null) {
+	public function triggerChange($feature, $value = null, $oldValue = null) {
 		if ($this->emitter) {
-			$this->emitter->emit('\OC\User', 'changeUser', array($this, $feature, $value));
+			$this->emitter->emit('\OC\User', 'changeUser', array($this, $feature, $value, $oldValue));
 		}
 	}
 }

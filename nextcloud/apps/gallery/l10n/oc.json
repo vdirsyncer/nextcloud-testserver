@@ -3,7 +3,6 @@
     "Aborting preview. Could not find the file" : "Interrupcion de la previsualizacion. Lo fichièr es introbable.",
     "Could not move \"{file}\", target exists" : "Impossible de desplaçar \"{file}\", la cibla existís",
     "Could not move \"{file}\"" : "Impossible de desplaçar \"{file}\"",
-    "Gallery view" : "Vista en galariá",
     "Could not load the description" : "Impossible de cargar la descripcion",
     "Could not load the description: " : "Impossible de cargar la descripcion :",
     "Copyright" : "Drech d'autor",
@@ -16,7 +15,6 @@
     "please install one of the following alternatives" : "Installatz una de las alternativas seguentas",
     "Album cannot be shown" : "Impossible d'afichar l'album",
     "No media files found" : "Cap de fichièr mèdia pas trobat",
-    "Upload pictures in the files app to display them here" : "Apondètz d'imatges dins l'aplicacion Fichièrs e apareisseràn aicí",
     "Configuration error" : "Error de configuracion",
     "New" : "Novèl",
     "Error loading slideshow template" : "Error al moment del telecargament del modèl de diaporama ",
@@ -92,12 +90,12 @@
     "a conflicting app was installed" : "una aplicacion incompatibla es estada installada",
     "a required component is missing or was disconnected" : "un component requesit es mancant o es estat desconnectat",
     "the filesystem is not readable" : "lo sistèma de fichièrs es pas legible",
-    "For more information, please contact your friendly ownCloud administrator." : "Per mai d'informacions, contactatz vòstre administrator ownCloud.",
     "Sorry, this link doesn't seem to work anymore." : "O planhèm, sembla qu'aqueste ligam fonciona pas mai.",
     "the item was removed" : "l'element es estat suprimit",
     "the link has expired" : "lo ligam a expirat",
     "sharing is disabled" : "lo partiment es desactivat",
     "For more information, please ask the person who has sent you this link." : "Per mai d'informacions, contactatz la persona que vos a mandat aqueste ligam.",
-    "Picture view" : "Visualizacion de l'imatge"
+    "Picture view" : "Visualizacion de l'imatge",
+    "Gallery view" : "Vista en galariá"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }

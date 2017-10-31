@@ -7,27 +7,7 @@
  */
 script(
 	$_['appName'],
-	[
-		'app',
-		'gallery',
-		'galleryutility',
-		'galleryconfig',
-		'galleryinfobox',
-		'galleryview',
-		'breadcrumb',
-		'galleryalbum',
-		'galleryrow',
-		'galleryimage',
-		'thumbnail',
-		'vendor/modified-eventsource-polyfill/eventsource-polyfill',
-		'eventsource',
-		'vendor/commonmark/dist/commonmark.min',
-		'vendor/dompurify/src/purify',
-		'vendor/bigshot/bigshot-compressed',
-		'slideshow',
-		'slideshowcontrols',
-		'slideshowzoomablepreview'
-	]
+	'merged'
 );
 style(
 	$_['appName'],
@@ -50,19 +30,13 @@ style(
 	<div id="header">
 		<a href="<?php print_unescaped(link_to('', 'index.php')); ?>"
 		   title="" id="nextcloud">
-			<div class="logo-icon svg">
+			<div class="logo logo-icon svg">
 			</div>
 		</a>
 
 		<div class="header-appname-container">
 			<h1 class="header-appname">
-				<?php
-				if (\OCP\App::isEnabled('enterprise_key')) {
-					print_unescaped($theme->getHTMLName());
-				} else {
-					p($theme->getName());
-				}
-				?>
+				<?php print_unescaped($theme->getHTMLName()); ?>
 			</h1>
 		</div>
 
@@ -87,11 +61,8 @@ style(
 								</span>
 				<?php } ?>
 				<a id="download" class="button">
-					<img class="svg" src="<?php print_unescaped(
-						image_path('core', 'actions/download.svg')
-					); ?>" alt=""/>
-						<span id="download-text"><?php p($l->t('Download')) ?>
-						</span>
+					<span class="icon-download"></span>
+					<span id="download-text"><?php p($l->t('Download')) ?></span>
 				</a>
 			</span>
 		</div>

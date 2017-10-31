@@ -102,7 +102,7 @@ OCA.External.StatusManager = {
 					var message;
 					if (mountData.location === 3) {
 						// In this case the error is because  mount point use Login credentials and don't exist in the session
-						message = t('files_external', 'Couldn\'t access. Please logout and login to activate this mount point');
+						message = t('files_external', 'Couldn\'t access. Please log out and in again to activate this mount point');
 					} else {
 						message = t('files_external', 'Couldn\'t get the information from the remote server: {code} {type}', {
 							code: jqxhr.status,
@@ -157,7 +157,9 @@ OCA.External.StatusManager = {
 				},
 				error: function (jqxhr, state, error) {
 					self.mountPointList = [];
-					OC.Notification.showTemporary(t('files_external', 'Couldn\'t get the list of external mount points: {type}', {type: error}));
+					OC.Notification.show(t('files_external', 'Couldn\'t get the list of external mount points: {type}', 
+						{type: error}), {type: 'error'}
+					);
 				},
 				complete: function () {
 					self.isGetMountPointListRunning = false;
@@ -265,7 +267,9 @@ OCA.External.StatusManager = {
 			// check if we have a list first
 			if (list === undefined && !self.emptyWarningShown) {
 				self.emptyWarningShown = true;
-				OC.Notification.showTemporary(t('files_external', 'Couldn\'t get the list of Windows network drive mount points: empty response from the server'));
+				OC.Notification.show(t('files_external', 'Couldn\'t fetch list of Windows network drive mount points: Empty response from server'), 
+					{type: 'error'}
+				);
 				return;
 			}
 			if (list && list.length > 0) {
@@ -295,7 +299,9 @@ OCA.External.StatusManager = {
 							}
 						});
 						if (showNotification) {
-							OC.Notification.showTemporary(t('files_external', 'Some of the configured external mount points are not connected. Please click on the red row(s) for more information'));
+							OC.Notification.show(t('files_external', 'Some of the configured external mount points are not connected. Please click on the red row(s) for more information'), 
+								{type: 'error'}
+							);
 						}
 					}
 				});
@@ -414,14 +420,14 @@ OCA.External.StatusManager = {
 					}
 				},
 				success: function (data) {
-					OC.Notification.showTemporary(t('files_external', 'Credentials saved'));
+					OC.Notification.show(t('files_external', 'Credentials saved'), {type: 'error'});
 					dialog.ocdialog('close');
 					/* Trigger status check again */
 					OCA.External.StatusManager.recheckConnectivityForMount([OC.basename(data.mountPoint)], true);
 				},
 				error: function () {
 					$('.oc-dialog-close').show();
-					OC.Notification.showTemporary(t('files_external', 'Credentials saving failed'));
+					OC.Notification.show(t('files_external', 'Credentials saving failed'), {type: 'error'});
 				}
 			});
 			return false;

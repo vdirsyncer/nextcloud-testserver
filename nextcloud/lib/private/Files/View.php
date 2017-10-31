@@ -61,8 +61,6 @@ use OCP\Files\InvalidPathException;
 use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
 use OCP\Files\ReservedWordException;
-use OCP\Files\UnseekableException;
-use OCP\Files\Storage\ILockingStorage;
 use OCP\IUser;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
@@ -90,13 +88,17 @@ class View {
 	/**
 	 * @var \OCP\Lock\ILockingProvider
 	 */
-	private $lockingProvider;
+	protected $lockingProvider;
 
 	private $lockingEnabled;
 
 	private $updaterEnabled = true;
 
+	/** @var \OC\User\Manager */
 	private $userManager;
+
+	/** @var \OCP\ILogger */
+	private $logger;
 
 	/**
 	 * @param string $root
@@ -114,6 +116,7 @@ class View {
 		$this->lockingProvider = \OC::$server->getLockingProvider();
 		$this->lockingEnabled = !($this->lockingProvider instanceof \OC\Lock\NoopLockingProvider);
 		$this->userManager = \OC::$server->getUserManager();
+		$this->logger = \OC::$server->getLogger();
 	}
 
 	public function getAbsolutePath($path = '/') {
@@ -564,7 +567,7 @@ class View {
 				$mtime = time();
 			}
 			//if native touch fails, we emulate it by changing the mtime in the cache
-			$this->putFileInfo($path, array('mtime' => $mtime));
+			$this->putFileInfo($path, array('mtime' => floor($mtime)));
 		}
 		return true;
 	}
@@ -692,7 +695,11 @@ class View {
 		if ($mount and $mount->getInternalPath($absolutePath) === '') {
 			return $this->removeMount($mount, $absolutePath);
 		}
-		$result = $this->basicOperation('unlink', $path, array('delete'));
+		if ($this->is_dir($path)) {
+			$result = $this->basicOperation('rmdir', $path, ['delete']);
+		} else {
+			$result = $this->basicOperation('unlink', $path, ['delete']);
+		}
 		if (!$result && !$this->file_exists($path)) { //clear ghost files from the cache on delete
 			$storage = $mount->getStorage();
 			$internalPath = $mount->getInternalPath($absolutePath);
@@ -772,14 +779,18 @@ class View {
 				$this->changeLock($path1, ILockingProvider::LOCK_EXCLUSIVE, true);
 				$this->changeLock($path2, ILockingProvider::LOCK_EXCLUSIVE, true);
 
-				if ($internalPath1 === '' and $mount1 instanceof MoveableMount) {
-					if ($this->isTargetAllowed($absolutePath2)) {
-						/**
-						 * @var \OC\Files\Mount\MountPoint | \OC\Files\Mount\MoveableMount $mount1
-						 */
-						$sourceMountPoint = $mount1->getMountPoint();
-						$result = $mount1->moveMount($absolutePath2);
-						$manager->moveMount($sourceMountPoint, $mount1->getMountPoint());
+				if ($internalPath1 === '') {
+					if ($mount1 instanceof MoveableMount) {
+						if ($this->isTargetAllowed($absolutePath2)) {
+							/**
+							 * @var \OC\Files\Mount\MountPoint | \OC\Files\Mount\MoveableMount $mount1
+							 */
+							$sourceMountPoint = $mount1->getMountPoint();
+							$result = $mount1->moveMount($absolutePath2);
+							$manager->moveMount($sourceMountPoint, $mount1->getMountPoint());
+						} else {
+							$result = false;
+						}
 					} else {
 						$result = false;
 					}
@@ -931,37 +942,34 @@ class View {
 
 	/**
 	 * @param string $path
-	 * @param string $mode
+	 * @param string $mode 'r' or 'w'
 	 * @return resource
 	 */
 	public function fopen($path, $mode) {
+		$mode = str_replace('b', '', $mode); // the binary flag is a windows only feature which we do not support
 		$hooks = array();
 		switch ($mode) {
 			case 'r':
-			case 'rb':
 				$hooks[] = 'read';
 				break;
 			case 'r+':
-			case 'rb+':
 			case 'w+':
-			case 'wb+':
 			case 'x+':
-			case 'xb+':
 			case 'a+':
-			case 'ab+':
 				$hooks[] = 'read';
 				$hooks[] = 'write';
 				break;
 			case 'w':
-			case 'wb':
 			case 'x':
-			case 'xb':
 			case 'a':
-			case 'ab':
 				$hooks[] = 'write';
 				break;
 			default:
 				\OCP\Util::writeLog('core', 'invalid mode (' . $mode . ') for ' . $path, \OCP\Util::ERROR);
+		}
+
+		if ($mode !== 'r' && $mode !== 'w') {
+			\OC::$server->getLogger()->info('Trying to open a file with a mode other than "r" or "w" can cause severe performance issues with some backends');
 		}
 
 		return $this->basicOperation('fopen', $path, $hooks, $mode);
@@ -1005,7 +1013,7 @@ class View {
 			// Create the directories if any
 			if (!$this->file_exists($filePath)) {
 				$result = $this->createParentDirectories($filePath);
-				if($result === false) {
+				if ($result === false) {
 					return false;
 				}
 			}
@@ -1077,7 +1085,11 @@ class View {
 	 */
 	public function free_space($path = '/') {
 		$this->assertPathLength($path);
-		return $this->basicOperation('free_space', $path);
+		$result = $this->basicOperation('free_space', $path);
+		if ($result === null) {
+			throw new InvalidPathException();
+		}
+		return $result;
 	}
 
 	/**
@@ -1149,6 +1161,8 @@ class View {
 				$unlockLater = false;
 				if ($this->lockingEnabled && $operation === 'fopen' && is_resource($result)) {
 					$unlockLater = true;
+					// make sure our unlocking callback will still be called if connection is aborted
+					ignore_user_abort(true);
 					$result = CallbackWrapper::wrap($result, null, null, function () use ($hooks, $path) {
 						if (in_array('write', $hooks)) {
 							$this->unlockFile($path, ILockingProvider::LOCK_EXCLUSIVE);
@@ -1357,7 +1371,7 @@ class View {
 					//add the sizes of other mount points to the folder
 					$extOnly = ($includeMountPoints === 'ext');
 					$mounts = Filesystem::getMountManager()->findIn($path);
-					$info->setSubMounts(array_filter($mounts, function(IMountPoint $mount) use ($extOnly) {
+					$info->setSubMounts(array_filter($mounts, function (IMountPoint $mount) use ($extOnly) {
 						$subStorage = $mount->getStorage();
 						return !($extOnly && $subStorage instanceof \OCA\Files_Sharing\SharedStorage);
 					}));
@@ -1936,11 +1950,18 @@ class View {
 					);
 				}
 			} catch (\OCP\Lock\LockedException $e) {
-				// rethrow with the a human-readable path
-				throw new \OCP\Lock\LockedException(
-					$this->getPathRelativeToFiles($absolutePath),
-					$e
-				);
+				try {
+					// rethrow with the a human-readable path
+					throw new \OCP\Lock\LockedException(
+						$this->getPathRelativeToFiles($absolutePath),
+						$e
+					);
+				} catch (\InvalidArgumentException $e) {
+					throw new \OCP\Lock\LockedException(
+						$absolutePath,
+						$e
+					);
+				}
 			}
 		}
 
@@ -2045,7 +2066,7 @@ class View {
 			return ($pathSegments[2] === 'files') && (count($pathSegments) > 3);
 		}
 
-		return true;
+		return strpos($path, '/appdata_') !== 0;
 	}
 
 	/**
@@ -2065,6 +2086,12 @@ class View {
 		$parts = explode('/', trim($path, '/'), 3);
 		// "$user", "files", "path/to/dir"
 		if (!isset($parts[1]) || $parts[1] !== 'files') {
+			$this->logger->error(
+				'$absolutePath must be relative to "files", value is "%s"',
+				[
+					$absolutePath
+				]
+			);
 			throw new \InvalidArgumentException('$absolutePath must be relative to "files"');
 		}
 		if (isset($parts[2])) {
@@ -2106,13 +2133,13 @@ class View {
 	private function createParentDirectories($filePath) {
 		$directoryParts = explode('/', $filePath);
 		$directoryParts = array_filter($directoryParts);
-		foreach($directoryParts as $key => $part) {
+		foreach ($directoryParts as $key => $part) {
 			$currentPathElements = array_slice($directoryParts, 0, $key);
 			$currentPath = '/' . implode('/', $currentPathElements);
-			if($this->is_file($currentPath)) {
+			if ($this->is_file($currentPath)) {
 				return false;
 			}
-			if(!$this->file_exists($currentPath)) {
+			if (!$this->file_exists($currentPath)) {
 				$this->mkdir($currentPath);
 			}
 		}

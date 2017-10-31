@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Manual Installation on Linux &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Installation on Linux &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Installation Wizard" href="installation_wizard.html" />
-    <link rel="prev" title="Nextcloud Deployment Recommendations" href="deployment_recommendations.html" />
+    <link rel="prev" title="Deployment Recommendations" href="deployment_recommendations.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,20 +66,20 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Nextcloud Deployment Recommendations</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Manual Installation on Linux</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment_recommendations.html">Deployment Recommendations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Installation on Linux</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installing-via-snap-packages">Installing via Snap Packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites-for-manual-installation">Prerequisites for Manual Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-installation-on-ubuntu-16-04-lts-server">Example Installation on Ubuntu 16.04 LTS Server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#binlog-format-statement">BINLOG_FORMAT = STATEMENT</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#apache-web-server-configuration">Apache Web Server Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pretty-urls">Pretty URLs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#enabling-ssl">Enabling SSL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installation-wizard">Installation Wizard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#setting-strong-directory-permissions">Setting Strong Directory Permissions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selinux-configuration-tips">SELinux Configuration Tips</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#php-ini-configuration-notes">php.ini Configuration Notes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#php-fpm-configuration-notes">php-fpm Configuration Notes</a></li>
@@ -87,19 +87,17 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing from Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html">Nginx Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -118,7 +116,7 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="deployment_recommendations.html" title="Previous Chapter: Nextcloud Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Dep...</span>
+    <a href="deployment_recommendations.html" title="Previous Chapter: Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Deployment Re...</span>
     </a>
   </li>
   <li class="next">
@@ -127,22 +125,25 @@
   </li>
 </ul>
 						
-  <div class="section" id="manual-installation-on-linux">
-<h1>Manual Installation on Linux<a class="headerlink" href="#manual-installation-on-linux" title="Permalink to this headline">¶</a></h1>
-<p>If there are no packages for your Linux distribution, or you prefer installing
-from the source tarball, you can setup Nextcloud from scratch using a classic
-LAMP stack (Linux, Apache, MySQL/MariaDB, PHP). This document provides a
-complete walk-through for installing Nextcloud on Ubuntu 14.04 LTS Server with
-Apache and MariaDB, using <a class="reference external" href="https://nextcloud.com/install/">the Nextcloud .tar archive</a>.</p>
+  <div class="section" id="installation-on-linux">
+<h1>Installation on Linux<a class="headerlink" href="#installation-on-linux" title="Permalink to this headline">¶</a></h1>
+<p>If there are no packages for your Linux distribution, you have the option to
+install <a class="reference external" href="http://snapcraft.io/docs/core/install/">Snap Packages</a>. See
+<a class="reference internal" href="#snaps-label"><span>Installing via Snap Packages</span></a></p>
+<p>In case you prefer installing from the source tarball, you can setup Nextcloud
+from scratch using a classic LAMP stack (Linux, Apache, MySQL/MariaDB, PHP).
+This document provides a complete walk-through for installing Nextcloud on
+Ubuntu 16.04 LTS Server with Apache and MariaDB, using <a class="reference external" href="https://nextcloud.com/install/">the Nextcloud .tar
+archive</a>.</p>
 <ul class="simple">
-<li><a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a></li>
+<li><a class="reference internal" href="#snaps-label"><span>Installing via Snap Packages</span></a></li>
+<li><a class="reference internal" href="#prerequisites-label"><span>Prerequisites for Manual Installation</span></a></li>
 <li><a class="reference internal" href="#ubuntu-installation-label"><span>Example Installation on Ubuntu 16.04 LTS Server</span></a></li>
 <li><a class="reference internal" href="#binlog-format-label"><span>BINLOG_FORMAT = STATEMENT</span></a></li>
 <li><a class="reference internal" href="#apache-configuration-label"><span>Apache Web Server Configuration</span></a></li>
 <li><a class="reference internal" href="#pretty-urls-label"><span>Pretty URLs</span></a></li>
 <li><a class="reference internal" href="#enabling-ssl-label"><span>Enabling SSL</span></a></li>
 <li><a class="reference internal" href="#installation-wizard-label"><span>Installation Wizard</span></a></li>
-<li><a class="reference internal" href="installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a></li>
 <li><a class="reference internal" href="#selinux-tips-label"><span>SELinux Configuration Tips</span></a></li>
 <li><a class="reference internal" href="#php-ini-tips-label"><span>php.ini Configuration Notes</span></a></li>
 <li><a class="reference internal" href="#php-fpm-tips-label"><span>php-fpm Configuration Notes</span></a></li>
@@ -154,8 +155,27 @@ Apache and MariaDB, using <a class="reference external" href="https://nextcloud.
 Red Hat Enterprise Linux may need to set new rules to enable installing
 Nextcloud. See <a class="reference internal" href="#selinux-tips-label"><span>SELinux Configuration Tips</span></a> for a suggested configuration.</p>
 </div>
-<div class="section" id="prerequisites">
-<span id="prerequisites-label"></span><h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-via-snap-packages">
+<span id="snaps-label"></span><h2>Installing via Snap Packages<a class="headerlink" href="#installing-via-snap-packages" title="Permalink to this headline">¶</a></h2>
+<p>A snap is a zip file containing an application together with its dependencies,
+and a description of how it should safely be run on your system, especially
+the different ways it should talk to other software. Most importantly snaps are
+designed to be secure, sandboxed, containerised applications isolated from the
+underlying system and from other applications.</p>
+<p>To install the Nextcloud Snap Package, run the following command in a terminal:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo snap install nextcloud
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <a class="reference external" href="http://snapcraft.io/docs/core/">snapd technology</a> is the core
+that powers snaps, and it offers a new way to package, distribute, update and
+run OS components and applications on a Linux system. See more about snaps on
+<a class="reference external" href="http://snapcraft.io/">snapcraft.io</a>.</p>
+</div>
+</div>
+<div class="section" id="prerequisites-for-manual-installation">
+<span id="prerequisites-label"></span><h2>Prerequisites for Manual Installation<a class="headerlink" href="#prerequisites-for-manual-installation" title="Permalink to this headline">¶</a></h2>
 <p>The Nextcloud .tar archive contains all of the required PHP modules. This
 section lists all required and optional PHP modules.  Consult the <a class="reference external" href="http://php.net/manual/en/extensions.php">PHP manual</a> for more information on modules.
 Your Linux distribution should have packages for all required modules. You can
@@ -170,18 +190,19 @@ If you get a result, the module is present.</p>
 <li>PHP module iconv</li>
 <li>PHP module JSON</li>
 <li>PHP module libxml (Linux package libxml2 must be &gt;=2.7.0)</li>
-<li>PHP module mb multibyte</li>
+<li>PHP module mbstring</li>
 <li>PHP module posix</li>
 <li>PHP module SimpleXML</li>
+<li>PHP module XMLReader</li>
 <li>PHP module XMLWriter</li>
 <li>PHP module zip</li>
 <li>PHP module zlib</li>
 </ul>
 <p>Database connectors (pick the one for your database:)</p>
 <ul class="simple">
-<li>PHP module sqlite (&gt;= 3, usually not recommended for performance reasons)</li>
+<li>PHP module pdo_sqlite (&gt;= 3, usually not recommended for performance reasons)</li>
 <li>PHP module pdo_mysql (MySQL/MariaDB)</li>
-<li>PHP module pgsql (requires PostgreSQL &gt;= 9.0)</li>
+<li>PHP module pdo_pgsql (requires PostgreSQL &gt;= 9.0)</li>
 </ul>
 <p><em>Recommended</em> packages:</p>
 <ul class="simple">
@@ -234,9 +255,15 @@ If <code class="docutils literal"><span class="pre">mod_webdav</span></code> is 
 </div>
 <div class="section" id="example-installation-on-ubuntu-16-04-lts-server">
 <span id="ubuntu-installation-label"></span><h2>Example Installation on Ubuntu 16.04 LTS Server<a class="headerlink" href="#example-installation-on-ubuntu-16-04-lts-server" title="Permalink to this headline">¶</a></h2>
-<p>On a machine running a pristine Ubuntu 16.04 LTS server, install the
-required and recommended modules for a typical Nextcloud installation, using
-Apache and MariaDB, by issuing the following commands in a terminal:</p>
+<p>On a machine running a pristine Ubuntu 16.04 LTS server, you have two options:</p>
+<p>You can either install the Nextcloud <a class="reference external" href="http://snapcraft.io/">Snap Package</a>, just run the
+following command in a terminal:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo snap install nextcloud
+</pre></div>
+</div>
+<p>Or you can use .deb packages to install the required and recommended modules for a typical Nextcloud
+installation, using Apache and MariaDB, by issuing the following commands in a
+terminal:</p>
 <div class="highlight-python"><div class="highlight"><pre>apt-get install apache2 mariadb-server libapache2-mod-php7.0
 apt-get install php7.0-gd php7.0-json php7.0-mysql php7.0-curl php7.0-mbstring
 apt-get install php7.0-intl php7.0-mcrypt php-imagick php7.0-xml php7.0-zip
@@ -250,7 +277,7 @@ apt-get install php7.0-intl php7.0-mcrypt php-imagick php7.0-xml php7.0-zip
 <span class="pre">SimpleXML</span> <span class="pre">soap</span> <span class="pre">sockets</span> <span class="pre">SPL</span> <span class="pre">standard</span> <span class="pre">sysvmsg</span> <span class="pre">sysvsem</span> <span class="pre">sysvshm</span> <span class="pre">tokenizer</span> <span class="pre">wddx</span>
 <span class="pre">xmlreader</span> <span class="pre">xmlwriter</span> <span class="pre">zlib</span></code>. If you are planning
 on running additional apps, keep in mind that they might require additional
-packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites</span></a> for details.</li>
+packages.  See <a class="reference internal" href="#prerequisites-label"><span>Prerequisites for Manual Installation</span></a> for details.</li>
 <li>At the installation of the MySQL/MariaDB server, you will be prompted to
 create a root password. Be sure to remember your password as you will need it
 during Nextcloud database setup.</li>
@@ -318,7 +345,7 @@ row-logging when transaction isolation level is READ COMMITTED or READ
 UNCOMMITTED.&#39;
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="../configuration_database/linux_database_configuration.html#db-binlog-label"><span>MySQL / MariaDB with Binary Logging Enabled</span></a>.</p>
+<p>See <span class="xref std std-ref">db-binlog-label</span>.</p>
 </div>
 <div class="section" id="apache-web-server-configuration">
 <span id="apache-configuration-label"></span><h2>Apache Web Server Configuration<a class="headerlink" href="#apache-web-server-configuration" title="Permalink to this headline">¶</a></h2>
@@ -395,9 +422,26 @@ CardDAV clients make sure you have configured the correct
 </div>
 <div class="section" id="pretty-urls">
 <span id="pretty-urls-label"></span><h2>Pretty URLs<a class="headerlink" href="#pretty-urls" title="Permalink to this headline">¶</a></h2>
-<p>Pretty URLs are created automatically when <code class="docutils literal"><span class="pre">.htaccess</span></code> is writable by the
-HTTP user, <code class="docutils literal"><span class="pre">mod_env</span></code> and <code class="docutils literal"><span class="pre">mod_rewrite</span></code> are installed, and
-<code class="docutils literal"><span class="pre">'overwrite.cli.url'</span></code> in your <code class="docutils literal"><span class="pre">config.php</span></code> is set to any non-null value.</p>
+<p>Pretty URLs remove the <code class="docutils literal"><span class="pre">index.php</span></code>-part in all Nextcloud URLs, for example
+in sharing links like <code class="docutils literal"><span class="pre">https://example.org/nextcloud/index.php/s/Sv1b7krAUqmF8QQ`</span></code>,
+making URLs shorter and thus prettier.</p>
+<p><code class="docutils literal"><span class="pre">mod_env</span></code> and <code class="docutils literal"><span class="pre">mod_rewrite</span></code> must be installed on your webserver and the <code class="file docutils literal"><span class="pre">.htaccess</span></code>
+must be writable by the HTTP user. Then you can set in the <code class="file docutils literal"><span class="pre">config.php</span></code> two variables:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;overwrite.cli.url&#39; =&gt; &#39;https://example.org/nextcloud&#39;,
+&#39;htaccess.RewriteBase&#39; =&gt; &#39;/nextcloud&#39;,
+</pre></div>
+</div>
+<p>if your setup is available on <code class="docutils literal"><span class="pre">https://example.org/nextcloud</span></code> or:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;overwrite.cli.url&#39; =&gt; &#39;https://example.org&#39;,
+&#39;htaccess.RewriteBase&#39; =&gt; &#39;/&#39;,
+</pre></div>
+</div>
+<p>if it isn&#8217;t installed in a subfolder. Finally run this occ-command to update
+your .htaccess file:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php /var/www/nextcloud/occ maintenance:update:htaccess
+</pre></div>
+</div>
+<p>After each update, these changes are automatically applied to the <code class="docutils literal"><span class="pre">.htaccess</span></code>-file.</p>
 </div>
 <div class="section" id="enabling-ssl">
 <span id="enabling-ssl-label"></span><h2>Enabling SSL<a class="headerlink" href="#enabling-ssl" title="Permalink to this headline">¶</a></h2>
@@ -428,27 +472,18 @@ for good deals on commercial certificates.</p>
 <span id="installation-wizard-label"></span><h2>Installation Wizard<a class="headerlink" href="#installation-wizard" title="Permalink to this headline">¶</a></h2>
 <p>After restarting Apache you must complete your installation by running either
 the graphical Installation Wizard, or on the command line with the <code class="docutils literal"><span class="pre">occ</span></code>
-command. To enable this, temporarily change the ownership on your Nextcloud
-directories to your HTTP user (see <a class="reference internal" href="installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a> to learn how to
-find your HTTP user):</p>
-<div class="highlight-python"><div class="highlight"><pre>chown -R www-data:www-data /var/www/nextcloud/
-</pre></div>
-</div>
+command. To enable this, change the ownership on your Nextcloud directories to
+your HTTP user:</p>
+<blockquote>
+<div>chown -R www-data:www-data /var/www/nextcloud/</div></blockquote>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Admins of SELinux-enabled distributions may need to write new SELinux
 rules to complete their Nextcloud installation; see
 <a class="reference internal" href="#selinux-tips-label"><span>SELinux Configuration Tips</span></a>.</p>
 </div>
-<p>To use <code class="docutils literal"><span class="pre">occ</span></code> see <a class="reference internal" href="command_line_installation.html"><em>Installing Nextcloud from the Command Line</em></a>.</p>
+<p>To use <code class="docutils literal"><span class="pre">occ</span></code> see <a class="reference internal" href="command_line_installation.html"><em>Installing from Command Line</em></a>.</p>
 <p>To use the graphical Installation Wizard see <a class="reference internal" href="installation_wizard.html"><em>Installation Wizard</em></a>.</p>
-</div>
-<div class="section" id="setting-strong-directory-permissions">
-<h2>Setting Strong Directory Permissions<a class="headerlink" href="#setting-strong-directory-permissions" title="Permalink to this headline">¶</a></h2>
-<p>After completing installation, you must immediately set the directory
-permissions in your Nextcloud installation as strictly as possible for stronger
-security. Please refer to <a class="reference internal" href="installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>.</p>
-<p>Now your Nextcloud server is ready to use.</p>
 </div>
 <div class="section" id="selinux-configuration-tips">
 <span id="selinux-tips-label"></span><h2>SELinux Configuration Tips<a class="headerlink" href="#selinux-configuration-tips" title="Permalink to this headline">¶</a></h2>
@@ -518,9 +553,9 @@ confirm your paths, for example:</p>
 </div>
 <p>If any of your system environment variables are not present in the file then
 you must add them.</p>
-<p>When you are using shared hosting or a control panel to manage your <a class="reference external" href="https://github.com/nextcloud/vm">Nextcloud VM</a> or server, the configuration files are almost certain to be located
-somewhere else, for security and flexibility reasons, so check your
-documentation for the correct locations.</p>
+<p>When you are using shared hosting or a control panel to manage your <a class="reference external" href="https://github.com/nextcloud/vm">Nextcloud VM</a> or server, the configuration files are almost
+certain to be located somewhere else, for security and flexibility reasons, so
+check your documentation for the correct locations.</p>
 <p>Please keep in mind that it is possible to create different settings for
 <code class="docutils literal"><span class="pre">php-cli</span></code> and <code class="docutils literal"><span class="pre">php-fpm</span></code>, and for different domains and Web sites.
 The best way to check your settings is with <a class="reference internal" href="../issues/general_troubleshooting.html#label-phpinfo"><span>PHP Version and Information</span></a>.</p>
@@ -536,7 +571,7 @@ be set in the <code class="docutils literal"><span class="pre">nextcloud/.user.i
 </div>
 <div class="section" id="other-web-servers">
 <span id="other-http-servers-label"></span><h2>Other Web Servers<a class="headerlink" href="#other-web-servers" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="nginx_examples.html"><em>Nginx Example Configurations</em></a></p>
+<p><a class="reference internal" href="nginx.html"><em>Nginx Configuration</em></a></p>
 <p><a class="reference external" href="https://github.com/nextcloud/documentation/wiki/Alternate-Web-server-notes">Other HTTP servers (Nextcloud)</a></p>
 </div>
 </div>
@@ -545,7 +580,7 @@ be set in the <code class="docutils literal"><span class="pre">nextcloud/.user.i
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="deployment_recommendations.html" title="Previous Chapter: Nextcloud Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Dep...</span>
+    <a href="deployment_recommendations.html" title="Previous Chapter: Deployment Recommendations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Deployment Re...</span>
     </a>
   </li>
   <li class="next">

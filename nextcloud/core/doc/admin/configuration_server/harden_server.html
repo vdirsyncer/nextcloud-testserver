@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Hardening and Security Guidance &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Hardening and Security Guidance &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Reverse Proxy Configuration" href="reverse_proxy_configuration.html" />
     <link rel="prev" title="Logging Configuration" href="logging_configuration.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -96,12 +96,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -228,12 +229,23 @@ VirtualHost file:</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;VirtualHost *:443&gt;
   ServerName cloud.nextcloud.com
     &lt;IfModule mod_headers.c&gt;
-      Header always set Strict-Transport-Security &quot;max-age=15552000; includeSubDomains; preload&quot;
+      Header always set Strict-Transport-Security &quot;max-age=15552000; includeSubDomains&quot;
     &lt;/IfModule&gt;
  &lt;/VirtualHost&gt;
 </pre></div>
 </div>
-<p>This example configuration will make all subdomains only accessible via HTTPS. If you have subdomains not accessible via HTTPS, remove <code class="docutils literal"><span class="pre">includeSubdomains;</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">We recommend the additional setting <code class="docutils literal"><span class="pre">;</span> <span class="pre">preload</span></code> to be added to that header.
+Then the domain will be added to an hardcoded list that is shipped with all
+major browsers and enforce HTTPS upon those domains. See the <a class="reference external" href="https://hstspreload.org/">HSTS preload
+website for more information</a>. Due to the policy
+of this list you need to add it to the above example for yourself once you
+are sure that this is what you want. <a class="reference external" href="https://hstspreload.org/#removal">Removing the domain from this list</a> could take some months until it reaches
+all installed browsers.</p>
+</div>
+<p>This example configuration will make all subdomains only accessible via HTTPS.
+If you have subdomains not accessible via HTTPS, remove <code class="docutils literal"><span class="pre">includeSubdomains;</span></code>.</p>
 <p>This requires the <code class="docutils literal"><span class="pre">mod_headers</span></code> extension in Apache.</p>
 </div>
 <div class="section" id="proper-ssl-configuration">

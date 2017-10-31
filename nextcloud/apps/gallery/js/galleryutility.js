@@ -1,3 +1,14 @@
+/**
+ * Nextcloud - Gallery
+ *
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Olivier Paroz <galleryapps@oparoz.com>
+ *
+ * @copyright Olivier Paroz 2017
+ */
 /* global DOMPurify, oc_requesttoken, Gallery */
 
 // The Utility class can also be loaded by the Files app
@@ -26,7 +37,7 @@ window.Gallery = window.Gallery || {};
 			if ($('html').is('.ie8')) {
 				return 'unsupportedIe';
 			} else if (navigator.userAgent.indexOf("MSIE") > 0) {
-				return 'oldIe';
+				return 'unsupportedIe';
 			} else if (!!navigator.userAgent.match(/Trident.*rv[ :]*11\./)) {
 				return 'modernIe';
 			} else if (navigator.userAgent.indexOf("Edge/") > 0) {

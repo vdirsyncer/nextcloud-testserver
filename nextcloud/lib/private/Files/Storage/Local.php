@@ -35,6 +35,7 @@
 
 namespace OC\Files\Storage;
 
+use OC\Files\Storage\Wrapper\Jail;
 use OCP\Files\ForbiddenException;
 
 /**
@@ -205,18 +206,7 @@ class Local extends \OC\Files\Storage\Common {
 	}
 
 	public function file_get_contents($path) {
-		// file_get_contents() has a memory leak: https://bugs.php.net/bug.php?id=61961
-		$fileName = $this->getSourcePath($path);
-
-		$fileSize = filesize($fileName);
-		if ($fileSize === 0) {
-			return '';
-		}
-
-		$handle = fopen($fileName, 'rb');
-		$content = fread($handle, $fileSize);
-		fclose($handle);
-		return $content;
+		return file_get_contents($this->getSourcePath($path));
 	}
 
 	public function file_put_contents($path, $data) {
@@ -380,9 +370,10 @@ class Local extends \OC\Files\Storage\Common {
 		}
 		if (substr($realPath, 0, $this->dataDirLength) === $this->realDataDir) {
 			return $fullPath;
-		} else {
-			throw new ForbiddenException("Following symlinks is not allowed ('$fullPath' -> '$realPath' not inside '{$this->realDataDir}')", false);
 		}
+
+		\OCP\Util::writeLog('core', "Following symlinks is not allowed ('$fullPath' -> '$realPath' not inside '{$this->realDataDir}')", \OCP\Util::ERROR);
+		throw new ForbiddenException('Following symlinks is not allowed', false);
 	}
 
 	/**
@@ -418,8 +409,14 @@ class Local extends \OC\Files\Storage\Common {
 	 * @param string $targetInternalPath
 	 * @return bool
 	 */
-	public function copyFromStorage(\OCP\Files\Storage $sourceStorage, $sourceInternalPath, $targetInternalPath) {
+	public function copyFromStorage(\OCP\Files\Storage $sourceStorage, $sourceInternalPath, $targetInternalPath, $preserveMtime = false) {
 		if ($sourceStorage->instanceOfStorage('\OC\Files\Storage\Local')) {
+			if ($sourceStorage->instanceOfStorage(Jail::class)) {
+				/**
+				 * @var \OC\Files\Storage\Wrapper\Jail $sourceStorage
+				 */
+				$sourceInternalPath = $sourceStorage->getUnjailedPath($sourceInternalPath);
+			}
 			/**
 			 * @var \OC\Files\Storage\Local $sourceStorage
 			 */
@@ -437,7 +434,13 @@ class Local extends \OC\Files\Storage\Common {
 	 * @return bool
 	 */
 	public function moveFromStorage(\OCP\Files\Storage $sourceStorage, $sourceInternalPath, $targetInternalPath) {
-		if ($sourceStorage->instanceOfStorage('\OC\Files\Storage\Local')) {
+		if ($sourceStorage->instanceOfStorage(Local::class)) {
+			if ($sourceStorage->instanceOfStorage(Jail::class)) {
+				/**
+				 * @var \OC\Files\Storage\Wrapper\Jail $sourceStorage
+				 */
+				$sourceInternalPath = $sourceStorage->getUnjailedPath($sourceInternalPath);
+			}
 			/**
 			 * @var \OC\Files\Storage\Local $sourceStorage
 			 */

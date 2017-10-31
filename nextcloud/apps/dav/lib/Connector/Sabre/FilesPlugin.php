@@ -31,7 +31,6 @@
 namespace OCA\DAV\Connector\Sabre;
 
 use OC\Files\View;
-use OCA\DAV\Upload\FutureFile;
 use OCP\Files\ForbiddenException;
 use OCP\IPreview;
 use Sabre\DAV\Exception\Forbidden;
@@ -46,8 +45,7 @@ use \Sabre\HTTP\ResponseInterface;
 use OCP\Files\StorageNotAvailableException;
 use OCP\IConfig;
 use OCP\IRequest;
-use Sabre\DAV\Exception\BadRequest;
-use OCA\DAV\Connector\Sabre\Directory;
+use OCA\DAV\Upload\FutureFile;
 
 class FilesPlugin extends ServerPlugin {
 
@@ -67,6 +65,8 @@ class FilesPlugin extends ServerPlugin {
 	const CHECKSUMS_PROPERTYNAME = '{http://owncloud.org/ns}checksums';
 	const DATA_FINGERPRINT_PROPERTYNAME = '{http://owncloud.org/ns}data-fingerprint';
 	const HAS_PREVIEW_PROPERTYNAME = '{http://nextcloud.org/ns}has-preview';
+	const MOUNT_TYPE_PROPERTYNAME = '{http://nextcloud.org/ns}mount-type';
+	const IS_ENCRYPTED_PROPERTYNAME = '{http://nextcloud.org/ns}is-encrypted';
 
 	/**
 	 * Reference to main server object
@@ -147,7 +147,6 @@ class FilesPlugin extends ServerPlugin {
 	 * @return void
 	 */
 	public function initialize(\Sabre\DAV\Server $server) {
-
 		$server->xml->namespaceMap[self::NS_OWNCLOUD] = 'oc';
 		$server->xml->namespaceMap[self::NS_NEXTCLOUD] = 'nc';
 		$server->protectedProperties[] = self::FILEID_PROPERTYNAME;
@@ -161,6 +160,8 @@ class FilesPlugin extends ServerPlugin {
 		$server->protectedProperties[] = self::CHECKSUMS_PROPERTYNAME;
 		$server->protectedProperties[] = self::DATA_FINGERPRINT_PROPERTYNAME;
 		$server->protectedProperties[] = self::HAS_PREVIEW_PROPERTYNAME;
+		$server->protectedProperties[] = self::MOUNT_TYPE_PROPERTYNAME;
+		$server->protectedProperties[] = self::IS_ENCRYPTED_PROPERTYNAME;
 
 		// normally these cannot be changed (RFC4918), but we want them modifiable through PROPPATCH
 		$allowedProperties = ['{DAV:}getetag'];
@@ -180,6 +181,7 @@ class FilesPlugin extends ServerPlugin {
 			}
 		});
 		$this->server->on('beforeMove', [$this, 'checkMove']);
+		$this->server->on('beforeMove', [$this, 'beforeMoveFutureFile']);
 	}
 
 	/**
@@ -287,6 +289,16 @@ class FilesPlugin extends ServerPlugin {
 		$httpRequest = $this->server->httpRequest;
 
 		if ($node instanceof \OCA\DAV\Connector\Sabre\Node) {
+			/**
+			 * This was disabled, because it made dir listing throw an exception,
+			 * so users were unable to navigate into folders where one subitem
+			 * is blocked by the files_accesscontrol app, see:
+			 * https://github.com/nextcloud/files_accesscontrol/issues/65
+			if (!$node->getFileInfo()->isReadable()) {
+				// avoid detecting files through this means
+				throw new NotFound();
+			}
+			 */
 
 			$propFind->handle(self::FILEID_PROPERTYNAME, function() use ($node) {
 				return $node->getFileId();
@@ -317,16 +329,34 @@ class FilesPlugin extends ServerPlugin {
 
 			$propFind->handle(self::OWNER_ID_PROPERTYNAME, function() use ($node) {
 				$owner = $node->getOwner();
-				return $owner->getUID();
+				if (!$owner) {
+					return null;
+				} else {
+					return $owner->getUID();
+				}
 			});
 			$propFind->handle(self::OWNER_DISPLAY_NAME_PROPERTYNAME, function() use ($node) {
 				$owner = $node->getOwner();
-				$displayName = $owner->getDisplayName();
-				return $displayName;
+				if (!$owner) {
+					return null;
+				} else {
+					return $owner->getDisplayName();
+				}
+			});
+
+			$propFind->handle(self::IS_ENCRYPTED_PROPERTYNAME, function() use ($node) {
+				$result = $node->getFileInfo()->isEncrypted() ? '1' : '0';
+				return $result;
 			});
 
 			$propFind->handle(self::HAS_PREVIEW_PROPERTYNAME, function () use ($node) {
 				return json_encode($this->previewManager->isAvailable($node->getFileInfo()));
+			});
+			$propFind->handle(self::SIZE_PROPERTYNAME, function() use ($node) {
+				return $node->getSize();
+			});
+			$propFind->handle(self::MOUNT_TYPE_PROPERTYNAME, function () use ($node) {
+				return $node->getFileInfo()->getMountPoint()->getMountType();
 			});
 		}
 
@@ -379,24 +409,21 @@ class FilesPlugin extends ServerPlugin {
 	 * @return void
 	 */
 	public function handleUpdateProperties($path, PropPatch $propPatch) {
-		$propPatch->handle(self::LASTMODIFIED_PROPERTYNAME, function($time) use ($path) {
+		$node = $this->tree->getNodeForPath($path);
+		if (!($node instanceof \OCA\DAV\Connector\Sabre\Node)) {
+			return;
+		}
+
+		$propPatch->handle(self::LASTMODIFIED_PROPERTYNAME, function($time) use ($node) {
 			if (empty($time)) {
 				return false;
-			}
-			$node = $this->tree->getNodeForPath($path);
-			if (is_null($node)) {
-				return 404;
 			}
 			$node->touch($time);
 			return true;
 		});
-		$propPatch->handle(self::GETETAG_PROPERTYNAME, function($etag) use ($path) {
+		$propPatch->handle(self::GETETAG_PROPERTYNAME, function($etag) use ($node) {
 			if (empty($etag)) {
 				return false;
-			}
-			$node = $this->tree->getNodeForPath($path);
-			if (is_null($node)) {
-				return 404;
 			}
 			if ($node->setEtag($etag) !== -1) {
 				return true;
@@ -432,4 +459,43 @@ class FilesPlugin extends ServerPlugin {
 			}
 		}
 	}
+
+	/**
+	 * Move handler for future file.
+	 *
+	 * This overrides the default move behavior to prevent Sabre
+	 * to delete the target file before moving. Because deleting would
+	 * lose the file id and metadata.
+	 *
+	 * @param string $path source path
+	 * @param string $destination destination path
+	 * @return bool|void false to stop handling, void to skip this handler
+	 */
+	public function beforeMoveFutureFile($path, $destination) {
+		$sourceNode = $this->tree->getNodeForPath($path);
+		if (!$sourceNode instanceof FutureFile) {
+			// skip handling as the source is not a chunked FutureFile
+			return;
+		}
+
+		if (!$this->tree->nodeExists($destination)) {
+			// skip and let the default handler do its work
+			return;
+		}
+
+		// do a move manually, skipping Sabre's default "delete" for existing nodes
+		$this->tree->move($path, $destination);
+
+		// trigger all default events (copied from CorePlugin::move)
+		$this->server->emit('afterMove', [$path, $destination]);
+		$this->server->emit('afterUnbind', [$path]);
+		$this->server->emit('afterBind', [$destination]);
+
+		$response = $this->server->httpResponse;
+		$response->setHeader('Content-Length', '0');
+		$response->setStatus(204);
+
+		return false;
+	}
+
 }

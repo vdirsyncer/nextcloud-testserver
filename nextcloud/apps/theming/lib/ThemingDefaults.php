@@ -1,6 +1,7 @@
 <?php
 /**
  * @copyright Copyright (c) 2016 Bjoern Schiessle <bjoern@schiessle.org>
+ * @copyright Copyright (c) 2017 Lukas Reschke <lukas@statuscode.ch>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -19,15 +20,14 @@
  *
  */
 
-
 namespace OCA\Theming;
 
 
+use OCP\Files\IAppData;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
-use OCP\Files\IRootFolder;
 
 class ThemingDefaults extends \OC_Defaults {
 
@@ -37,8 +37,8 @@ class ThemingDefaults extends \OC_Defaults {
 	private $l;
 	/** @var IURLGenerator */
 	private $urlGenerator;
-	/** @var IRootFolder */
-	private $rootFolder;
+	/** @var IAppData */
+	private $appData;
 	/** @var ICacheFactory */
 	private $cacheFactory;
 	/** @var string */
@@ -49,6 +49,14 @@ class ThemingDefaults extends \OC_Defaults {
 	private $slogan;
 	/** @var string */
 	private $color;
+	/** @var Util */
+	private $util;
+	/** @var string */
+	private $iTunesAppId;
+	/** @var string */
+	private $iOSClientUrl;
+	/** @var string */
+	private $AndroidClientUrl;
 
 	/**
 	 * ThemingDefaults constructor.
@@ -57,31 +65,36 @@ class ThemingDefaults extends \OC_Defaults {
 	 * @param IL10N $l
 	 * @param IURLGenerator $urlGenerator
 	 * @param \OC_Defaults $defaults
-	 * @param IRootFolder $rootFolder
+	 * @param IAppData $appData
 	 * @param ICacheFactory $cacheFactory
+	 * @param Util $util
 	 */
 	public function __construct(IConfig $config,
 								IL10N $l,
 								IURLGenerator $urlGenerator,
-								\OC_Defaults $defaults,
-								IRootFolder $rootFolder,
-								ICacheFactory $cacheFactory
+								IAppData $appData,
+								ICacheFactory $cacheFactory,
+								Util $util
 	) {
 		parent::__construct();
 		$this->config = $config;
 		$this->l = $l;
 		$this->urlGenerator = $urlGenerator;
-		$this->rootFolder = $rootFolder;
+		$this->appData = $appData;
 		$this->cacheFactory = $cacheFactory;
+		$this->util = $util;
 
-		$this->name = $defaults->getName();
-		$this->url = $defaults->getBaseUrl();
-		$this->slogan = $defaults->getSlogan();
-		$this->color = $defaults->getMailHeaderColor();
+		$this->name = parent::getName();
+		$this->url = parent::getBaseUrl();
+		$this->slogan = parent::getSlogan();
+		$this->color = parent::getColorPrimary();
+		$this->iTunesAppId = parent::getiTunesAppId();
+		$this->iOSClientUrl = parent::getiOSClientUrl();
+		$this->AndroidClientUrl = parent::getAndroidClientUrl();
 	}
 
 	public function getName() {
-		return $this->config->getAppValue('theming', 'name', $this->name);
+		return strip_tags($this->config->getAppValue('theming', 'name', $this->name));
 	}
 
 	public function getHTMLName() {
@@ -89,11 +102,11 @@ class ThemingDefaults extends \OC_Defaults {
 	}
 
 	public function getTitle() {
-		return $this->config->getAppValue('theming', 'name', $this->name);
+		return $this->getName();
 	}
 
 	public function getEntity() {
-		return $this->config->getAppValue('theming', 'name', $this->name);
+		return $this->getName();
 	}
 
 	public function getBaseUrl() {
@@ -101,7 +114,7 @@ class ThemingDefaults extends \OC_Defaults {
 	}
 
 	public function getSlogan() {
-		return $this->config->getAppValue('theming', 'slogan', $this->slogan);
+		return \OCP\Util::sanitizeHTML($this->config->getAppValue('theming', 'slogan', $this->slogan));
 	}
 
 	public function getShortFooter() {
@@ -118,22 +131,38 @@ class ThemingDefaults extends \OC_Defaults {
 	 *
 	 * @return string
 	 */
-	public function getMailHeaderColor() {
+	public function getColorPrimary() {
 		return $this->config->getAppValue('theming', 'color', $this->color);
 	}
 
 	/**
 	 * Themed logo url
 	 *
+	 * @param bool $useSvg Whether to point to the SVG image or a fallback
 	 * @return string
 	 */
-	public function getLogo() {
-		$logo = $this->config->getAppValue('theming', 'logoMime');
-		if(!$logo || !$this->rootFolder->nodeExists('/themedinstancelogo')) {
-			return $this->urlGenerator->imagePath('core','logo.svg');
-		} else {
-			return $this->urlGenerator->linkToRoute('theming.Theming.getLogo');
+	public function getLogo($useSvg = true) {
+		$logo = $this->config->getAppValue('theming', 'logoMime', false);
+
+		$logoExists = true;
+		try {
+			$this->appData->getFolder('images')->getFile('logo');
+		} catch (\Exception $e) {
+			$logoExists = false;
 		}
+
+		$cacheBusterCounter = $this->config->getAppValue('theming', 'cachebuster', '0');
+
+		if(!$logo || !$logoExists) {
+			if($useSvg) {
+				$logo = $this->urlGenerator->imagePath('core', 'logo.svg');
+			} else {
+				$logo = $this->urlGenerator->imagePath('core', 'logo.png');
+			}
+			return $logo . '?v=' . $cacheBusterCounter;
+		}
+
+		return $this->urlGenerator->linkToRoute('theming.Theming.getLogo') . '?v=' . $cacheBusterCounter;
 	}
 
 	/**
@@ -142,12 +171,81 @@ class ThemingDefaults extends \OC_Defaults {
 	 * @return string
 	 */
 	public function getBackground() {
-		$backgroundLogo = $this->config->getAppValue('theming', 'backgroundMime');
-		if(!$backgroundLogo || !$this->rootFolder->nodeExists('/themedbackgroundlogo')) {
-			return $this->urlGenerator->imagePath('core','background.jpg');
-		} else {
-			return $this->urlGenerator->linkToRoute('theming.Theming.getLoginBackground');
+		$backgroundLogo = $this->config->getAppValue('theming', 'backgroundMime',false);
+
+		$backgroundExists = true;
+		try {
+			$this->appData->getFolder('images')->getFile('background');
+		} catch (\Exception $e) {
+			$backgroundExists = false;
 		}
+
+		$cacheBusterCounter = $this->config->getAppValue('theming', 'cachebuster', '0');
+
+		if(!$backgroundLogo || !$backgroundExists) {
+			return $this->urlGenerator->imagePath('core','background.jpg') . '?v=' . $cacheBusterCounter;
+		}
+
+		return $this->urlGenerator->linkToRoute('theming.Theming.getLoginBackground') . '?v=' . $cacheBusterCounter;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getiTunesAppId() {
+		return $this->config->getAppValue('theming', 'iTunesAppId', $this->iTunesAppId);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getiOSClientUrl() {
+		return $this->config->getAppValue('theming', 'iOSClientUrl', $this->iOSClientUrl);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAndroidClientUrl() {
+		return $this->config->getAppValue('theming', 'AndroidClientUrl', $this->AndroidClientUrl);
+	}
+
+
+	/**
+	 * @return array scss variables to overwrite
+	 */
+	public function getScssVariables() {
+		$cache = $this->cacheFactory->create('theming');
+		if ($value = $cache->get('getScssVariables')) {
+			return $value;
+		}
+
+		$variables = [
+			'theming-cachebuster' => "'" . $this->config->getAppValue('theming', 'cachebuster', '0') . "'",
+			'theming-logo-mime' => "'" . $this->config->getAppValue('theming', 'logoMime', '') . "'",
+			'theming-background-mime' => "'" . $this->config->getAppValue('theming', 'backgroundMime', '') . "'"
+		];
+
+		$variables['image-logo'] = "'".$this->urlGenerator->getAbsoluteURL($this->getLogo())."'";
+		$variables['image-login-background'] = "'".$this->urlGenerator->getAbsoluteURL($this->getBackground())."'";
+		$variables['image-login-plain'] = 'false';
+
+		if ($this->config->getAppValue('theming', 'color', null) !== null) {
+			if ($this->util->invertTextColor($this->getColorPrimary())) {
+				$colorPrimaryText = '#000000';
+			} else {
+				$colorPrimaryText = '#ffffff';
+			}
+			$variables['color-primary'] = $this->getColorPrimary();
+			$variables['color-primary-text'] = $colorPrimaryText;
+			$variables['color-primary-element'] = $this->util->elementColor($this->getColorPrimary());
+		}
+
+		if ($this->config->getAppValue('theming', 'backgroundMime', null) === 'backgroundColor') {
+			$variables['image-login-plain'] = 'true';
+		}
+		$cache->set('getScssVariables', $variables);
+		return $variables;
 	}
 
 	/**
@@ -179,6 +277,7 @@ class ThemingDefaults extends \OC_Defaults {
 	private function increaseCacheBuster() {
 		$cacheBusterKey = $this->config->getAppValue('theming', 'cachebuster', '0');
 		$this->config->setAppValue('theming', 'cachebuster', (int)$cacheBusterKey+1);
+		$this->cacheFactory->create('theming')->clear('getScssVariables');
 	}
 
 	/**
@@ -213,7 +312,7 @@ class ThemingDefaults extends \OC_Defaults {
 				$returnValue = $this->getSlogan();
 				break;
 			case 'color':
-				$returnValue = $this->getMailHeaderColor();
+				$returnValue = $this->getColorPrimary();
 				break;
 			default:
 				$returnValue = '';
@@ -222,5 +321,4 @@ class ThemingDefaults extends \OC_Defaults {
 
 		return $returnValue;
 	}
-
 }

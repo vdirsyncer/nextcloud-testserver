@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Linking External Sites &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Linking External Sites &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Custom Client Download Repositories" href="custom_client_repos.html" />
     <link rel="prev" title="Email Configuration" href="email_configuration.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occ_command.html">Using the occ Command</a></li>
 <li class="toctree-l2"><a class="reference internal" href="activity_configuration.html">Configuring the Activity App</a></li>
@@ -78,7 +78,10 @@
 <li class="toctree-l2"><a class="reference internal" href="background_jobs_configuration.html">Defining Background Jobs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_sample_php_parameters.html">Config.php Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="email_configuration.html">Email Configuration</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Linking External Sites</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Linking External Sites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configurations-preventing-embedding">Configurations preventing embedding</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="custom_client_repos.html">Custom Client Download Repositories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knowledgebase_configuration.html">Knowledge Base Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="language_configuration.html">Language Configuration</a></li>
@@ -87,12 +90,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -122,31 +126,37 @@
 						
   <div class="section" id="linking-external-sites">
 <h1>Linking External Sites<a class="headerlink" href="#linking-external-sites" title="Permalink to this headline">¶</a></h1>
-<p>You can embed external Web sites inside your Nextcloud pages with the External
-Sites app, as this screenshot shows.</p>
+<p>You can embed external websites or documents inside your Nextcloud pages with the External
+sites app, as this screenshot shows.</p>
 <div class="figure" id="id1">
-<a class="reference internal image-reference" href="../_images/external-sites-1.png"><img alt="../_images/external-sites-1.png" src="../_images/external-sites-1.png" style="width: 617.4px; height: 301.8px;" /></a>
+<a class="reference internal image-reference" href="../_images/external-sites-1.png"><img alt="../_images/external-sites-1.png" src="../_images/external-sites-1.png" style="width: 823.9px; height: 322.7px;" /></a>
 <p class="caption"><span class="caption-text"><em>Click to enlarge</em></span></p>
 </div>
-<p>This is useful for quick access to important Web pages such as the
+<p>This is useful for quick access to important pages such as the
 Nextcloud manuals and informational pages for your company, and for presenting
 external pages inside your custom Nextcloud branding, if you use your own custom
 themes.</p>
-<p>The External sites app is included in all versions of Nextcloud. Go to <strong>Apps &gt;
-Not Enabled</strong> to enable it. Then go to your Nextcloud Admin page to create your
-links, which are saved automatically. There is a dropdown menu to select an
-icon, but there is only one default icon so you don&#8217;t have to select one. Hover
-your cursor to the right of your links to make the trashcan icon appear when you
+<p>The External sites app is included in all versions of Nextcloud. Go to <strong>Settings &gt; Apps &gt;
+Disabled apps</strong> to enable it. Then go to your Nextcloud <strong>Settings &gt; Admin &gt; Additional
+settings</strong> to create your links, which are saved automatically.</p>
+<p>Each link can have a unique icon, icons are currently loaded from <code class="docutils literal"><span class="pre">apps/external/img/</span></code>.
+If you select a language, the link will only be displayed for users with the selected language.
+This allows you to have different documentation links for users depending on their language.</p>
+<p>It is also possible to add links for a special device (recognized by the user agent).
+Currently the following options are available: All devices, Android app, iOS app, Desktop client and all others (Browsers).</p>
+<p>Hover your cursor over a row to make the trashcan icon appear when you
 want to remove them.</p>
 <div class="figure" id="id2">
-<a class="reference internal image-reference" href="../_images/external-sites-2.png"><img alt="../_images/external-sites-2.png" src="../_images/external-sites-2.png" style="width: 447.2px; height: 144.0px;" /></a>
+<a class="reference internal image-reference" href="../_images/external-sites-2.png"><img alt="../_images/external-sites-2.png" src="../_images/external-sites-2.png" style="width: 816.8px; height: 209.6px;" /></a>
 <p class="caption"><span class="caption-text"><em>Click to enlarge</em></span></p>
 </div>
-<p>The links appear in the Nextcloud dropdown menu on the top left after
-refreshing your page, and have globe icons.</p>
+<p>The links appear in the Nextcloud menu on the top or in the settings menu, after
+reloading the page.</p>
 <div class="figure">
 <img alt="../_images/external-sites-3.png" src="../_images/external-sites-3.png" />
 </div>
+<div class="section" id="configurations-preventing-embedding">
+<h2>Configurations preventing embedding<a class="headerlink" href="#configurations-preventing-embedding" title="Permalink to this headline">¶</a></h2>
 <p>Your links may or may not work correctly due to the various ways that Web
 browsers and Web sites handle HTTP and HTTPS URLs, and because the External
 Sites app embeds external links in IFrames. Modern Web browsers try very hard
@@ -171,6 +181,7 @@ certificate.</p>
 </div>
 <p>There isn&#8217;t much you can do about these issues, but if you&#8217;re curious you can
 see what is happening.</p>
+</div>
 </div>
 
 

@@ -240,10 +240,12 @@ var Files_Texteditor = {
 	getSupportedMimetypes: function() {
 		return [
 			'text',
+			'application/cmd',
 			'application/javascript',
 			'application/json',
 			'application/xml',
 			'application/x-empty',
+			'application/x-msdos-program',
 			'application/x-php',
 			'application/x-pearl',
 			'application/x-text',
@@ -316,6 +318,7 @@ var Files_Texteditor = {
 					var text = window.aceEditor.getSession().getValue();
 					_self.previewPluginOnChange(text, _self.preview);
 					window.aceEditor.resize();
+					_self.loadPreviewControlBar();
 				} else {
 					_self.previewPluginOnChange = null;
 				}
@@ -347,6 +350,54 @@ var Files_Texteditor = {
 		this.setFilenameMaxLength();
 		this.bindControlBar();
 
+	},
+
+	setPreviewMode: function(mode) {
+		var container = $('#app-content-texteditor');
+		var controlBar = $('#preview_editor_controls');
+		controlBar.find('button').removeClass('active');
+		controlBar.find('button[data-type="' + mode + '"]').addClass('active');
+		switch (mode) {
+			case 'mixed':
+				container.find('#editor_container').addClass('hasPreview');
+				container.find('#editor').show();
+				container.find('#preview_wrap').css('width', '50%');
+				break;
+			case 'text':
+				container.find('#editor_container').removeClass('hasPreview');
+				container.find('#editor').show();
+				container.find('#preview_wrap').css('width', '50%');
+				break;
+			case 'image':
+				container.find('#editor_container').addClass('hasPreview');
+				container.find('#editor').hide();
+				container.find('#preview_wrap').css('width', '100%');
+				break;
+		}
+	},
+
+	loadPreviewControlBar: function() {
+		var makeButton = function (type, tooltip, active) {
+			var button = $('<button/>');
+			button.tooltip({
+				title: tooltip,
+				container: 'body',
+				placement: 'bottom',
+				delay: {show: 500, hide: 0}
+			});
+			if (active) {
+				button.addClass('active');
+			}
+			button.click(this.setPreviewMode.bind(this, type));
+			button.attr('data-type', type);
+			return button.css('background-image', 'url("' + OC.imagePath('files_texteditor', type) + '")');
+		}.bind(this);
+
+		var controls = $('<span/>').attr('id', 'preview_editor_controls');
+		controls.append(makeButton('text', t('files_texteditor', 'Edit')));
+		controls.append(makeButton('mixed', t('files_texteditor', 'Mixed'), true));
+		controls.append(makeButton('image', t('files_texteditor', 'Preview')));
+		$('#editor_close').after(controls);
 	},
 
 	/**
@@ -389,6 +440,7 @@ var Files_Texteditor = {
 	 */
 	configureACE: function(file) {
 		window.aceEditor = ace.edit(this.editor);
+		aceEditor.getSession().setNewLineMode("windows");
 		aceEditor.setShowPrintMargin(false);
 		aceEditor.getSession().setUseWrapMode(true);
 		if (!file.writeable) { aceEditor.setReadOnly(true); }
@@ -429,6 +481,8 @@ var Files_Texteditor = {
 		// Loads the syntax mode files and tells the editor
 		var filetype = [];
 		// add file extensions like this: filetype["extension"] = "filetype":
+		filetype["bat"] = "batchfile";
+		filetype["cmd"] = "batchfile";
 		filetype["h"] = "c_cpp";
 		filetype["c"] = "c_cpp";
 		filetype["clj"] = "clojure";
@@ -461,7 +515,7 @@ var Files_Texteditor = {
 		filetype["mli"] = "ocaml";
 		filetype["pl"] = "perl";
 		filetype["php"] = "php";
-		filetype["powershell"] = "ps1";
+		filetype["ps1"] = "powershell";
 		filetype["py"] = "python";
 		filetype["rb"] = "ruby";
 		filetype["scad"] = "scad"; // seems to be something like 3d model files printed with e.g. reprap
@@ -625,7 +679,7 @@ Files_Texteditor.NewFileMenuPlugin = {
 		// register the new menu entry
 		menu.addMenuEntry({
 			id: 'file',
-			displayName: t('files_texteditor', 'Text file'),
+			displayName: t('files_texteditor', 'New text file'),
 			templateName: t('files_texteditor', 'New text file.txt'),
 			iconClass: 'icon-filetype-text',
 			fileType: 'file',

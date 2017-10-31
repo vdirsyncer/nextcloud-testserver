@@ -23,6 +23,7 @@
 
 namespace OC\Security\Bruteforce;
 
+use OC\Security\Normalizer\IpAddress;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -83,67 +84,6 @@ class Throttler {
 	}
 
 	/**
-	 * Return the given subnet for an IPv4 address and mask bits
-	 *
-	 * @param string $ip
-	 * @param int $maskBits
-	 * @return string
-	 */
-	private function getIPv4Subnet($ip,
-								  $maskBits = 32) {
-		$binary = \inet_pton($ip);
-		for ($i = 32; $i > $maskBits; $i -= 8) {
-			$j = \intdiv($i, 8) - 1;
-			$k = (int) \min(8, $i - $maskBits);
-			$mask = (0xff - ((pow(2, $k)) - 1));
-			$int = \unpack('C', $binary[$j]);
-			$binary[$j] = \pack('C', $int[1] & $mask);
-		}
-		return \inet_ntop($binary).'/'.$maskBits;
-	}
-
-	/**
-	 * Return the given subnet for an IPv6 address and mask bits
-	 *
-	 * @param string $ip
-	 * @param int $maskBits
-	 * @return string
-	 */
-	private function getIPv6Subnet($ip, $maskBits = 48) {
-		$binary = \inet_pton($ip);
-		for ($i = 128; $i > $maskBits; $i -= 8) {
-			$j = \intdiv($i, 8) - 1;
-			$k = (int) \min(8, $i - $maskBits);
-			$mask = (0xff - ((pow(2, $k)) - 1));
-			$int = \unpack('C', $binary[$j]);
-			$binary[$j] = \pack('C', $int[1] & $mask);
-		}
-		return \inet_ntop($binary).'/'.$maskBits;
-	}
-
-	/**
-	 * Return the given subnet for an IP and the configured mask bits
-	 *
-	 * Determine if the IP is an IPv4 or IPv6 address, then pass to the correct
-	 * method for handling that specific type.
-	 *
-	 * @param string $ip
-	 * @return string
-	 */
-	private function getSubnet($ip) {
-		if (\preg_match('/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/', $ip)) {
-			return $this->getIPv4Subnet(
-				$ip,
-				32
-			);
-		}
-		return $this->getIPv6Subnet(
-			$ip,
-			128
-		);
-	}
-
-	/**
 	 * Register a failed attempt to bruteforce a security control
 	 *
 	 * @param string $action
@@ -158,11 +98,12 @@ class Throttler {
 			return;
 		}
 
+		$ipAddress = new IpAddress($ip);
 		$values = [
 			'action' => $action,
 			'occurred' => $this->timeFactory->getTime(),
-			'ip' => $ip,
-			'subnet' => $this->getSubnet($ip),
+			'ip' => (string)$ipAddress,
+			'subnet' => $ipAddress->getSubnet(),
 			'metadata' => json_encode($metadata),
 		];
 
@@ -186,12 +127,83 @@ class Throttler {
 	}
 
 	/**
+	 * Check if the IP is whitelisted
+	 *
+	 * @param string $ip
+	 * @return bool
+	 */
+	private function isIPWhitelisted($ip) {
+		if($this->config->getSystemValue('auth.bruteforce.protection.enabled', true) === false) {
+			return true;
+		}
+
+		$keys = $this->config->getAppKeys('bruteForce');
+		$keys = array_filter($keys, function($key) {
+			$regex = '/^whitelist_/S';
+			return preg_match($regex, $key) === 1;
+		});
+
+		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+			$type = 4;
+		} else if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+			$type = 6;
+		} else {
+			return false;
+		}
+
+		$ip = inet_pton($ip);
+
+		foreach ($keys as $key) {
+			$cidr = $this->config->getAppValue('bruteForce', $key, null);
+
+			$cx = explode('/', $cidr);
+			$addr = $cx[0];
+			$mask = (int)$cx[1];
+
+			// Do not compare ipv4 to ipv6
+			if (($type === 4 && !filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) ||
+				($type === 6 && !filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6))) {
+				continue;
+			}
+
+			$addr = inet_pton($addr);
+
+			$valid = true;
+			for($i = 0; $i < $mask; $i++) {
+				$part = ord($addr[(int)($i/8)]);
+				$orig = ord($ip[(int)($i/8)]);
+
+				$part = $part & (15 << (1 - ($i % 2)));
+				$orig = $orig & (15 << (1 - ($i % 2)));
+
+				if ($part !== $orig) {
+					$valid = false;
+					break;
+				}
+			}
+
+			if ($valid === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+
+	/**
 	 * Get the throttling delay (in milliseconds)
 	 *
 	 * @param string $ip
+	 * @param string $action optionally filter by action
 	 * @return int
 	 */
-	public function getDelay($ip) {
+	public function getDelay($ip, $action = '') {
+		$ipAddress = new IpAddress($ip);
+		if ($this->isIPWhitelisted((string)$ipAddress)) {
+			return 0;
+		}
+
 		$cutoffTime = (new \DateTime())
 			->sub($this->getCutoff(43200))
 			->getTimestamp();
@@ -200,7 +212,12 @@ class Throttler {
 		$qb->select('*')
 			->from('bruteforce_attempts')
 			->where($qb->expr()->gt('occurred', $qb->createNamedParameter($cutoffTime)))
-			->andWhere($qb->expr()->eq('subnet', $qb->createNamedParameter($this->getSubnet($ip))));
+			->andWhere($qb->expr()->eq('subnet', $qb->createNamedParameter($ipAddress->getSubnet())));
+
+		if ($action !== '') {
+			$qb->andWhere($qb->expr()->eq('action', $qb->createNamedParameter($action)));
+		}
+
 		$attempts = count($qb->execute()->fetchAll());
 
 		if ($attempts === 0) {
@@ -225,10 +242,11 @@ class Throttler {
 	 * Will sleep for the defined amount of time
 	 *
 	 * @param string $ip
+	 * @param string $action optionally filter by action
 	 * @return int the time spent sleeping
 	 */
-	public function sleepDelay($ip) {
-		$delay = $this->getDelay($ip);
+	public function sleepDelay($ip, $action = '') {
+		$delay = $this->getDelay($ip, $action);
 		usleep($delay * 1000);
 		return $delay;
 	}

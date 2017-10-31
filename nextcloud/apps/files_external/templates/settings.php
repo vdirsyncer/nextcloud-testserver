@@ -88,7 +88,7 @@
 ?>
 
 <form data-can-create="<?php echo $canCreateMounts?'true':'false' ?>" id="files_external" class="section" data-encryption-enabled="<?php echo $_['encryptionEnabled']?'true': 'false'; ?>">
-	<h2><?php p($l->t('External storage')); ?></h2>
+	<h2 data-anchor-name="external-storage"><?php p($l->t('External storages')); ?></h2>
 	<?php if (isset($_['dependencies']) and ($_['dependencies']<>'') and $canCreateMounts) print_unescaped(''.$_['dependencies'].''); ?>
 	<table id="externalStorage" class="grid" data-admin='<?php print_unescaped(json_encode($_['visibilityType'] === BackendService::VISIBILITY_ADMIN)); ?>'>
 		<thead>
@@ -150,11 +150,17 @@
 					/>
 					<input type="hidden" class="mountOptions" value="" />
 				</td>
-				<td class="hidden">
+				<td class="remove hidden">
 					<img class="svg"
 						alt="<?php p($l->t('Delete')); ?>"
 						title="<?php p($l->t('Delete')); ?>"
 						src="<?php print_unescaped(image_path('core', 'actions/delete.svg')); ?>"
+					/>
+				</td>
+				<td class="save hidden">
+					<img alt="<?php p($l->t('Save')); ?>"
+						 title="<?php p($l->t('Save')); ?>"
+						 src="<?php print_unescaped(image_path('core', 'actions/checkmark.svg')); ?>"
 					/>
 				</td>
 			</tr>

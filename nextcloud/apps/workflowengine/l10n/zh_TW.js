@@ -1,9 +1,9 @@
 OC.L10N.register(
     "workflowengine",
     {
-    "Successfully saved" : "成功保存",
+    "Saved" : "已儲存",
     "Saving failed:" : "保存失敗:",
-    "File mime type" : "檔案mime類型",
+    "File MIME type" : "檔案MIME類型",
     "is" : "是",
     "is not" : "不是",
     "matches" : "匹配",
@@ -25,6 +25,7 @@ OC.L10N.register(
     "does not match IPv6" : "不能匹配 IPv6",
     "Request time" : "請求時間",
     "between" : "之間",
+    "not between" : "皆非",
     "Start" : "開始",
     "End" : "結束",
     "Select timezone…" : "選擇時區...",
@@ -36,6 +37,9 @@ OC.L10N.register(
     "Android client" : "Android 客戶端",
     "iOS client" : "iOS 客戶端",
     "Desktop client" : "桌面客戶端",
+    "User group membership" : "使用者成員關係",
+    "is member of" : "是成員來自",
+    "is not member of" : "不是成員來自",
     "The given operator is invalid" : "指定的操作無效",
     "The given regular expression is invalid" : "指定的規則表達式無效",
     "The given file size is invalid" : "指定的檔案大小無效",
@@ -62,6 +66,8 @@ OC.L10N.register(
     "Reset" : "重設",
     "Save" : "儲存",
     "Saving…" : "儲存中...",
-    "Loading…" : "載入中…"
+    "Loading…" : "載入中…",
+    "Successfully saved" : "成功保存",
+    "File mime type" : "檔案mime類型"
 },
 "nplurals=1; plural=0;");

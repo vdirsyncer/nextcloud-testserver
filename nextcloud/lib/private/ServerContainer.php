@@ -37,12 +37,30 @@ class ServerContainer extends SimpleContainer {
 	/** @var DIContainer[] */
 	protected $appContainers;
 
+	/** @var string[] */
+	protected $hasNoAppContainer;
+
+	/** @var string[] */
+	protected $namespaces;
+
 	/**
 	 * ServerContainer constructor.
 	 */
 	public function __construct() {
 		parent::__construct();
 		$this->appContainers = [];
+		$this->namespaces = [];
+		$this->hasNoAppContainer = [];
+	}
+
+	/**
+	 * @param string $appName
+	 * @param string $appNamespace
+	 */
+	public function registerNamespace($appName, $appNamespace) {
+		// Cut of OCA\ and lowercase
+		$appNamespace = strtolower(substr($appNamespace, strrpos($appNamespace, '\\') + 1));
+		$this->namespaces[$appNamespace] = $appName;
 	}
 
 	/**
@@ -54,15 +72,31 @@ class ServerContainer extends SimpleContainer {
 	}
 
 	/**
-	 * @param string $appName
+	 * @param string $namespace
+	 * @param string $sensitiveNamespace
 	 * @return DIContainer
+	 * @throws QueryException
 	 */
-	public function getAppContainer($appName) {
-		if (isset($this->appContainers[$appName])) {
-			return $this->appContainers[$appName];
+	protected function getAppContainer($namespace, $sensitiveNamespace) {
+		if (isset($this->appContainers[$namespace])) {
+			return $this->appContainers[$namespace];
 		}
 
-		return new DIContainer($appName);
+		if (isset($this->namespaces[$namespace])) {
+			if (!isset($this->hasNoAppContainer[$namespace])) {
+				$applicationClassName = 'OCA\\' . $sensitiveNamespace . '\\AppInfo\\Application';
+				if (class_exists($applicationClassName)) {
+					new $applicationClassName();
+					if (isset($this->appContainers[$namespace])) {
+						return $this->appContainers[$namespace];
+					}
+				}
+				$this->hasNoAppContainer[$namespace] = true;
+			}
+
+			return new DIContainer($this->namespaces[$namespace]);
+		}
+		throw new QueryException();
 	}
 
 	/**
@@ -77,11 +111,20 @@ class ServerContainer extends SimpleContainer {
 		// the apps container first.
 		if (strpos($name, 'OCA\\') === 0 && substr_count($name, '\\') >= 2) {
 			$segments = explode('\\', $name);
-			$appContainer = $this->getAppContainer(strtolower($segments[1]));
 			try {
-				return $appContainer->query($name);
+				$appContainer = $this->getAppContainer(strtolower($segments[1]), $segments[1]);
+				return $appContainer->queryNoFallback($name);
 			} catch (QueryException $e) {
-				// Didn't find the service in the respective app container,
+				// Didn't find the service or the respective app container,
+				// ignore it and fall back to the core container.
+			}
+		} else if (strpos($name, 'OC\\Settings\\') === 0 && substr_count($name, '\\') >= 3) {
+			$segments = explode('\\', $name);
+			try {
+				$appContainer = $this->getAppContainer(strtolower($segments[1]), $segments[1]);
+				return $appContainer->queryNoFallback($name);
+			} catch (QueryException $e) {
+				// Didn't find the service or the respective app container,
 				// ignore it and fall back to the core container.
 			}
 		}

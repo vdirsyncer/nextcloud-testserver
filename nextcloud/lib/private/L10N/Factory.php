@@ -99,6 +99,12 @@ class Factory implements IFactory {
 		if ($lang !== null) {
 			$lang = str_replace(array('\0', '/', '\\', '..'), '', (string) $lang);
 		}
+
+		$forceLang = $this->config->getSystemValue('force_language', false);
+		if (is_string($forceLang)) {
+			$lang = $forceLang;
+		}
+
 		if ($lang === null || !$this->languageExists($app, $lang)) {
 			$lang = $this->findLanguage($app);
 		}
@@ -125,7 +131,7 @@ class Factory implements IFactory {
 		}
 
 		/**
-		 * At this point ownCloud might not yet be installed and thus the lookup
+		 * At this point Nextcloud might not yet be installed and thus the lookup
 		 * in the preferences table might fail. For this reason we need to check
 		 * whether the instance has already been installed
 		 *
@@ -268,24 +274,6 @@ class Factory implements IFactory {
 		}
 
 		throw new LanguageNotFoundException();
-	}
-
-	/**
-	 * @param string|null $app App id or null for core
-	 * @return string
-	 */
-	public function setLanguageFromRequest($app = null) {
-
-		try {
-			$requestLanguage = $this->getLanguageFromRequest($app);
-		} catch (LanguageNotFoundException $e) {
-			$requestLanguage = 'en';
-		}
-
-		if ($app === null && !$this->requestLanguage) {
-			$this->requestLanguage = $requestLanguage;
-		}
-		return $requestLanguage;
 	}
 
 	/**

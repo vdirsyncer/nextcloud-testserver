@@ -28,6 +28,7 @@
 namespace OC\Files\Cache\Wrapper;
 use OC\Files\Cache\Cache;
 use OCP\Files\Cache\ICacheEntry;
+use OCP\Files\Search\ISearchQuery;
 
 /**
  * Jail to a subdirectory of the wrapped cache
@@ -93,7 +94,7 @@ class CacheJail extends CacheWrapper {
 	 * get the stored metadata of a file or folder
 	 *
 	 * @param string /int $file
-	 * @return array|false
+	 * @return ICacheEntry|false
 	 */
 	public function get($file) {
 		if (is_string($file) or $file == '') {
@@ -142,11 +143,7 @@ class CacheJail extends CacheWrapper {
 	 * @return int
 	 */
 	public function getParentId($file) {
-		if ($file === '') {
-			return -1;
-		} else {
-			return $this->getCache()->getParentId($this->getSourcePath($file));
-		}
+		return $this->getCache()->getParentId($this->getSourcePath($file));
 	}
 
 	/**
@@ -176,6 +173,16 @@ class CacheJail extends CacheWrapper {
 	 */
 	public function move($source, $target) {
 		$this->getCache()->move($this->getSourcePath($source), $this->getSourcePath($target));
+	}
+
+	/**
+	 * Get the storage id and path needed for a move
+	 *
+	 * @param string $path
+	 * @return array [$storageId, $internalPath]
+	 */
+	protected function getMoveInfo($path) {
+		return [$this->getNumericStorageId(), $this->getSourcePath($path)];
 	}
 
 	/**
@@ -219,6 +226,11 @@ class CacheJail extends CacheWrapper {
 	 */
 	public function searchByMime($mimetype) {
 		$results = $this->getCache()->searchByMime($mimetype);
+		return $this->formatSearchResults($results);
+	}
+
+	public function searchQuery(ISearchQuery $query) {
+		$results = $this->getCache()->searchQuery($query);
 		return $this->formatSearchResults($results);
 	}
 

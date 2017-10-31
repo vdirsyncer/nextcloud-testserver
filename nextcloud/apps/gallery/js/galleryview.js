@@ -1,8 +1,19 @@
-/* global Handlebars, Gallery */
+/**
+ * Nextcloud - Gallery
+ *
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Olivier Paroz <galleryapps@oparoz.com>
+ *
+ * @copyright Olivier Paroz 2017
+ */
+/* global Handlebars, Gallery, Thumbnails */
 (function ($, _, OC, t, Gallery) {
 	"use strict";
 
-	var TEMPLATE_ADDBUTTON = '<a href="#" class="button new"><img src="{{iconUrl}}" alt="{{addText}}"></img></a>';
+	var TEMPLATE_ADDBUTTON = '<a href="#" class="button new"><span class="icon icon-add"></span><span class="hidden-visually">New</span></a>';
 
 	/**
 	 * Builds and updates the Gallery view
@@ -230,7 +241,7 @@
 				// We can't upload yet on the public side
 				if (Gallery.token) {
 					message += '<p>' + t('gallery',
-							'Upload pictures in the files app to display them here') + '</p>';
+							'Upload pictures in the Files app to display them here') + '</p>';
 				} else {
 					message += '<p>' + t('gallery',
 							'Upload new files via drag and drop or by using the [+] button above') +
@@ -291,28 +302,50 @@
 		/**
 		 * Sets up our custom handlers for folder uploading operations
 		 *
-		 * We only want it to be called for that specific case as all other file uploading
-		 * operations will call Files.highlightFiles
-		 *
 		 * @see OC.Upload.init/file_upload_param.done()
 		 *
 		 * @private
 		 */
 		_setupUploader: function () {
-			$('#file_upload_start').on('fileuploaddone', function (e, data) {
-				if (data.files[0] === data.originalFiles[data.originalFiles.length - 1]
-					&& data.files[0].relativePath) {
+			var $uploadEl = $('#file_upload_start');
+			if (!$uploadEl.exists()) {
+				return;
+			}
+			this._uploader = new OC.Uploader($uploadEl, {
+				fileList: FileList,
+				dropZone: $('#content')
+			});
+			this._uploader.on('add', function (e, data) {
+				data.targetDir = '/' + Gallery.currentAlbum;
+			});
+			this._uploader.on('done', function (e, upload) {
+				var data = upload.data;
 
+				// is that the last upload ?
+				if (data.files[0] === data.originalFiles[data.originalFiles.length - 1]) {
+					var fileList = data.originalFiles;
 					//Ask for a refresh of the photowall
 					Gallery.getFiles(Gallery.currentAlbum).done(function () {
+						var fileId, path;
+						// Removes the cached thumbnails of files which have been re-uploaded
+						_(fileList).each(function (fileName) {
+							path = Gallery.currentAlbum + '/' + fileName;
+							if (Gallery.imageMap[path]) {
+								fileId = Gallery.imageMap[path].fileId;
+								if (Thumbnails.map[fileId]) {
+									delete Thumbnails.map[fileId];
+								}
+							}
+						});
+
 						Gallery.view.init(Gallery.currentAlbum);
 					});
 				}
 			});
 
-			// Since 9.0
-			if (OC.Upload) {
-				OC.Upload._isReceivedSharedFile = function (file) {
+			// Since Nextcloud 9.0
+			if (OC.Uploader) {
+				OC.Uploader.prototype._isReceivedSharedFile = function (file) {
 					var path = file.name;
 					var sharedWith = false;
 
@@ -337,7 +370,7 @@
 			this.element.on("contextmenu", function(e) { e.preventDefault(); });
 			$('#filelist-button').click(Gallery.switchToFilesView);
 			$('#download').click(Gallery.download);
-			$('#share-button').click(Gallery.share);
+			$('#shared-button').click(Gallery.share);
 			Gallery.infoBox = new Gallery.InfoBox();
 			$('#album-info-button').click(Gallery.showInfo);
 			$('#sort-name-button').click(Gallery.sorter);
@@ -365,7 +398,7 @@
 			var availableWidth = $(window).width() - Gallery.buttonsWidth;
 			this.breadcrumb.init(albumPath, availableWidth);
 			var album = Gallery.albumMap[albumPath];
-			
+
 			var sum = album.images.length + album.subAlbums.length;
 			//If sum of the number of images and subalbums exceeds 1 then show the buttons.
 			if(sum > 1)
@@ -398,7 +431,7 @@
 		 */
 		_hideButtons: function (uploadAllowed) {
 			$('#album-info-button').hide();
-			$('#share-button').hide();
+			$('#shared-button').hide();
 			$('#sort-name-button').hide();
 			$('#sort-date-button').hide();
 			$('#save-button').hide();
@@ -416,7 +449,7 @@
 		 * @private
 		 */
 		_shareButtonSetup: function (albumPath) {
-			var shareButton = $('#share-button');
+			var shareButton = $('#shared-button');
 			if (albumPath === '' || Gallery.token) {
 				shareButton.hide();
 			} else {
@@ -507,7 +540,7 @@
 					});
 			}
 		},
-		
+
 		/**
 		 * If no url is entered then do not show the error box.
 		 *
@@ -521,7 +554,7 @@
  				}
 			});
 		},
-		
+
 		/**
 		 * Creates the [+] button allowing users who can't drag and drop to upload files
 		 *
@@ -569,7 +602,7 @@
 			}
 			if (!this._newFileMenu) {
 				this._newFileMenu = new Gallery.NewFileMenu();
-				$('body').append(this._newFileMenu.$el);
+				$('.actions').append(this._newFileMenu.$el);
 			}
 			this._newFileMenu.showAt($target);
 

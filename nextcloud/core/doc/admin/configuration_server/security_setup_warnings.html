@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Warnings on Admin Page &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Warnings on Admin Page &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Using the occ Command" href="occ_command.html" />
-    <link rel="prev" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="prev" title="Server Configuration" href="index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="">Warnings on Admin Page</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cache-warnings">Cache Warnings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#transactional-file-locking-is-disabled">Transactional file locking is disabled</a></li>
@@ -100,12 +100,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -124,7 +125,7 @@
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="index.html" title="Previous Chapter: Nextcloud Server Configuration"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Ser...</span>
+    <a href="index.html" title="Previous Chapter: Server Configuration"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Server Config...</span>
     </a>
   </li>
   <li class="next">
@@ -141,6 +142,11 @@ might see, and what to do about them.</p>
 <div class="figure">
 <img alt="../_images/security-setup-warning-1.png" src="../_images/security-setup-warning-1.png" />
 </div>
+<p>You can use the  <a class="reference external" href="https://scan.nextcloud.com">Nextcloud Security Scan</a> to see
+if your system is up to date and well secured. We have ran this scan over public
+IP addresses in the past to try and reach out to <a class="reference external" href="https://nextcloud.com/blog/nextcloud-releases-security-scanner-to-help-protect-private-clouds/">extremely outdated systems</a>
+and might again in the future. Please, protect your privacy and keep your server
+up to date! Privacy means little without security.</p>
 <div class="section" id="cache-warnings">
 <h2>Cache Warnings<a class="headerlink" href="#cache-warnings" title="Permalink to this headline">¶</a></h2>
 <p>&#8220;No memory cache has been configured. To enhance your performance please
@@ -177,7 +183,7 @@ section of your Nextcloud Admin page to enable. The following pages
 describe how to enable HTTPS on the Apache and Nginx Web servers.</p>
 <p><a class="reference internal" href="../installation/source_installation.html#enabling-ssl-label"><span>Enabling SSL</span></a> (on Apache)</p>
 <p><a class="reference internal" href="harden_server.html#use-https-label"><span>Use HTTPS</span></a></p>
-<p><a class="reference internal" href="../installation/nginx_examples.html"><em>Nginx Example Configurations</em></a></p>
+<p><a class="reference internal" href="../installation/nginx.html"><em>Nginx Configuration</em></a></p>
 </div>
 <div class="section" id="the-test-with-getenv-path-only-returns-an-empty-response">
 <h2>The test with getenv(&#8220;PATH&#8221;) only returns an empty response<a class="headerlink" href="#the-test-with-getenv-path-only-returns-an-empty-response" title="Permalink to this headline">¶</a></h2>
@@ -242,7 +248,7 @@ This can cause problems when multiple actions are executed in parallel.&#8221;</
             
 <ul class="prevnext-title list-unstyled list-inline">
   <li class="prev">
-    <a href="index.html" title="Previous Chapter: Nextcloud Server Configuration"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Nextcloud Ser...</span>
+    <a href="index.html" title="Previous Chapter: Server Configuration"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm">&laquo; Server Config...</span>
     </a>
   </li>
   <li class="next">

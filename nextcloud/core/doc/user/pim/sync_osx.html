@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Synchronizing with OS X &mdash; Nextcloud 11 User Manual 11 documentation</title>
+    <title>Synchronizing with OS X &mdash; Nextcloud 12 User Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 User Manual 11 documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 User Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Contacts &amp; Calendar" href="index.html" />
-    <link rel="next" title="Synchronizing with KDE SC" href="sync_kde.html" />
+    <link rel="next" title="Thunderbird - Synchronize Addressbook and Calendar" href="sync_thunderbird.html" />
     <link rel="prev" title="iOS - Synchronize iPhone/iPad" href="sync_ios.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,8 +66,8 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 User Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 11</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 12 User Manual Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whats_new.html">What&#8217;s New for Users in Nextcloud 12</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../webinterface.html">The Nextcloud Web Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../files/index.html">Files &amp; Synchronization</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Contacts &amp; Calendar</a><ul class="current">
@@ -75,8 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="calendar.html">Using the Calendar App</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sync_ios.html">iOS - Synchronize iPhone/iPad</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Synchronizing with OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sync_kde.html">Synchronizing with KDE SC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sync_thunderbird.html">Thunderbird - Synchronize Addressbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sync_thunderbird.html">Thunderbird - Synchronize Addressbook and Calendar</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
 </li>
@@ -101,7 +100,7 @@
     </a>
   </li>
   <li class="next">
-    <a href="sync_kde.html" title="Next Chapter: Synchronizing with KDE SC"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Synchronizing... &raquo;</span>
+    <a href="sync_thunderbird.html" title="Next Chapter: Thunderbird - Synchronize Addressbook and Calendar"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Thunderbird -... &raquo;</span>
     </a>
   </li>
 </ul>
@@ -116,17 +115,17 @@
 to sync with Nextcloud. For OS X 10.7 Lion and 10.8 Mountain Lion everything works
 fine, but OS X 10.6 (Snow Leopard) and older needs some fiddling to work. A user
 contributed the following:</p>
-<p>#. Make sure, addressbook is not running. If it is, select the windows and press
+<p>#. Make sure, &#8220;Addressbook&#8221; is not running. If it is, select the windows and press
 Command + Q to terminate it.
 #. Navigate to <strong>/Users/YOUR_USERNAME/Library/Application Support/AddressBook/Sources</strong>.
-If you already have some kind of addressbook setup, it is likely you will see
+If you already have some kind of addressbook set up, it is likely you will see
 some folders named like this <strong>BEA92826-FBF3-4E53-B5C6-ED7C2B454430</strong>.
 Note down what folders there are now and leave the window open.
-#. Open addressbook and try to add a new CardDav addressbook. At this point, it
+#. Open &#8220;Addressbook&#8221; and try to add a new CardDav addressbook. At this point, it
 does not matter what information you enter. It will come up with the same error
 message you mentioned before when you click &#8220;Create&#8221;. Ignore it and click &#8220;Create&#8221;
 again. A non-functional addressbook will be added.
-#. Close addressbook again using Command + Q
+#. Close &#8220;Addressbook&#8221; again using Command + Q
 #. Go back to the folder window from step 2. You will now see a newly created folder
 with another long string as its name.
 #. Navigate to the newly created folder and edit the <strong>Configuration.plist</strong> with
@@ -149,7 +148,7 @@ your favorite text editor.
 </li>
 </ol>
 <p>If it&#8217;s still not working, have a look at the <a class="reference internal" href="troubleshooting.html"><em>Troubleshooting</em></a> and
-<a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/issues/index.html#troubleshooting-contacts-calendar">Troubleshooting Contacts &amp; Calendar</a> guides.</p>
+<a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/issues/index.html#troubleshooting-contacts-calendar">Troubleshooting Contacts &amp; Calendar</a> guides.</p>
 <p>There is also an easy <a class="reference external" href="https://forum.owncloud.org/viewtopic.php?f=3&amp;t=132">HOWTO</a> in the forum.</p>
 </div>
 
@@ -161,7 +160,7 @@ your favorite text editor.
     </a>
   </li>
   <li class="next">
-    <a href="sync_kde.html" title="Next Chapter: Synchronizing with KDE SC"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Synchronizing... &raquo;</span>
+    <a href="sync_thunderbird.html" title="Next Chapter: Thunderbird - Synchronize Addressbook and Calendar"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Thunderbird -... &raquo;</span>
     </a>
   </li>
 </ul>

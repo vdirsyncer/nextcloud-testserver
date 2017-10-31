@@ -29,7 +29,6 @@ namespace OCA\Encryption\Crypto;
 
 use OC\Encryption\Exceptions\DecryptionFailedException;
 use OC\Encryption\Exceptions\EncryptionFailedException;
-use OC\HintException;
 use OCA\Encryption\Exceptions\MultiKeyDecryptException;
 use OCA\Encryption\Exceptions\MultiKeyEncryptException;
 use OCP\Encryption\Exceptions\GenericEncryptionException;
@@ -39,7 +38,7 @@ use OCP\ILogger;
 use OCP\IUserSession;
 
 /**
- * Class Crypt provides the encryption implementation of the default ownCloud
+ * Class Crypt provides the encryption implementation of the default Nextcloud
  * encryption module. As default AES-256-CTR is used, it does however offer support
  * for the following modes:
  *
@@ -55,10 +54,10 @@ use OCP\IUserSession;
 class Crypt {
 
 	const DEFAULT_CIPHER = 'AES-256-CTR';
-	// default cipher from old ownCloud versions
+	// default cipher from old Nextcloud versions
 	const LEGACY_CIPHER = 'AES-128-CFB';
 
-	// default key format, old ownCloud version encrypted the private key directly
+	// default key format, old Nextcloud version encrypted the private key directly
 	// with the user password
 	const LEGACY_KEY_FORMAT = 'password';
 
@@ -476,12 +475,12 @@ class Crypt {
 	 * @param string $data
 	 * @param string $passPhrase
 	 * @param string $expectedSignature
-	 * @throws HintException
+	 * @throws GenericEncryptionException
 	 */
 	private function checkSignature($data, $passPhrase, $expectedSignature) {
 		$signature = $this->createSignature($data, $passPhrase);
 		if (!hash_equals($expectedSignature, $signature)) {
-			throw new HintException('Bad Signature', $this->l->t('Bad Signature'));
+			throw new GenericEncryptionException('Bad Signature', $this->l->t('Bad Signature'));
 		}
 	}
 
@@ -552,7 +551,7 @@ class Crypt {
 	 * @param string $catFile
 	 * @param string $cipher
 	 * @return bool
-	 * @throws HintException
+	 * @throws GenericEncryptionException
 	 */
 	private function hasSignature($catFile, $cipher) {
 		$meta = substr($catFile, -93);
@@ -560,7 +559,7 @@ class Crypt {
 
 		// enforce signature for the new 'CTR' ciphers
 		if ($signaturePosition === false && strpos(strtolower($cipher), 'ctr') !== false) {
-			throw new HintException('Missing Signature', $this->l->t('Missing Signature'));
+			throw new GenericEncryptionException('Missing Signature', $this->l->t('Missing Signature'));
 		}
 
 		return ($signaturePosition !== false);

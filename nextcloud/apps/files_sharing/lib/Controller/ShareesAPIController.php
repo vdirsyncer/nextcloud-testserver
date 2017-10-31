@@ -24,10 +24,11 @@
  */
 namespace OCA\Files_Sharing\Controller;
 
-use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCSController;
 use OCP\Contacts\IManager;
+use OCP\Federation\ICloudIdManager;
 use OCP\Http\Client\IClientService;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -69,6 +70,9 @@ class ShareesAPIController extends OCSController {
 	/** @var IClientService */
 	protected $clientService;
 
+	/** @var ICloudIdManager  */
+	protected $cloudIdManager;
+
 	/** @var bool */
 	protected $shareWithGroupOnly = false;
 
@@ -88,12 +92,14 @@ class ShareesAPIController extends OCSController {
 			'groups' => [],
 			'remotes' => [],
 			'emails' => [],
+			'circles' => [],
 		],
 		'users' => [],
 		'groups' => [],
 		'remotes' => [],
 		'emails' => [],
 		'lookup' => [],
+		'circles' => [],
 	];
 
 	protected $reachedEndFor = [];
@@ -110,6 +116,7 @@ class ShareesAPIController extends OCSController {
 	 * @param ILogger $logger
 	 * @param \OCP\Share\IManager $shareManager
 	 * @param IClientService $clientService
+	 * @param ICloudIdManager $cloudIdManager
 	 */
 	public function __construct($appName,
 								IRequest $request,
@@ -121,7 +128,9 @@ class ShareesAPIController extends OCSController {
 								IURLGenerator $urlGenerator,
 								ILogger $logger,
 								\OCP\Share\IManager $shareManager,
-								IClientService $clientService) {
+								IClientService $clientService,
+								ICloudIdManager $cloudIdManager
+	) {
 		parent::__construct($appName, $request);
 
 		$this->groupManager = $groupManager;
@@ -133,6 +142,7 @@ class ShareesAPIController extends OCSController {
 		$this->logger = $logger;
 		$this->shareManager = $shareManager;
 		$this->clientService = $clientService;
+		$this->cloudIdManager = $cloudIdManager;
 	}
 
 	/**
@@ -165,9 +175,10 @@ class ShareesAPIController extends OCSController {
 		}
 
 		$foundUserById = false;
+		$lowerSearch = strtolower($search);
 		foreach ($users as $uid => $userDisplayName) {
-			if (strtolower($uid) === strtolower($search) || strtolower($userDisplayName) === strtolower($search)) {
-				if (strtolower($uid) === strtolower($search)) {
+			if (strtolower($uid) === $lowerSearch || strtolower($userDisplayName) === $lowerSearch) {
+				if (strtolower($uid) === $lowerSearch) {
 					$foundUserById = true;
 				}
 				$this->result['exact']['users'][] = [
@@ -225,7 +236,7 @@ class ShareesAPIController extends OCSController {
 		$this->result['groups'] = $this->result['exact']['groups'] = [];
 
 		$groups = $this->groupManager->search($search, $this->limit, $this->offset);
-		$groups = array_map(function (IGroup $group) { return $group->getGID(); }, $groups);
+		$groupIds = array_map(function (IGroup $group) { return $group->getGID(); }, $groups);
 
 		if (!$this->shareeEnumeration || sizeof($groups) < $this->limit) {
 			$this->reachedEndFor[] = 'groups';
@@ -236,13 +247,19 @@ class ShareesAPIController extends OCSController {
 			// Intersect all the groups that match with the groups this user is a member of
 			$userGroups = $this->groupManager->getUserGroups($this->userSession->getUser());
 			$userGroups = array_map(function (IGroup $group) { return $group->getGID(); }, $userGroups);
-			$groups = array_intersect($groups, $userGroups);
+			$groupIds = array_intersect($groupIds, $userGroups);
 		}
 
-		foreach ($groups as $gid) {
-			if (strtolower($gid) === strtolower($search)) {
+		$lowerSearch = strtolower($search);
+		foreach ($groups as $group) {
+			// FIXME: use a more efficient approach
+			$gid = $group->getGID();
+			if (!in_array($gid, $groupIds)) {
+				continue;
+			}
+			if (strtolower($gid) === $lowerSearch || strtolower($group->getDisplayName()) === $lowerSearch) {
 				$this->result['exact']['groups'][] = [
-					'label' => $gid,
+					'label' => $group->getDisplayName(),
 					'value' => [
 						'shareType' => Share::SHARE_TYPE_GROUP,
 						'shareWith' => $gid,
@@ -250,7 +267,7 @@ class ShareesAPIController extends OCSController {
 				];
 			} else {
 				$this->result['groups'][] = [
-					'label' => $gid,
+					'label' => $group->getDisplayName(),
 					'value' => [
 						'shareType' => Share::SHARE_TYPE_GROUP,
 						'shareWith' => $gid,
@@ -265,7 +282,7 @@ class ShareesAPIController extends OCSController {
 			$group = $this->groupManager->get($search);
 			if ($group instanceof IGroup && (!$this->shareWithGroupOnly || in_array($group->getGID(), $userGroups))) {
 				array_push($this->result['exact']['groups'], [
-					'label' => $group->getGID(),
+					'label' => $group->getDisplayName(),
 					'value' => [
 						'shareType' => Share::SHARE_TYPE_GROUP,
 						'shareWith' => $group->getGID(),
@@ -278,6 +295,23 @@ class ShareesAPIController extends OCSController {
 			$this->result['groups'] = [];
 		}
 	}
+
+
+	/**
+	 * @param string $search
+	 */
+	protected function getCircles($search) {
+		$this->result['circles'] = $this->result['exact']['circles'] = [];
+
+		$result = \OCA\Circles\Api\Sharees::search($search, $this->limit, $this->offset);
+		if (array_key_exists('circles', $result['exact'])) {
+			$this->result['exact']['circles'] = $result['exact']['circles'];
+		}
+		if (array_key_exists('circles', $result)) {
+			$this->result['circles'] = $result['circles'];
+		}
+	}
+
 
 	/**
 	 * @param string $search
@@ -299,10 +333,16 @@ class ShareesAPIController extends OCSController {
 				if (!is_array($cloudIds)) {
 					$cloudIds = [$cloudIds];
 				}
+				$lowerSearch = strtolower($search);
 				foreach ($cloudIds as $cloudId) {
-					list(, $serverUrl) = $this->splitUserRemote($cloudId);
-					if (strtolower($contact['FN']) === strtolower($search) || strtolower($cloudId) === strtolower($search)) {
-						if (strtolower($cloudId) === strtolower($search)) {
+					try {
+						list(, $serverUrl) = $this->splitUserRemote($cloudId);
+					} catch (\InvalidArgumentException $e) {
+						continue;
+					}
+
+					if (strtolower($contact['FN']) === $lowerSearch || strtolower($cloudId) === $lowerSearch) {
+						if (strtolower($cloudId) === $lowerSearch) {
 							$result['exactIdMatch'] = true;
 						}
 						$result['exact'][] = [
@@ -331,7 +371,7 @@ class ShareesAPIController extends OCSController {
 			$result['results'] = [];
 		}
 
-		if (!$result['exactIdMatch'] && substr_count($search, '@') >= 1 && $this->offset === 0) {
+		if (!$result['exactIdMatch'] && $this->cloudIdManager->isValidCloudId($search) && $this->offset === 0) {
 			$result['exact'][] = [
 				'label' => $search,
 				'value' => [
@@ -351,45 +391,15 @@ class ShareesAPIController extends OCSController {
 	 *
 	 * @param string $address federated share address
 	 * @return array [user, remoteURL]
-	 * @throws \Exception
+	 * @throws \InvalidArgumentException
 	 */
 	public function splitUserRemote($address) {
-		if (strpos($address, '@') === false) {
-			throw new \Exception('Invalid Federated Cloud ID');
+		try {
+			$cloudId = $this->cloudIdManager->resolveCloudId($address);
+			return [$cloudId->getUser(), $cloudId->getRemote()];
+		} catch (\InvalidArgumentException $e) {
+			throw new \InvalidArgumentException('Invalid Federated Cloud ID', 0, $e);
 		}
-
-		// Find the first character that is not allowed in user names
-		$id = str_replace('\\', '/', $address);
-		$posSlash = strpos($id, '/');
-		$posColon = strpos($id, ':');
-
-		if ($posSlash === false && $posColon === false) {
-			$invalidPos = strlen($id);
-		} else if ($posSlash === false) {
-			$invalidPos = $posColon;
-		} else if ($posColon === false) {
-			$invalidPos = $posSlash;
-		} else {
-			$invalidPos = min($posSlash, $posColon);
-		}
-
-		// Find the last @ before $invalidPos
-		$pos = $lastAtPos = 0;
-		while ($lastAtPos !== false && $lastAtPos <= $invalidPos) {
-			$pos = $lastAtPos;
-			$lastAtPos = strpos($id, '@', $pos + 1);
-		}
-
-		if ($pos !== false) {
-			$user = substr($id, 0, $pos);
-			$remote = substr($id, $pos + 1);
-			$remote = $this->fixRemoteURL($remote);
-			if (!empty($user) && !empty($remote)) {
-				return array($user, $remote);
-			}
-		}
-
-		throw new \Exception('Invalid Federated Cloud ID');
 	}
 
 	/**
@@ -423,10 +433,22 @@ class ShareesAPIController extends OCSController {
 	 * @param int $perPage
 	 * @param int|int[] $shareType
 	 * @param bool $lookup
-	 * @return Http\DataResponse
+	 * @return DataResponse
 	 * @throws OCSBadRequestException
 	 */
 	public function search($search = '', $itemType = null, $page = 1, $perPage = 200, $shareType = null, $lookup = true) {
+
+		// only search for string larger than a given threshold
+		$threshold = (int)$this->config->getSystemValue('sharing.minSearchStringLength', 0);
+		if (strlen($search) < $threshold) {
+			return new DataResponse($this->result);
+		}
+
+		// never return more than the max. number of results configured in the config.php
+		$maxResults = (int)$this->config->getSystemValue('sharing.maxAutocompleteResults', 0);
+		if ($maxResults > 0) {
+			$perPage = min($perPage, $maxResults);
+		}
 		if ($perPage <= 0) {
 			throw new OCSBadRequestException('Invalid perPage argument');
 		}
@@ -453,6 +475,10 @@ class ShareesAPIController extends OCSController {
 		} else {
 			$shareTypes[] = Share::SHARE_TYPE_GROUP;
 			$shareTypes[] = Share::SHARE_TYPE_EMAIL;
+		}
+
+		if (\OC::$server->getAppManager()->isEnabledForUser('circles') && class_exists('\OCA\Circles\ShareByCircleProvider')) {
+			$shareTypes[] = Share::SHARE_TYPE_CIRCLE;
 		}
 
 		if (isset($_GET['shareType']) && is_array($_GET['shareType'])) {
@@ -495,7 +521,7 @@ class ShareesAPIController extends OCSController {
 	 * @param int $page
 	 * @param int $perPage
 	 * @param bool $lookup
-	 * @return Http\DataResponse
+	 * @return DataResponse
 	 * @throws OCSBadRequestException
 	 */
 	protected function searchSharees($search, $itemType, array $shareTypes, $page, $perPage, $lookup) {
@@ -513,6 +539,12 @@ class ShareesAPIController extends OCSController {
 		if (in_array(Share::SHARE_TYPE_GROUP, $shareTypes)) {
 			$this->getGroups($search);
 		}
+
+		// Get circles
+		if (in_array(Share::SHARE_TYPE_CIRCLE, $shareTypes)) {
+			$this->getCircles($search);
+		}
+
 
 		// Get remote
 		$remoteResults = ['results' => [], 'exact' => [], 'exactIdMatch' => false];
@@ -547,7 +579,7 @@ class ShareesAPIController extends OCSController {
 			$this->result['exact']['emails'] = $mailResults['exact'];
 		}
 
-		$response = new Http\DataResponse($this->result);
+		$response = new DataResponse($this->result);
 
 		if (sizeof($this->reachedEndFor) < 3) {
 			$response->addHeader('Link', $this->getPaginationLink($page, [
@@ -566,24 +598,63 @@ class ShareesAPIController extends OCSController {
 	 * @return array
 	 */
 	protected function getEmail($search) {
-		$result = ['results' => [], 'exact' => []];
+		$result = ['results' => [], 'exact' => [], 'exactIdMatch' => false];
 
 		// Search in contacts
 		//@todo Pagination missing
 		$addressBookContacts = $this->contactsManager->search($search, ['EMAIL', 'FN']);
-		$result['exactIdMatch'] = false;
+		$lowerSearch = strtolower($search);
 		foreach ($addressBookContacts as $contact) {
-			if (isset($contact['isLocalSystemBook'])) {
-				continue;
-			}
 			if (isset($contact['EMAIL'])) {
 				$emailAddresses = $contact['EMAIL'];
 				if (!is_array($emailAddresses)) {
 					$emailAddresses = [$emailAddresses];
 				}
 				foreach ($emailAddresses as $emailAddress) {
-					if (strtolower($contact['FN']) === strtolower($search) || strtolower($emailAddress) === strtolower($search)) {
-						if (strtolower($emailAddress) === strtolower($search)) {
+					$exactEmailMatch = strtolower($emailAddress) === $lowerSearch;
+
+					if (isset($contact['isLocalSystemBook'])) {
+						if ($exactEmailMatch) {
+							try {
+								$cloud = $this->cloudIdManager->resolveCloudId($contact['CLOUD'][0]);
+							} catch (\InvalidArgumentException $e) {
+								continue;
+							}
+
+							if (!$this->hasUserInResult($cloud->getUser())) {
+								$this->result['exact']['users'][] = [
+									'label' => $contact['FN'] . " ($emailAddress)",
+									'value' => [
+										'shareType' => Share::SHARE_TYPE_USER,
+										'shareWith' => $cloud->getUser(),
+									],
+								];
+							}
+							return ['results' => [], 'exact' => [], 'exactIdMatch' => true];
+						}
+
+						if ($this->shareeEnumeration) {
+							try {
+								$cloud = $this->cloudIdManager->resolveCloudId($contact['CLOUD'][0]);
+							} catch (\InvalidArgumentException $e) {
+								continue;
+							}
+
+							if (!$this->hasUserInResult($cloud->getUser())) {
+								$this->result['users'][] = [
+									'label' => $contact['FN'] . " ($emailAddress)",
+									'value' => [
+										'shareType' => Share::SHARE_TYPE_USER,
+										'shareWith' => $cloud->getUser(),
+									],
+								];
+							}
+						}
+						continue;
+					}
+
+					if ($exactEmailMatch || strtolower($contact['FN']) === $lowerSearch) {
+						if ($exactEmailMatch) {
 							$result['exactIdMatch'] = true;
 						}
 						$result['exact'][] = [
@@ -627,13 +698,15 @@ class ShareesAPIController extends OCSController {
 
 	protected function getLookup($search) {
 		$isEnabled = $this->config->getAppValue('files_sharing', 'lookupServerEnabled', 'no');
+		$lookupServerUrl = $this->config->getSystemValue('lookup_server', 'https://lookup.nextcloud.com');
+		$lookupServerUrl = rtrim($lookupServerUrl, '/');
 		$result = [];
 
 		if($isEnabled === 'yes') {
 			try {
 				$client = $this->clientService->newClient();
 				$response = $client->get(
-					'https://lookup.nextcloud.com/users?search=' . urlencode($search),
+					$lookupServerUrl . '/users?search=' . urlencode($search),
 					[
 						'timeout' => 10,
 						'connect_timeout' => 3,
@@ -657,6 +730,28 @@ class ShareesAPIController extends OCSController {
 		}
 
 		$this->result['lookup'] = $result;
+	}
+
+	/**
+	 * Check if a given user is already part of the result
+	 *
+	 * @param string $userId
+	 * @return bool
+	 */
+	protected function hasUserInResult($userId) {
+		foreach ($this->result['exact']['users'] as $result) {
+			if ($result['value']['shareWith'] === $userId) {
+				return true;
+			}
+		}
+
+		foreach ($this->result['users'] as $result) {
+			if ($result['value']['shareWith'] === $userId) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

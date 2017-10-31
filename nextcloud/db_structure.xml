@@ -739,9 +739,8 @@
 
 			<field>
 				<name>propertyvalue</name>
-				<type>text</type>
+				<type>clob</type>
 				<notnull>true</notnull>
-				<length>255</length>
 			</field>
 
 			<index>
@@ -786,6 +785,13 @@
 			<!-- Foreign Key users::uid or NULL -->
 			<field>
 				<name>share_with</name>
+				<type>text</type>
+				<default></default>
+				<notnull>false</notnull>
+				<length>255</length>
+			</field>
+			<field>
+				<name>password</name>
 				<type>text</type>
 				<default></default>
 				<notnull>false</notnull>
@@ -916,6 +922,14 @@
 				<length>1</length>
 			</field>
 
+			<field>
+				<name>share_name</name>
+				<type>text</type>
+				<default></default>
+				<notnull>false</notnull>
+				<length>64</length>
+			</field>
+
 			<index>
 				<name>item_share_type_index</name>
 				<field>
@@ -1003,6 +1017,14 @@
 				<type>integer</type>
 				<default></default>
 				<notnull>false</notnull>
+			</field>
+
+			<field>
+				<!-- time for execution of the job -->
+				<name>execution_duration</name>
+				<type>integer</type>
+				<default></default>
+				<notnull>true</notnull>
 			</field>
 
 			<index>

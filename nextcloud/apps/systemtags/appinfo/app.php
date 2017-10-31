@@ -30,15 +30,8 @@ $eventDispatcher->addListener(
 	function() {
 		// FIXME: no public API for these ?
 		\OCP\Util::addScript('oc-backbone-webdav');
-		\OCP\Util::addScript('systemtags/systemtags');
-		\OCP\Util::addScript('systemtags/systemtagmodel');
-		\OCP\Util::addScript('systemtags/systemtagsmappingcollection');
-		\OCP\Util::addScript('systemtags/systemtagscollection');
-		\OCP\Util::addScript('systemtags/systemtagsinputfield');
-		\OCP\Util::addScript('systemtags', 'app');
-		\OCP\Util::addScript('systemtags', 'systemtagsfilelist');
-		\OCP\Util::addScript('systemtags', 'filesplugin');
-		\OCP\Util::addScript('systemtags', 'systemtagsinfoview');
+		\OCP\Util::addScript('systemtags/merged');
+		\OCP\Util::addScript('systemtags', 'merged');
 		\OCP\Util::addStyle('systemtags');
 		\OCP\Util::addStyle('systemtags', 'systemtagsfilelist');
 	}
@@ -65,14 +58,14 @@ $mapperListener = function(MapperEvent $event) {
 $eventDispatcher->addListener(MapperEvent::EVENT_ASSIGN, $mapperListener);
 $eventDispatcher->addListener(MapperEvent::EVENT_UNASSIGN, $mapperListener);
 
-$l = \OC::$server->getL10N('systemtags');
-
-\OCA\Files\App::getNavigationManager()->add(
-	array(
+\OCA\Files\App::getNavigationManager()->add(function () {
+	$l = \OC::$server->getL10N('systemtags');
+	return [
 		'id' => 'systemtagsfilter',
 		'appname' => 'systemtags',
 		'script' => 'list.php',
 		'order' => 25,
-		'name' => $l->t('Tags')
-	)
-);
+		'name' => $l->t('Tags'),
+	];
+});
+

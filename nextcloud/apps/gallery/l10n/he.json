@@ -4,7 +4,6 @@
     "Aborting preview. Could not find the file" : "מבטל תצוגה מקדימה. לא מצליח לאתר את הקובץ",
     "Could not move \"{file}\", target exists" : "לא ניתן להעביר \"{file}\", קובץ מטרה קיים",
     "Could not move \"{file}\"" : "לא ניתן להעביר \"{file}\"",
-    "Gallery view" : "תצוגת גלריה",
     "Could not load the description" : "לא ניתן לטעון את התיאור",
     "Could not load the description: " : "לא ניתן לטעון את התיאור:",
     "Copyright" : "זכויות יוצרים",
@@ -17,7 +16,6 @@
     "please install one of the following alternatives" : "יש להתקין אחת מהחלופות הבאות",
     "Album cannot be shown" : "לא ניתן להציג את האלבום",
     "No media files found" : "לא נמצאו קובצי מדיה",
-    "Upload pictures in the files app to display them here" : "יש להעלות תמונות ביישום הקבצים להצגתם כאן",
     "Upload new files via drag and drop or by using the [+] button above" : "העלאת קבצים חדשים באמצעות גרירה ושחרור או באמצעות כפתור ה- [+] מעלה",
     "Configuration error" : "שגיאת הגדרה",
     "New" : "חדש",
@@ -98,12 +96,12 @@
     "a conflicting app was installed" : "הותקן יישום הגורם להתנגשות",
     "a required component is missing or was disconnected" : "מרכיב נדרש חסר או מנותק",
     "the filesystem is not readable" : "קובץ המערכת לא ניתן לקריאה",
-    "For more information, please contact your friendly ownCloud administrator." : "למידע נוסף, יש לפנות למנהל ownCloud החברותי",
     "Sorry, this link doesn't seem to work anymore." : "מצטערים, לא נראה שקישור זה עובד יותר. ",
     "the item was removed" : "הפריט הוסר",
     "the link has expired" : "הקישור פג תוקף",
     "sharing is disabled" : "השיתוף נוטרל",
     "For more information, please ask the person who has sent you this link." : "למידע נוסף, יש לפנות לשולח קישור זה.",
-    "Picture view" : "תצוגת תמונה"
+    "Picture view" : "תצוגת תמונה",
+    "Gallery view" : "תצוגת גלריה"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

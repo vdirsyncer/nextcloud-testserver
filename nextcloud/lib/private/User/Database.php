@@ -185,15 +185,15 @@ class Database extends Backend implements IUserBackend {
 		$parameters = [];
 		$searchLike = '';
 		if ($search !== '') {
-			$parameters[] = '%' . $search . '%';
-			$parameters[] = '%' . $search . '%';
+			$parameters[] = '%' . \OC::$server->getDatabaseConnection()->escapeLikeParameter($search) . '%';
+			$parameters[] = '%' . \OC::$server->getDatabaseConnection()->escapeLikeParameter($search) . '%';
 			$searchLike = ' WHERE LOWER(`displayname`) LIKE LOWER(?) OR '
 				. 'LOWER(`uid`) LIKE LOWER(?)';
 		}
 
 		$displayNames = array();
 		$query = \OC_DB::prepare('SELECT `uid`, `displayname` FROM `*PREFIX*users`'
-			. $searchLike .' ORDER BY `uid` ASC', $limit, $offset);
+			. $searchLike .' ORDER BY LOWER(`displayname`), LOWER(`uid`) ASC', $limit, $offset);
 		$result = $query->execute($parameters);
 		while ($row = $result->fetchRow()) {
 			$displayNames[$row['uid']] = $row['displayname'];
@@ -234,10 +234,17 @@ class Database extends Backend implements IUserBackend {
 	/**
 	 * Load an user in the cache
 	 * @param string $uid the username
-	 * @return boolean
+	 * @return boolean true if user was found, false otherwise
 	 */
 	private function loadUser($uid) {
+		$uid = (string) $uid;
 		if (!isset($this->cache[$uid])) {
+			//guests $uid could be NULL or ''
+			if ($uid === '') {
+				$this->cache[$uid]=false;
+				return true;
+			}
+
 			$query = \OC_DB::prepare('SELECT `uid`, `displayname` FROM `*PREFIX*users` WHERE LOWER(`uid`) = LOWER(?)');
 			$result = $query->execute(array($uid));
 
@@ -248,9 +255,14 @@ class Database extends Backend implements IUserBackend {
 
 			$this->cache[$uid] = false;
 
-			while ($row = $result->fetchRow()) {
+			// "uid" is primary key, so there can only be a single result
+			if ($row = $result->fetchRow()) {
 				$this->cache[$uid]['uid'] = $row['uid'];
 				$this->cache[$uid]['displayname'] = $row['displayname'];
+				$result->closeCursor();
+			} else {
+				$result->closeCursor();
+				return false;
 			}
 		}
 
@@ -269,11 +281,11 @@ class Database extends Backend implements IUserBackend {
 		$parameters = [];
 		$searchLike = '';
 		if ($search !== '') {
-			$parameters[] = '%' . $search . '%';
+			$parameters[] = '%' . \OC::$server->getDatabaseConnection()->escapeLikeParameter($search) . '%';
 			$searchLike = ' WHERE LOWER(`uid`) LIKE LOWER(?)';
 		}
 
-		$query = \OC_DB::prepare('SELECT `uid` FROM `*PREFIX*users`' . $searchLike . ' ORDER BY `uid` ASC', $limit, $offset);
+		$query = \OC_DB::prepare('SELECT `uid` FROM `*PREFIX*users`' . $searchLike . ' ORDER BY LOWER(`uid`) ASC', $limit, $offset);
 		$result = $query->execute($parameters);
 		$users = array();
 		while ($row = $result->fetchRow()) {

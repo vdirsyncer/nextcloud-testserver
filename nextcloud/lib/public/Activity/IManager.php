@@ -64,6 +64,7 @@ interface IManager {
 	 *  - setSubject()
 	 *
 	 * @param IEvent $event
+	 * @throws \BadMethodCallException if required values have not been set
 	 * @since 8.2.0
 	 */
 	public function publish(IEvent $event);
@@ -204,6 +205,18 @@ interface IManager {
 	 * @since 8.2.0
 	 */
 	public function isFormattingFilteredObject();
+
+	/**
+	 * @param bool $status Set to true, when parsing events should not use SVG icons
+	 * @since 12.0.1
+	 */
+	public function setRequirePNG($status);
+
+	/**
+	 * @return bool
+	 * @since 12.0.1
+	 */
+	public function getRequirePNG();
 
 	/**
 	 * @param string $app

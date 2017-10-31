@@ -40,7 +40,11 @@ OC_Util::checkLoggedIn();
 
 $defaults = \OC::$server->getThemingDefaults();
 $certificateManager = \OC::$server->getCertificateManager();
-$accountManager = new \OC\Accounts\AccountManager(\OC::$server->getDatabaseConnection(), \OC::$server->getEventDispatcher());
+$accountManager = new \OC\Accounts\AccountManager(
+	\OC::$server->getDatabaseConnection(),
+	\OC::$server->getEventDispatcher(),
+	\OC::$server->getJobList()
+);
 $config = \OC::$server->getConfig();
 $urlGenerator = \OC::$server->getURLGenerator();
 
@@ -57,10 +61,8 @@ OC_Util::addStyle( 'settings', 'settings' );
 \OC_Util::addVendorScript('strengthify/jquery.strengthify');
 \OC_Util::addVendorStyle('strengthify/strengthify');
 \OC_Util::addScript('files', 'jquery.fileupload');
-if ($config->getSystemValue('enable_avatars', true) === true) {
-	\OC_Util::addVendorScript('jcrop/js/jquery.Jcrop');
-	\OC_Util::addVendorStyle('jcrop/css/jquery.Jcrop');
-}
+\OC_Util::addVendorScript('jcrop/js/jquery.Jcrop');
+\OC_Util::addVendorStyle('jcrop/css/jquery.Jcrop');
 
 \OC::$server->getEventDispatcher()->dispatch('OC\Settings\Personal::loadAdditionalScripts');
 
@@ -71,62 +73,65 @@ $storageInfo=OC_Helper::getStorageInfo('/');
 
 $user = OC::$server->getUserManager()->get(OC_User::getUser());
 
-$userLang=$config->getUserValue( OC_User::getUser(), 'core', 'lang', \OC::$server->getL10NFactory()->findLanguage() );
-$languageCodes = \OC::$server->getL10NFactory()->findAvailableLanguages();
+$forceLanguage = $config->getSystemValue('force_language', false);
+if ($forceLanguage === false) {
+	$userLang=$config->getUserValue( OC_User::getUser(), 'core', 'lang', \OC::$server->getL10NFactory()->findLanguage() );
+	$languageCodes = \OC::$server->getL10NFactory()->findAvailableLanguages();
 
-// array of common languages
-$commonLangCodes = array(
-	'en', 'es', 'fr', 'de', 'de_DE', 'ja', 'ar', 'ru', 'nl', 'it', 'pt_BR', 'pt_PT', 'da', 'fi_FI', 'nb_NO', 'sv', 'tr', 'zh_CN', 'ko'
-);
+	// array of common languages
+	$commonLangCodes = array(
+		'en', 'es', 'fr', 'de', 'de_DE', 'ja', 'ar', 'ru', 'nl', 'it', 'pt_BR', 'pt_PT', 'da', 'fi_FI', 'nb_NO', 'sv', 'tr', 'zh_CN', 'ko'
+	);
 
-$languages=array();
-$commonLanguages = array();
-foreach($languageCodes as $lang) {
-	$l = \OC::$server->getL10N('settings', $lang);
-	// TRANSLATORS this is the language name for the language switcher in the personal settings and should be the localized version
-	$potentialName = (string) $l->t('__language_name__');
-	if($l->getLanguageCode() === $lang && substr($potentialName, 0, 1) !== '_') {//first check if the language name is in the translation file
-		$ln = array('code' => $lang, 'name' => $potentialName);
-	} elseif ($lang === 'en') {
-		$ln = ['code' => $lang, 'name' => 'English'];
-	}else{//fallback to language code
-		$ln=array('code'=>$lang, 'name'=>$lang);
+	$languages=array();
+	$commonLanguages = array();
+	foreach($languageCodes as $lang) {
+		$l = \OC::$server->getL10N('settings', $lang);
+		// TRANSLATORS this is the language name for the language switcher in the personal settings and should be the localized version
+		$potentialName = (string) $l->t('__language_name__');
+		if($l->getLanguageCode() === $lang && substr($potentialName, 0, 1) !== '_') {//first check if the language name is in the translation file
+			$ln = array('code' => $lang, 'name' => $potentialName);
+		} elseif ($lang === 'en') {
+			$ln = ['code' => $lang, 'name' => 'English (US)'];
+		}else{//fallback to language code
+			$ln=array('code'=>$lang, 'name'=>$lang);
+		}
+
+		// put appropriate languages into appropriate arrays, to print them sorted
+		// used language -> common languages -> divider -> other languages
+		if ($lang === $userLang) {
+			$userLang = $ln;
+		} elseif (in_array($lang, $commonLangCodes)) {
+			$commonLanguages[array_search($lang, $commonLangCodes)]=$ln;
+		} else {
+			$languages[]=$ln;
+		}
 	}
 
-	// put appropriate languages into appropriate arrays, to print them sorted
-	// used language -> common languages -> divider -> other languages
-	if ($lang === $userLang) {
-		$userLang = $ln;
-	} elseif (in_array($lang, $commonLangCodes)) {
-		$commonLanguages[array_search($lang, $commonLangCodes)]=$ln;
-	} else {
-		$languages[]=$ln;
+	// if user language is not available but set somehow: show the actual code as name
+	if (!is_array($userLang)) {
+		$userLang = [
+			'code' => $userLang,
+			'name' => $userLang,
+		];
 	}
+
+	ksort($commonLanguages);
+
+	// sort now by displayed language not the iso-code
+	usort( $languages, function ($a, $b) {
+		if ($a['code'] === $a['name'] && $b['code'] !== $b['name']) {
+			// If a doesn't have a name, but b does, list b before a
+			return 1;
+		}
+		if ($a['code'] !== $a['name'] && $b['code'] === $b['name']) {
+			// If a does have a name, but b doesn't, list a before b
+			return -1;
+		}
+		// Otherwise compare the names
+		return strcmp($a['name'], $b['name']);
+	});
 }
-
-// if user language is not available but set somehow: show the actual code as name
-if (!is_array($userLang)) {
-	$userLang = [
-		'code' => $userLang,
-		'name' => $userLang,
-	];
-}
-
-ksort($commonLanguages);
-
-// sort now by displayed language not the iso-code
-usort( $languages, function ($a, $b) {
-	if ($a['code'] === $a['name'] && $b['code'] !== $b['name']) {
-		// If a doesn't have a name, but b does, list b before a
-		return 1;
-	}
-	if ($a['code'] !== $a['name'] && $b['code'] === $b['name']) {
-		// If a does have a name, but b doesn't, list a before b
-		return -1;
-	}
-	// Otherwise compare the names
-	return strcmp($a['name'], $b['name']);
-});
 
 //links to clients
 $clients = array(
@@ -160,11 +165,14 @@ $userData = $accountManager->getUser($user);
 
 $tmpl->assign('total_space', $totalSpace);
 $tmpl->assign('usage_relative', $storageInfo['relative']);
+$tmpl->assign('quota', $storageInfo['quota']);
 $tmpl->assign('clients', $clients);
 $tmpl->assign('email', $userData[\OC\Accounts\AccountManager::PROPERTY_EMAIL]['value']);
-$tmpl->assign('languages', $languages);
-$tmpl->assign('commonlanguages', $commonLanguages);
-$tmpl->assign('activelanguage', $userLang);
+if ($forceLanguage === false) {
+	$tmpl->assign('languages', $languages);
+	$tmpl->assign('commonlanguages', $commonLanguages);
+	$tmpl->assign('activelanguage', $userLang);
+}
 $tmpl->assign('passwordChangeSupported', OC_User::canUserChangePassword(OC_User::getUser()));
 $tmpl->assign('displayNameChangeSupported', OC_User::canUserChangeDisplayName(OC_User::getUser()));
 $tmpl->assign('displayName', $userData[\OC\Accounts\AccountManager::PROPERTY_DISPLAYNAME]['value']);
@@ -182,11 +190,42 @@ $tmpl->assign('websiteScope', $userData[\OC\Accounts\AccountManager::PROPERTY_WE
 $tmpl->assign('twitterScope', $userData[\OC\Accounts\AccountManager::PROPERTY_TWITTER]['scope']);
 $tmpl->assign('addressScope', $userData[\OC\Accounts\AccountManager::PROPERTY_ADDRESS]['scope']);
 
-$tmpl->assign('enableAvatars', $config->getSystemValue('enable_avatars', true) === true);
+$tmpl->assign('websiteVerification', $userData[\OC\Accounts\AccountManager::PROPERTY_WEBSITE]['verified']);
+$tmpl->assign('twitterVerification', $userData[\OC\Accounts\AccountManager::PROPERTY_TWITTER]['verified']);
+$tmpl->assign('emailVerification', $userData[\OC\Accounts\AccountManager::PROPERTY_EMAIL]['verified']);
+
+$needVerifyMessage = [\OC\Accounts\AccountManager::PROPERTY_EMAIL, \OC\Accounts\AccountManager::PROPERTY_WEBSITE, \OC\Accounts\AccountManager::PROPERTY_TWITTER];
+
+foreach ($needVerifyMessage as $property) {
+
+	switch ($userData[$property]['verified']) {
+		case \OC\Accounts\AccountManager::VERIFIED:
+			$message = $l->t('Verifying');
+			break;
+		case \OC\Accounts\AccountManager::VERIFICATION_IN_PROGRESS:
+			$message = $l->t('Verifying …');
+			break;
+		default:
+			$message = $l->t('Verify');
+	}
+
+	$tmpl->assign($property . 'Message', $message);
+}
+
 $tmpl->assign('avatarChangeSupported', OC_User::canUserChangeAvatar(OC_User::getUser()));
 $tmpl->assign('certs', $certificateManager->listCertificates());
 $tmpl->assign('showCertificates', $enableCertImport);
 $tmpl->assign('urlGenerator', $urlGenerator);
+
+$federatedFileSharingEnabled = \OC::$server->getAppManager()->isEnabledForUser('federatedfilesharing');
+$lookupServerUploadEnabled = false;
+if ($federatedFileSharingEnabled) {
+	$federatedFileSharing = new \OCA\FederatedFileSharing\AppInfo\Application();
+	$shareProvider = $federatedFileSharing->getFederatedShareProvider();
+	$lookupServerUploadEnabled = $shareProvider->isLookupServerUploadEnabled();
+}
+
+$tmpl->assign('lookupServerUploadEnabled', $lookupServerUploadEnabled);
 
 // Get array of group ids for this user
 $groups = \OC::$server->getGroupManager()->getUserIdGroups(OC_User::getUser());
@@ -197,9 +236,10 @@ $tmpl->assign('groups', $groups2);
 // add hardcoded forms from the template
 $formsAndMore = [];
 $formsAndMore[]= ['anchor' => 'personal-settings', 'section-name' => $l->t('Personal info')];
-$formsAndMore[]= ['anchor' => 'sessions', 'section-name' => $l->t('Sessions')];
-$formsAndMore[]= ['anchor' => 'apppasswords', 'section-name' => $l->t('App passwords')];
-$formsAndMore[]= ['anchor' => 'clientsbox', 'section-name' => $l->t('Sync clients')];
+if (\OC::$server->getAppManager()->isEnabledForUser('firstrunwizard')) {
+	$formsAndMore[]= ['anchor' => 'clientsbox', 'section-name' => $l->t('Sync clients')];
+}
+$formsAndMore[]= ['anchor' => 'security', 'section-name' => $l->t('Security')];
 
 $forms=OC_App::getForms('personal');
 
@@ -218,8 +258,13 @@ $formsMap = array_map(function($form){
 	if (preg_match('%(<h2(?P<class>[^>]*)>.*?</h2>)%i', $form, $regs)) {
 		$sectionName = str_replace('<h2'.$regs['class'].'>', '', $regs[0]);
 		$sectionName = str_replace('</h2>', '', $sectionName);
-		$anchor = strtolower($sectionName);
-		$anchor = str_replace(' ', '-', $anchor);
+		if (strpos($regs['class'], 'data-anchor-name') !== false) {
+			preg_match('%.*data-anchor-name="(?P<anchor>[^"]*)"%i', $regs['class'], $matches);
+			$anchor = $matches['anchor'];
+		} else {
+			$anchor = strtolower($sectionName);
+			$anchor = str_replace(' ', '-', $anchor);
+		}
 
 		return array(
 			'anchor' => $anchor,

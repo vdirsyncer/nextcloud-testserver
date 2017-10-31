@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Nextcloud Deployment Recommendations &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Deployment Recommendations &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Manual Installation on Linux" href="source_installation.html" />
+    <link rel="next" title="Installation on Linux" href="source_installation.html" />
     <link rel="prev" title="System Requirements" href="system_requirements.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,11 +66,11 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="system_requirements.html">System Requirements</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Nextcloud Deployment Recommendations</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Deployment Recommendations</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#general-recommendations">General Recommendations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#small-workgroups-or-departments">Small Workgroups or Departments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mid-sized-enterprises">Mid-sized Enterprises</a></li>
@@ -82,21 +82,19 @@
 <li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Manual Installation on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html">Installation on Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation_wizard.html">Installation Wizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing Nextcloud from the Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_line_installation.html">Installing from Command Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apps_management_installation.html">Installing and Managing Apps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps in Nextcloud</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_54_installation.html">Installing PHP 5.4 on RHEL 6 and CentOS 6</a></li>
-<li class="toctree-l2"><a class="reference internal" href="php_55_installation.html">Installing PHP 5.5 on RHEL 7 and CentOS 7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apps_supported.html">Supported Apps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selinux_configuration.html">SELinux Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_examples.html">Nginx Example Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nginx_nextcloud_9x.html">Nginx Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html">Nginx Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Nextcloud Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration_server/index.html">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -119,13 +117,13 @@
     </a>
   </li>
   <li class="next">
-    <a href="source_installation.html" title="Next Chapter: Manual Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Manual Instal... &raquo;</span>
+    <a href="source_installation.html" title="Next Chapter: Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
     </a>
   </li>
 </ul>
 						
-  <div class="section" id="nextcloud-deployment-recommendations">
-<h1>Nextcloud Deployment Recommendations<a class="headerlink" href="#nextcloud-deployment-recommendations" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="deployment-recommendations">
+<h1>Deployment Recommendations<a class="headerlink" href="#deployment-recommendations" title="Permalink to this headline">¶</a></h1>
 <p>What is the best way to install and maintain Nextcloud? The answer to that is
 <em>&#8220;it depends&#8221;</em> because every Nextcloud customer has their own
 particular needs and IT infrastructure. Nextcloud and the LAMP stack are
@@ -141,16 +139,16 @@ the amount of data stored in Nextcloud will only grow. Plan ahead.</p>
 <p>Consider setting up a scale-out deployment, or using Federated Cloud Sharing to
 keep individual Nextcloud instances to a manageable size.</p>
 <ul class="simple">
-<li>Operating system: Linux.</li>
+<li>Operating system: Linux (Ubuntu 16.04 or Red Hat Enterprise Linux 7 is recommended).</li>
 <li>Web server: Apache 2.4.</li>
 <li>Database: MySQL/MariaDB.</li>
 <li>PHP 5.6+. PHP 5.6 is the minimum supported version. We recommend to deploy
-on PHP 7 if possible. This version is known to offer significan performance
+on PHP 7 if possible. This version is known to offer significant performance
 advantages. <code class="docutils literal"><span class="pre">mod_php</span></code> is the recommended Apache module due to
 vendor support and ease of configuration. <code class="docutils literal"><span class="pre">php-fpm</span></code> with Apache Event
 MPM (or nginx) is an alternative with potentially better scalability in
 high load and limited RAM environments. For the best results we recommend
-working with the Nextcloud GmbH enterprise suppor team for large deployments.</li>
+working with the Nextcloud GmbH enterprise support team for large deployments.</li>
 </ul>
 </div>
 <div class="section" id="small-workgroups-or-departments">
@@ -194,8 +192,8 @@ local storage.</p>
 </li>
 <li><dl class="first docutils">
 <dt>Operating system</dt>
-<dd><p class="first last">Enterprise-grade Linux distribution with full support from OS vendor. We
-recommend Red Hat Enterprise Linux or SUSE Linux Enterprise Server 12.</p>
+<dd><p class="first last">Enterprise grade Linux distribution with full support from OS vendor. Red
+Hat Enterprise Linux or Ubuntu 16.04 are recommended.</p>
 </dd>
 </dl>
 </li>
@@ -234,7 +232,7 @@ Mount DB partitions with the &#8220;nodatacow&#8221; option to prevent fragmenta
 <li>Start Apache.</li>
 </ul>
 <p class="last">Then optionally rsync to a backup storage or tape backup. (See the
-<a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/maintenance/index.html">Maintenance</a> section of the Administration manual for tips on backups
+<a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/maintenance/index.html">Maintenance</a> section of the Administration manual for tips on backups
 and restores.)</p>
 </dd>
 </dl>
@@ -242,7 +240,7 @@ and restores.)</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory servers. (See
-<a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a> for information on configuring Nextcloud to
+<a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a> for information on configuring Nextcloud to
 use LDAP and AD.)</p>
 </dd>
 </dl>
@@ -262,7 +260,7 @@ for example:
 <li><dl class="first docutils">
 <dt>Memory Caching</dt>
 <dd><p class="first last">A memcache speeds up server performance, and Nextcloud supports four
-memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
+memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
 selecting and configuring a memcache.</p>
 </dd>
 </dl>
@@ -323,7 +321,7 @@ Backups without service interruption</p>
 <li><dl class="first docutils">
 <dt>Operating system</dt>
 <dd><p class="first last">Enterprise grade Linux distribution with full support from OS vendor. Red
-Hat Enterprise Linux or SUSE Linux Enterprise Server 12 are recommended.</p>
+Hat Enterprise Linux or Ubuntu 16.04 are recommended.</p>
 </dd>
 </dl>
 </li>
@@ -346,7 +344,10 @@ application servers.</p>
 <ul>
 <li><dl class="first docutils">
 <dt>Database</dt>
-<dd><p class="first last">MySQL/MariaDB Galera cluster with master-master replication.</p>
+<dd><p class="first last">MySQL/MariaDB Galera cluster with master-slave replication. The slave is
+only used as failover in case the master is down. This could be extended
+with a load balancer infront to distribute writes to the master and reads
+to the slave as well. (see &#8220;Database load balancer&#8221; below)</p>
 </dd>
 </dl>
 </li>
@@ -371,7 +372,7 @@ be replicated to a backup MySQL/MariaDB slave instance.</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory servers.
-(See <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>  for information on configuring
+(See <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>  for information on configuring
 Nextcloud to use LDAP and AD.)</p>
 </dd>
 </dl>
@@ -398,7 +399,7 @@ for example:
 <li><dl class="first docutils">
 <dt>Memory Caching</dt>
 <dd><p class="first last">A memcache speeds up server performance, and Nextcloud supports four
-memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
+memcaches; refer to <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_server/caching_configuration.html">Configuring Memory Caching</a> for information on
 selecting and configuring a memcache.</p>
 </dd>
 </dl>
@@ -439,20 +440,25 @@ Backups without service interruption</p>
 <div class="section" id="id2">
 <h3>Recommended System Requirements<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>4 to 20 application/Web servers.</p>
-<p>A cluster of two or more database servers.</p>
+<p>A cluster of two or more database servers which are behind a load balancer to
+send all writes to the master and reads to the slaves. (see &#8220;Database load balancer&#8221;
+below)</p>
 <p>Storage is an NFS server, or an object store that is S3 compatible.</p>
 <p>Cloud federation for a distributed setup over several data centers.</p>
 <p>Authentication via an existing LDAP or Active Directory server, or SAML.</p>
 <div class="figure">
-<a class="reference internal image-reference" href="../_images/deprecs-3.png"><img alt="Network diagram for large enterprise." src="../_images/deprecs-3.png" style="width: 505.8px; height: 607.8px;" /></a>
+<img alt="Network diagram for large enterprise." src="../_images/deprecs-3.png" />
 </div>
 <ul>
 <li><dl class="first docutils">
 <dt>Components</dt>
 <dd><ul class="first last simple">
 <li>4 to 20 application servers with 4 sockets and 64GB  RAM.</li>
-<li>4 DB servers with 4 sockets and 128GB RAM</li>
-<li>2 Hardware load balancer, for example BIG IP from F5</li>
+<li>4 DB servers with 4 sockets and 128GB RAM plus a DB load balancer
+(see &#8220;Database load balancer&#8221; below)</li>
+<li>2 load balancer - either HAProxy with keepalived (heartbeat) and a shared
+virutal IP address as a software solution or a hardware load balancer. For
+the HAProxy we recommend at least 2 sockets and 16GB RAM each.</li>
 <li>NFS storage server as needed.</li>
 </ul>
 </dd>
@@ -460,7 +466,8 @@ Backups without service interruption</p>
 </li>
 <li><dl class="first docutils">
 <dt>Operating system</dt>
-<dd><p class="first last">RHEL 7 with latest service packs.</p>
+<dd><p class="first last">Enterprise grade Linux distribution with full support from OS vendor. Red
+Hat Enterprise Linux or Ubuntu 16.04 are recommended.</p>
 </dd>
 </dl>
 </li>
@@ -473,14 +480,16 @@ is needed, installed according to the load balancer documentation.</p>
 </li>
 <li><dl class="first docutils">
 <dt>Load Balancer</dt>
-<dd><p class="first last">A redundant hardware load-balancer with heartbeat, for example <a class="reference external" href="https://f5.com/products/big-ip/">F5 Big-IP</a>.
+<dd><p class="first last">A redundant load-balancer with heartbeat, for example <a class="reference external" href="http://www.haproxy.org/">HAProxy</a>.
 This runs two load balancers in front of the application servers.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>Database</dt>
-<dd><p class="first last">MySQL/MariaDB Galera Cluster with 4x master &#8211; master replication.</p>
+<dd><p class="first last">MySQL/MariaDB Galera Cluster with master - slave replication (master &amp; 3 slaves).
+The load balancer infront distributes writes to the master and reads to the
+slaves. (see &#8220;Database load balancer&#8221; below)</p>
 </dd>
 </dl>
 </li>
@@ -505,7 +514,7 @@ be replicated to a backup MySQL/MariaDB slave instance.</p>
 <li><dl class="first docutils">
 <dt>Authentication</dt>
 <dd><p class="first last">User authentication via one or several LDAP or Active Directory
-servers, or SAML/Shibboleth. (See <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>.)</p>
+servers, or SAML/Shibboleth. (See <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_user/user_auth_ldap.html">User Authentication with LDAP</a>.)</p>
 </dd>
 </dl>
 </li>
@@ -524,7 +533,7 @@ optimal scalability.</p>
 </li>
 <li><dl class="first docutils">
 <dt>Caching</dt>
-<dd><p class="first last">Redis for distributed in-memory caching (see <a class="reference external" href="https://docs.nextcloud.org/server/11/admin_manual/configuration_server/caching_configuration.html">Configuring Memory
+<dd><p class="first last">Redis for distributed in-memory caching (see <a class="reference external" href="https://docs.nextcloud.org/server/12/admin_manual/configuration_server/caching_configuration.html">Configuring Memory
 Caching</a>).</p>
 </dd>
 </dl>
@@ -576,7 +585,9 @@ resources)</li>
 <li>Least load to Apache servers (2-n)</li>
 <li>Memcached/Redis for shared session storage (2-n)</li>
 <li>Database cluster with single Master, multiple slaves and proxy to split
-requests accordingly (2-n)</li>
+requests accordingly (2-n) - <a class="reference external" href="https://mariadb.com/products/mariadb-maxscale">MaxScale</a> is a possible proxy
+solutions to load balance the writes to the master and reads to the slaves
+(see &#8220;Database load balancer&#8221; below)</li>
 <li>GPFS or Ceph via phprados (2-n, 3 to be safe, Ceph 10+ nodes to see speed
 benefits under load)</li>
 </ul>
@@ -601,10 +612,17 @@ But on uploads stores the whole file on disk before handing it over to PHP-FPM.<
 </div>
 <div class="section" id="a-single-master-db-is-single-point-of-failure-does-not-scale">
 <h3>A Single Master DB is Single Point of Failure, Does Not Scale<a class="headerlink" href="#a-single-master-db-is-single-point-of-failure-does-not-scale" title="Permalink to this headline">¶</a></h3>
-<p>When master fails another slave can become master. However, the increased
-complexity carries some risks: Multi-master has the risk of split brain, and
-deadlocks. Nextcloud tries to solve the problem of deadlocks with high-level
-file locking.</p>
+<p>When master fails another slave can become master.</p>
+<p>A multi-master setup with Galera cluster is not supported, because we require
+<code class="docutils literal"><span class="pre">READ-COMMITTED</span></code> as transaction isolation level. <a class="reference external" href="http://galeracluster.com/documentation-webpages/isolationlevels.html#understanding-isolation-levels">Galera doesn&#8217;t support this
+with a master-master replication</a> which will lead to deadlocks during uploads
+of multiple files into one directory for example.</p>
+</div>
+<div class="section" id="database-load-balancer">
+<h3>Database load balancer<a class="headerlink" href="#database-load-balancer" title="Permalink to this headline">¶</a></h3>
+<p>When Galera cluster is used as DB cluster solution, we recommend to use
+<a class="reference external" href="https://mariadb.com/products/mariadb-maxscale">MaxScale</a> as load balancer infront of the cluster to distribute writes to
+the master node and reads to the slaves.</p>
 </div>
 </div>
 <div class="section" id="software-considerations">
@@ -612,13 +630,10 @@ file locking.</p>
 <div class="section" id="operating-system">
 <h3>Operating System<a class="headerlink" href="#operating-system" title="Permalink to this headline">¶</a></h3>
 <p>We are dependent on distributions that offer an easy way to install the various
-components in up-to-date versions. Nextcloud has a partnership with RedHat
-and SUSE for customers who need commercial support. Canonical, the parent
-company of Ubuntu Linux, also offers enterprise service and support. Debian
+components in up-to-date versions. We recommend Red Hat Enterprise Linux 7 or
+Ubuntu 16.04 - for both commercial support can be purchased. Debian
 and Ubuntu are free of cost, and include newer software packages. CentOS is the
-community-supported free-of-cost Red Hat Enterprise Linux clone. openSUSE is
-community-supported, and includes many of the same system administration tools
-as SUSE Linux Enterprise Server.</p>
+community-supported free-of-cost Red Hat Enterprise Linux clone.</p>
 </div>
 <div class="section" id="web-server">
 <h3>Web server<a class="headerlink" href="#web-server" title="Permalink to this headline">¶</a></h3>
@@ -632,9 +647,9 @@ deployments separate PHP pools are simply not necessary.</p>
 <p>More often than not the customer already has an opinion on what database to
 use. In general, the recommendation is to use what their database administrator
 is most familiar with. Taking into account what we are seeing at customer
-deployments, we recommend MySQL/MariaDB in a master-slave deployment with a
+deployments, we recommend MySQL/MariaDB in a master - slave deployment with a
 MySQL proxy in front of them to send updates to master, and selects to the
-slave(s).</p>
+slave(s). (see &#8220;Database load balancer&#8221; above)</p>
 <p>The second best option is PostgreSQL (alter table does not lock table, which
 makes migration less painful) although we have yet to find a customer who uses a
 master-slave setup.</p>
@@ -643,8 +658,8 @@ master-slave setup.</p>
 <li>Sqlite is adequate for simple testing, and for low-load single-user
 deployments. It is not adequate for production systems.</li>
 <li>Microsoft SQL Server is not a supported option.</li>
-<li>Oracle DB is the de facto standard at large enterprises and is currently only
-supported with an Nextcloud Enterprise Support Subscription only.</li>
+<li>For Oracle DB support please <a class="reference external" href="https://nextcloud.com/contact/">contact the Nextcloud team</a> to get more
+information on this.</li>
 </ul>
 </div>
 </div>
@@ -677,7 +692,7 @@ used to scale-out shibd session storage (see <a class="reference external" href=
     </a>
   </li>
   <li class="next">
-    <a href="source_installation.html" title="Next Chapter: Manual Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Manual Instal... &raquo;</span>
+    <a href="source_installation.html" title="Next Chapter: Installation on Linux"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm">Installation ... &raquo;</span>
     </a>
   </li>
 </ul>

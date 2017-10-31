@@ -97,11 +97,19 @@ class FavoriteProvider implements IProvider {
 	public function parseShortVersion(IEvent $event) {
 
 		if ($event->getSubject() === self::SUBJECT_ADDED) {
-			$event->setParsedSubject($this->l->t('Added to favorites'))
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.svg')));
+			$event->setParsedSubject($this->l->t('Added to favorites'));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.svg')));
+			}
 		} else if ($event->getSubject() === self::SUBJECT_REMOVED) {
-			$event->setParsedSubject($this->l->t('Removed from favorites'))
-				->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.svg')));
+			$event->setParsedSubject($this->l->t('Removed from favorites'));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.svg')));
+			}
 		} else {
 			throw new \InvalidArgumentException();
 		}
@@ -120,10 +128,18 @@ class FavoriteProvider implements IProvider {
 
 		if ($event->getSubject() === self::SUBJECT_ADDED) {
 			$subject = $this->l->t('You added {file} to your favorites');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/starred.svg')));
+			}
 		} else if ($event->getSubject() === self::SUBJECT_REMOVED) {
 			$subject = $this->l->t('You removed {file} from your favorites');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('core', 'actions/star.svg')));
+			}
 		} else {
 			throw new \InvalidArgumentException();
 		}
@@ -138,14 +154,24 @@ class FavoriteProvider implements IProvider {
 	 * @param string $subject
 	 */
 	protected function setSubjects(IEvent $event, $subject) {
+		$subjectParams = $event->getSubjectParameters();
+		if (empty($subjectParams)) {
+			// Try to fall back to the old way, but this does not work for emails.
+			// But at least old activities still work.
+			$subjectParams = [
+				'id' => $event->getObjectId(),
+				'path' => $event->getObjectName(),
+			];
+		}
 		$parameter = [
 			'type' => 'file',
-			'id' => $event->getObjectId(),
-			'name' => basename($event->getObjectName()),
-			'path' => $event->getObjectName(),
+			'id' => $subjectParams['id'],
+			'name' => basename($subjectParams['path']),
+			'path' => trim($subjectParams['path'], '/'),
+			'link' => $this->url->linkToRouteAbsolute('files.viewcontroller.showFile', ['fileid' => $subjectParams['id']]),
 		];
 
-		$event->setParsedSubject(str_replace('{file}', trim($parameter['path'], '/'), $subject))
+		$event->setParsedSubject(str_replace('{file}', $parameter['path'], $subject))
 			->setRichSubject($subject, ['file' => $parameter]);
 	}
 }

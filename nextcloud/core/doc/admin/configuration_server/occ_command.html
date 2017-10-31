@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using the occ Command &mdash; Nextcloud 11 Server Administration Manual 11 alpha documentation</title>
+    <title>Using the occ Command &mdash; Nextcloud 12 Server Administration Manual 12 documentation</title>
     
     <link rel="stylesheet" href="../_static/" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '11 alpha',
+        VERSION:     '12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,8 +28,8 @@
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Nextcloud 11 Server Administration Manual 11 alpha documentation" href="../contents.html" />
-    <link rel="up" title="Nextcloud Server Configuration" href="index.html" />
+    <link rel="top" title="Nextcloud 12 Server Administration Manual 12 documentation" href="../contents.html" />
+    <link rel="up" title="Server Configuration" href="index.html" />
     <link rel="next" title="Configuring the Activity App" href="activity_configuration.html" />
     <link rel="prev" title="Warnings on Admin Page" href="security_setup_warnings.html" />
 <meta charset='utf-8'>
@@ -66,10 +66,10 @@
 <li><a href="../contents.html">Table of Contents</a></li>
 									</ul>
                   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Nextcloud 11 Server Administration Manual Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Nextcloud 11 Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Nextcloud Server Configuration</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Server Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="security_setup_warnings.html">Warnings on Admin Page</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Using the occ Command</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#occ-command-directory">occ Command Directory</a></li>
@@ -90,7 +90,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#logging-commands">Logging Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#maintenance-commands">Maintenance Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#security">Security</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shibboleth-modes-enterprise-edition-only">Shibboleth Modes (Enterprise Edition only)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#trashbin">Trashbin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#user-commands">User Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#versions">Versions</a></li>
@@ -115,12 +114,13 @@
 <li class="toctree-l2"><a class="reference internal" href="reverse_proxy_configuration.html">Reverse Proxy Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="thirdparty_php_configuration.html">Using Third Party PHP Components</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic_configuration.html">Automatic Configuration Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Nextcloud Server Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="server_tuning.html">Server Tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theming.html">Theming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_user/index.html">User Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_files/index.html">File Sharing and Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file_workflows/index.html">File Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_database/index.html">Database Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration_mimetypes/index.html">Mimetypes Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../maintenance/index.html">Maintenance</a></li>
@@ -177,7 +177,6 @@ on your Nextcloud files and directories.</p>
 <li><a class="reference internal" href="#logging-commands-label"><span>Logging Commands</span></a></li>
 <li><a class="reference internal" href="#maintenance-commands-label"><span>Maintenance Commands</span></a></li>
 <li><a class="reference internal" href="#security-commands-label"><span>Security</span></a></li>
-<li><a class="reference internal" href="#shibboleth-label"><span>Shibboleth Modes (Enterprise Edition only)</span></a></li>
 <li><a class="reference internal" href="#trashbin-label"><span>Trashbin</span></a></li>
 <li><a class="reference internal" href="#user-commands-label"><span>User Commands</span></a></li>
 <li><a class="reference internal" href="#versions-label"><span>Versions</span></a></li>
@@ -189,8 +188,7 @@ on your Nextcloud files and directories.</p>
 </div>
 <div class="section" id="run-occ-as-your-http-user">
 <span id="http-user-label"></span><h2>Run occ As Your HTTP User<a class="headerlink" href="#run-occ-as-your-http-user" title="Permalink to this headline">¶</a></h2>
-<p>The HTTP user is different on the various Linux distributions. See
-<a class="reference internal" href="../installation/installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a> to learn how to find your HTTP user.</p>
+<p>The HTTP user is different on the various Linux distributions:</p>
 <ul class="simple">
 <li>The HTTP user and group in Debian/Ubuntu is www-data.</li>
 <li>The HTTP user and group in Fedora/CentOS is apache.</li>
@@ -659,7 +657,7 @@ Current key storage root:  default storage location (data/)
 see a list of modules only if you have enabled the Encryption app. Use
 <code class="docutils literal"><span class="pre">encryption:set-default-module</span> <span class="pre">[module</span> <span class="pre">name]</span></code> to set your desired module.</p>
 <p><code class="docutils literal"><span class="pre">encryption:encrypt-all</span></code> encrypts all data files for all users. You must first
-put your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>single-user
+put your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>maintenance
 mode</span></a> to prevent any user activity until encryption
 is completed.</p>
 <p><code class="docutils literal"><span class="pre">encryption:decrypt-all</span></code> decrypts all user data files, or optionally a single
@@ -668,11 +666,11 @@ user:</p>
 </pre></div>
 </div>
 <p>Users must have enabled recovery keys on their Personal pages. You must first
-put your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>single-user
+put your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>maintenance
 mode</span></a> to prevent any user activity until
 decryption is completed.</p>
 <p>Use <code class="docutils literal"><span class="pre">encryption:disable</span></code> to disable your encryption module. You must first put
-your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>single-user mode</span></a>
+your Nextcloud server into <a class="reference internal" href="#maintenance-commands-label"><span>maintenance mode</span></a>
 to prevent any user activity.</p>
 <p><code class="docutils literal"><span class="pre">encryption:enable-master-key</span></code> creates a new master key, which is used for all
 user data instead of individual user keys. This is especially useful to enable
@@ -812,7 +810,7 @@ and to copy external mount configurations to another Nextcloud server.</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ integrity:check-app --path=/pathto/app appname
 </pre></div>
 </div>
-<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/11/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.
+<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.org/server/12/developer_manual/app/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.
 .. TODO ON RELEASE: Update version number above on release</p>
 <p><code class="docutils literal"><span class="pre">integrity:sign-core</span></code> is for Nextcloud core developers only.</p>
 <p>See <a class="reference internal" href="../issues/code_signing.html"><em>Code Signing</em></a> to learn more.</p>
@@ -948,12 +946,12 @@ are <code class="docutils literal"><span class="pre">owncloud</span></code>, <co
 <p>Use these commands when you upgrade Nextcloud, manage encryption, perform
 backups and other tasks that require locking users out until you are finished:</p>
 <div class="highlight-python"><div class="highlight"><pre>maintenance
- maintenance:mimetype:update-db       Update database mimetypes and update
-                                      filecache
- maintenance:mimetype:update-js       Update mimetypelist.js
- maintenance:mode                     set maintenance mode
- maintenance:repair                   repair this installation
- maintenance:singleuser               set single user mode
+ maintenance:data-fingerprint        update the systems data-fingerprint after a backup is restored
+ maintenance:mimetype:update-db      Update database mimetypes and update filecache
+ maintenance:mimetype:update-js      Update mimetypelist.js
+ maintenance:mode                    set maintenance mode
+ maintenance:repair                  repair this installation
+ maintenance:update:htaccess         Updates the .htaccess file
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">maintenance:mode</span></code> locks the sessions of all logged-in users, including
@@ -965,18 +963,9 @@ logged-in users must refresh their Web browsers to continue working:</p>
 sudo -u www-data php occ maintenance:mode --off
 </pre></div>
 </div>
-<p>Putting your Nextcloud server into single-user mode allows admins to log in and
-work, but not ordinary users. This is useful for performing maintenance and
-troubleshooting on a running server:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ maintenance:singleuser --on
-Single user mode enabled
-</pre></div>
-</div>
-<p>Turn it off when you&#8217;re finished:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ maintenance:singleuser --off
-Single user mode disabled
-</pre></div>
-</div>
+<p>After restoring a backup of your data directory or the database, you should always
+call <code class="docutils literal"><span class="pre">maintenance:data-fingerprint</span></code> once. This changes the ETag for all files
+in the communication with sync clients, allowing them to realize a file was modified.</p>
 <p>The <code class="docutils literal"><span class="pre">maintenance:repair</span></code> command runs automatically during upgrades to clean
 up the database, so while you can run it manually there usually isn&#8217;t a need
 to:</p>
@@ -1008,19 +997,6 @@ change to existing files.</p>
 </div>
 <p>Remove a certificate:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ security:remove [certificate name]
-</pre></div>
-</div>
-</div>
-<div class="section" id="shibboleth-modes-enterprise-edition-only">
-<span id="shibboleth-label"></span><h2>Shibboleth Modes (Enterprise Edition only)<a class="headerlink" href="#shibboleth-modes-enterprise-edition-only" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This command is only available when the &#8220;Shibboleth user backend&#8221; app
-(<code class="docutils literal"><span class="pre">user_shibboleth</span></code>) is enabled.</p>
-</div>
-<p><code class="docutils literal"><span class="pre">shibboleth:mode</span></code> sets your Shibboleth mode to <code class="docutils literal"><span class="pre">notactive</span></code>,
-<code class="docutils literal"><span class="pre">autoprovision</span></code>, or <code class="docutils literal"><span class="pre">ssoonly</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre>shibboleth:mode [mode]
 </pre></div>
 </div>
 </div>
@@ -1214,9 +1190,7 @@ Nextcloud archive, and taken no further installation steps.</p>
 <p>You can install Nextcloud entirely from the command line. After downloading the
 tarball and copying Nextcloud into the appropriate directories you can use <code class="docutils literal"><span class="pre">occ</span></code>
 commands in place of running the graphical Installation Wizard.</p>
-<p>Apply correct permissions to your Nextcloud directories; see
-<a class="reference internal" href="../installation/installation_wizard.html#strong-perms-label"><span>Setting Strong Directory Permissions</span></a>. Then choose your <code class="docutils literal"><span class="pre">occ</span></code> options. This lists your
-available options:</p>
+<p>Then choose your <code class="docutils literal"><span class="pre">occ</span></code> options. This lists your available options:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php /var/www/nextcloud/occ
 Nextcloud is not installed - only a limited number of commands are available
 Nextcloud version 9.0.0
@@ -1301,13 +1275,9 @@ tar archives, and before you complete the upgrade.</p>
 <p>List all options, like this example on CentOS Linux:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u apache php occ upgrade -h
 Usage:
-upgrade [--skip-migration-test] [--dry-run] [--no-app-disable]
+upgrade [--no-app-disable]
 
 Options:
---skip-migration-test  skips the database schema migration simulation and
-   update directly
---dry-run              only runs the database schema migration simulation, do
-  not actually update
 --no-app-disable       skips the disable of third party apps
 --help (-h)            Display this help message.
 --quiet (-q)           Do not output any message.
@@ -1325,7 +1295,7 @@ database upgrade step, rather than the Web GUI, in order to avoid timeouts. PHP
 scripts invoked from the Web interface are limited to 3600 seconds. In larger
 environments this may not be enough, leaving the system in an inconsistent
 state. After performing all the preliminary steps (see
-<a class="reference internal" href="../maintenance/upgrade.html"><em>How to Upgrade Your Nextcloud Server</em></a>) use this command to upgrade your databases,
+<a class="reference internal" href="../maintenance/upgrade.html"><em>How to Upgrade</em></a>) use this command to upgrade your databases,
 like this example on CentOS Linux. Note how it details the steps:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ upgrade
 Nextcloud or one of the apps require upgrade - only a limited number of
@@ -1366,19 +1336,6 @@ Exception
 ServerNotAvailableException: LDAP server is not available
 Update failed
 Turned off maintenance mode
-</pre></div>
-</div>
-<p>Before completing the upgrade, Nextcloud first runs a simulation by copying all
-database tables to new tables, and then performs the upgrade on them, to ensure
-that the upgrade will complete correctly. The copied tables are deleted after
-the upgrade. This takes twice as much time, which on large installations can be
-many hours, so you can omit this step with the <code class="docutils literal"><span class="pre">--skip-migration-test</span></code>
-option:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ upgrade --skip-migration-test
-</pre></div>
-</div>
-<p>You can perform this simulation manually with the <code class="docutils literal"><span class="pre">--dry-run</span></code> option:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo -u www-data php occ upgrade --dry-run
 </pre></div>
 </div>
 </div>

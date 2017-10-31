@@ -1,6 +1,6 @@
 <?php
 /**
- * Gallery
+ * Nextcloud - Gallery
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
@@ -8,8 +8,8 @@
  * @author Olivier Paroz <galleryapps@oparoz.com>
  * @author Robin Appelman <robin@icewind.nl>
  *
- * @copyright Olivier Paroz 2014-2016
- * @copyright Robin Appelman 2014-2015
+ * @copyright Olivier Paroz 2017
+ * @copyright Robin Appelman 2017
  */
 
 namespace OCA\Gallery\AppInfo;
@@ -56,33 +56,22 @@ $c->query('OCP\INavigationManager')
  *
  * The string has to match the app's folder name
  */
-Util::addTranslations('gallery');
+Util::addTranslations($appName);
 
-// Hack which only loads the scripts in the Files app
-$request = $c->query('Request');
-if (isset($request->server['REQUEST_URI'])) {
-	$url = $request->server['REQUEST_URI'];
-	if (preg_match('/apps\/files(_sharing)?$/', $url)
-		|| preg_match('%apps/files(_sharing)?[/?]%', $url)
-		|| preg_match('%^((?!/apps/).)*/s/\b(.*)\b(?<!/authenticate)$%', $url)
-	) {
-		// @codeCoverageIgnoreStart
-		/**
-		 * Scripts for the Files app
-		 */
-		Util::addScript($appName, 'vendor/bigshot/bigshot-compressed');
-		Util::addScript($appName, 'vendor/dompurify/src/purify');
-		Util::addScript($appName, 'galleryutility');
-		Util::addScript($appName, 'galleryfileaction');
-		Util::addScript($appName, 'slideshow');
-		Util::addScript($appName, 'slideshowcontrols');
-		Util::addScript($appName, 'slideshowzoomablepreview');
-		Util::addScript($appName, 'gallerybutton');
+$loadScripts = function() use ($appName) {
+	// @codeCoverageIgnoreStart
+	/**
+	 * Scripts for the Files app
+	 */
+	Util::addScript($appName, 'scripts-for-file-app');
 
-		/**
-		 * Styles for the Files app
-		 */
-		Util::addStyle($appName, 'slideshow');
-		Util::addStyle($appName, 'gallerybutton');
-	}
-}// @codeCoverageIgnoreEnd
+	/**
+	 * Styles for the Files app
+	 */
+	Util::addStyle($appName, 'slideshow');
+	Util::addStyle($appName, 'gallerybutton');
+	Util::addStyle($appName, 'share');
+};// @codeCoverageIgnoreEnd
+
+\OC::$server->getEventDispatcher()->addListener('OCA\Files::loadAdditionalScripts', $loadScripts);
+\OC::$server->getEventDispatcher()->addListener('OCA\Files_Sharing::loadAdditionalScripts', $loadScripts);

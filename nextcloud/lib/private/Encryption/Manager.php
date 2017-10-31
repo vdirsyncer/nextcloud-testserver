@@ -193,8 +193,8 @@ class Manager implements IManager {
 			if (isset($this->encryptionModules[$moduleId])) {
 				return call_user_func($this->encryptionModules[$moduleId]['callback']);
 			} else {
-				$message = "Module with id: $moduleId does not exist.";
-				$hint = $this->l->t('Module with id: %s does not exist. Please enable it in your apps settings or contact your administrator.', [$moduleId]);
+				$message = "Module with ID: $moduleId does not exist.";
+				$hint = $this->l->t('Module with ID: %s does not exist. Please enable it in your apps settings or contact your administrator.', [$moduleId]);
 				throw new Exceptions\ModuleDoesNotExistsException($message, $hint);
 			}
 		} else {
@@ -254,8 +254,11 @@ class Manager implements IManager {
 	 * Add storage wrapper
 	 */
 	public function setupStorage() {
-		$encryptionWrapper = new EncryptionWrapper($this->arrayCache, $this, $this->logger);
-		Filesystem::addStorageWrapper('oc_encryption', array($encryptionWrapper, 'wrapStorage'), 2);
+		// If encryption is disabled and there are no loaded modules it makes no sense to load the wrapper
+		if (!empty($this->encryptionModules) || $this->isEnabled()) {
+			$encryptionWrapper = new EncryptionWrapper($this->arrayCache, $this, $this->logger);
+			Filesystem::addStorageWrapper('oc_encryption', array($encryptionWrapper, 'wrapStorage'), 2);
+		}
 	}
 
 

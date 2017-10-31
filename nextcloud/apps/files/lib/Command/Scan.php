@@ -30,7 +30,9 @@ namespace OCA\Files\Command;
 
 use Doctrine\DBAL\Connection;
 use OC\Core\Command\Base;
+use OC\Core\Command\InterruptedException;
 use OC\ForbiddenException;
+use OCP\Files\NotFoundException;
 use OCP\Files\StorageNotAvailableException;
 use OCP\IDBConnection;
 use OCP\IUserManager;
@@ -117,55 +119,58 @@ class Scan extends Base {
 				$output->writeln("\tFile   <info>$path</info>");
 				$this->filesCounter += 1;
 				if ($this->hasBeenInterrupted()) {
-					throw new \Exception('ctrl-c');
+					throw new InterruptedException();
 				}
 			});
 			$scanner->listen('\OC\Files\Utils\Scanner', 'scanFolder', function ($path) use ($output) {
 				$output->writeln("\tFolder <info>$path</info>");
 				$this->foldersCounter += 1;
 				if ($this->hasBeenInterrupted()) {
-					throw new \Exception('ctrl-c');
+					throw new InterruptedException();
 				}
 			});
 			$scanner->listen('\OC\Files\Utils\Scanner', 'StorageNotAvailable', function (StorageNotAvailableException $e) use ($output) {
 				$output->writeln("Error while scanning, storage not available (" . $e->getMessage() . ")");
 			});
-		# count only
+			# count only
 		} else {
 			$scanner->listen('\OC\Files\Utils\Scanner', 'scanFile', function () use ($output) {
 				$this->filesCounter += 1;
 				if ($this->hasBeenInterrupted()) {
-					throw new \Exception('ctrl-c');
+					throw new InterruptedException();
 				}
 			});
 			$scanner->listen('\OC\Files\Utils\Scanner', 'scanFolder', function () use ($output) {
 				$this->foldersCounter += 1;
 				if ($this->hasBeenInterrupted()) {
-					throw new \Exception('ctrl-c');
+					throw new InterruptedException();
 				}
 			});
 		}
-		$scanner->listen('\OC\Files\Utils\Scanner', 'scanFile', function($path) use ($output) {
+		$scanner->listen('\OC\Files\Utils\Scanner', 'scanFile', function ($path) use ($output) {
 			$this->checkScanWarning($path, $output);
 		});
-		$scanner->listen('\OC\Files\Utils\Scanner', 'scanFolder', function($path) use ($output) {
+		$scanner->listen('\OC\Files\Utils\Scanner', 'scanFolder', function ($path) use ($output) {
 			$this->checkScanWarning($path, $output);
 		});
 
 		try {
 			if ($backgroundScan) {
 				$scanner->backgroundScan($path);
-			}else {
+			} else {
 				$scanner->scan($path);
 			}
 		} catch (ForbiddenException $e) {
 			$output->writeln("<error>Home storage for user $user not writable</error>");
 			$output->writeln("Make sure you're running the scan command only as the user the web server runs as");
+		} catch (InterruptedException $e) {
+			# exit the function if ctrl-c has been pressed
+			$output->writeln('Interrupted by user');
+		} catch (NotFoundException $e) {
+			$output->writeln('<error>Path not found: ' . $e->getMessage() . '</error>');
 		} catch (\Exception $e) {
-			if ($e->getMessage() !== 'ctrl-c') {
-				$output->writeln('<error>Exception while scanning: ' . $e->getMessage() . "\n" . $e->getTraceAsString() . '</error>');
-			}
-			return;
+			$output->writeln('<error>Exception during scan: ' . $e->getMessage() . '</error>');
+			$output->writeln('<error>' . $e->getTraceAsString() . '</error>');
 		}
 	}
 
@@ -192,7 +197,7 @@ class Scan extends Base {
 		$verbose = $input->getOption('verbose');
 		$quiet = $input->getOption('quiet');
 		# restrict the verbosity level to VERBOSITY_VERBOSE
-		if ($output->getVerbosity()>OutputInterface::VERBOSITY_VERBOSE) {
+		if ($output->getVerbosity() > OutputInterface::VERBOSITY_VERBOSE) {
 			$output->setVerbosity(OutputInterface::VERBOSITY_VERBOSE);
 		}
 		if ($quiet) {
@@ -221,7 +226,9 @@ class Scan extends Base {
 			$user_count += 1;
 			if ($this->userManager->userExists($user)) {
 				# add an extra line when verbose is set to optical separate users
-				if ($verbose) {$output->writeln(""); }
+				if ($verbose) {
+					$output->writeln("");
+				}
 				$output->writeln("Starting scan for user $user_count out of $users_total ($user)");
 				# full: printout data if $verbose was set
 				$this->scanFiles($user, $path, $verbose, $output, $input->getOption('unscanned'));
@@ -325,7 +332,7 @@ class Scan extends Base {
 	 * @return \OCP\IDBConnection
 	 */
 	protected function reconnectToDatabase(OutputInterface $output) {
-		/** @var Connection | IDBConnection $connection*/
+		/** @var Connection | IDBConnection $connection */
 		$connection = \OC::$server->getDatabaseConnection();
 		try {
 			$connection->close();

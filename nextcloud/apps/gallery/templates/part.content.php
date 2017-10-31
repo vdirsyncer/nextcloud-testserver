@@ -7,33 +7,7 @@
  */
 script(
 	$_['appName'],
-	[
-		'app',
-		'vendor/jquery-touch-events/src/1.0.1/jquery.mobile-events.min',
-		'vendor/jquery.ui.touch-punch-custom',
-		'gallery',
-		'galleryutility',
-		'galleryconfig',
-		'galleryinfobox',
-		'galleryview',
-		'breadcrumb',
-		'galleryalbum',
-		'galleryrow',
-		'galleryimage',
-		'thumbnail',
-		'vendor/modified-eventsource-polyfill/eventsource-polyfill',
-		'eventsource',
-		'vendor/owncloud/share',
-		'vendor/commonmark/dist/commonmark.min',
-		'vendor/dompurify/src/purify',
-		'vendor/bigshot/bigshot-compressed',
-		'slideshow',
-		'slideshowcontrols',
-		'slideshowzoomablepreview',
-		'upload-helper',
-		'vendor/owncloud/newfilemenu',
-		'newfilemenuplugins'
-	]
+	'merged'
 );
 script(
 	'files',
@@ -100,9 +74,9 @@ style(
 	<div id="file_action_panel"></div>
 	<span class="right">
 		<!-- sharing button -->
-		<div id="share-button" class="button">
+		<div id="shared-button" class="button">
 			<img class="svg" src="<?php print_unescaped(
-				image_path('core', 'actions/share.svg')
+				image_path('core', 'actions/shared.svg')
 			); ?>" alt="<?php p($l->t("Share")); ?>"/>
 		</div>
 		<a class="share" data-item-type="folder" data-item=""

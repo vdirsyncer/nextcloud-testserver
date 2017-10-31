@@ -31,11 +31,12 @@
 
 namespace OCA\Files_External\Lib\Storage;
 
+use Icewind\SMB\Exception\AlreadyExistsException;
 use Icewind\SMB\Exception\ConnectException;
 use Icewind\SMB\Exception\Exception;
 use Icewind\SMB\Exception\ForbiddenException;
 use Icewind\SMB\Exception\NotFoundException;
-use Icewind\SMB\IShare;
+use Icewind\SMB\IFileInfo;
 use Icewind\SMB\NativeServer;
 use Icewind\SMB\Server;
 use Icewind\Streams\CallbackWrapper;
@@ -43,6 +44,9 @@ use Icewind\Streams\IteratorDirectory;
 use OC\Cache\CappedMemoryCache;
 use OC\Files\Filesystem;
 use OC\Files\Storage\Common;
+use OCA\Files_External\Lib\Notify\SMBNotifyHandler;
+use OCP\Files\Notify\IChange;
+use OCP\Files\Notify\IRenameChange;
 use OCP\Files\Storage\INotifyStorage;
 use OCP\Files\StorageNotAvailableException;
 
@@ -87,6 +91,7 @@ class SMB extends Common implements INotifyStorage {
 			throw new \Exception('Invalid configuration');
 		}
 		$this->statCache = new CappedMemoryCache();
+		parent::__construct($params);
 	}
 
 	/**
@@ -146,7 +151,9 @@ class SMB extends Common implements INotifyStorage {
 			foreach ($files as $file) {
 				$this->statCache[$path . '/' . $file->getName()] = $file;
 			}
-			return $files;
+			return array_filter($files, function (IFileInfo $file) {
+				return !$file->isHidden();
+			});
 		} catch (ConnectException $e) {
 			throw new StorageNotAvailableException($e->getMessage(), $e->getCode(), $e);
 		}
@@ -157,10 +164,42 @@ class SMB extends Common implements INotifyStorage {
 	 * @return array
 	 */
 	protected function formatInfo($info) {
-		return array(
+		$result = [
 			'size' => $info->getSize(),
-			'mtime' => $info->getMTime()
-		);
+			'mtime' => $info->getMTime(),
+		];
+		if ($info->isDirectory()) {
+			$result['type'] = 'dir';
+		} else {
+			$result['type'] = 'file';
+		}
+		return $result;
+	}
+
+	/**
+	 * Rename the files. If the source or the target is the root, the rename won't happen.
+	 *
+	 * @param string $source the old name of the path
+	 * @param string $target the new name of the path
+	 * @return bool true if the rename is successful, false otherwise
+	 */
+	public function rename($source, $target) {
+		if ($this->isRootDir($source) || $this->isRootDir($target)) {
+			return false;
+		}
+
+		$absoluteSource = $this->buildPath($source);
+		$absoluteTarget = $this->buildPath($target);
+		try {
+			$result = $this->share->rename($absoluteSource, $absoluteTarget);
+		} catch (AlreadyExistsException $e) {
+			$this->remove($target);
+			$result = $this->share->rename($absoluteSource, $absoluteTarget);
+		} catch (\Exception $e) {
+			return false;
+		}
+		unset($this->statCache[$absoluteSource], $this->statCache[$absoluteTarget]);
+		return $result;
 	}
 
 	/**
@@ -168,7 +207,46 @@ class SMB extends Common implements INotifyStorage {
 	 * @return array
 	 */
 	public function stat($path) {
-		return $this->formatInfo($this->getFileInfo($path));
+		$result = $this->formatInfo($this->getFileInfo($path));
+		if ($this->remoteIsShare() && $this->isRootDir($path)) {
+			$result['mtime'] = $this->shareMTime();
+		}
+		return $result;
+	}
+
+	/**
+	 * get the best guess for the modification time of the share
+	 *
+	 * @return int
+	 */
+	private function shareMTime() {
+		$highestMTime = 0;
+		$files = $this->share->dir($this->root);
+		foreach ($files as $fileInfo) {
+			if ($fileInfo->getMTime() > $highestMTime) {
+				$highestMTime = $fileInfo->getMTime();
+			}
+		}
+		return $highestMTime;
+	}
+
+	/**
+	 * Check if the path is our root dir (not the smb one)
+	 *
+	 * @param string $path the path
+	 * @return bool
+	 */
+	private function isRootDir($path) {
+		return $path === '' || $path === '/' || $path === '.';
+	}
+
+	/**
+	 * Check if our root points to a smb share
+	 *
+	 * @return bool true if our root points to a share false otherwise
+	 */
+	private function remoteIsShare() {
+		return $this->share->getName() && (!$this->root || $this->root === '/');
 	}
 
 	/**
@@ -176,6 +254,10 @@ class SMB extends Common implements INotifyStorage {
 	 * @return bool
 	 */
 	public function unlink($path) {
+		if ($this->isRootDir($path)) {
+			return false;
+		}
+
 		try {
 			if ($this->is_dir($path)) {
 				return $this->rmdir($path);
@@ -195,26 +277,6 @@ class SMB extends Common implements INotifyStorage {
 	}
 
 	/**
-	 * @param string $path1 the old name
-	 * @param string $path2 the new name
-	 * @return bool
-	 */
-	public function rename($path1, $path2) {
-		try {
-			$this->remove($path2);
-			$path1 = $this->buildPath($path1);
-			$path2 = $this->buildPath($path2);
-			return $this->share->rename($path1, $path2);
-		} catch (NotFoundException $e) {
-			return false;
-		} catch (ForbiddenException $e) {
-			return false;
-		} catch (ConnectException $e) {
-			throw new StorageNotAvailableException($e->getMessage(), $e->getCode(), $e);
-		}
-	}
-
-	/**
 	 * check if a file or folder has been updated since $time
 	 *
 	 * @param string $path
@@ -222,7 +284,7 @@ class SMB extends Common implements INotifyStorage {
 	 * @return bool
 	 */
 	public function hasUpdated($path, $time) {
-		if (!$path and $this->root == '/') {
+		if (!$path and $this->root === '/') {
 			// mtime doesn't work for shares, but giving the nature of the backend,
 			// doing a full update is still just fast enough
 			return true;
@@ -299,6 +361,10 @@ class SMB extends Common implements INotifyStorage {
 	}
 
 	public function rmdir($path) {
+		if ($this->isRootDir($path)) {
+			return false;
+		}
+
 		try {
 			$this->statCache = array();
 			$content = $this->share->dir($this->buildPath($path));
@@ -442,46 +508,18 @@ class SMB extends Common implements INotifyStorage {
 	}
 
 	public function listen($path, callable $callback) {
-		$fullPath = $this->buildPath($path);
-		$oldRenamePath = null;
-		$this->share->notify($fullPath, function ($smbType, $fullPath) use (&$oldRenamePath, $callback) {
-			$path = $this->relativePath($fullPath);
-			if (is_null($path)) {
-				return true;
-			}
-			if ($smbType === IShare::NOTIFY_RENAMED_OLD) {
-				$oldRenamePath = $path;
-				return true;
-			}
-			$type = $this->mapNotifyType($smbType);
-			if (is_null($type)) {
-				return true;
-			}
-			if ($type === INotifyStorage::NOTIFY_RENAMED && !is_null($oldRenamePath)) {
-				$result = $callback($type, $path, $oldRenamePath);
-				$oldRenamePath = null;
+		$this->notify($path)->listen(function (IChange $change) use ($callback) {
+			if ($change instanceof IRenameChange) {
+				return $callback($change->getType(), $change->getPath(), $change->getTargetPath());
 			} else {
-				$result = $callback($type, $path);
+				return $callback($change->getType(), $change->getPath());
 			}
-			return $result;
 		});
 	}
 
-	private function mapNotifyType($smbType) {
-		switch ($smbType) {
-			case IShare::NOTIFY_ADDED:
-				return INotifyStorage::NOTIFY_ADDED;
-			case IShare::NOTIFY_REMOVED:
-				return INotifyStorage::NOTIFY_REMOVED;
-			case IShare::NOTIFY_MODIFIED:
-			case IShare::NOTIFY_ADDED_STREAM:
-			case IShare::NOTIFY_MODIFIED_STREAM:
-			case IShare::NOTIFY_REMOVED_STREAM:
-				return INotifyStorage::NOTIFY_MODIFIED;
-			case IShare::NOTIFY_RENAMED_NEW:
-				return INotifyStorage::NOTIFY_RENAMED;
-			default:
-				return null;
-		}
+	public function notify($path) {
+		$path = '/' . ltrim($path, '/');
+		$shareNotifyHandler = $this->share->notify($this->buildPath($path));
+		return new SMBNotifyHandler($shareNotifyHandler, $this->root);
 	}
 }

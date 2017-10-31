@@ -38,6 +38,8 @@ class Provider implements IProvider {
 
 	/** @var IL10N */
 	protected $l;
+	/** @var IL10N */
+	protected $activityLang;
 
 	/** @var IURLGenerator */
 	protected $url;
@@ -83,6 +85,7 @@ class Provider implements IProvider {
 		}
 
 		$this->l = $this->languageFactory->get('files', $language);
+		$this->activityLang = $this->languageFactory->get('activity', $language);
 
 		if ($this->activityManager->isFormattingFilteredObject()) {
 			try {
@@ -103,34 +106,57 @@ class Provider implements IProvider {
 	 * @since 11.0.0
 	 */
 	public function parseShortVersion(IEvent $event, IEvent $previousEvent = null) {
-		$parsedParameters = $this->getParameters($event->getSubject(), $event->getSubjectParameters());
+		$parsedParameters = $this->getParameters($event);
 
 		if ($event->getSubject() === 'created_by') {
 			$subject = $this->l->t('Created by {user}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			}
 		} else if ($event->getSubject() === 'changed_by') {
 			$subject = $this->l->t('Changed by {user}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'deleted_by') {
 			$subject = $this->l->t('Deleted by {user}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			}
 		} else if ($event->getSubject() === 'restored_by') {
 			$subject = $this->l->t('Restored by {user}');
 		} else if ($event->getSubject() === 'renamed_by') {
 			$subject = $this->l->t('Renamed by {user}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'moved_by') {
 			$subject = $this->l->t('Moved by {user}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else {
 			throw new \InvalidArgumentException();
 		}
 
+		if (!isset($parsedParameters['user'])) {
+			// External user via public link share
+			$subject = str_replace('{user}', $this->activityLang->t('"remote user"'), $subject);
+		}
+
 		$this->setSubjects($event, $subject, $parsedParameters);
 
-		$event = $this->eventMerger->mergeEvents('user', $event, $previousEvent);
-
-		return $event;
+		return $this->eventMerger->mergeEvents('user', $event, $previousEvent);
 	}
 
 	/**
@@ -141,47 +167,96 @@ class Provider implements IProvider {
 	 * @since 11.0.0
 	 */
 	public function parseLongVersion(IEvent $event, IEvent $previousEvent = null) {
-		$parsedParameters = $this->getParameters($event->getSubject(), $event->getSubjectParameters());
+		$parsedParameters = $this->getParameters($event);
 
 		if ($event->getSubject() === 'created_self') {
 			$subject = $this->l->t('You created {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			}
 		} else if ($event->getSubject() === 'created_by') {
 			$subject = $this->l->t('{user} created {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			}
 		} else if ($event->getSubject() === 'created_public') {
 			$subject = $this->l->t('{file} was created in a public folder');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'add-color.svg')));
+			}
 		} else if ($event->getSubject() === 'changed_self') {
 			$subject = $this->l->t('You changed {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'changed_by') {
 			$subject = $this->l->t('{user} changed {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'deleted_self') {
 			$subject = $this->l->t('You deleted {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			}
 		} else if ($event->getSubject() === 'deleted_by') {
 			$subject = $this->l->t('{user} deleted {file}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'delete-color.svg')));
+			}
 		} else if ($event->getSubject() === 'restored_self') {
 			$subject = $this->l->t('You restored {file}');
 		} else if ($event->getSubject() === 'restored_by') {
 			$subject = $this->l->t('{user} restored {file}');
 		} else if ($event->getSubject() === 'renamed_self') {
 			$subject = $this->l->t('You renamed {oldfile} to {newfile}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'renamed_by') {
 			$subject = $this->l->t('{user} renamed {oldfile} to {newfile}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'moved_self') {
 			$subject = $this->l->t('You moved {oldfile} to {newfile}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else if ($event->getSubject() === 'moved_by') {
 			$subject = $this->l->t('{user} moved {oldfile} to {newfile}');
-			$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			if ($this->activityManager->getRequirePNG()) {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.png')));
+			} else {
+				$event->setIcon($this->url->getAbsoluteURL($this->url->imagePath('files', 'change.svg')));
+			}
 		} else {
 			throw new \InvalidArgumentException();
+		}
+
+		if (!isset($parsedParameters['user'])) {
+			// External user via public link share
+			$subject = str_replace('{user}', $this->activityLang->t('"remote user"'), $subject);
 		}
 
 		$this->setSubjects($event, $subject, $parsedParameters);
@@ -201,7 +276,7 @@ class Provider implements IProvider {
 		foreach ($parameters as $placeholder => $parameter) {
 			$placeholders[] = '{' . $placeholder . '}';
 			if ($parameter['type'] === 'file') {
-				$replacements[] = trim($parameter['path'], '/');
+				$replacements[] = $parameter['path'];
 			} else {
 				$replacements[] = $parameter['name'];
 			}
@@ -211,53 +286,92 @@ class Provider implements IProvider {
 			->setRichSubject($subject, $parameters);
 	}
 
-	protected function getParameters($subject, array $parameters) {
-		switch ($subject) {
+	/**
+	 * @param IEvent $event
+	 * @return array
+	 * @throws \InvalidArgumentException
+	 */
+	protected function getParameters(IEvent $event) {
+		$parameters = $event->getSubjectParameters();
+		switch ($event->getSubject()) {
 			case 'created_self':
 			case 'created_public':
 			case 'changed_self':
 			case 'deleted_self':
 			case 'restored_self':
 				return [
-					'file' => $this->getRichFileParameter($parameters[0]),
+					'file' => $this->getFile($parameters[0], $event),
 				];
 			case 'created_by':
 			case 'changed_by':
 			case 'deleted_by':
 			case 'restored_by':
+				if ($parameters[1] === '') {
+					// External user via public link share
+					return [
+						'file' => $this->getFile($parameters[0], $event),
+					];
+				}
 				return [
-					'file' => $this->getRichFileParameter($parameters[0]),
-					'user' => $this->getRichUserParameter($parameters[1]),
+					'file' => $this->getFile($parameters[0], $event),
+					'user' => $this->getUser($parameters[1]),
 				];
 			case 'renamed_self':
 			case 'moved_self':
 				return [
-					'newfile' => $this->getRichFileParameter($parameters[0]),
-					'oldfile' => $this->getRichFileParameter($parameters[1]),
+					'newfile' => $this->getFile($parameters[0]),
+					'oldfile' => $this->getFile($parameters[1]),
 				];
 			case 'renamed_by':
 			case 'moved_by':
+				if ($parameters[1] === '') {
+					// External user via public link share
+					return [
+						'newfile' => $this->getFile($parameters[0]),
+						'oldfile' => $this->getFile($parameters[2]),
+					];
+				}
 				return [
-					'newfile' => $this->getRichFileParameter($parameters[0]),
-					'user' => $this->getRichUserParameter($parameters[1]),
-					'oldfile' => $this->getRichFileParameter($parameters[2]),
+					'newfile' => $this->getFile($parameters[0]),
+					'user' => $this->getUser($parameters[1]),
+					'oldfile' => $this->getFile($parameters[2]),
 				];
 		}
 		return [];
 	}
 
-	protected function getRichFileParameter($parameter) {
-		$path = reset($parameter);
-		$id = key($parameter);
+	/**
+	 * @param array|string $parameter
+	 * @param IEvent|null $event
+	 * @return array
+	 * @throws \InvalidArgumentException
+	 */
+	protected function getFile($parameter, IEvent $event = null) {
+		if (is_array($parameter)) {
+			$path = reset($parameter);
+			$id = (string) key($parameter);
+		} else if ($event !== null) {
+			// Legacy from before ownCloud 8.2
+			$path = $parameter;
+			$id = $event->getObjectId();
+		} else {
+			throw new \InvalidArgumentException('Could not generate file parameter');
+		}
+
 		return [
 			'type' => 'file',
 			'id' => $id,
 			'name' => basename($path),
-			'path' => $path,
+			'path' => trim($path, '/'),
+			'link' => $this->url->linkToRouteAbsolute('files.viewcontroller.showFile', ['fileid' => $id]),
 		];
 	}
 
-	protected function getRichUserParameter($uid) {
+	/**
+	 * @param string $uid
+	 * @return array
+	 */
+	protected function getUser($uid) {
 		if (!isset($this->displayNames[$uid])) {
 			$this->displayNames[$uid] = $this->getDisplayName($uid);
 		}

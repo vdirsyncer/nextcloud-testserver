@@ -41,8 +41,9 @@ if (count($matches) > 0 && $matches[1] <= 9) {
 $cloudID = \OC::$server->getUserSession()->getUser()->getCloudId();
 $url = 'https://nextcloud.com/federation#' . $cloudID;
 $logoPath = \OC::$server->getURLGenerator()->imagePath('core', 'logo-icon.svg');
-$theme = \OC::$server->getThemingDefaults();
-$color = $theme->getMailHeaderColor();
+/** @var \OCP\Defaults $theme */
+$theme = \OC::$server->query(\OCP\Defaults::class);
+$color = $theme->getColorPrimary();
 $textColor = "#ffffff";
 if(\OC::$server->getAppManager()->isEnabledForUser("theming")) {
 	$logoPath = $theme->getLogo();
@@ -52,7 +53,7 @@ if(\OC::$server->getAppManager()->isEnabledForUser("theming")) {
 			$textColor = "#000000";
 		}
 	} catch (OCP\AppFramework\QueryException $e) {
-		
+
 	}
 }
 

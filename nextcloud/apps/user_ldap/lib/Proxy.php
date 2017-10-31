@@ -64,6 +64,7 @@ abstract class Proxy {
 		static $groupMap;
 		static $db;
 		static $coreUserManager;
+		static $coreNotificationManager;
 		if(is_null($fs)) {
 			$ocConfig = \OC::$server->getConfig();
 			$fs       = new FilesystemHelper();
@@ -73,9 +74,11 @@ abstract class Proxy {
 			$userMap  = new UserMapping($db);
 			$groupMap = new GroupMapping($db);
 			$coreUserManager = \OC::$server->getUserManager();
+			$coreNotificationManager = \OC::$server->getNotificationManager();
 		}
 		$userManager =
-			new Manager($ocConfig, $fs, $log, $avatarM, new \OCP\Image(), $db, $coreUserManager);
+			new Manager($ocConfig, $fs, $log, $avatarM, new \OCP\Image(), $db,
+				$coreUserManager, $coreNotificationManager);
 		$connector = new Connection($this->ldap, $configPrefix);
 		$access = new Access($connector, $this->ldap, $userManager, new Helper(\OC::$server->getConfig()));
 		$access->setUserMapper($userMap);
@@ -126,6 +129,12 @@ abstract class Proxy {
 	 * @return mixed
 	 */
 	abstract protected function walkBackends($id, $method, $parameters);
+
+	/**
+	 * @param string $id
+	 * @return Access
+	 */
+	abstract public function getLDAPAccess($id);
 
 	/**
 	 * Takes care of the request to the User backend

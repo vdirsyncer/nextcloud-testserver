@@ -23,12 +23,15 @@
  */
 namespace OC\Share20;
 
+use OC\CapabilitiesManager;
+use OC\GlobalScale\Config;
 use OCA\FederatedFileSharing\AddressHandler;
-use OCA\FederatedFileSharing\DiscoveryManager;
 use OCA\FederatedFileSharing\FederatedShareProvider;
 use OCA\FederatedFileSharing\Notifications;
 use OCA\FederatedFileSharing\TokenHandler;
+use OCA\ShareByMail\Settings\SettingsManager;
 use OCA\ShareByMail\ShareByMailProvider;
+use OCP\Defaults;
 use OCP\Share\IProviderFactory;
 use OC\Share20\Exception\ProviderException;
 use OCP\IServerContainer;
@@ -48,9 +51,14 @@ class ProviderFactory implements IProviderFactory {
 	private $federatedProvider = null;
 	/** @var  ShareByMailProvider */
 	private $shareByMailProvider;
+	/** @var  \OCA\Circles\ShareByCircleProvider */
+	private $shareByCircleProvider = null;
+	/** @var bool */
+	private $circlesAreNotAvailable = false;
 
 	/**
 	 * IProviderFactory constructor.
+	 *
 	 * @param IServerContainer $serverContainer
 	 */
 	public function __construct(IServerContainer $serverContainer) {
@@ -96,16 +104,13 @@ class ProviderFactory implements IProviderFactory {
 			$l = $this->serverContainer->getL10N('federatedfilessharing');
 			$addressHandler = new AddressHandler(
 				$this->serverContainer->getURLGenerator(),
-				$l
-			);
-			$discoveryManager = new DiscoveryManager(
-				$this->serverContainer->getMemCacheFactory(),
-				$this->serverContainer->getHTTPClientService()
+				$l,
+				$this->serverContainer->getCloudIdManager()
 			);
 			$notifications = new Notifications(
 				$addressHandler,
 				$this->serverContainer->getHTTPClientService(),
-				$discoveryManager,
+				$this->serverContainer->query(\OCP\OCS\IDiscoveryService::class),
 				$this->serverContainer->getJobList()
 			);
 			$tokenHandler = new TokenHandler(
@@ -121,7 +126,9 @@ class ProviderFactory implements IProviderFactory {
 				$this->serverContainer->getLogger(),
 				$this->serverContainer->getLazyRootFolder(),
 				$this->serverContainer->getConfig(),
-				$this->serverContainer->getUserManager()
+				$this->serverContainer->getUserManager(),
+				$this->serverContainer->getCloudIdManager(),
+				$this->serverContainer->query(Config::class)
 			);
 		}
 
@@ -131,7 +138,7 @@ class ProviderFactory implements IProviderFactory {
 	/**
 	 * Create the federated share provider
 	 *
-	 * @return FederatedShareProvider
+	 * @return ShareByMailProvider
 	 */
 	protected function getShareByMailProvider() {
 		if ($this->shareByMailProvider === null) {
@@ -143,22 +150,61 @@ class ProviderFactory implements IProviderFactory {
 				return null;
 			}
 
-			$l = $this->serverContainer->getL10N('sharebymail');
+			$settingsManager = new SettingsManager($this->serverContainer->getConfig());
 
 			$this->shareByMailProvider = new ShareByMailProvider(
 				$this->serverContainer->getDatabaseConnection(),
 				$this->serverContainer->getSecureRandom(),
 				$this->serverContainer->getUserManager(),
 				$this->serverContainer->getLazyRootFolder(),
-				$l,
+				$this->serverContainer->getL10N('sharebymail'),
 				$this->serverContainer->getLogger(),
 				$this->serverContainer->getMailer(),
 				$this->serverContainer->getURLGenerator(),
-				$this->serverContainer->getActivityManager()
+				$this->serverContainer->getActivityManager(),
+				$settingsManager,
+				$this->serverContainer->query(Defaults::class),
+				$this->serverContainer->getHasher(),
+				$this->serverContainer->query(CapabilitiesManager::class)
 			);
 		}
 
 		return $this->shareByMailProvider;
+	}
+
+
+	/**
+	 * Create the circle share provider
+	 *
+	 * @return FederatedShareProvider
+	 */
+	protected function getShareByCircleProvider() {
+
+		if ($this->circlesAreNotAvailable) {
+			return null;
+		}
+
+		if (!$this->serverContainer->getAppManager()->isEnabledForUser('circles') ||
+			!class_exists('\OCA\Circles\ShareByCircleProvider')
+		) {
+			$this->circlesAreNotAvailable = true;
+			return null;
+		}
+
+		if ($this->shareByCircleProvider === null) {
+
+			$this->shareByCircleProvider = new \OCA\Circles\ShareByCircleProvider(
+				$this->serverContainer->getDatabaseConnection(),
+				$this->serverContainer->getSecureRandom(),
+				$this->serverContainer->getUserManager(),
+				$this->serverContainer->getLazyRootFolder(),
+				$this->serverContainer->getL10N('circles'),
+				$this->serverContainer->getLogger(),
+				$this->serverContainer->getURLGenerator()
+			);
+		}
+
+		return $this->shareByCircleProvider;
 	}
 
 
@@ -171,8 +217,10 @@ class ProviderFactory implements IProviderFactory {
 			$provider = $this->defaultShareProvider();
 		} else if ($id === 'ocFederatedSharing') {
 			$provider = $this->federatedShareProvider();
-		} else if ($id = 'ocMailShare') {
+		} else if ($id === 'ocMailShare') {
 			$provider = $this->getShareByMailProvider();
+		} else if ($id === 'ocCircleShare') {
+			$provider = $this->getShareByCircleProvider();
 		}
 
 		if ($provider === null) {
@@ -188,15 +236,19 @@ class ProviderFactory implements IProviderFactory {
 	public function getProviderForType($shareType) {
 		$provider = null;
 
-		if ($shareType === \OCP\Share::SHARE_TYPE_USER  ||
+		if ($shareType === \OCP\Share::SHARE_TYPE_USER ||
 			$shareType === \OCP\Share::SHARE_TYPE_GROUP ||
-			$shareType === \OCP\Share::SHARE_TYPE_LINK) {
+			$shareType === \OCP\Share::SHARE_TYPE_LINK
+		) {
 			$provider = $this->defaultShareProvider();
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_REMOTE) {
 			$provider = $this->federatedShareProvider();
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_EMAIL) {
 			$provider = $this->getShareByMailProvider();
+		} else if ($shareType === \OCP\Share::SHARE_TYPE_CIRCLE) {
+			$provider = $this->getShareByCircleProvider();
 		}
+
 
 		if ($provider === null) {
 			throw new ProviderException('No share provider for share type ' . $shareType);
@@ -206,10 +258,16 @@ class ProviderFactory implements IProviderFactory {
 	}
 
 	public function getAllProviders() {
+		$shares = [$this->defaultShareProvider(), $this->federatedShareProvider()];
 		$shareByMail = $this->getShareByMailProvider();
 		if ($shareByMail !== null) {
-			return [$this->defaultShareProvider(), $this->federatedShareProvider(), $shareByMail];
+			$shares[] = $shareByMail;
 		}
-		return [$this->defaultShareProvider(), $this->federatedShareProvider()];
+		$shareByCircle = $this->getShareByCircleProvider();
+		if ($shareByCircle !== null) {
+			$shares[] = $shareByCircle;
+		}
+
+		return $shares;
 	}
 }

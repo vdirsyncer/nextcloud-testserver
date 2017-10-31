@@ -42,7 +42,6 @@ class Defaults {
 
 	/**
 	 * \OC_Defaults instance to retrieve the defaults
-	 * @return string
 	 * @since 6.0.0
 	 */
 	private $defaults;
@@ -52,8 +51,11 @@ class Defaults {
 	 * actual defaults
 	 * @since 6.0.0
 	 */
-	function __construct() {
-		$this->defaults = \OC::$server->getThemingDefaults();
+	public function __construct(\OC_Defaults $defaults = null) {
+		if ($defaults === null) {
+			$defaults = \OC::$server->getThemingDefaults();
+		}
+		$this->defaults = $defaults;
 	}
 
 	/**
@@ -171,5 +173,43 @@ class Defaults {
 	 */
 	public function getiTunesAppId() {
 		return $this->defaults->getiTunesAppId();
+	}
+
+	/**
+	 * Themed logo url
+	 *
+	 * @param bool $useSvg Whether to point to the SVG image or a fallback
+	 * @return string
+	 * @since 12.0.0
+	 */
+	public function getLogo($useSvg = true) {
+		return $this->defaults->getLogo($useSvg);
+	}
+
+	/**
+	 * Returns primary color
+	 * @return string
+	 * @since 12.0.0
+	 */
+	public function getColorPrimary() {
+		return $this->defaults->getColorPrimary();
+	}
+
+	/**
+	 * @param string $key
+	 * @return string URL to doc with key
+	 * @since 12.0.0
+	 */
+	public function buildDocLinkToKey($key) {
+		return $this->defaults->buildDocLinkToKey($key);
+	}
+
+	/**
+	 * Returns the title
+	 * @return string title
+	 * @since 12.0.0
+	 */
+	public function getTitle() {
+		return $this->defaults->getTitle();
 	}
 }

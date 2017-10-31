@@ -28,6 +28,7 @@
 
 <div id="security-warning" class="section">
 	<h2><?php p($l->t('Security & setup warnings'));?></h2>
+	<p class="settings-hint"><?php p($l->t('It\'s important for the security and performance of your instance that everything is configured correctly. To help you with that we are doing some automatic checks. Please see the Tips & Ticks section and the documentation for more information.'));?></p>
 	<ul>
 		<?php
 		// is php setup properly to query system environment variables like getenv('PATH')
@@ -81,7 +82,7 @@
 		if (!$_['has_fileinfo']) {
 			?>
 			<li>
-				<?php p($l->t('The PHP module \'fileinfo\' is missing. We strongly recommend to enable this module to get best results with mime-type detection.')); ?>
+				<?php p($l->t('The PHP module \'fileinfo\' is missing. We strongly recommend to enable this module to get best results with MIME type detection.')); ?>
 			</li>
 			<?php
 		}
@@ -154,7 +155,7 @@
 </div>
 
 <div class="section" id="backgroundjobs">
-	<h2 class="inlineblock"><?php p($l->t('Cron'));?></h2>
+	<h2 class="inlineblock"><?php p($l->t('Background jobs'));?></h2>
 	<?php if ($_['cron_log']): ?>
 		<p class="cronlog inlineblock">
 			<?php if ($_['lastcron'] !== false):
@@ -163,17 +164,17 @@
 				if (time() - $_['lastcron'] <= 3600): ?>
 					<span class="status success"></span>
 					<span class="crondate" title="<?php p($absolute_time);?>">
-					<?php p($l->t("Last cron job execution: %s.", [$relative_time]));?>
+					<?php p($l->t("Last job ran %s.", [$relative_time]));?>
 				</span>
 				<?php else: ?>
 					<span class="status error"></span>
 					<span class="crondate" title="<?php p($absolute_time);?>">
-					<?php p($l->t("Last cron job execution: %s. Something seems wrong.", [$relative_time]));?>
+					<?php p($l->t("Last job execution ran %s. Something seems wrong.", [$relative_time]));?>
 				</span>
 				<?php endif;
 			else: ?>
 				<span class="status error"></span>
-				<?php p($l->t("Cron was not executed yet!"));
+				<?php p($l->t("Background job didn’t run yet!"));
 			endif; ?>
 		</p>
 	<?php endif; ?>
@@ -181,6 +182,7 @@
 	   title="<?php p($l->t('Open documentation'));?>"
 	   href="<?php p(link_to_docs('admin-background-jobs')); ?>"></a>
 
+	<p class="settings-hint"><?php p($l->t('For optimal performance it\'s important to configure background jobs correctly. For bigger instances \'Cron\' is the recommended setting. Please see the documentation for more information.'));?></p>
 	<p>
 		<input type="radio" name="mode" value="ajax" class="radio"
 			   id="backgroundjobs_ajax" <?php if ($_['backgroundjobs_mode'] === "ajax") {
@@ -206,7 +208,7 @@
 			print_unescaped('disabled');
 		}?>>
 		<label for="backgroundjobs_cron">Cron</label><br/>
-		<em><?php p($l->t("Use system's cron service to call the cron.php file every 15 minutes.")); ?>
+		<em><?php p($l->t("Use system cron service to call the cron.php file every 15 minutes.")); ?>
 			<?php if($_['cli_based_cron_possible']) {
 				p($l->t('The cron.php needs to be executed by the system user "%s".', [$_['cli_based_cron_user']]));
 			} else {
@@ -223,5 +225,5 @@
 <div class="section">
 	<!-- should be the last part, so Updater can follow if enabled (it has no heading therefore). -->
 	<h2><?php p($l->t('Version'));?></h2>
-	<p><a href="<?php print_unescaped($theme->getBaseUrl()); ?>" rel="noreferrer" target="_blank"><?php p($theme->getTitle()); ?></a> <?php p(OC_Util::getHumanVersion()) ?></p>
+	<p><strong><a href="<?php print_unescaped($theme->getBaseUrl()); ?>" rel="noreferrer" target="_blank"><?php p($theme->getTitle()); ?></a> <?php p(OC_Util::getHumanVersion()) ?></strong></p>
 </div>
